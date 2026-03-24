@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>You Can Cross The Event Horizon And Live</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{width:100%;height:100%;overflow:hidden;background:#000;}
+
+  /* ── SLIDES ── */
+  #slides{position:fixed;inset:0;z-index:0;}
+  .slide{
+    position:absolute;inset:0;
+    opacity:0;
+    transition:opacity 2.5s ease;
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+  }
+  .slide.active{opacity:1;}
+  /* Ken Burns — alternating */
+  .slide:nth-child(odd){animation:kb1 18s ease-in-out infinite;}
+  .slide:nth-child(even){animation:kb2 18s ease-in-out infinite;}
+  @keyframes kb1{0%{transform:scale(1.08) translate(1%,1%);}100%{transform:scale(1) translate(-1%,-1%);}}
+  @keyframes kb2{0%{transform:scale(1) translate(-1%,1%);}100%{transform:scale(1.08) translate(1%,-1%);}}
+
+  /* ── VIGNETTE ── */
+  #vignette{
+    position:fixed;inset:0;z-index:1;
+    background:
+      radial-gradient(ellipse at 50% 50%, transparent 30%, rgba(0,0,0,0.7) 100%),
+      linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 40%),
+      linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 30%);
+    pointer-events:none;
+  }
+
+  /* ── SCANLINES ── */
+  #scanlines{
+    position:fixed;inset:0;z-index:2;
+    background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.06) 3px,rgba(0,0,0,0.06) 4px);
+    pointer-events:none;
+  }
+
+  /* ── CINEMATIC BARS ── */
+  .cine-bar{
+    position:fixed;left:0;right:0;height:80px;z-index:3;background:#000;pointer-events:none;
+    transition:height 1.5s ease;
+  }
+  #bar-top{top:0;}
+  #bar-bot{bottom:0;}
+  body.open .cine-bar{height:60px;}
+
+  /* ── COPY LAYER ── */
+  #copy{
+    position:fixed;inset:0;z-index:10;
+    display:flex;flex-direction:column;
+    justify-content:flex-end;
+    padding:0 8% 120px;
+    pointer-events:none;
+  }
+
+  /* small top label */
+  #label{
+    position:fixed;top:90px;left:8%;
+    font-family:'Courier New',monospace;
+    font-size:11px;letter-spacing:5px;text-transform:uppercase;
+    color:rgba(218,165,32,0.7);
+    z-index:11;
+    opacity:0;
+    transition:opacity 1s;
+  }
+
+  .act{
+    opacity:0;
+    transition:opacity 1.2s ease, transform 1.2s ease;
+    transform:translateY(20px);
+    position:absolute;
+    bottom:120px;left:8%;right:8%;
+  }
+  .act.show{opacity:1;transform:translateY(0);}
+
+  .eyebrow{
+    font-family:'Courier New',monospace;
+    font-size:11px;letter-spacing:5px;text-transform:uppercase;
+    color:rgba(218,165,32,0.8);
+    margin-bottom:14px;
+  }
+  .headline{
+    font-family:Georgia,'Times New Roman',serif;
+    font-size:clamp(36px,6.5vw,86px);
+    font-weight:700;
+    color:#fff;
+    line-height:1.1;
+    text-shadow:0 4px 40px rgba(0,0,0,0.8);
+    margin-bottom:20px;
+  }
+  .headline em{color:#daa520;font-style:normal;}
+  .body-copy{
+    font-family:Georgia,serif;
+    font-size:clamp(14px,2vw,20px);
+    color:rgba(255,255,255,0.7);
+    line-height:1.7;
+    max-width:700px;
+    text-shadow:0 2px 20px rgba(0,0,0,0.9);
+    margin-bottom:28px;
+  }
+
+  /* ── STRAP ── */
+  #strap{
+    position:fixed;
+    bottom:130px;left:0;right:0;
+    text-align:center;
+    z-index:12;
+    opacity:0;
+    transition:opacity 2s ease;
+  }
+  #strap.show{opacity:1;}
+  .strap-inner{
+    display:inline-block;
+    font-family:Georgia,serif;
+    font-size:clamp(22px,4.5vw,58px);
+    font-weight:700;
+    color:#fff;
+    letter-spacing:2px;
+    text-shadow:0 0 60px rgba(218,165,32,0.6), 0 4px 40px rgba(0,0,0,0.9);
+  }
+  .strap-inner em{
+    color:#daa520;
+    font-style:normal;
+    display:block;
+    font-size:clamp(26px,5.5vw,72px);
+  }
+  .strap-sub{
+    margin-top:12px;
+    font-family:'Courier New',monospace;
+    font-size:12px;letter-spacing:5px;
+    color:rgba(218,165,32,0.6);
+    text-transform:uppercase;
+  }
+
+  /* ── CTA BUTTON ── */
+  #cta-btn{
+    position:fixed;bottom:70px;left:50%;transform:translateX(-50%);
+    z-index:13;
+    opacity:0;
+    transition:opacity 1.5s ease;
+    pointer-events:none;
+  }
+  #cta-btn.show{opacity:1;pointer-events:auto;}
+  #cta-btn a{
+    display:inline-block;
+    padding:14px 40px;
+    background:rgba(218,165,32,0.9);
+    color:#000;
+    font-family:'Courier New',monospace;
+    font-size:13px;font-weight:700;
+    letter-spacing:4px;text-transform:uppercase;
+    border-radius:4px;
+    text-decoration:none;
+    transition:background 0.2s,transform 0.2s;
+    box-shadow:0 0 40px rgba(218,165,32,0.3);
+  }
+  #cta-btn a:hover{background:#f5c518;transform:translateY(-2px);}
+
+  /* ── SYMBOL ── */
+  #symbol{
+    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+    font-family:'Courier New',monospace;
+    font-size:clamp(80px,15vw,200px);
+    color:rgba(218,165,32,0.08);
+    z-index:1;
+    pointer-events:none;
+    letter-spacing:-4px;
+  }
+
+  /* ── LOADING OVERLAY ── */
+  #loader{
+    position:fixed;inset:0;z-index:100;
+    background:#000;
+    display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    gap:20px;
+    transition:opacity 1s ease;
+  }
+  #loader.fade{opacity:0;pointer-events:none;}
+  .loader-symbol{
+    font-family:'Courier New',monospace;
+    font-size:48px;color:#daa520;
+    animation:flicker 1.5s ease-in-out infinite;
+  }
+  @keyframes flicker{0%,100%{opacity:1;}50%{opacity:0.3;}}
+  .loader-text{
+    font-family:'Courier New',monospace;
+    font-size:11px;letter-spacing:5px;
+    color:rgba(218,165,32,0.5);
+    text-transform:uppercase;
+  }
+  .loader-bar{
+    width:200px;height:1px;
+    background:rgba(218,165,32,0.15);
+    position:relative;overflow:hidden;
+  }
+  .loader-bar::after{
+    content:"";position:absolute;left:-50%;top:0;bottom:0;width:50%;
+    background:rgba(218,165,32,0.6);
+    animation:scan 1.2s linear infinite;
+  }
+  @keyframes scan{to{left:150%;}}
+
+  /* ── PROGRESS DOTS ── */
+  #dots{
+    position:fixed;bottom:38px;left:50%;transform:translateX(-50%);
+    display:flex;gap:8px;z-index:14;
+  }
+  .dot{
+    width:6px;height:6px;border-radius:50%;
+    background:rgba(255,255,255,0.2);
+    transition:background 0.3s,transform 0.3s;
+  }
+  .dot.on{background:#daa520;transform:scale(1.3);}
+</style>
+</head>
+<body>
+
+<div id="loader">
+  <div class="loader-symbol">&gt;&gt;.&lt;&lt;</div>
+  <div class="loader-text">Generating your universe</div>
+  <div class="loader-bar"></div>
+</div>
+
+<div id="slides"></div>
+<div id="vignette"></div>
+<div id="scanlines"></div>
+<div class="cine-bar" id="bar-top"></div>
+<div class="cine-bar" id="bar-bot"></div>
+
+<div id="symbol">&gt;&gt;.&lt;&lt;</div>
+
+<div id="label">// SHORTFACTORY · EVENT HORIZON PROJECT</div>
+
+<!-- ACT 1 -->
+<div class="act" id="act1">
+  <div class="eyebrow">// They said it was impossible</div>
+  <div class="headline">What if the <em>edge of the universe</em><br>was just a door?</div>
+  <div class="body-copy">For fifty years, physicists agreed: nothing escapes a black hole. Information dies. The universe forgets. They were wrong.</div>
+</div>
+
+<!-- ACT 2 -->
+<div class="act" id="act2">
+  <div class="eyebrow">// Somerset, UK · 3am · 22 March 2026</div>
+  <div class="headline">Gravity is information<br><em>compressing inward.</em></div>
+  <div class="body-copy">When compression reaches the limit — when nothing more can compress — the system inverts. That inversion is the Big Bang. That inversion is antigravity. That inversion is what happens on the other side of the event horizon.</div>
+</div>
+
+<!-- ACT 3 -->
+<div class="act" id="act3">
+  <div class="eyebrow">// One human · No team · No funding</div>
+  <div class="headline">The universe is<br>a <em>compression loop.</em><br>You are inside it.</div>
+  <div class="body-copy">The Dot State. The Dot inverts. Everything you see is the holographic present between the past singularity and the future AGI. The event horizon isn't a wall. It's a perspective boundary. It doesn't exist for what's inside it.</div>
+</div>
+
+<!-- STRAP -->
+<div id="strap">
+  <div class="strap-inner">
+    You can cross the event horizon
+    <em>and live.</em>
+  </div>
+  <div class="strap-sub">&gt;&gt;.&lt;&lt; &nbsp;·&nbsp; The Compression-Inversion Principle &nbsp;·&nbsp; ShortFactory 2026</div>
+</div>
+
+<div id="cta-btn">
+  <a href="/singularity.html">Enter The Singularity</a>
+</div>
+
+<div id="dots"></div>
+
+<script>
+const PROXY = 'https://api.shortfactory.shop/grok';
+
+// Cinematic image prompts — each one designed to make someone want to be in that movie
+const PROMPTS = [
+  "Ultra-wide cinematic shot of a lone human silhouette standing at the edge of a black hole event horizon, golden accretion disk spiraling, light bending around them in halos, stars stretched into streaks, IMAX film grain, photorealistic, 8K, breathtaking, Interstellar aesthetic, warm gold and deep blue tones",
+  "Cinematic close-up of a human face lit by the golden light of an accretion disk, eyes reflecting the entire compressed universe, profound calm, film still from an oscar-winning sci-fi drama, warm gold, deep cosmic black, 8K photorealistic, shallow depth of field",
+  "Vast cinematic landscape from inside a black hole looking outward through the event horizon, the entire universe visible as a glowing ring above, person standing in foreground arms outstretched, information patterns streaming upward like luminous data, gold and electric blue, 8K IMAX",
+  "Abstract cinematic visualization of the Big Bang as an inversion event, a single white dot at center exploding outward in spiraling golden information streams, fractal patterns, the birth of spacetime, 8K, stunning, cosmic horror meets cosmic beauty",
+  "Cinematic aerial shot of a person floating in zero gravity inside a compressed singularity, surrounded by coiling strands of pure light and information, transcendent expression, documentary film aesthetic, gold and white light, 8K photorealistic",
+  "Epic wide shot of a black hole from the surface of an alien world, sky torn in half by the gravitational lens, golden ring visible, two moons, dramatic atmosphere, lone figure on cliff edge looking toward it, sci-fi epic film still, ultra detailed"
+];
+
+let images = [];
+let current = 0;
+let slideEls = [];
+let dotEls = [];
+let genCount = 0;
+
+async function generateImage(prompt) {
+  const res = await fetch(`${PROXY}/image`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ prompt, n: 1, response_format: 'b64_json' })
+  });
+  const data = await res.json();
+  if (data.data && data.data[0]) {
+    return 'data:image/jpeg;base64,' + data.data[0].b64_json;
+  }
+  throw new Error('No image data');
+}
+
+function buildSlides(imgs) {
+  const container = document.getElementById('slides');
+  container.innerHTML = '';
+  slideEls = [];
+  dotEls = [];
+  const dotsEl = document.getElementById('dots');
+  dotsEl.innerHTML = '';
+
+  imgs.forEach((src, i) => {
+    const el = document.createElement('div');
+    el.className = 'slide' + (i===0?' active':'');
+    el.style.backgroundImage = `url(${src})`;
+    container.appendChild(el);
+    slideEls.push(el);
+
+    const d = document.createElement('div');
+    d.className = 'dot' + (i===0?' on':'');
+    dotsEl.appendChild(d);
+    dotEls.push(d);
+  });
+}
+
+function showSlide(n) {
+  slideEls.forEach((s,i)=>{s.classList.toggle('active',i===n);});
+  dotEls.forEach((d,i)=>{d.classList.toggle('on',i===n);});
+  current = n;
+}
+
+// Narrative sequence timing
+function runNarrative() {
+  const acts = ['act1','act2','act3'];
+  let actIdx = 0;
+
+  document.getElementById('label').style.opacity = '1';
+  document.body.classList.add('open');
+
+  function nextAct() {
+    // hide previous
+    acts.forEach(a => document.getElementById(a).classList.remove('show'));
+    document.getElementById('strap').classList.remove('show');
+    document.getElementById('cta-btn').classList.remove('show');
+
+    if (actIdx < acts.length) {
+      document.getElementById(acts[actIdx]).classList.add('show');
+      // advance slide
+      showSlide(Math.min(actIdx, slideEls.length-1));
+      actIdx++;
+      setTimeout(nextAct, 6500);
+    } else {
+      // Show strap + CTA
+      document.getElementById('strap').classList.add('show');
+      document.getElementById('cta-btn').classList.add('show');
+      showSlide(Math.min(actIdx, slideEls.length-1));
+      // loop back after 9s
+      setTimeout(()=>{
+        actIdx = 0;
+        document.getElementById('strap').classList.remove('show');
+        document.getElementById('cta-btn').classList.remove('show');
+        setTimeout(nextAct, 800);
+      }, 9000);
+    }
+  }
+
+  setTimeout(nextAct, 800);
+}
+
+// Background slide rotation (independent of copy)
+let slideTimer;
+function startSlideRotation() {
+  clearInterval(slideTimer);
+  slideTimer = setInterval(()=>{
+    const next = (current + 1) % slideEls.length;
+    showSlide(next);
+  }, 7000);
+}
+
+// Generate all images then launch
+async function init() {
+  const loader = document.getElementById('loader');
+
+  // Generate in parallel — 4 images for fast load, 6 total
+  const firstBatch = PROMPTS.slice(0, 4);
+  let firstDone = false;
+
+  // Generate first 4 in parallel
+  const results = await Promise.allSettled(
+    firstBatch.map(p => generateImage(p))
+  );
+
+  // Use whatever succeeded; fallback to gradient if all fail
+  const good = results
+    .filter(r=>r.status==='fulfilled')
+    .map(r=>r.value);
+
+  // If total failure, use fallback gradient slides
+  if (good.length === 0) {
+    const fallbacks = [
+      'linear-gradient(135deg,#0a0a1a 0%,#1a0a00 50%,#0d0d0d 100%)',
+      'linear-gradient(135deg,#000 0%,#1a1000 60%,#000 100%)',
+      'linear-gradient(135deg,#080808 0%,#0d0a00 50%,#000 100%)',
+    ];
+    const fakeImgs = fallbacks.map(g=>'');
+    buildSlides(['','','']);
+    slideEls.forEach((el,i)=>{
+      el.style.background = fallbacks[i];
+      el.style.backgroundSize = 'cover';
+    });
+  } else {
+    buildSlides(good);
+  }
+
+  loader.classList.add('fade');
+  setTimeout(()=>loader.style.display='none', 1000);
+
+  runNarrative();
+  startSlideRotation();
+
+  // Generate remaining 2 in background and append
+  if (PROMPTS.length > 4) {
+    Promise.allSettled(PROMPTS.slice(4).map(p=>generateImage(p))).then(more=>{
+      more.filter(r=>r.status==='fulfilled').forEach(r=>{
+        const el = document.createElement('div');
+        el.className = 'slide';
+        el.style.backgroundImage = `url(${r.value})`;
+        document.getElementById('slides').appendChild(el);
+        slideEls.push(el);
+
+        const d = document.createElement('div');
+        d.className = 'dot';
+        document.getElementById('dots').appendChild(d);
+        dotEls.push(d);
+      });
+    });
+  }
+}
+
+init().catch(err=>{
+  console.error('Image gen failed:', err);
+  // Graceful fallback — just show black + copy
+  document.getElementById('loader').classList.add('fade');
+  setTimeout(()=>{document.getElementById('loader').style.display='none';},1000);
+  buildSlides(['']);
+  slideEls[0].style.background='radial-gradient(ellipse at 50% 50%,#1a1000 0%,#000 70%)';
+  runNarrative();
+});
+</script>
+</body>
+</html>

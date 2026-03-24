@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TRICODE PAIR — LAPTOP</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#0a0a0a; overflow:hidden; font-family:'Courier New',monospace; }
+#cv { position:fixed; inset:0; width:100%; height:100%; }
+#hud {
+  position:fixed; bottom:0; left:0; right:0;
+  padding:14px 18px 24px;
+  background:linear-gradient(transparent,rgba(0,0,0,.9));
+}
+#status  { font-size:7px; letter-spacing:4px; color:rgba(255,199,44,.4); margin-bottom:4px; }
+#payload { font-size:20px; letter-spacing:6px; color:#FFC72C; min-height:28px;
+           text-shadow:0 0 30px rgba(255,199,44,1); }
+#gid     { font-size:.45rem; letter-spacing:3px; color:rgba(255,199,44,.25); margin-top:4px; }
+#pulse   {
+  position:fixed; top:16px; right:16px; width:10px; height:10px;
+  border-radius:50%; background:rgba(255,199,44,.2);
+}
+#pulse.on { background:#FFC72C; box-shadow:0 0 12px #FFC72C; }
+#converge {
+  position:fixed; top:16px; left:50%; transform:translateX(-50%);
+  font-size:7px; letter-spacing:3px; color:rgba(44,255,100,0);
+  transition:color .5s;
+}
+#converge.active { color:rgba(44,255,100,.9); text-shadow:0 0 12px rgba(44,255,100,.6); }
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="hud">
+  <div id="status">WAITING FOR PHONE...</div>
+  <div id="payload"></div>
+  <div id="gid"></div>
+  <div id="actions" style="display:none;flex-wrap:wrap;gap:8px;margin-top:12px;">
+    <button class="ab" id="btn-lock-nodes" onclick="resetNodes()" style="border-color:rgba(255,199,44,.5);color:rgba(255,199,44,.7);">✕ RESET NODES</button>
+    <button class="ab" onclick="clearShape()">✕ CLEAR</button>
+    <button class="ab" onclick="saveConfirmed()">💾 SAVE CONFIRMED</button>
+  </div>
+</div>
+<div id="pulse"></div>
+<div id="converge">✓ CONVERGED</div>
+<style>
+.ab {
+  background:rgba(0,0,0,.7); border:1px solid rgba(255,199,44,.35);
+  color:rgba(255,199,44,.7); font-family:'Courier New',monospace;
+  font-size:8px; letter-spacing:2px; padding:9px 14px; cursor:pointer;
+  backdrop-filter:blur(4px);
+}
+.ab:active { background:rgba(255,199,44,.2); color:#FFC72C; border-color:#FFC72C; }
+</style>
+<div id="tap" onclick="this.style.display='none';initAC();if(window.speechSynthesis)window.speechSynthesis.getVoices();" style="
+  position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.85);cursor:pointer;z-index:99;flex-direction:column;gap:12px;">
+  <div style="font-size:.7rem;letter-spacing:6px;color:#FFC72C;text-shadow:0 0 20px rgba(255,199,44,.6)">TRICODE PAIR</div>
+  <div style="font-size:.5rem;letter-spacing:4px;color:rgba(255,199,44,.4)">TAP TO ACTIVATE RECEIVER</div>
+</div>
+
+<script data-cfasync="false">
+'use strict';
+
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const statusEl   = document.getElementById('status');
+const payloadEl  = document.getElementById('payload');
+const gidEl      = document.getElementById('gid');
+const pulseEl    = document.getElementById('pulse');
+const convergeEl = document.getElementById('converge');
+
+// ── Reference geometry (same as spider) ───────────────────────────────
+const REF_W=500, REF_H=Math.round(500*Math.sqrt(3)/2), N=28, HOLE=0.48;
+const RO=[{x:REF_W/2,y:6},{x:REF_W-6,y:REF_H-6},{x:6,y:REF_H-6}];
+const RCX=(RO[0].x+RO[1].x+RO[2].x)/3, RCY=(RO[0].y+RO[1].y+RO[2].y)/3;
+const RI=RO.map(function(p){return{x:p.x+(RCX-p.x)*HOLE,y:p.y+(RCY-p.y)*HOLE};});
+
+function inT(px,py,v){
+  function s(a,b,c){return(a.x-c.x)*(b.y-c.y)-(b.x-c.x)*(a.y-c.y);}
+  const d1=s({x:px,y:py},v[0],v[1]),d2=s({x:px,y:py},v[1],v[2]),d3=s({x:px,y:py},v[2],v[0]);
+  return !((d1<0||d2<0||d3<0)&&(d1>0||d2>0||d3>0));
+}
+function eDist(px,py,v){
+  let m=Infinity;
+  for(let i=0;i<v.length;i++){
+    const a=v[i],b=v[(i+1)%v.length];
+    const dx=b.x-a.x,dy=b.y-a.y,l=Math.sqrt(dx*dx+dy*dy);
+    const t=Math.max(0,Math.min(1,((px-a.x)*dx+(py-a.y)*dy)/(l*l)));
+    m=Math.min(m,Math.hypot(a.x+t*dx-px,a.y+t*dy-py));
+  }
+  return m;
+}
+function baryOf(p,a,b,c){
+  const det=(b.y-c.y)*(a.x-c.x)+(c.x-b.x)*(a.y-c.y);
+  const u=((b.y-c.y)*(p.x-c.x)+(c.x-b.x)*(p.y-c.y))/det;
+  const v=((c.y-a.y)*(p.x-c.x)+(a.x-c.x)*(p.y-c.y))/det;
+  return {u:u,v:v,w:1-u-v};
+}
+function fromBary(b,a,p2,p3){return{x:b.u*a.x+b.v*p2.x+b.w*p3.x,y:b.u*a.y+b.v*p2.y+b.w*p3.y};}
+function r2s(rx,ry,vt){
+  const b=baryOf({x:rx,y:ry},RO[0],RO[1],RO[2]);
+  return fromBary(b,vt[0],vt[1],vt[2]);
+}
+
+// ── Build reference cells once ─────────────────────────────────────────
+function buildCells(){
+  const typW=REF_W/(2*N-1);
+  const cells=[];
+  const TEXT='SF:TRIANGLE', bits=[];
+  for(let i=0;i<TEXT.length;i++){const b=TEXT.charCodeAt(i);for(let j=7;j>=0;j--)bits.push((b>>j)&1);}
+  let bi=0,label=1;
+  for(let r=0;r<N;r++){
+    const nC=2*r+1,y0=r*(REF_H/N),y1=(r+1)*(REF_H/N);
+    const spanB=((r+1)/N)*REF_W,xL=(REF_W-spanB)/2,cw=spanB/nC;
+    for(let c=0;c<nC;c++){
+      const isUp=(c%2===0),x0=xL+c*cw,x1=x0+cw;
+      const rcx=(x0+x1)/2,rcy=(y0+y1)/2;
+      if(!inT(rcx,rcy,RO)||inT(rcx,rcy,RI)) continue;
+      const dO=eDist(rcx,rcy,RO),dI=eDist(rcx,rcy,RI);
+      let type='data',dark=0;
+      if(dO<typW*1.1){type='border';dark=1;}
+      else if(dO<typW*2.1){type='quiet';}
+      else if(dI<typW*1.1){type='inner-border';dark=1;}
+      else if(dI<typW*2.1){type='inner-quiet';}
+      if(type==='data'){
+        for(let k=0;k<RO.length;k++){
+          if(Math.hypot(rcx-RO[k].x,rcy-RO[k].y)<typW*5){
+            type='anchor';dark=Math.round(Math.hypot(rcx-RO[k].x,rcy-RO[k].y)/typW)%2===0?1:0;break;
+          }
+        }
+      }
+      if(type==='data'&&dO>=typW*2.1&&dO<typW*3.1){type='timing';dark=r%2;}
+      const refCorners=isUp?[
+        {x:(x0+x1)/2,y:y0},{x:x1,y:y1},{x:x0,y:y1}
+      ]:[
+        {x:x0,y:y0},{x:x1,y:y0},{x:(x0+x1)/2,y:y1}
+      ];
+      if(type==='data'){dark=bits[bi%bits.length];bi++;cells.push({r,c,isUp,rcx,rcy,refCorners,type,dark,label:label++,spawnDelay:Math.random()*800});}
+      else{cells.push({r,c,isUp,rcx,rcy,refCorners,type,dark,label:0,spawnDelay:Math.random()*800});}
+    }
+  }
+  return cells;
+}
+const CELLS=buildCells();
+
+// ── Tween state ───────────────────────────────────────────────────────
+let homeVerts=null, targetVerts=null, tweenT=0, tweening=false;
+let convergeLocked=false, spawnTime=0, paired=false;
+let currentGenome=null, lastId=null, syncInterval=null;
+let laptopGeoBase=null; // baseline verts when phone SET geo
+let mirrorActive=false;
+
+// ── Draggable pairing nodes (A1 B2 C3) ──────────────────────────────
+let nodeVerts=null;   // [{x,y}] screen px
+let nodeLocked=false;
+let dragNode=null;
+const NL=['A','B','C'], NN=['1','2','3'];
+const NC=['rgba(255,80,80,1)','rgba(80,220,80,1)','rgba(80,160,255,1)'];
+const NG=['#FF5050','#50DC50','#50A0FF'];
+
+// play vars removed — user moves phone by hand
+
+function easeInOut(t){return t<.5?2*t*t:(4-2*t)*t-1;}
+function lerpV(a,b,t){return{x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t};}
+function liveVerts(){
+  if(!tweening||!targetVerts) return homeVerts;
+  const e=easeInOut(Math.min(1,tweenT));
+  return homeVerts.map(function(v,i){return lerpV(v,targetVerts[i],e);});
+}
+
+// ── Gold→Green ────────────────────────────────────────────────────────
+function goldToGreen(alpha,isDark){
+  if(!isDark) return 'rgba(17,17,17,'+(alpha*0.95)+')';
+  const t=Math.min(1,tweenT*1.25);
+  const r=Math.round(255*(1-t)+44*t);
+  const g=Math.round(199*(1-t)+255*t);
+  const b=Math.round(44*(1-t)+100*t);
+  return 'rgba('+r+','+g+','+b+','+alpha+')';
+}
+
+// ── Apply phone orientation delta to laptop triangle ──────────────────
+function applyOrientDelta(base, db, dg, da){
+  const W=window.innerWidth,H=window.innerHeight;
+  const cx=(base[0].x+base[1].x+base[2].x)/3;
+  const cy=(base[0].y+base[1].y+base[2].y)/3;
+  return base.map(function(v){
+    let x=v.x,y=v.y;
+    // Roll (gamma delta) → rotate
+    const rad=dg*Math.PI/180;
+    const dx=x-cx,dy=y-cy;
+    x=cx+dx*Math.cos(rad)-dy*Math.sin(rad);
+    y=cy+dx*Math.sin(rad)+dy*Math.cos(rad);
+    // Pitch (beta delta) → vertical shift
+    y+=db*(H/180)*0.28;
+    // Yaw (alpha delta) → horizontal shear
+    x+=(x-cx)*Math.sin(da*Math.PI/180)*0.14;
+    return{x:x,y:y};
+  });
+}
+
+// ── Audio ─────────────────────────────────────────────────────────────
+let AC=null;
+// Only create AudioContext on explicit user gesture — never auto-create
+function initAC(){if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();}
+function getAC(){return(AC&&AC.state==='running')?AC:null;}
+function tone(f,d,v,type,delay){
+  const ac=getAC();if(!ac)return;
+  v=v||0.2;type=type||'sine';delay=delay||0;
+  const osc=ac.createOscillator(),g=ac.createGain();
+  osc.connect(g);g.connect(ac.destination);
+  osc.type=type;osc.frequency.value=f;
+  const t=ac.currentTime+delay;
+  g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(0.001,t+d);
+  osc.start(t);osc.stop(t+d+0.01);
+}
+function sndPaired(){
+  tone(220,0.4,0.25,'sine');tone(330,0.35,0.18,'sine',0.1);
+  tone(440,0.3,0.15,'sine',0.2);tone(880,0.5,0.12,'sine',0.35);
+  [1200,1400,1600,1100].forEach(function(f,i){tone(f,0.08,0.08,'square',0.5+i*0.06);});
+}
+function sndConverge(){tone(880,0.05);tone(1100,0.05,0.2,'sine',0.07);tone(1320,0.3,0.15,'sine',0.14);}
+
+// ── Single click-to-place node1 ───────────────────────────────────────
+let node1=null;  // {x,y} normalised — set by one click on the triangle
+
+function handleNodeClick(ex,ey){
+  if(!homeVerts) return;
+  const W=window.innerWidth,H=window.innerHeight;
+  node1={x:+(ex/W).toFixed(4), y:+(ey/H).toFixed(4)};
+  tone(660,.15,.2,'sine'); tone(880,.1,.12,'sine',.12);
+  statusEl.textContent='NODE 1 SET — ('+node1.x+', '+node1.y+')  CLICK TO MOVE';
+}
+
+function resetNodes(){
+  node1=null;
+  statusEl.textContent='CLICK ANYWHERE ON TRIANGLE TO PLACE NODE 1';
+}
+
+cv.addEventListener('click',function(e){ handleNodeClick(e.clientX,e.clientY); });
+
+// ── Sync ──────────────────────────────────────────────────────────────
+function startSync(id){
+  if(syncInterval) clearInterval(syncInterval);
+  syncInterval=setInterval(function(){
+    if(!homeVerts) return;
+    const lv=liveVerts();
+    const W=window.innerWidth,H=window.innerHeight;
+    // Push laptop verts
+    const laptopPayload={side:'laptop',verts:lv.map(function(v){return{x:+(v.x/W).toFixed(4),y:+(v.y/H).toFixed(4)};}),tweenT:tweenT};
+    if(node1) laptopPayload.node1=node1;
+    fetch('/soul/tricode_sync.php?id='+id,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(laptopPayload)
+    }).catch(function(){});
+    // Pull phone verts + mirror mode
+    fetch('/soul/tricode_sync.php?id='+id+'&t='+Date.now())
+    .then(function(r){return r.json();})
+    .then(function(state){
+      if(!state.phone||!state.phone.verts||state.phone.ts<=(Date.now()/1000-10)) return;
+      const pv=state.phone.verts.map(function(v){return{x:v.x*W,y:v.y*H};});
+      if(state.phone.mirrorMode&&state.phone.orientDelta){
+        // MIRROR MODE — phone is geostationary, apply its delta to our base
+        if(!laptopGeoBase){
+          // First mirror frame: lock our current position as base
+          laptopGeoBase=liveVerts().map(function(v){return{x:v.x,y:v.y};});
+          mirrorActive=true;
+          statusEl.style.color='rgba(44,255,100,1)';
+          statusEl.textContent='◈ HOLOGRAPHIC MIRROR ACTIVE';
+          convergeEl.textContent='◈ MIRROR';convergeEl.classList.add('active');
+        }
+        const d=state.phone.orientDelta;
+        const newTarget=applyOrientDelta(laptopGeoBase,d.db,d.dg,d.da);
+        targetVerts=newTarget; tweenT=0;
+        // Fast snap for real-time feel
+        tweening=true; convergeLocked=false;
+      } else if(!mirrorActive){
+        laptopGeoBase=null;
+        if(!tweening||tweenT>=0.95){targetVerts=pv;tweenT=0;tweening=true;convergeLocked=false;}
+      }
+    }).catch(function(){});
+  },mirrorActive?350:1500);
+}
+
+// play animation removed — user moves phone by hand
+
+// ── Render genome ─────────────────────────────────────────────────────
+function renderGenome(genome){
+  const W=window.innerWidth,H=window.innerHeight;
+  const v=genome.vertices;
+  const pts=v.map(function(p){return{x:p.x*W,y:p.y*H};});
+  const sorted=[...pts].sort(function(a,b){return a.y-b.y;});
+  const apex=sorted[0],bot=sorted.slice(1).sort(function(a,b){return a.x-b.x;});
+  homeVerts=[apex,bot[1],bot[0]]; // [apex,BR,BL]
+  nodeVerts=[null,null,null]; nodeLocked=false;
+  document.getElementById('btn-lock-nodes').textContent='✕ RESET NODES';
+  document.getElementById('btn-lock-nodes').style.color='rgba(255,199,44,.7)';
+  document.getElementById('btn-lock-nodes').style.borderColor='rgba(255,199,44,.5)';
+  targetVerts=null;tweenT=0;tweening=false;convergeLocked=false;
+  spawnTime=Date.now();paired=true;currentGenome=genome;
+  payloadEl.textContent=genome.payload||'SF:TRIANGLE';
+  gidEl.textContent='GENOME '+genome.id+' · '+new Date(genome.ts*1000).toLocaleTimeString();
+  statusEl.style.color='';statusEl.textContent='CLICK VERTEX A1 TO PLACE FIRST NODE';
+  convergeEl.classList.remove('active');
+  document.getElementById('actions').style.display='flex';
+  sndPaired();
+  startSync(genome.id);
+}
+
+// ── Clear ─────────────────────────────────────────────────────────────
+function clearShape(){
+  paired=false;homeVerts=null;targetVerts=null;tweenT=0;tweening=false;
+  convergeLocked=false;currentGenome=null;
+  if(syncInterval){clearInterval(syncInterval);syncInterval=null;}
+  payloadEl.textContent='';gidEl.textContent='';
+  statusEl.style.color='';statusEl.textContent='CLEARED · WAITING FOR PHONE...';
+  document.getElementById('actions').style.display='none';
+  convergeEl.classList.remove('active');
+}
+
+// ── Save confirmed ────────────────────────────────────────────────────
+function saveConfirmed(){
+  if(!currentGenome) return;
+  currentGenome.confirmed=true;currentGenome.confirmed_ts=Date.now();
+  fetch('/soul/tricode_save.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(currentGenome)})
+  .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+  .then(function(res){
+    if(res.ok){sndPaired();statusEl.style.color='';statusEl.textContent='✓ CONFIRMED #'+res.total+' · '+res.id;}
+    else{statusEl.style.color='#ff4444';statusEl.textContent='SAVE FAILED: '+(res.err||'unknown');}
+  }).catch(function(e){statusEl.style.color='#ff4444';statusEl.textContent='SAVE ERROR: '+e.message;});
+}
+
+// ── Draw ──────────────────────────────────────────────────────────────
+function draw(){
+  cv.width=window.innerWidth;cv.height=window.innerHeight;
+  ctx.fillStyle='#0a0a0a';ctx.fillRect(0,0,cv.width,cv.height);
+
+  if(!paired||!homeVerts){
+    // Waiting animation
+    const now=Date.now(),gridS=40;
+    for(let x=0;x<cv.width;x+=gridS)for(let y=0;y<cv.height;y+=gridS){
+      const phase=Math.sin(now/1200+x*0.02+y*0.02);
+      ctx.fillStyle='rgba(255,199,44,'+(Math.max(0,phase)*0.04)+')';
+      ctx.fillRect(x,y,gridS-1,gridS-1);
+    }
+    const cx2=cv.width/2,cy2=cv.height/2;
+    ctx.strokeStyle='rgba(255,199,44,0.15)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(cx2-60,cy2);ctx.lineTo(cx2+60,cy2);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(cx2,cy2-60);ctx.lineTo(cx2,cy2+60);ctx.stroke();
+    ctx.beginPath();ctx.arc(cx2,cy2,30,0,Math.PI*2);
+    ctx.strokeStyle='rgba(255,199,44,'+(0.1+0.1*Math.sin(Date.now()/500))+')';ctx.stroke();
+    requestAnimationFrame(draw);return;
+  }
+
+  const now=Date.now(),age=now-spawnTime;
+
+  // Advance tween — fast in mirror mode, slow otherwise
+  if(tweening){
+    tweenT+=mirrorActive?0.06:0.004;
+    if(tweenT>=0.8&&!convergeLocked){
+      convergeLocked=true;
+      sndConverge();
+      statusEl.style.color='rgba(44,255,100,1)';
+      statusEl.textContent='✓ 80% CONVERGED — LOCKED';
+      convergeEl.classList.add('active');
+    }
+    if(tweenT>=1){tweenT=1;tweening=false;}
+  }
+
+  const lv=liveVerts();
+  const wavePhase=(now%4000)/4000;
+
+  for(const cell of CELLS){
+    const t=Math.max(0,Math.min(1,(age-cell.spawnDelay)/500));
+    if(t<=0) continue;
+
+    const sc=cell.refCorners.map(function(p){return r2s(p.x,p.y,lv);});
+    const mx=(sc[0].x+sc[1].x+sc[2].x)/3,my=(sc[0].y+sc[1].y+sc[2].y)/3;
+
+    const breath=(cell.type==='data'||cell.type==='anchor')
+      ?0.88+0.12*Math.sin(now/1100+cell.label*0.18):1;
+
+    // Regiment wave
+    const rowFrac=cell.r/N;
+    const regPulse=Math.max(0,1-Math.abs(wavePhase-rowFrac)*12)*0.35;
+    const a=Math.min(1,t+regPulse);
+
+    let col;
+    switch(cell.type){
+      case 'border':       col=goldToGreen(a,true);break;
+      case 'quiet':        col='rgba(17,17,17,'+(Math.min(1,t*0.9))+')';break;
+      case 'inner-border': col=goldToGreen(a,true);break;
+      case 'inner-quiet':  col='rgba(17,17,17,'+(Math.min(1,t*0.9))+')';break;
+      case 'anchor':       col=cell.dark?goldToGreen(a,true):'rgba(17,17,17,'+(Math.min(1,t*0.9))+')';break;
+      case 'timing':       col=cell.dark?goldToGreen(a,true):'rgba(17,17,17,'+(Math.min(1,t*0.9))+')';break;
+      case 'data':         col=cell.dark?goldToGreen(a,true):'rgba(17,17,17,'+(Math.min(1,t*0.9))+')';break;
+      default: continue;
+    }
+
+    ctx.beginPath();
+    ctx.moveTo(mx+(sc[0].x-mx)*breath,my+(sc[0].y-my)*breath);
+    ctx.lineTo(mx+(sc[1].x-mx)*breath,my+(sc[1].y-my)*breath);
+    ctx.lineTo(mx+(sc[2].x-mx)*breath,my+(sc[2].y-my)*breath);
+    ctx.closePath();ctx.fillStyle=col;ctx.fill();
+    if(cell.type!=='border'&&cell.type!=='inner-border'){
+      ctx.strokeStyle='rgba(255,199,44,0.06)';ctx.lineWidth=0.3;ctx.stroke();
+    }
+  }
+
+  // Outer glow — gold→green as converged
+  if(age>1200){
+    const pulse=0.22+0.14*Math.sin(now/700);
+    const gt=Math.min(1,tweenT*1.25);
+    const gr=Math.round(255*(1-gt)+44*gt),gg=Math.round(199*(1-gt)+255*gt),gb=Math.round(44*(1-gt)+100*gt);
+    ctx.beginPath();ctx.moveTo(lv[0].x,lv[0].y);ctx.lineTo(lv[1].x,lv[1].y);ctx.lineTo(lv[2].x,lv[2].y);ctx.closePath();
+    ctx.strokeStyle='rgba('+gr+','+gg+','+gb+','+pulse+')';ctx.lineWidth=2;
+    ctx.shadowColor='rgba('+gr+','+gg+','+gb+',1)';ctx.shadowBlur=16;ctx.stroke();ctx.shadowBlur=0;
+  }
+
+  // ── Draw pairing nodes A1 B2 C3 ────────────────────────────────────
+  // ── Node 1 — single click-placed dot ──────────────────────────────
+  if(node1){
+    const W=window.innerWidth,H=window.innerHeight;
+    const nx=node1.x*W, ny=node1.y*H;
+    ctx.beginPath(); ctx.arc(nx,ny,16,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,199,44,1)'; ctx.shadowColor='#FFC72C'; ctx.shadowBlur=20; ctx.fill(); ctx.shadowBlur=0;
+    ctx.beginPath(); ctx.arc(nx,ny,26,0,Math.PI*2);
+    ctx.strokeStyle='rgba(255,199,44,0.35)'; ctx.lineWidth=1.5; ctx.stroke();
+    ctx.fillStyle='#000'; ctx.font='bold 10px Courier New';
+    ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('1',nx,ny);
+    ctx.font='6px Courier New'; ctx.fillStyle='rgba(255,199,44,.7)'; ctx.textBaseline='top';
+    ctx.fillText(node1.x+' · '+node1.y, nx, ny+20);
+  }
+
+  requestAnimationFrame(draw);
+}
+
+// ── Poll for new genomes ──────────────────────────────────────────────
+let pollCount=0;
+function showError(msg){statusEl.style.color='#ff4444';statusEl.textContent='✗ '+msg;}
+
+async function poll(){
+  pollCount++;
+  let r;
+  try{r=await fetch('/soul/tricode_save.php?t='+Date.now());}
+  catch(e){showError('NETWORK: '+e.message);return;}
+  if(!r.ok){showError('HTTP '+r.status+' on tricode_save.php');return;}
+  let all;
+  try{all=await r.json();}
+  catch(e){showError('BAD JSON: '+e.message);return;}
+  if(!Array.isArray(all)||!all.length){
+    if(!paired)statusEl.textContent='WAITING FOR PHONE · POLL #'+pollCount;return;
+  }
+  const newest=all.sort(function(a,b){return(b.ts||0)-(a.ts||0);})[0];
+  if(newest.id!==lastId){
+    lastId=newest.id;paired=false;homeVerts=null;
+    setTimeout(function(){renderGenome(newest);},300);
+  }
+  pulseEl.classList.add('on');
+  setTimeout(function(){pulseEl.classList.remove('on');},200);
+  if(!paired)statusEl.textContent='GENOME RECEIVED · POLL #'+pollCount;
+}
+
+setInterval(poll,2000);
+poll();
+draw();
+</script>
+</body>
+</html>

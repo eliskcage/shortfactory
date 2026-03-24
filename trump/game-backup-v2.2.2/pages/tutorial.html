@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Tutorial - TRUMP vs DEEPSTATE</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{
+    height:100%;
+    background:#000;
+    overflow:hidden;
+    font-family:'Press Start 2P',monospace;
+    color:#0f0;
+    user-select:none;
+    -webkit-user-select:none;
+}
+
+/* CRT EFFECT */
+.crt-effect{
+    position:fixed;
+    inset:0;
+    background:repeating-linear-gradient(0deg,rgba(0,255,0,.03) 0px,rgba(0,0,0,.2) 1px,rgba(0,255,0,.03) 2px);
+    pointer-events:none;
+    animation:scanlines 8s linear infinite;
+    z-index:1000;
+}
+
+@keyframes scanlines{
+    0%{transform:translateY(0)}
+    100%{transform:translateY(10px)}
+}
+
+/* VIDEO CONTAINER */
+#video-container{
+    position:fixed;
+    inset:0;
+    display:none;
+    background:#000;
+}
+
+#tutorial-video{
+    width:100%;
+    height:100%;
+    object-fit:contain;
+}
+
+/* BUTTON SCREEN */
+#button-screen{
+    position:fixed;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    gap:30px;
+    background:linear-gradient(to bottom,#001a33,#000);
+    padding:20px;
+}
+
+.title{
+    font-size:clamp(16px,5vw,32px);
+    text-align:center;
+    color:#00ffff;
+    text-shadow:0 0 20px #00ffff,3px 3px 0 #000;
+    margin-bottom:20px;
+    line-height:1.5;
+}
+
+.subtitle{
+    font-size:clamp(10px,3vw,18px);
+    text-align:center;
+    color:#ffff00;
+    text-shadow:0 0 15px #ffff00,2px 2px 0 #000;
+    margin-bottom:40px;
+    animation:pulse 2s infinite;
+}
+
+@keyframes pulse{
+    0%,100%{opacity:1;transform:scale(1)}
+    50%{opacity:0.7;transform:scale(0.98)}
+}
+
+/* THE BIG BLUE BUTTON */
+.tutorial-btn{
+    width:200px;
+    height:200px;
+    background:linear-gradient(135deg,#0066ff,#0033cc);
+    border:6px solid #00ccff;
+    border-radius:20px;
+    cursor:pointer;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:15px;
+    box-shadow:
+        0 0 40px rgba(0,102,255,0.8),
+        inset 0 0 30px rgba(0,204,255,0.3);
+    transition:all 0.2s;
+    position:relative;
+}
+
+.tutorial-btn:active{
+    transform:scale(0.95);
+    box-shadow:
+        0 0 60px rgba(0,102,255,1),
+        inset 0 0 50px rgba(0,204,255,0.5);
+}
+
+.house-icon{
+    font-size:60px;
+    filter:drop-shadow(0 0 10px #fff);
+}
+
+.btn-text{
+    font-size:12px;
+    color:#fff;
+    text-align:center;
+    line-height:1.6;
+    text-shadow:0 0 10px #fff,2px 2px 0 #000;
+    animation:flash 1.5s infinite;
+}
+
+@keyframes flash{
+    0%,100%{opacity:1}
+    50%{opacity:0.5}
+}
+
+.hold-text{
+    position:absolute;
+    bottom:-50px;
+    font-size:9px;
+    color:#00ff00;
+    text-shadow:0 0 10px #00ff00;
+    animation:blink 1s infinite;
+}
+
+@keyframes blink{
+    0%,50%{opacity:1}
+    51%,100%{opacity:0}
+}
+
+/* TIPS SECTION */
+.tips-container{
+    max-width:500px;
+    background:rgba(0,50,100,0.3);
+    border:3px solid #00ffff;
+    padding:20px;
+    border-radius:10px;
+    margin-top:30px;
+}
+
+.tip{
+    font-size:clamp(9px,2.5vw,14px);
+    color:#ffff00;
+    line-height:2;
+    margin:10px 0;
+    text-shadow:0 0 8px #ffff00;
+}
+
+.tip-icon{
+    display:inline-block;
+    margin-right:10px;
+}
+
+/* PROGRESS INDICATOR */
+.progress-ring{
+    position:absolute;
+    top:10px;
+    right:10px;
+    width:50px;
+    height:50px;
+    display:none;
+}
+
+.progress-ring circle{
+    fill:none;
+    stroke:#00ff00;
+    stroke-width:4;
+    transform:rotate(-90deg);
+    transform-origin:50% 50%;
+    stroke-dasharray:126;
+    stroke-dashoffset:126;
+    transition:stroke-dashoffset 2s linear;
+}
+
+.holding .progress-ring{
+    display:block;
+}
+
+.holding .progress-ring circle{
+    stroke-dashoffset:0;
+}
+
+@media(max-width:600px){
+    .tutorial-btn{width:180px;height:180px}
+    .house-icon{font-size:50px}
+    .tips-container{padding:15px}
+}
+</style>
+</head>
+<body>
+
+<!-- CRT SCANLINES -->
+<div class="crt-effect"></div>
+
+<!-- BUTTON SCREEN -->
+<div id="button-screen">
+    <div class="title">
+        🎮 GAME TUTORIAL 🎮
+    </div>
+    
+    <div class="subtitle">
+        LEARN THE BASICS
+    </div>
+    
+    <div class="tutorial-btn" id="tutorialBtn">
+        <svg class="progress-ring">
+            <circle cx="25" cy="25" r="20"></circle>
+        </svg>
+        
+        <div class="house-icon">🏠</div>
+        <div class="btn-text">
+            PRESS<br>TO START
+        </div>
+        <div class="hold-text">
+            HOLD FOR ADVANCED
+        </div>
+    </div>
+    
+    <div class="tips-container">
+        <div class="tip">
+            <span class="tip-icon">💰</span>
+            Green button with BARREL = Get Money
+        </div>
+        <div class="tip">
+            <span class="tip-icon">🏠</span>
+            Use money to buy HOMES
+        </div>
+        <div class="tip">
+            <span class="tip-icon">🎯</span>
+            More homes = More points!
+        </div>
+    </div>
+</div>
+
+<!-- VIDEO CONTAINER -->
+<div id="video-container">
+    <video id="tutorial-video" playsinline>
+        <source id="video-source" src="" type="video/webm">
+    </video>
+</div>
+
+<script>
+const btn = document.getElementById('tutorialBtn');
+const buttonScreen = document.getElementById('button-screen');
+const videoContainer = document.getElementById('video-container');
+const video = document.getElementById('tutorial-video');
+const videoSource = document.getElementById('video-source');
+
+let holdTimer;
+let isHolding = false;
+let hasPlayed = false;
+
+// AUDIO CONTEXT FOR RETRO SOUNDS
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+// LOW VOLUME RETRO GAME MUSIC (SIMPLE LOOP)
+let musicInterval;
+function playRetroMusic(){
+    if(hasPlayed) return;
+    
+    const notes = [262,294,330,349,392,440,494,523];
+    let noteIndex = 0;
+    
+    musicInterval = setInterval(()=>{
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        osc.type = 'square';
+        osc.frequency.value = notes[noteIndex % notes.length];
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        gain.gain.value = 0.03;
+        
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.2);
+        
+        noteIndex++;
+    }, 400);
+}
+
+// PLAY BUTTON PRESS SOUND
+function playPressSound(){
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    
+    osc.type = 'square';
+    osc.frequency.value = 880;
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    gain.gain.value = 0.08;
+    
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.1);
+}
+
+// PLAY HOLD SOUND
+function playHoldSound(){
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    
+    osc.type = 'sawtooth';
+    osc.frequency.value = 440;
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    gain.gain.value = 0.08;
+    
+    osc.start();
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+    osc.stop(audioCtx.currentTime + 0.5);
+}
+
+// START MUSIC ON FIRST INTERACTION
+document.addEventListener('click', playRetroMusic, {once:true});
+document.addEventListener('touchstart', playRetroMusic, {once:true});
+
+// BUTTON PRESS
+btn.addEventListener('mousedown', startHold);
+btn.addEventListener('touchstart', startHold);
+
+btn.addEventListener('mouseup', endHold);
+btn.addEventListener('touchend', endHold);
+btn.addEventListener('mouseleave', endHold);
+
+function startHold(e){
+    e.preventDefault();
+    if(hasPlayed) return;
+    
+    playPressSound();
+    isHolding = true;
+    btn.classList.add('holding');
+    
+    holdTimer = setTimeout(()=>{
+        playHoldSound();
+        playVideo('https://shortfactory.shop/trump/tutorial2.webm');
+    }, 2000);
+}
+
+function endHold(e){
+    e.preventDefault();
+    if(hasPlayed) return;
+    
+    if(holdTimer){
+        clearTimeout(holdTimer);
+    }
+    
+    btn.classList.remove('holding');
+    
+    if(isHolding && !hasPlayed){
+        const holdDuration = 2000;
+        if(holdTimer){
+            playPressSound();
+            playVideo('https://shortfactory.shop/trump/tutorial.webm');
+        }
+    }
+    
+    isHolding = false;
+}
+
+function playVideo(src){
+    hasPlayed = true;
+    if(musicInterval) clearInterval(musicInterval);
+    
+    videoSource.src = src;
+    video.load();
+    
+    buttonScreen.style.display = 'none';
+    videoContainer.style.display = 'block';
+    
+    video.play().catch(err=>{
+        console.log('Autoplay prevented, user interaction required');
+    });
+    
+    video.addEventListener('ended', resetTutorial);
+}
+
+function resetTutorial(){
+    hasPlayed = false;
+    videoContainer.style.display = 'none';
+    buttonScreen.style.display = 'flex';
+    video.removeEventListener('ended', resetTutorial);
+    playRetroMusic();
+}
+</script>
+
+<!-- User Interaction Tracking -->
+<script src="/tracking.js"></script>
+
+<!-- AI Feedback System - disabled (interferes with game UI) -->
+<!-- <script src="/ai_feedback.js"></script> -->
+
+</body>
+</html>

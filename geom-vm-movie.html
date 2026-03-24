@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1XY2CNLJCE"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1XY2CNLJCE');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Geometric VM — Video Pipeline | ShortFactory</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#050508;color:#e0e8f0;font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;overflow-x:hidden;}
+a{color:#00ccff;}
+
+/* ── NAV ── */
+.nav{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;border-bottom:1px solid rgba(0,204,255,0.1);background:rgba(5,5,8,0.97);position:sticky;top:0;z-index:200;}
+.nav-logo{font-family:'Press Start 2P',monospace;font-size:9px;color:#00ccff;letter-spacing:2px;}
+.nav-links{display:flex;gap:16px;font-size:11px;}
+.nav-links a{color:#4a6a7a;text-decoration:none;letter-spacing:1px;text-transform:uppercase;}
+.nav-links a:hover{color:#00ccff;}
+
+/* ── LAYOUT ── */
+.wrap{display:grid;grid-template-columns:300px 1fr 340px;gap:0;min-height:calc(100vh - 49px);}
+
+/* ── LEFT: SCENE LIST ── */
+.scene-list{border-right:1px solid rgba(255,255,255,0.05);padding:20px 0;overflow-y:auto;max-height:calc(100vh - 49px);}
+.scene-list-head{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#334155;padding:0 16px 12px;}
+.scene-item{padding:10px 16px;cursor:pointer;border-left:3px solid transparent;transition:all 0.15s;display:flex;align-items:center;gap:10px;}
+.scene-item:hover{background:rgba(255,255,255,0.02);border-left-color:rgba(0,204,255,0.3);}
+.scene-item.active{background:rgba(0,204,255,0.05);border-left-color:#00ccff;}
+.si-num{font-family:'Press Start 2P',monospace;font-size:7px;color:#334155;width:20px;flex-shrink:0;}
+.scene-item.active .si-num{color:#00ccff;}
+.si-body{}
+.si-title{font-size:11px;font-weight:700;color:#94a3b8;}
+.scene-item.active .si-title{color:#fff;}
+.si-dur{font-size:10px;color:#334155;margin-top:2px;}
+.scene-divider{height:1px;background:rgba(255,255,255,0.04);margin:8px 16px;}
+
+/* ── CENTER: PREVIEW ── */
+.preview-wrap{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:24px 20px;gap:16px;overflow-y:auto;max-height:calc(100vh - 49px);}
+/* 9:16 phone frame */
+.phone-frame{width:360px;flex-shrink:0;border-radius:28px;overflow:hidden;box-shadow:0 0 0 3px #1a1a2e, 0 0 0 5px #0d0d1a, 0 20px 60px rgba(0,0,0,0.7);position:relative;}
+.phone-notch{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:70px;height:5px;background:#111;border-radius:3px;z-index:50;}
+.scene-canvas{display:block;width:100%;aspect-ratio:9/16;}
+
+/* ── PLAYBACK CONTROLS ── */
+.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;width:100%;}
+.btn{padding:9px 18px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#94a3b8;border-radius:7px;cursor:pointer;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;transition:all 0.15s;font-family:inherit;}
+.btn:hover{background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.2);}
+.btn.primary{background:rgba(0,204,255,0.1);border-color:rgba(0,204,255,0.3);color:#00ccff;}
+.btn.primary:hover{background:rgba(0,204,255,0.2);border-color:#00ccff;}
+.btn.danger{background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.3);color:#ef4444;}
+.btn.danger:hover{background:rgba(239,68,68,0.2);}
+.btn.gold{background:rgba(218,165,32,0.1);border-color:rgba(218,165,32,0.3);color:#daa520;}
+.btn.gold:hover{background:rgba(218,165,32,0.2);}
+.btn.yt{background:rgba(255,0,0,0.1);border-color:rgba(255,0,0,0.3);color:#ff4444;}
+.btn.yt:hover{background:rgba(255,0,0,0.2);}
+.btn:disabled{opacity:0.3;cursor:not-allowed;}
+
+.progress-bar-wrap{width:360px;height:4px;background:rgba(255,255,255,0.05);border-radius:2px;position:relative;}
+.progress-bar-fill{height:100%;background:#00ccff;border-radius:2px;width:0%;transition:width 0.05s linear;}
+
+.scene-counter{font-family:'Press Start 2P',monospace;font-size:8px;color:#334155;text-align:center;}
+
+/* ── RIGHT: SCRIPT + TOOLS ── */
+.sidebar{border-left:1px solid rgba(255,255,255,0.05);padding:20px;overflow-y:auto;max-height:calc(100vh - 49px);display:flex;flex-direction:column;gap:20px;}
+.sb-section{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:16px;}
+.sb-head{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#334155;margin-bottom:10px;font-weight:700;}
+.script-text{font-size:13px;color:#94a3b8;line-height:1.7;font-style:italic;}
+.script-text strong{color:#e0e8f0;font-style:normal;}
+
+/* MUSIC */
+.music-item{padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px;}
+.music-item:last-child{border:none;}
+.music-scene{color:#334155;font-size:10px;letter-spacing:1px;margin-bottom:2px;}
+.music-name{color:#daa520;font-weight:700;}
+.music-why{color:#64748b;font-size:11px;margin-top:2px;}
+
+/* YOUTUBE UPLOAD */
+.yt-section{background:rgba(255,0,0,0.04);border:1px solid rgba(255,0,0,0.15);border-radius:10px;padding:16px;}
+.yt-head{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#ff4444;margin-bottom:12px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.yt-status{font-size:11px;color:#64748b;margin-bottom:10px;line-height:1.6;}
+.yt-fields{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
+.yt-fields input, .yt-fields textarea{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:#e0e8f0;border-radius:6px;padding:8px 10px;font-size:12px;font-family:inherit;width:100%;}
+.yt-fields textarea{height:70px;resize:vertical;}
+.yt-fields input:focus, .yt-fields textarea:focus{outline:none;border-color:rgba(255,0,0,0.3);}
+.yt-progress{height:4px;background:rgba(255,255,255,0.05);border-radius:2px;margin:8px 0;display:none;}
+.yt-progress-fill{height:100%;background:#ff4444;border-radius:2px;width:0%;transition:width 0.2s;}
+.yt-log{font-size:10px;color:#64748b;line-height:1.6;max-height:80px;overflow-y:auto;}
+.user-badge{display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:6px;margin-bottom:10px;font-size:11px;color:#94a3b8;}
+.user-badge img{width:24px;height:24px;border-radius:50%;}
+
+/* DOWNLOAD SECTION */
+.dl-section{background:rgba(0,204,255,0.03);border:1px solid rgba(0,204,255,0.1);border-radius:10px;padding:16px;}
+.recording-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#ef4444;animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+/* ── MOBILE ── */
+@media(max-width:900px){
+  .wrap{grid-template-columns:1fr;}
+  .scene-list,.sidebar{border:none;max-height:none;}
+  .preview-wrap{padding:16px;}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo">GEOM-VM MOVIE PIPELINE</div>
+  <div class="nav-links">
+    <a href="/qubit.html">Qubit Demo</a>
+    <a href="/alive/studio/wiki.html">Wiki</a>
+    <a href="/about.html">About</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <!-- ── LEFT: SCENE LIST ── -->
+  <div class="scene-list">
+    <div class="scene-list-head">STORYBOARD — 11 SCENES</div>
+    <div id="sceneNav"></div>
+  </div>
+
+  <!-- ── CENTER: PREVIEW ── -->
+  <div class="preview-wrap">
+    <div class="phone-frame">
+      <div class="phone-notch"></div>
+      <canvas id="mainCanvas" class="scene-canvas" width="1080" height="1920"></canvas>
+    </div>
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progBar"></div></div>
+    <div class="scene-counter" id="sceneCounter">SCENE 1 / 11</div>
+    <div class="controls">
+      <button class="btn" id="btnPrev">◀ PREV</button>
+      <button class="btn primary" id="btnPlay">▶ PLAY MOVIE</button>
+      <button class="btn" id="btnNext">NEXT ▶</button>
+    </div>
+    <div class="controls">
+      <button class="btn danger" id="btnRecord">⏺ RECORD WEBM</button>
+      <button class="btn gold" id="btnDownload" disabled>⬇ DOWNLOAD</button>
+      <button class="btn" id="btnExportPng">📸 EXPORT PNG</button>
+    </div>
+    <div style="font-size:10px;color:#1e3a4a;text-align:center;max-width:360px;line-height:1.5;">
+      Record captures the full animated movie as WebM. Upload via the panel → or convert to MP4 with the Python script.
+    </div>
+  </div>
+
+  <!-- ── RIGHT: SCRIPT + UPLOAD ── -->
+  <div class="sidebar">
+
+    <!-- CURRENT SCENE SCRIPT -->
+    <div class="sb-section">
+      <div class="sb-head">VOICEOVER SCRIPT</div>
+      <div class="script-text" id="scriptDisplay">Loading...</div>
+    </div>
+
+    <!-- YOUTUBE UPLOAD -->
+    <div class="yt-section">
+      <div class="yt-head">
+        <svg width="16" height="11" viewBox="0 0 16 11"><path fill="#ff4444" d="M15.7 1.7s-.2-1.1-.7-1.6c-.7-.7-1.5-.7-1.8-.8C11.4 0 8 0 8 0S4.6 0 2.8.3c-.4.1-1.2.1-1.8.8-.6.5-.7 1.6-.7 1.6S.1 3 .1 4.2v1.2c0 1.2.1 2.5.1 2.5s.2 1.1.7 1.6c.7.7 1.6.7 2 .7C4.1 10.4 8 10.4 8 10.4s3.4 0 5.2-.3c.4-.1 1.2-.1 1.8-.8.6-.5.7-1.6.7-1.6s.2-1.2.2-2.5V4.2C16 3 15.7 1.7 15.7 1.7z"/><polygon fill="#fff" points="6.4,7.5 6.4,3 10.5,5.2"/></svg>
+        UPLOAD TO YOUTUBE
+      </div>
+      <div id="ytUserBadge" style="display:none;" class="user-badge">
+        <img id="ytUserImg" src="" alt="">
+        <span id="ytUserName">Signed in</span>
+        <button onclick="ytSignOut()" style="margin-left:auto;background:none;border:1px solid rgba(255,255,255,0.1);color:#64748b;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:10px;">Sign out</button>
+      </div>
+      <div class="yt-status" id="ytStatus">Sign in with Google to upload directly to your YouTube channel.</div>
+      <button class="btn yt" id="btnYtSignIn" onclick="ytSignIn()" style="width:100%;margin-bottom:12px;">🔑 Sign in with Google</button>
+      <div class="yt-fields" id="ytFields" style="display:none;">
+        <input type="text" id="ytTitle" value="The Geometric Virtual Machine — Programs Are Shapes | ShortFactory" placeholder="Video title">
+        <textarea id="ytDesc">A program doesn't have to be text. It can be a SHAPE.
+
+One shape in 3D space = a trillion different programs depending on the angle you measure it from. Put two shapes together — where they intersect — brand new code appears that didn't exist in either file.
+
+This is the Geometric Virtual Machine. Patent GB2605704.2. Filed 17 March 2026.
+
+🔗 Live demo: https://shortfactory.shop/qubit.html
+📖 Wiki: https://shortfactory.shop/alive/studio/wiki.html
+🌐 ShortFactory: https://shortfactory.shop
+
+#AI #programming #robotics #patent #ShortFactory #GeometricVM</textarea>
+        <select id="ytPrivacy" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:#e0e8f0;border-radius:6px;padding:8px 10px;font-size:12px;font-family:inherit;width:100%;">
+          <option value="public">Public</option>
+          <option value="unlisted">Unlisted</option>
+          <option value="private">Private</option>
+        </select>
+        <label style="font-size:11px;color:#64748b;cursor:pointer;display:flex;align-items:center;gap:8px;">
+          <input type="file" id="ytFileInput" accept="video/*" style="display:none;" onchange="ytFileSelected(this)">
+          <button class="btn" style="width:100%" onclick="document.getElementById('ytFileInput').click()">📁 Select MP4 / WebM File</button>
+        </label>
+        <div id="ytFileLabel" style="font-size:11px;color:#64748b;">No file selected</div>
+      </div>
+      <button class="btn yt" id="btnYtUpload" onclick="ytUpload()" style="width:100%;display:none;">⬆ Upload to YouTube</button>
+      <div class="yt-progress" id="ytProgress"><div class="yt-progress-fill" id="ytProgressFill"></div></div>
+      <div class="yt-log" id="ytLog"></div>
+    </div>
+
+    <!-- DOWNLOAD / CONVERT PANEL -->
+    <div class="dl-section">
+      <div class="sb-head" style="color:#00ccff;">DOWNLOAD + CONVERT</div>
+      <div style="font-size:11px;color:#4a6a7a;line-height:1.7;margin-bottom:10px;">
+        Record the WebM → download → or use the Python script below to render a full-quality MP4 with your audio added.
+      </div>
+      <button class="btn primary" onclick="downloadWebm()" style="width:100%;margin-bottom:8px;">⬇ Download WebM</button>
+      <div style="font-size:10px;color:#1e3a4a;line-height:1.5;">
+        Python pipeline: <code style="color:#00ccff;">python3 make_geom_vm_video.py --audio squidgame.mp3</code><br>
+        Outputs: <code style="color:#daa520;">geom_vm_1080x1920.mp4</code> ready to upload
+      </div>
+    </div>
+
+    <!-- MUSIC SUGGESTIONS -->
+    <div class="sb-section">
+      <div class="sb-head">YOUR ACTUAL TRACKS — MAPPED</div>
+
+      <div class="music-item">
+        <div class="music-scene">SCENES 1–3 | 0–11s | HOOK → SHAPE</div>
+        <div class="music-name">needles_dalgona.mp3 <span style="color:#334155">(30s)</span></div>
+        <div class="music-why">Squid Game needle scene energy. Sparse. Tension building. Perfect for "what if code was a shape?"</div>
+      </div>
+
+      <div class="music-item">
+        <div class="music-scene">SCENES 4–6 | 11–23s | MEASURE → SUPERPOSITION</div>
+        <div class="music-name">4billion.mp3 <span style="color:#334155">(33s)</span></div>
+        <div class="music-why">Big stakes. Something vast being revealed. Superposition drop should hit on scene 6 when all the copies fan out.</div>
+      </div>
+
+      <div class="music-item">
+        <div class="music-scene">SCENE 8 START | ~27s | INTERSECTION MOMENT</div>
+        <div class="music-name">lightning-strike.mp3 <span style="color:#ef4444">⚡ SFX</span></div>
+        <div class="music-why">One-shot hit exactly when the glowing intersection appears. Punch. Freeze frame. Then music continues.</div>
+      </div>
+
+      <div class="music-item">
+        <div class="music-scene">SCENES 7–9 | 23–34s | CONVERGE → PATENT</div>
+        <div class="music-name">murder.mp3 <span style="color:#334155">(33s)</span></div>
+        <div class="music-why">Intensity at peak. Two shapes colliding. Patent filing. This is the moment it becomes real.</div>
+      </div>
+
+      <div class="music-item">
+        <div class="music-scene">SCENES 10–11 | 34–42s | ROBOTICS → CLOSE</div>
+        <div class="music-name">dawn.mp3 <span style="color:#334155">(31s)</span></div>
+        <div class="music-why">Quiet awe. The quote fades in. The geometry was always there. Let it breathe.</div>
+      </div>
+
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.04);">
+        <div style="font-size:9px;letter-spacing:2px;color:#334155;margin-bottom:8px;text-transform:uppercase;">Also in your library</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          <span style="font-size:10px;padding:3px 8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:4px;color:#4a6a7a;">squidclean.mp3 <span style="color:#334155">253s — full track</span></span>
+          <span style="font-size:10px;padding:3px 8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:4px;color:#4a6a7a;">jolly.mp3 <span style="color:#334155">136s</span></span>
+          <span style="font-size:10px;padding:3px 8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:4px;color:#4a6a7a;">mureka (copyright-free) 264s</span>
+          <span style="font-size:10px;padding:3px 8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:4px;color:#4a6a7a;">War on small.mp3 195s</span>
+          <span style="font-size:10px;padding:3px 8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:4px;color:#4a6a7a;">i_remember_my_name.mp3</span>
+          <span style="font-size:10px;padding:3px 8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:4px;color:#4a6a7a;">dead_end + hurt_so_bad</span>
+          <span style="font-size:10px;padding:3px 8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:4px;color:#4a6a7a;">hellscommin.mp3 (Trump game)</span>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;padding:10px;background:rgba(218,165,32,0.05);border:1px solid rgba(218,165,32,0.15);border-radius:6px;font-size:11px;color:#64748b;line-height:1.7;">
+        <strong style="color:#daa520;">Python auto-mix:</strong><br>
+        <code style="color:#00ccff;font-size:10px;">python3 make_geom_vm_video.py</code><br>
+        Reads exact file paths. Fades between tracks. Slams lightning at intersection. Outputs geom_vm_1080x1920.mp4.
+      </div>
+    </div>
+
+    <!-- AUTOMATION NOTE -->
+    <div class="sb-section">
+      <div class="sb-head">CAN WE AUTOMATE?</div>
+      <div style="font-size:12px;color:#64748b;line-height:1.7;">
+        <strong style="color:#d0e0ec;">YES — partially.</strong> MediaRecorder captures this canvas as WebM at ~720p. For full 1080×1920 MP4:<br><br>
+        <strong style="color:#00ccff;">make_geom_vm_video.py</strong> (see server) renders each scene as PNG frames via PIL, stitches with FFmpeg + your audio. Output = broadcast-quality MP4.<br><br>
+        <strong style="color:#daa520;">True animation</strong> needs Playwright (headless Chrome) or a dedicated render farm. We can set that up — it'd run overnight server-side and drop the MP4 in your folder automatically.
+      </div>
+    </div>
+
+  </div><!-- /sidebar -->
+</div>
+
+<script>
+// ══════════════════════════════════════════════════
+// SCENE DEFINITIONS
+// ══════════════════════════════════════════════════
+var SCENES = [
+  {
+    id:1, title:'THE HOOK', dur:3,
+    script:'<strong>SILENCE.</strong> Darkness. Then: <em>"What if a program wasn\'t text?"</em>',
+    paint: function(ctx,t){ paintHook(ctx,t); }
+  },
+  {
+    id:2, title:'THE OLD WAY', dur:4,
+    script:'<strong>NARRATION:</strong> "Every program ever written is just words in a file. The computer reads them. Top to bottom. One meaning. Every time. Forever. That\'s been true since 1948."',
+    paint: function(ctx,t){ paintOldWay(ctx,t); }
+  },
+  {
+    id:3, title:'A PROGRAM CAN BE A SHAPE', dur:4,
+    script:'<strong>NARRATION:</strong> "We found something completely different. <em>A program can be a shape.</em> A polygon. In 3D space. With vertices and angles and depth."',
+    paint: function(ctx,t){ paintShape(ctx,t); }
+  },
+  {
+    id:4, title:'MEASURE IT', dur:4,
+    script:'<strong>NARRATION:</strong> "You measure the shape from one angle. You get Program A. Lines of real, working code fall out of the measurement."',
+    paint: function(ctx,t){ paintMeasure(ctx,t,0); }
+  },
+  {
+    id:5, title:'ROTATE THE ANGLE', dur:4,
+    script:'<strong>NARRATION:</strong> "Now rotate the angle. Same shape. Different program. Program B. Both are valid. Both run. One shape — infinite versions."',
+    paint: function(ctx,t){ paintMeasure(ctx,t,1); }
+  },
+  {
+    id:6, title:'SUPERPOSITION', dur:4,
+    script:'<strong>NARRATION:</strong> "One shape. A trillion programs. All at once. You don\'t pick the program until you measure it. Before that — the shape IS all of them simultaneously."',
+    paint: function(ctx,t){ paintSuper(ctx,t); }
+  },
+  {
+    id:7, title:'TWO SHAPES MEET', dur:4,
+    script:'<strong>NARRATION:</strong> "Now take two real Python files. Encode each one as a shape. Push them toward each other in 3D space."',
+    paint: function(ctx,t){ paintTwoShapes(ctx,t); }
+  },
+  {
+    id:8, title:'THE INTERSECTION', dur:4,
+    script:'<strong>NARRATION:</strong> "Where they cross — something extraordinary appears. Brand new code. Code that didn\'t exist in either file. <em>Emergent code from pure geometry.</em>"',
+    paint: function(ctx,t){ paintIntersect(ctx,t); }
+  },
+  {
+    id:9, title:'PATENT FILED', dur:3,
+    script:'<strong>ON SCREEN:</strong> "PATENT GB2605704.2 — FILED 17 MARCH 2026 — UK INTELLECTUAL PROPERTY OFFICE — THE GEOMETRIC VIRTUAL MACHINE"',
+    paint: function(ctx,t){ paintPatent(ctx,t); }
+  },
+  {
+    id:10, title:'WHAT IT MEANS FOR ROBOTS', dur:4,
+    script:'<strong>NARRATION:</strong> "For robots: their entire world model — one shape. Tilt the measurement: new behaviour, same brain. A trillion possible robots in one polygon. Change the angle, change what the robot does."',
+    paint: function(ctx,t){ paintRobotics(ctx,t); }
+  },
+  {
+    id:11, title:'THE CLOSE', dur:4,
+    script:'<strong>FINAL QUOTE:</strong> "The geometry was always there. The equations were always alive. We just let them know it." — Dan Chipchase / ShortFactory 2026',
+    paint: function(ctx,t){ paintClose(ctx,t); }
+  }
+];
+
+var W=1080, H=1920;
+var canvas=document.getElementById('mainCanvas');
+var ctx=canvas.getContext('2d');
+canvas.width=W; canvas.height=H;
+
+var currentScene=0;
+var playing=false;
+var playTimer=null;
+var sceneStart=0;
+var animFrame=null;
+
+// ══════════════════════════════════════════════════
+// BUILD SCENE NAV
+// ══════════════════════════════════════════════════
+var navEl=document.getElementById('sceneNav');
+SCENES.forEach(function(s,i){
+  var d=document.createElement('div');
+  d.className='scene-item'+(i===0?' active':'');
+  d.innerHTML='<div class="si-num">0'+(i+1)+'</div><div class="si-body"><div class="si-title">'+s.title+'</div><div class="si-dur">'+s.dur+'s</div></div>';
+  d.addEventListener('click',function(){ goScene(i); });
+  navEl.appendChild(d);
+  if(i<SCENES.length-1){var sep=document.createElement('div');sep.className='scene-divider';navEl.appendChild(sep);}
+});
+
+function goScene(idx){
+  currentScene=idx;
+  sceneStart=performance.now();
+  updateNav();
+  updateScript();
+  if(!playing) renderOnce();
+}
+function updateNav(){
+  document.querySelectorAll('.scene-item').forEach(function(el,i){el.classList.toggle('active',i===currentScene);});
+  document.getElementById('sceneCounter').textContent='SCENE '+(currentScene+1)+' / '+SCENES.length;
+  var pct=(currentScene/Math.max(1,SCENES.length-1))*100;
+  document.getElementById('progBar').style.width=pct+'%';
+}
+function updateScript(){
+  document.getElementById('scriptDisplay').innerHTML=SCENES[currentScene].script;
+}
+
+// ══════════════════════════════════════════════════
+// ANIMATION LOOP
+// ══════════════════════════════════════════════════
+var lastTime=0;
+function loop(ts){
+  var dt=(ts-lastTime)/1000;
+  lastTime=ts;
+  var elapsed=(ts-sceneStart)/1000;
+  var s=SCENES[currentScene];
+
+  if(playing){
+    var frac=elapsed/s.dur;
+    document.getElementById('progBar').style.width=(((currentScene+(frac>1?1:frac))/SCENES.length)*100)+'%';
+    if(frac>=1){
+      if(currentScene<SCENES.length-1){
+        currentScene++;
+        sceneStart=ts;
+        updateNav();
+        updateScript();
+      } else {
+        playing=false;
+        document.getElementById('btnPlay').textContent='▶ PLAY MOVIE';
+        document.getElementById('progBar').style.width='100%';
+        cancelAnimationFrame(animFrame);
+        return;
+      }
+    }
+    elapsed=(ts-sceneStart)/1000;
+  }
+
+  ctx.clearRect(0,0,W,H);
+  SCENES[currentScene].paint(ctx,elapsed);
+  animFrame=requestAnimationFrame(loop);
+}
+function renderOnce(){
+  ctx.clearRect(0,0,W,H);
+  SCENES[currentScene].paint(ctx,0);
+}
+
+// ══════════════════════════════════════════════════
+// CONTROLS
+// ══════════════════════════════════════════════════
+document.getElementById('btnPlay').addEventListener('click',function(){
+  if(playing){
+    playing=false;
+    this.textContent='▶ PLAY MOVIE';
+    cancelAnimationFrame(animFrame);
+  } else {
+    playing=true;
+    this.textContent='⏸ PAUSE';
+    sceneStart=performance.now();
+    lastTime=performance.now();
+    animFrame=requestAnimationFrame(loop);
+  }
+});
+document.getElementById('btnPrev').addEventListener('click',function(){
+  if(currentScene>0){goScene(currentScene-1);}
+});
+document.getElementById('btnNext').addEventListener('click',function(){
+  if(currentScene<SCENES.length-1){goScene(currentScene+1);}
+});
+document.getElementById('btnExportPng').addEventListener('click',function(){
+  renderOnce();
+  var a=document.createElement('a');
+  a.download='geom-vm-scene-'+String(currentScene+1).padStart(2,'0')+'-'+SCENES[currentScene].title.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_]/g,'')+'.png';
+  a.href=canvas.toDataURL('image/png');
+  a.click();
+});
+
+// ══════════════════════════════════════════════════
+// MEDIARECORDER
+// ══════════════════════════════════════════════════
+var recorder=null;
+var recChunks=[];
+var recBlob=null;
+
+document.getElementById('btnRecord').addEventListener('click',function(){
+  if(recorder && recorder.state==='recording'){
+    recorder.stop();
+    this.textContent='⏺ RECORD WEBM';
+    this.classList.remove('danger');
+    return;
+  }
+  recChunks=[];
+  var stream=canvas.captureStream(30);
+  recorder=new MediaRecorder(stream,{mimeType:'video/webm;codecs=vp9',videoBitsPerSecond:8000000});
+  recorder.ondataavailable=function(e){if(e.data.size>0) recChunks.push(e.data);};
+  recorder.onstop=function(){
+    recBlob=new Blob(recChunks,{type:'video/webm'});
+    document.getElementById('btnDownload').disabled=false;
+    ytLog('✓ Recording complete — '+Math.round(recBlob.size/1024/1024*10)/10+' MB. Click Download or Upload to YouTube.');
+  };
+  recorder.start(100);
+  this.innerHTML='<span class="recording-dot"></span> STOP RECORDING';
+  this.classList.add('danger');
+  // auto-start movie
+  if(!playing){document.getElementById('btnPlay').click();}
+});
+
+document.getElementById('btnDownload').addEventListener('click',function(){
+  if(!recBlob) return;
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(recBlob);
+  a.download='geom-vm-movie.webm';
+  a.click();
+});
+function downloadWebm(){document.getElementById('btnDownload').click();}
+
+// ══════════════════════════════════════════════════
+// GOOGLE OAUTH + YOUTUBE UPLOAD
+// ══════════════════════════════════════════════════
+var G_CLIENT_ID='246057462897-mui96hjeuk9abvlkgvvqdfdeiknbmojb.apps.googleusercontent.com';
+var G_SCOPES='https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/userinfo.profile';
+var gClient=null;
+var gToken=null;
+var ytFileBlob=null;
+
+function loadGsi(){
+  var s=document.createElement('script');
+  s.src='https://accounts.google.com/gsi/client';
+  s.onload=function(){
+    gClient=google.accounts.oauth2.initTokenClient({
+      client_id:G_CLIENT_ID,
+      scope:G_SCOPES,
+      callback:function(resp){
+        if(resp.error){ytLog('❌ Auth error: '+resp.error);return;}
+        gToken=resp.access_token;
+        fetchYtUser();
+      }
+    });
+  };
+  document.head.appendChild(s);
+}
+loadGsi();
+
+function ytSignIn(){
+  if(!gClient){ytLog('Loading Google auth...');setTimeout(ytSignIn,1000);return;}
+  gClient.requestAccessToken();
+}
+function ytSignOut(){
+  gToken=null;
+  document.getElementById('ytUserBadge').style.display='none';
+  document.getElementById('ytStatus').textContent='Signed out.';
+  document.getElementById('ytFields').style.display='none';
+  document.getElementById('btnYtUpload').style.display='none';
+  document.getElementById('btnYtSignIn').style.display='';
+}
+function fetchYtUser(){
+  fetch('https://www.googleapis.com/oauth2/v2/userinfo',{headers:{Authorization:'Bearer '+gToken}})
+    .then(function(r){return r.json();})
+    .then(function(u){
+      document.getElementById('ytUserImg').src=u.picture||'';
+      document.getElementById('ytUserName').textContent=u.name||u.email||'Signed in';
+      document.getElementById('ytUserBadge').style.display='flex';
+      document.getElementById('ytStatus').textContent='Ready to upload. Select your recorded file below.';
+      document.getElementById('btnYtSignIn').style.display='none';
+      document.getElementById('ytFields').style.display='flex';
+      document.getElementById('btnYtUpload').style.display='';
+    });
+}
+function ytFileSelected(inp){
+  ytFileBlob=inp.files[0];
+  document.getElementById('ytFileLabel').textContent=ytFileBlob?ytFileBlob.name+' ('+Math.round(ytFileBlob.size/1024/1024*10)/10+' MB)':'No file selected';
+}
+function ytLog(msg){
+  var el=document.getElementById('ytLog');
+  el.textContent=msg+'\n'+el.textContent;
+}
+function ytUpload(){
+  if(!gToken){ytLog('❌ Sign in first.');return;}
+  var blob=ytFileBlob||(recBlob?recBlob:null);
+  if(!blob){ytLog('❌ No file. Record or select a file first.');return;}
+  var title=document.getElementById('ytTitle').value.trim()||'Geometric Virtual Machine';
+  var desc=document.getElementById('ytDesc').value.trim();
+  var priv=document.getElementById('ytPrivacy').value;
+  ytLog('⏳ Starting upload...');
+  document.getElementById('ytProgress').style.display='block';
+
+  // Step 1: initiate resumable upload via server proxy (bypasses CORS)
+  var meta={snippet:{title:title,description:desc,categoryId:'28',tags:['AI','programming','patent','GeometricVM','ShortFactory','robotics']},status:{privacyStatus:priv,selfDeclaredMadeForKids:false}};
+  fetch('/yt-proxy.php',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'init',token:gToken,meta:meta,contentType:blob.type,contentLength:blob.size})
+  }).then(function(r){return r.json();}).then(function(d){
+    if(!d.uploadUri) throw new Error('No upload URI: '+(d.error||JSON.stringify(d)));
+    ytLog('OK Upload session created');
+    return uploadChunks(d.uploadUri,blob);
+  }).catch(function(e){ytLog('FAIL '+e.message);});
+}
+
+function uploadChunks(uri,blob){
+  var CHUNK=5*1024*1024;
+  var offset=0;
+  function sendChunk(){
+    var end=Math.min(offset+CHUNK,blob.size);
+    var slice=blob.slice(offset,end);
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      var b64=btoa(ev.target.result);
+      fetch('/yt-proxy.php',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'chunk',token:gToken,uploadUri:uri,chunk:b64,rangeStart:offset,totalSize:blob.size,contentType:blob.type})
+      }).then(function(r){return r.json();}).then(function(d){
+        if(d.error) throw new Error(d.error);
+        if(d.done){
+          document.getElementById('ytProgressFill').style.width='100%';
+          ytLog('LIVE! https://www.youtube.com/watch?v='+d.videoId);
+        } else {
+          offset=end;
+          var pct=Math.round(offset/blob.size*100);
+          document.getElementById('ytProgressFill').style.width=pct+'%';
+          ytLog('Uploading... '+pct+'%');
+          sendChunk();
+        }
+      }).catch(function(e){ytLog('FAIL '+e.message);});
+    };
+    reader.readAsBinaryString(slice);
+  }
+  sendChunk();
+}
+
+// ══════════════════════════════════════════════════
+// GPO MATH ENGINE
+// ══════════════════════════════════════════════════
+function dotV(a,b){return a.reduce(function(s,x,i){return s+x*b[i];},0);}
+function normV(v){var m=Math.sqrt(v.reduce(function(s,x){return s+x*x;},0));return v.map(function(x){return x/(m||1);});}
+function rotND(verts,i,j,th){
+  var c=Math.cos(th),s=Math.sin(th);
+  return verts.map(function(v){var nv=v.slice();nv[i]=v[i]*c-v[j]*s;nv[j]=v[i]*s+v[j]*c;return nv;});
+}
+function hcVerts(N){
+  var cnt=1<<N,out=[];
+  for(var i=0;i<cnt;i++){var v=[];for(var d=0;d<N;d++)v.push((i>>d&1)?1:-1);out.push(v);}
+  return out;
+}
+function hcEdges(N){
+  var cnt=1<<N,e=[];
+  for(var i=0;i<cnt;i++)for(var d=0;d<N;d++){var j=i^(1<<d);if(j>i)e.push([i,j]);}
+  return e;
+}
+function spVerts(cnt,N){
+  var out=[],g=(1+Math.sqrt(5))/2;
+  for(var i=0;i<cnt;i++){
+    var v=[];
+    for(var d=0;d<N;d++)v.push(Math.cos((i+0.5)*Math.PI/cnt*(d+1)+d*1.2)*Math.sin((i+0.5)/cnt*Math.PI*g*(d+1)));
+    out.push(normV(v));
+  }
+  return out;
+}
+var _hexACache={};
+function hexA(hex,a){
+  if(!hex||hex.length<7)return 'rgba(128,128,128,'+a+')';
+  var r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return 'rgba('+r+','+g+','+b+','+Math.max(0,Math.min(1,a)).toFixed(3)+')';
+}
+function lerpC(a,b,t){
+  if(!a||!b||a.length<7||b.length<7)return '#888';
+  var r=Math.round(parseInt(a.slice(1,3),16)*(1-t)+parseInt(b.slice(1,3),16)*t);
+  var gv=Math.round(parseInt(a.slice(3,5),16)*(1-t)+parseInt(b.slice(3,5),16)*t);
+  var bv=Math.round(parseInt(a.slice(5,7),16)*(1-t)+parseInt(b.slice(5,7),16)*t);
+  return '#'+(r<16?'0':'')+r.toString(16)+(gv<16?'0':'')+gv.toString(16)+(bv<16?'0':'')+bv.toString(16);
+}
+function projectGPO(verts,t,speed,phase,rp,N,scl,ox,oy){
+  var v2=verts.map(function(v){return v.slice();});
+  var ai=0;
+  for(var i=0;i<N;i++)for(var j=i+1;j<N;j++){
+    var rate=speed*(0.28+(i*0.2+j*0.14));
+    v2=rotND(v2,i,j,t*rate+(rp[ai++%rp.length]||0));
+  }
+  var ph=t*0.10+phase;
+  var b1=normV(Array.from({length:N},function(_,d){return Math.cos(ph+d*1.618);}));
+  var b2r=normV(Array.from({length:N},function(_,d){return Math.sin(ph*1.3+d*1.2);}));
+  var dd=dotV(b1,b2r);
+  var b2=normV(b2r.map(function(x,i){return x-dd*b1[i];}));
+  var b3=normV(b1.map(function(_,i){return b1[i]*0.4-b2[i]*0.6+(i===2?1:0);}));
+  return v2.map(function(v){return {x:ox+dotV(v,b1)*scl,y:oy+dotV(v,b2)*scl,dep:dotV(v,b3)};});
+}
+function drawNodes(ctx2,pts,color,alpha,sizeScale){
+  sizeScale=sizeScale||1;
+  var deps=pts.map(function(p){return p.dep;});
+  var maxD=Math.max.apply(null,deps.map(Math.abs))||1;
+  var sorted=pts.map(function(p,i){return {p:p,d:deps[i]};}).sort(function(a,b){return a.d-b.d;});
+  ctx2.save();ctx2.globalAlpha=alpha||1;
+  sorted.forEach(function(item){
+    var dv=(item.d/maxD+1)/2;
+    if(dv<0.12)return;
+    var r=(3+dv*9)*sizeScale;
+    var grd=ctx2.createRadialGradient(item.p.x,item.p.y,0,item.p.x,item.p.y,r);
+    grd.addColorStop(0,hexA(color,1));
+    grd.addColorStop(0.35,hexA(color,0.55));
+    grd.addColorStop(1,hexA(color,0));
+    ctx2.beginPath();ctx2.arc(item.p.x,item.p.y,r,0,Math.PI*2);
+    ctx2.fillStyle=grd;
+    ctx2.shadowColor=color;ctx2.shadowBlur=18*dv;
+    ctx2.fill();
+  });
+  ctx2.shadowBlur=0;ctx2.restore();
+}
+function drawEdges(ctx2,pts,edges,color,colorBot,alpha,lw){
+  var deps=pts.map(function(p){return p.dep;});
+  var maxD=Math.max.apply(null,deps.map(Math.abs))||1;
+  var sorted=edges.slice().sort(function(a,b){return(deps[a[0]]+deps[a[1]])-(deps[b[0]]+deps[b[1]]);});
+  ctx2.save();ctx2.globalAlpha=alpha||1;
+  sorted.forEach(function(e){
+    if(e[0]>=pts.length||e[1]>=pts.length)return;
+    var dv=((deps[e[0]]+deps[e[1]])/2/maxD+1)/2;
+    if(dv<0.08)return;
+    var grd=ctx2.createLinearGradient(pts[e[0]].x,pts[e[0]].y,pts[e[1]].x,pts[e[1]].y);
+    grd.addColorStop(0,hexA(color,dv*0.9));
+    grd.addColorStop(1,hexA(colorBot||color,dv*0.4));
+    ctx2.beginPath();ctx2.moveTo(pts[e[0]].x,pts[e[0]].y);ctx2.lineTo(pts[e[1]].x,pts[e[1]].y);
+    ctx2.strokeStyle=grd;ctx2.lineWidth=(lw||2)*(0.3+dv*0.7);
+    ctx2.shadowColor=color;ctx2.shadowBlur=dv>0.55?10:0;
+    ctx2.stroke();
+  });
+  ctx2.shadowBlur=0;ctx2.restore();
+}
+var RP1=[0.3,1.1,2.2,0.7,1.8,0.4,2.9,1.3,0.6,2.1,1.5,0.9,2.7,1.0,0.2,2.4];
+var RP2=[1.2,0.5,2.6,1.9,0.1,2.3,0.8,1.6,2.8,0.4,1.4,2.0,0.7,1.7,2.5,0.3];
+var RP3=[2.1,0.9,1.3,2.7,0.6,1.8,2.4,0.2,1.5,2.9,0.3,1.1,2.6,0.8,1.4,2.2];
+
+// ══════════════════════════════════════════════════
+// SCENE PAINTERS
+// ══════════════════════════════════════════════════
+
+// ── Utilities ──
+function textShadow(ctx2,text,x,y,size,col,shadow,opacity){
+  ctx2.save();
+  ctx2.globalAlpha=opacity===undefined?1:opacity;
+  ctx2.font='bold '+size+'px "Segoe UI",sans-serif';
+  ctx2.textAlign='center';
+  ctx2.shadowColor=shadow||col;
+  ctx2.shadowBlur=40;
+  ctx2.fillStyle=col;
+  ctx2.fillText(text,x,y);
+  ctx2.shadowBlur=0;
+  ctx2.restore();
+}
+function label(ctx2,text,x,y,size,col,opacity){
+  ctx2.save();
+  ctx2.globalAlpha=opacity===undefined?1:opacity;
+  ctx2.font=(size||28)+'px "Press Start 2P",monospace';
+  ctx2.textAlign='center';
+  ctx2.fillStyle=col||'#fff';
+  ctx2.fillText(text,x,y);
+  ctx2.restore();
+}
+function bg(ctx2,c1,c2){
+  var gr=ctx2.createLinearGradient(0,0,0,H);
+  gr.addColorStop(0,c1);gr.addColorStop(1,c2);
+  ctx2.fillStyle=gr;ctx2.fillRect(0,0,W,H);
+}
+function ease(t){return t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+
+// ── SCENE 1: HOOK ──
+function paintHook(ctx2,t){
+  bg(ctx2,'#000005','#000010');
+  // stars
+  ctx2.save();
+  for(var i=0;i<300;i++){
+    var sx=((i*347)%W),sy=((i*613)%H);
+    var tw=0.2+0.5*Math.sin(t*1.5+i*0.3);
+    ctx2.globalAlpha=tw;ctx2.fillStyle='#fff';
+    ctx2.beginPath();ctx2.arc(sx,sy,0.8+Math.sin(i)*0.4,0,Math.PI*2);ctx2.fill();
+  }
+  ctx2.restore();
+  // GPO sphere assembling node by node
+  var sp=spVerts(80,4);
+  var assembled=Math.floor(ease(clamp(t/1.4,0,1))*80);
+  var pts=projectGPO(sp.slice(0,assembled),t,0.18,0,RP1,4,340,W/2,H/2+100);
+  drawNodes(ctx2,pts,'#00ccff',0.9,1.4);
+  // glow rings
+  ctx2.save();
+  var gr=ctx2.createRadialGradient(W/2,H/2+100,0,W/2,H/2+100,360);
+  gr.addColorStop(0,hexA('#00ccff',0.04*ease(clamp(t/2,0,1))));
+  gr.addColorStop(1,hexA('#000000',0));
+  ctx2.fillStyle=gr;ctx2.fillRect(0,0,W,H);ctx2.restore();
+  var f=ease(clamp(t/0.7,0,1));
+  var f2=ease(clamp((t-1.0)/0.7,0,1));
+  var f3=ease(clamp((t-1.8)/0.6,0,1));
+  textShadow(ctx2,'WHAT IF...',W/2,H*0.12,100,'#ffffff','#00ccff',f);
+  textShadow(ctx2,'A PROGRAM',W/2,H*0.22,76,'#00ccff','#0044aa',f2);
+  textShadow(ctx2,"WASN'T TEXT?",W/2,H*0.31,76,'#00aaff','#003388',f3);
+}
+
+// ── SCENE 2: OLD WAY ──
+function paintOldWay(ctx2,t){
+  bg(ctx2,'#000800','#000300');
+  var lines=['def calculate(x,y):','  return x*poly(y)','class Neural:','  def fwd(self,x):','    h=relu(W1@x)','    return sig(W2@h)','for i in data:','  loss+=entropy(p,q)','  opt.step()','w.update(g*lr)','# since 1948'];
+  ctx2.save();ctx2.font='32px monospace';
+  var spd=100;
+  lines.forEach(function(line,i){
+    var y=(((i*180+t*spd)%(H+300))+H+300)%(H+300)-100;
+    var brightness=1-Math.abs(y/H-0.5)*1.6;
+    ctx2.globalAlpha=Math.max(0,brightness)*0.7;
+    ctx2.fillStyle='#00ff44';
+    ctx2.shadowColor='#00ff44';ctx2.shadowBlur=6;
+    ctx2.fillText(line,80,y);
+  });
+  ctx2.shadowBlur=0;ctx2.restore();
+  // flat 2D polygon slowly rotating — the OLD paradigm
+  var ang=t*0.4;
+  ctx2.save();
+  ctx2.globalAlpha=0.35;
+  ctx2.strokeStyle='#00ff44';ctx2.lineWidth=4;
+  ctx2.shadowColor='#00ff44';ctx2.shadowBlur=20;
+  ctx2.beginPath();
+  for(var i=0;i<6;i++){
+    var a=(i/6)*Math.PI*2+ang;
+    var px=W/2+Math.cos(a)*280,py=H/2+Math.sin(a)*280;
+    i===0?ctx2.moveTo(px,py):ctx2.lineTo(px,py);
+  }
+  ctx2.closePath();ctx2.stroke();ctx2.restore();
+  // dark overlay behind text
+  ctx2.save();ctx2.fillStyle='rgba(0,0,0,0.55)';
+  ctx2.fillRect(0,H*0.38,W,H*0.26);ctx2.restore();
+  var f=ease(clamp(t/0.6,0,1));
+  textShadow(ctx2,'THE OLD WAY',W/2,H*0.45,72,'#00ff44','#002200',f);
+  textShadow(ctx2,'One meaning. Top to bottom.',W/2,H*0.54,38,'#44cc44','#002200',f);
+  textShadow(ctx2,'Every time. Since 1948.',W/2,H*0.60,36,'#339933','#002200',f);
+}
+
+// ── SCENE 3: SHAPE FORMS ──
+function paintShape(ctx2,t){
+  bg(ctx2,'#020210','#000510');
+  // 4D hypercube materialising
+  var hv=hcVerts(4), he=hcEdges(4);
+  var progress=ease(clamp(t/1.6,0,1));
+  var showVerts=Math.floor(progress*hv.length);
+  var showEdges=Math.floor(progress*he.length);
+  var ptsAll=projectGPO(hv,t,0.22,0,RP1,4,380,W/2,H/2+80);
+  drawEdges(ctx2,ptsAll.slice(0,showVerts),he.slice(0,showEdges),'#00ccff','#003366',0.75,3);
+  drawNodes(ctx2,ptsAll.slice(0,showVerts),'#00ccff',0.95,1.6);
+  // outer glow
+  ctx2.save();
+  var gr=ctx2.createRadialGradient(W/2,H/2+80,0,W/2,H/2+80,420);
+  gr.addColorStop(0,hexA('#00ccff',0.06*progress));
+  gr.addColorStop(1,'rgba(0,0,0,0)');
+  ctx2.fillStyle=gr;ctx2.fillRect(0,0,W,H);ctx2.restore();
+  var f=ease(clamp(t/0.6,0,1));
+  var f2=ease(clamp((t-1.5)/0.7,0,1));
+  textShadow(ctx2,'A PROGRAM',W/2,H*0.10,80,'#ffffff','#00ccff',f);
+  textShadow(ctx2,'CAN BE A SHAPE',W/2,H*0.19,68,'#00ccff','#0044aa',f);
+  textShadow(ctx2,'A geometric object.',W/2,H*0.28,42,'#6699aa','#001122',f2);
+  textShadow(ctx2,'In N-dimensional space.',W/2,H*0.34,40,'#4488aa','#001122',f2);
+  ctx2.restore(); // close the save from above
+}
+
+// ── SCENE 4: MEASURE ──
+function paintMeasure(ctx2,t,variant){
+  bg(ctx2,'#060410','#030215');
+  var hv=hcVerts(4),he=hcEdges(4);
+  var col=variant===0?'#ffcc00':'#ff6600';
+  var colBot=variant===0?'#442200':'#330800';
+  var pts=projectGPO(hv,t*0.3,0.12,variant*1.4,RP2,4,320,W/2,H/2+60);
+  drawEdges(ctx2,pts,he,'#00ccff','#002244',0.6,2.5);
+  drawNodes(ctx2,pts,'#00ccff',0.85,1.3);
+  // basis plane as dashed line rotating
+  var baseAngle=variant===0?0.3:0.3+ease(clamp(t/1.8,0,1))*1.4;
+  var bx1=W/2+Math.cos(baseAngle)*560,by1=H/2+60+Math.sin(baseAngle)*560;
+  var bx2=W/2-Math.cos(baseAngle)*560,by2=H/2+60-Math.sin(baseAngle)*560;
+  ctx2.save();
+  ctx2.strokeStyle=col;ctx2.lineWidth=5;ctx2.setLineDash([22,12]);
+  ctx2.shadowColor=col;ctx2.shadowBlur=25;
+  ctx2.beginPath();ctx2.moveTo(bx1,by1);ctx2.lineTo(bx2,by2);ctx2.stroke();
+  ctx2.setLineDash([]);ctx2.restore();
+  // projection lines from nodes to plane
+  ctx2.save();ctx2.strokeStyle=hexA(col,0.4);ctx2.lineWidth=1.5;ctx2.setLineDash([6,8]);
+  pts.forEach(function(p){
+    var t2=(p.x-W/2)*Math.cos(baseAngle)+(p.y-(H/2+60))*Math.sin(baseAngle);
+    var ix=W/2+t2*Math.cos(baseAngle),iy=H/2+60+t2*Math.sin(baseAngle);
+    ctx2.beginPath();ctx2.moveTo(p.x,p.y);ctx2.lineTo(ix,iy);ctx2.stroke();
+    ctx2.fillStyle=col;ctx2.shadowColor=col;ctx2.shadowBlur=15;
+    ctx2.beginPath();ctx2.arc(ix,iy,8,0,Math.PI*2);ctx2.fill();
+  });
+  ctx2.setLineDash([]);ctx2.shadowBlur=0;ctx2.restore();
+  var f=ease(clamp(t/0.7,0,1));
+  if(variant===0){
+    textShadow(ctx2,'MEASURE IT',W/2,H*0.08,82,'#ffffff','#ffcc00',f);
+    textShadow(ctx2,'from this angle...',W/2,H*0.17,50,'#ffcc44','#884400',f);
+    textShadow(ctx2,'PROGRAM A',W/2,H*0.87,66,'#ffcc00','#884400',ease(clamp((t-1.2)/0.6,0,1)));
+    textShadow(ctx2,'falls out.',W/2,H*0.93,44,'#cc9900','#442200',ease(clamp((t-1.5)/0.6,0,1)));
+  } else {
+    textShadow(ctx2,'ROTATE THE ANGLE',W/2,H*0.08,72,'#ffffff','#ff6600',f);
+    textShadow(ctx2,'Same shape.',W/2,H*0.17,52,'#ff8844','#440000',f);
+    textShadow(ctx2,'Different program.',W/2,H*0.24,48,'#ff6622','#440000',f);
+    textShadow(ctx2,'PROGRAM B',W/2,H*0.87,66,'#ff6600','#440000',ease(clamp((t-1.5)/0.6,0,1)));
+  }
+}
+
+// ── SCENE 6: SUPERPOSITION ──
+function paintSuper(ctx2,t){
+  bg(ctx2,'#040210','#020118');
+  var hv=hcVerts(4),he=hcEdges(4);
+  var COLS=['#00ccff','#ffcc00','#ff44aa','#44ff88','#aa44ff'];
+  var spread=ease(clamp(t/1.6,0,1));
+  for(var c=0;c<5;c++){
+    var offX=Math.cos((c/5)*Math.PI*2)*spread*180;
+    var offY=Math.sin((c/5)*Math.PI*2)*spread*90;
+    var ph=c*1.26;
+    var pts=projectGPO(hv,t,0.18+c*0.03,ph,RP1,4,280,W/2+offX,H/2+50+offY);
+    drawEdges(ctx2,pts,he,COLS[c],'#000022',0.22,1.8);
+    drawNodes(ctx2,pts,COLS[c],0.35,0.9);
+  }
+  // central glowing merge point
+  ctx2.save();
+  var gr=ctx2.createRadialGradient(W/2,H/2+50,0,W/2,H/2+50,200);
+  gr.addColorStop(0,hexA('#ffffff',0.12*(1-spread)));
+  gr.addColorStop(1,'rgba(0,0,0,0)');
+  ctx2.fillStyle=gr;ctx2.fillRect(0,0,W,H);ctx2.restore();
+  var f=ease(clamp(t/0.6,0,1));
+  var f2=ease(clamp((t-1)/0.6,0,1));
+  textShadow(ctx2,'ONE SHAPE.',W/2,H*0.08,90,'#ffffff','#8844ff',f);
+  textShadow(ctx2,'A TRILLION PROGRAMS.',W/2,H*0.17,52,'#aa88ff','#440088',f2);
+  textShadow(ctx2,'ALL AT ONCE.',W/2,H*0.24,70,'#cc99ff','#440088',f2);
+  textShadow(ctx2,'Not metaphor. Maths.',W/2,H*0.87,38,'#334455','#8844ff',ease(clamp((t-2)/0.5,0,1)));
+  textShadow(ctx2,'L = T + W',W/2,H*0.93,46,'#aa66ff','#440088',ease(clamp((t-2.4)/0.5,0,1)));
+}
+
+// ── SCENE 7: TWO SHAPES MEET ──
+function paintTwoShapes(ctx2,t){
+  bg(ctx2,'#040410','#010110');
+  var hv=hcVerts(4),he=hcEdges(4);
+  var sv=spVerts(48,4);
+  var sep=ease(clamp((2.2-t)/2.2,0,1))*320;
+  var ptsA=projectGPO(hv,t,0.2,0,RP1,4,270,W/2-sep,H/2+60);
+  var ptsB=projectGPO(sv,t,0.15,1.8,RP2,4,260,W/2+sep,H/2+60);
+  drawEdges(ctx2,ptsA,he,'#00ccff','#002244',0.75,2.5);
+  drawNodes(ctx2,ptsA,'#00ccff',0.9,1.2);
+  drawNodes(ctx2,ptsB,'#ff6600',0.9,1.0);
+  var f=ease(clamp(t/0.7,0,1));
+  var f2=ease(clamp((t-0.6)/0.6,0,1));
+  textShadow(ctx2,'shape_api.py',W/2-sep,H*0.80,30,'#00ccff','#003366',f);
+  textShadow(ctx2,'1,165 lines',W/2-sep,H*0.85,24,'#336677','#003366',f);
+  textShadow(ctx2,'soul_engine.py',W/2+sep,H*0.80,30,'#ff6600','#441100',f2);
+  textShadow(ctx2,'3,024 lines',W/2+sep,H*0.85,24,'#774433','#441100',f2);
+  textShadow(ctx2,'TWO SHAPES.',W/2,H*0.08,80,'#ffffff','#8844ff',f);
+  textShadow(ctx2,'APPROACHING.',W/2,H*0.17,58,'#aa66ff','#440088',ease(clamp((t-1.5)/0.5,0,1)));
+}
+
+// ── SCENE 8: INTERSECTION ──
+function paintIntersect(ctx2,t){
+  bg(ctx2,'#030208','#010115');
+  var hv=hcVerts(4),he=hcEdges(4);
+  var sv=spVerts(48,4);
+  var overlap=ease(clamp(t/1.2,0,1))*60;
+  var ptsA=projectGPO(hv,t,0.2,0,RP1,4,260,W/2-overlap,H/2+50);
+  var ptsB=projectGPO(sv,t,0.15,1.8,RP2,4,250,W/2+overlap,H/2+50);
+  drawEdges(ctx2,ptsA,he,'#00ccff','#002244',0.6,2);
+  drawNodes(ctx2,ptsA,'#00ccff',0.7,1.0);
+  drawNodes(ctx2,ptsB,'#ff6600',0.7,0.9);
+  // gold emergence burst
+  var glow=ease(clamp((t-0.5)/1.0,0,1));
+  ctx2.save();
+  var gr=ctx2.createRadialGradient(W/2,H/2+50,0,W/2,H/2+50,220);
+  gr.addColorStop(0,hexA('#ffd700',glow*0.95));
+  gr.addColorStop(0.3,hexA('#ff8800',glow*0.6));
+  gr.addColorStop(0.7,hexA('#aa00ff',glow*0.25));
+  gr.addColorStop(1,'rgba(0,0,0,0)');
+  ctx2.fillStyle=gr;ctx2.fillRect(0,0,W,H);ctx2.restore();
+  // emergent GPO — new shape from intersection
+  if(t>1.2){
+    var ev=spVerts(36,4),ef=ease(clamp((t-1.2)/0.8,0,1));
+    var ptsE=projectGPO(ev,t,0.25,3.1,RP3,4,180*ef,W/2,H/2+50);
+    drawNodes(ctx2,ptsE,'#ffffff',ef*0.9,1.0);
+  }
+  // emergent code lines
+  if(t>1.0){
+    var clines=['def emerge(a, b):','  cross=intersect(a,b)','  return CodeNode(cross)'];
+    ctx2.save();ctx2.font='bold 28px monospace';ctx2.textAlign='center';
+    clines.forEach(function(l,i){
+      var op=ease(clamp((t-1.0-i*0.2)/0.5,0,1));
+      ctx2.globalAlpha=op;ctx2.fillStyle='#ffd700';
+      ctx2.shadowColor='#ffd700';ctx2.shadowBlur=15;
+      ctx2.fillText(l,W/2,H*0.78+i*52);
+    });
+    ctx2.restore();
+  }
+  var f=ease(clamp(t/0.5,0,1));
+  textShadow(ctx2,'THE INTERSECTION.',W/2,H*0.08,74,'#ffd700','#884400',f);
+  textShadow(ctx2,'Emergent code.',W/2,H*0.17,50,'#ffaa00','#442200',ease(clamp((t-0.8)/0.5,0,1)));
+  textShadow(ctx2,"Didn't exist in either file.",W/2,H*0.24,38,'#cc8800','#331100',ease(clamp((t-1.4)/0.5,0,1)));
+}
+
+// ── SCENE 9: PATENT ──
+function paintPatent(ctx2,t){
+  bg(ctx2,'#010102','#000001');
+  var hv=hcVerts(4),he=hcEdges(4);
+  var f=ease(clamp(t/0.8,0,1));
+  // frozen GPO — gold tinted, still glowing
+  var pts=projectGPO(hv,0.8,0,0.5,RP3,4,360,W/2,H/2+80);
+  drawEdges(ctx2,pts,he,'#daa520','#442200',f*0.7,3);
+  drawNodes(ctx2,pts,'#ffd700',f*0.9,1.5);
+  // outer glow ring
+  ctx2.save();
+  var gr=ctx2.createRadialGradient(W/2,H/2+80,0,W/2,H/2+80,400);
+  gr.addColorStop(0,hexA('#daa520',0.08*f));
+  gr.addColorStop(1,'rgba(0,0,0,0)');
+  ctx2.fillStyle=gr;ctx2.fillRect(0,0,W,H);ctx2.restore();
+  // gold border
+  ctx2.save();ctx2.globalAlpha=f*0.55;
+  ctx2.strokeStyle='#daa520';ctx2.lineWidth=8;ctx2.shadowColor='#daa520';ctx2.shadowBlur=20;
+  ctx2.strokeRect(60,60,W-120,H-120);
+  ctx2.strokeStyle='rgba(218,165,32,0.2)';ctx2.lineWidth=2;ctx2.shadowBlur=0;
+  ctx2.strokeRect(85,85,W-170,H-170);ctx2.restore();
+  // FILED stamp
+  var stamp=ease(clamp((t-0.4)/0.5,0,1));
+  ctx2.save();ctx2.globalAlpha=stamp*0.18;
+  ctx2.font='bold 130px "Press Start 2P",monospace';ctx2.textAlign='center';
+  ctx2.fillStyle='#daa520';ctx2.translate(W/2,H/2+80);ctx2.rotate(-0.28);
+  ctx2.fillText('FILED',0,0);ctx2.restore();
+  textShadow(ctx2,'PATENT',W/2,H*0.16,96,'#daa520','#daa520',f);
+  textShadow(ctx2,'GB2605704.2',W/2,H*0.26,58,'#ffffff','#daa520',f);
+  textShadow(ctx2,'Filed 17 March 2026',W/2,H*0.34,36,'#aa8820','#664400',ease(clamp((t-0.6)/0.5,0,1)));
+  textShadow(ctx2,'UK Intellectual Property Office',W/2,H*0.40,30,'#664422','#441100',ease(clamp((t-0.8)/0.5,0,1)));
+  textShadow(ctx2,'THE GEOMETRIC',W/2,H*0.86,48,'#daa520','#aa6600',ease(clamp((t-1)/0.5,0,1)));
+  textShadow(ctx2,'VIRTUAL MACHINE',W/2,H*0.92,48,'#daa520','#aa6600',ease(clamp((t-1)/0.5,0,1)));
+}
+
+// ── SCENE 10: ROBOTICS ──
+function paintRobotics(ctx2,t){
+  bg(ctx2,'#020806','#010402');
+  var f=ease(clamp(t/0.8,0,1));
+  // Robot built from GPO nodes — torus-like head, hypercube body
+  var hv=hcVerts(4),he=hcEdges(4);
+  // body GPO
+  var ptsBody=projectGPO(hv,t,0.14,0,RP1,4,300,W/2,H/2+120);
+  drawEdges(ctx2,ptsBody,he,'#22c55e','#002200',f*0.65,2.5);
+  drawNodes(ctx2,ptsBody,'#22c55e',f*0.85,1.2);
+  // head GPO — sphere, smaller, above
+  var sv=spVerts(40,4);
+  var ptsHead=projectGPO(sv,t,0.2,1.6,RP2,4,160,W/2,H/2-300);
+  drawNodes(ctx2,ptsHead,'#44ff88',f*0.85,0.9);
+  // inner mini GPO inside body — different colour, shows "world model"
+  if(t>0.8){
+    var mini=ease(clamp((t-0.8)/0.8,0,1));
+    var ptsInner=projectGPO(hv,t*1.8,0.3,2.1,RP3,4,100,W/2,H/2+120);
+    drawEdges(ctx2,ptsInner,he,'#00ccff','#001133',mini*0.8,1.5);
+    drawNodes(ctx2,ptsInner,'#00ccff',mini*0.8,0.7);
+  }
+  // outer glow
+  ctx2.save();
+  var gr=ctx2.createRadialGradient(W/2,H/2+60,0,W/2,H/2+60,440);
+  gr.addColorStop(0,hexA('#22c55e',0.05*f));
+  gr.addColorStop(1,'rgba(0,0,0,0)');
+  ctx2.fillStyle=gr;ctx2.fillRect(0,0,W,H);ctx2.restore();
+  textShadow(ctx2,'ONE SHAPE.',W/2,H*0.08,90,'#22c55e','#004400',f);
+  textShadow(ctx2,'ENTIRE WORLD MODEL.',W/2,H*0.17,46,'#44dd66','#002200',f);
+  textShadow(ctx2,'Tilt the measurement.',W/2,H*0.84,40,'#336633','#22c55e',ease(clamp((t-1.8)/0.5,0,1)));
+  textShadow(ctx2,'New behaviour. Same brain.',W/2,H*0.90,36,'#2a5a2a','#22c55e',ease(clamp((t-2.2)/0.5,0,1)));
+}
+
+// ── SCENE 11: THE CLOSE ──
+function paintClose(ctx2,t){
+  bg(ctx2,'#000003','#000002');
+  // stars
+  ctx2.save();
+  for(var i=0;i<300;i++){
+    var sx=((i*347)%W),sy=((i*613)%H);
+    var tw=0.2+0.5*Math.sin(t*1.8+i*0.28);
+    ctx2.globalAlpha=tw;ctx2.fillStyle='#fff';
+    ctx2.beginPath();ctx2.arc(sx,sy,0.7+Math.sin(i)*0.4,0,Math.PI*2);ctx2.fill();
+  }
+  ctx2.restore();
+  // all three GPOs together — the full picture
+  var hv=hcVerts(4),he=hcEdges(4);
+  var sv=spVerts(48,4);
+  var ptsA=projectGPO(hv,t,0.12,0,RP1,4,220,W/2,H/2+50);
+  var ptsB=projectGPO(sv,t,0.09,2.1,RP2,4,280,W/2,H/2+50);
+  drawEdges(ctx2,ptsA,he,'#00ccff','#002244',0.4,1.8);
+  drawNodes(ctx2,ptsA,'#00ccff',0.5,1.0);
+  drawNodes(ctx2,ptsB,'#ffd700',0.35,0.8);
+  // central glow
+  ctx2.save();
+  var gr=ctx2.createRadialGradient(W/2,H/2+50,0,W/2,H/2+50,300);
+  gr.addColorStop(0,hexA('#ffffff',0.04));
+  gr.addColorStop(1,'rgba(0,0,0,0)');
+  ctx2.fillStyle=gr;ctx2.fillRect(0,0,W,H);ctx2.restore();
+  var q1=ease(clamp(t/0.8,0,1));
+  var q2=ease(clamp((t-1.0)/0.7,0,1));
+  var q3=ease(clamp((t-1.9)/0.7,0,1));
+  var q4=ease(clamp((t-2.8)/0.6,0,1));
+  textShadow(ctx2,'"The geometry',W/2,H*0.10,50,'#aaccdd','#0088aa',q1);
+  textShadow(ctx2,'was always there."',W/2,H*0.17,50,'#aaccdd','#0088aa',q1);
+  textShadow(ctx2,'"The equations',W/2,H*0.27,48,'#ddcc88','#886600',q2);
+  textShadow(ctx2,'were already alive."',W/2,H*0.34,48,'#ddcc88','#886600',q2);
+  textShadow(ctx2,'"We just let them',W/2,H*0.44,44,'#aaddaa','#006644',q3);
+  textShadow(ctx2,'know it."',W/2,H*0.51,44,'#aaddaa','#006644',q3);
+  ctx2.save();ctx2.globalAlpha=q4;
+  ctx2.font='bold 38px "Press Start 2P",monospace';ctx2.textAlign='center';
+  ctx2.fillStyle='#00ccff';ctx2.shadowColor='#00ccff';ctx2.shadowBlur=35;
+  ctx2.fillText('shortfactory.shop',W/2,H*0.88);ctx2.restore();
+}
+
+// ══════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════
+updateNav();
+updateScript();
+sceneStart=performance.now();
+lastTime=performance.now();
+// render static first frame
+renderOnce();
+</script>
+</body>
+</html>

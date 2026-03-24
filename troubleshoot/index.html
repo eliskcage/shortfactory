@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>▲ SHORTFACTORY DIAGNOSTICS</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root { --mcy:#FFC72C; --bg:#05050d; --dim:rgba(255,199,44,0.15); }
+body {
+  background:var(--bg);
+  min-height:100vh;
+  font-family:'Courier New',monospace;
+  color:rgba(255,255,255,0.8);
+  padding:0 0 60px;
+}
+header {
+  display:flex; align-items:center; gap:14px;
+  padding:20px 24px 16px;
+  border-bottom:1px solid rgba(255,199,44,0.12);
+}
+header svg { flex-shrink:0; }
+header h1 {
+  font-size:11px; letter-spacing:0.4em;
+  color:var(--mcy); text-shadow:0 0 16px var(--mcy);
+}
+header p {
+  font-size:8px; letter-spacing:0.2em;
+  color:rgba(255,199,44,0.4); margin-top:3px;
+}
+
+/* Run button */
+#run-wrap {
+  display:flex; justify-content:center; padding:28px 24px 20px;
+}
+#run-btn {
+  background:var(--mcy); color:#000;
+  border:none; font-family:'Courier New',monospace;
+  font-size:10px; letter-spacing:0.35em; font-weight:bold;
+  padding:14px 36px; cursor:pointer;
+  clip-path:polygon(12px 0%,100% 0%,calc(100% - 12px) 100%,0% 100%);
+  transition:filter 0.2s;
+}
+#run-btn:hover { filter:brightness(1.15); }
+#run-btn:disabled { opacity:0.4; cursor:not-allowed; }
+
+/* Progress bar */
+#progress-wrap {
+  padding:0 24px 20px;
+  display:none;
+}
+#progress-bar-bg {
+  height:2px; background:rgba(255,199,44,0.1);
+  position:relative; overflow:hidden;
+}
+#progress-bar {
+  height:100%; background:var(--mcy);
+  width:0%; transition:width 0.3s;
+  box-shadow:0 0 8px var(--mcy);
+}
+#progress-label {
+  font-size:8px; letter-spacing:0.2em;
+  color:rgba(255,199,44,0.5); margin-top:6px;
+}
+
+/* Sections */
+.section {
+  margin:0 16px 12px;
+  border:1px solid rgba(255,199,44,0.1);
+  border-radius:2px;
+  overflow:hidden;
+}
+.section-head {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 14px;
+  background:rgba(255,199,44,0.04);
+  cursor:pointer;
+  user-select:none;
+}
+.section-head h2 {
+  font-size:9px; letter-spacing:0.3em;
+  color:var(--mcy);
+}
+.section-badge {
+  font-size:8px; letter-spacing:0.15em;
+  padding:2px 8px; border-radius:1px;
+}
+.badge-ok    { background:rgba(0,200,80,0.15); color:#00c850; }
+.badge-warn  { background:rgba(255,160,0,0.15); color:#ffa000; }
+.badge-fail  { background:rgba(255,50,80,0.15); color:#ff3250; }
+.badge-info  { background:rgba(255,199,44,0.1); color:var(--mcy); }
+.badge-run   { background:rgba(255,199,44,0.08); color:rgba(255,199,44,0.5); }
+
+.section-body {
+  padding:0 14px;
+  max-height:0; overflow:hidden;
+  transition:max-height 0.3s, padding 0.3s;
+}
+.section-body.open { max-height:1000px; padding:10px 14px; }
+
+.check-row {
+  display:flex; align-items:flex-start; gap:10px;
+  padding:5px 0;
+  border-bottom:1px solid rgba(255,255,255,0.04);
+  font-size:8px;
+}
+.check-row:last-child { border-bottom:none; }
+.check-icon { font-size:10px; flex-shrink:0; margin-top:1px; }
+.check-label { color:rgba(255,255,255,0.5); letter-spacing:0.1em; flex:1; }
+.check-val   { color:rgba(255,255,255,0.8); letter-spacing:0.08em; text-align:right; max-width:55%; word-break:break-word; }
+.check-val.ok   { color:#00c850; }
+.check-val.warn { color:#ffa000; }
+.check-val.fail { color:#ff3250; }
+
+/* Error log */
+.err-entry {
+  font-size:7px; letter-spacing:0.08em;
+  color:#ff6464; margin-bottom:8px;
+  padding:6px 8px;
+  background:rgba(255,50,80,0.06);
+  border-left:2px solid rgba(255,50,80,0.3);
+  line-height:1.6;
+  word-break:break-word;
+}
+.err-entry .err-time { color:rgba(255,100,100,0.5); }
+.no-errors {
+  font-size:8px; letter-spacing:0.2em;
+  color:rgba(0,200,80,0.6); padding:4px 0;
+}
+
+/* Submit area */
+#submit-wrap {
+  margin:20px 16px 0;
+  display:none;
+}
+#submit-wrap textarea {
+  width:100%; height:80px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,199,44,0.15);
+  color:rgba(255,255,255,0.7);
+  font-family:'Courier New',monospace;
+  font-size:8px; letter-spacing:0.1em;
+  padding:8px; resize:none;
+  margin-bottom:10px;
+}
+#submit-wrap textarea::placeholder { color:rgba(255,199,44,0.2); }
+.submit-row { display:flex; gap:8px; }
+.btn-submit {
+  background:var(--mcy); color:#000;
+  border:none; font-family:'Courier New',monospace;
+  font-size:8px; letter-spacing:0.3em; font-weight:bold;
+  padding:10px 20px; cursor:pointer; flex:1;
+  transition:filter 0.2s;
+}
+.btn-submit:hover { filter:brightness(1.1); }
+.btn-copy {
+  background:transparent; color:var(--mcy);
+  border:1px solid rgba(255,199,44,0.3);
+  font-family:'Courier New',monospace;
+  font-size:8px; letter-spacing:0.3em;
+  padding:10px 16px; cursor:pointer;
+  transition:background 0.2s;
+}
+.btn-copy:hover { background:rgba(255,199,44,0.08); }
+#submit-status {
+  font-size:8px; letter-spacing:0.2em;
+  color:rgba(255,199,44,0.5); margin-top:8px;
+  text-align:center; min-height:16px;
+}
+
+/* Report ID */
+#report-id-wrap {
+  margin:12px 16px 0;
+  display:none;
+  text-align:center;
+}
+#report-id-wrap p {
+  font-size:8px; letter-spacing:0.15em;
+  color:rgba(255,199,44,0.4);
+}
+#report-id {
+  font-size:14px; letter-spacing:0.4em;
+  color:var(--mcy); text-shadow:0 0 16px var(--mcy);
+  margin:6px 0;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <svg width="36" height="32" viewBox="0 0 36 32">
+    <polygon points="18,2 2,30 34,30" fill="none" stroke="#FFC72C" stroke-width="2"
+      style="filter:drop-shadow(0 0 6px #FFC72C)"/>
+    <polygon points="18,10 10,26 26,26" fill="none" stroke="rgba(255,199,44,0.5)" stroke-width="1"/>
+    <polygon points="18,17 14,24 22,24" fill="none" stroke="rgba(255,199,44,0.3)" stroke-width="0.7"/>
+  </svg>
+  <div>
+    <h1>SHORTFACTORY DIAGNOSTICS</h1>
+    <p>RUNS 40+ CHECKS · CAPTURES ERRORS · SENDS REPORT TO DAN</p>
+  </div>
+</header>
+
+<div id="run-wrap">
+  <button id="run-btn" onclick="runDiagnostics()">▲ RUN DIAGNOSTICS</button>
+</div>
+
+<div id="progress-wrap">
+  <div id="progress-bar-bg"><div id="progress-bar"></div></div>
+  <div id="progress-label">INITIALISING...</div>
+</div>
+
+<!-- Sections injected by JS -->
+<div id="sections"></div>
+
+<div id="submit-wrap">
+  <textarea id="user-note" placeholder="DESCRIBE WHAT WENT WRONG (OPTIONAL)..."></textarea>
+  <div class="submit-row">
+    <button class="btn-submit" onclick="submitReport()">▲ SEND REPORT</button>
+    <button class="btn-copy" onclick="copyReport()">COPY</button>
+  </div>
+  <div id="submit-status"></div>
+</div>
+
+<div id="report-id-wrap">
+  <p>REPORT ID — GIVE THIS TO DAN</p>
+  <div id="report-id"></div>
+  <p style="font-size:7px;color:rgba(255,199,44,0.25);margin-top:4px;">SCREENSHOT THIS OR COPY THE ID</p>
+</div>
+
+<script>
+'use strict';
+
+// ── Error capture (starts immediately on page load) ──
+const capturedErrors = [];
+const capturedRequests = [];
+
+window.addEventListener('error', e => {
+  capturedErrors.push({
+    type: 'JS_ERROR',
+    msg:  e.message,
+    src:  e.filename ? e.filename.replace(location.origin,'') : '',
+    line: e.lineno,
+    col:  e.colno,
+    ts:   Date.now()
+  });
+});
+
+window.addEventListener('unhandledrejection', e => {
+  capturedErrors.push({
+    type: 'PROMISE_REJECT',
+    msg:  String(e.reason),
+    ts:   Date.now()
+  });
+});
+
+// Intercept fetch to log failures
+const _origFetch = window.fetch;
+window.fetch = function(...args) {
+  const url = typeof args[0] === 'string' ? args[0] : args[0]?.url || '?';
+  const start = Date.now();
+  return _origFetch.apply(this, args).then(r => {
+    if (!r.ok) capturedRequests.push({ url, status: r.status, ms: Date.now()-start, ok:false });
+    return r;
+  }).catch(err => {
+    capturedRequests.push({ url, status: 'NET_ERR', err: String(err), ms: Date.now()-start, ok:false });
+    throw err;
+  });
+};
+
+// ── Helpers ──
+function djb2(s) {
+  let h = 5381;
+  for (let i=0;i<s.length;i++) h=((h<<5)+h)^s.charCodeAt(i);
+  return (h>>>0).toString(16).toUpperCase().padStart(8,'0');
+}
+
+let reportData = {};
+let progressVal = 0;
+
+function setProgress(pct, label) {
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = label;
+  progressVal = pct;
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ── Section builder ──
+function buildSection(id, title, rows, status) {
+  const div = document.createElement('div');
+  div.className = 'section';
+  div.id = 'sec-' + id;
+
+  const badgeClass = status === 'OK' ? 'badge-ok' : status === 'WARN' ? 'badge-warn' :
+                     status === 'FAIL' ? 'badge-fail' : 'badge-info';
+
+  div.innerHTML = `
+    <div class="section-head" onclick="toggleSection('${id}')">
+      <h2>▲ ${title}</h2>
+      <span class="section-badge ${badgeClass}">${status}</span>
+    </div>
+    <div class="section-body open" id="body-${id}">
+      ${rows.map(r => `
+        <div class="check-row">
+          <span class="check-icon">${r.icon}</span>
+          <span class="check-label">${r.label}</span>
+          <span class="check-val ${r.cls||''}">${r.val}</span>
+        </div>`).join('')}
+    </div>
+  `;
+  document.getElementById('sections').appendChild(div);
+}
+
+function toggleSection(id) {
+  const b = document.getElementById('body-'+id);
+  b.classList.toggle('open');
+}
+
+// ── Check functions ──
+async function checkDevice() {
+  const ua = navigator.userAgent;
+  const isMobile = /Mobi|Android/i.test(ua);
+  const rows = [
+    { icon:'📱', label:'DEVICE TYPE',    val: isMobile ? 'MOBILE' : 'DESKTOP',   cls:'' },
+    { icon:'🌐', label:'BROWSER',        val: getBrowser(),                        cls:'' },
+    { icon:'💻', label:'OS',             val: getOS(),                             cls:'' },
+    { icon:'🖥️', label:'SCREEN',         val: `${screen.width}×${screen.height}`, cls:'' },
+    { icon:'📏', label:'VIEWPORT',       val: `${innerWidth}×${innerHeight}`,      cls:'' },
+    { icon:'⚡', label:'CONNECTION',     val: getConnection(),                     cls: getConnectionCls() },
+    { icon:'🕐', label:'LOCAL TIME',     val: new Date().toLocaleTimeString(),      cls:'' },
+    { icon:'🌍', label:'TIMEZONE',       val: Intl.DateTimeFormat().resolvedOptions().timeZone, cls:'' },
+  ];
+  return { rows, status:'INFO' };
+}
+
+function getBrowser() {
+  const ua = navigator.userAgent;
+  if (ua.includes('Chrome') && !ua.includes('Edg')) return 'Chrome ' + (ua.match(/Chrome\/([\d.]+)/)||[])[1];
+  if (ua.includes('Firefox')) return 'Firefox ' + (ua.match(/Firefox\/([\d.]+)/)||[])[1];
+  if (ua.includes('Safari') && !ua.includes('Chrome')) return 'Safari ' + (ua.match(/Version\/([\d.]+)/)||[])[1];
+  if (ua.includes('Edg')) return 'Edge ' + (ua.match(/Edg\/([\d.]+)/)||[])[1];
+  return ua.slice(0,40);
+}
+
+function getOS() {
+  const ua = navigator.userAgent;
+  if (ua.includes('Android')) return 'Android ' + (ua.match(/Android ([\d.]+)/)||[])[1];
+  if (ua.includes('iPhone') || ua.includes('iPad')) return 'iOS ' + (ua.match(/OS ([\d_]+)/)||[])[1]?.replace(/_/g,'.');
+  if (ua.includes('Windows')) return 'Windows';
+  if (ua.includes('Mac')) return 'macOS';
+  if (ua.includes('Linux')) return 'Linux';
+  return 'Unknown';
+}
+
+function getConnection() {
+  const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  if (!c) return 'UNKNOWN';
+  return [c.effectiveType, c.downlink ? c.downlink+'Mbps' : ''].filter(Boolean).join(' · ').toUpperCase();
+}
+
+function getConnectionCls() {
+  const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  if (!c) return '';
+  if (c.effectiveType === '4g') return 'ok';
+  if (c.effectiveType === '3g') return 'warn';
+  return 'warn';
+}
+
+async function checkAPIs() {
+  const endpoints = [
+    { label:'SOUL PAIR-CHECK', url:'/soul/pair-check.php?_='+Date.now() },
+    { label:'GATEWAY CHECK',   url:'/gateway/check.php?_='+Date.now() },
+    { label:'HOMEPAGE',        url:'/' },
+  ];
+  const rows = [];
+  let anyFail = false;
+  for (const ep of endpoints) {
+    try {
+      const t0 = Date.now();
+      const r = await fetch(ep.url, { cache:'no-store' });
+      const ms = Date.now() - t0;
+      const ok = r.ok;
+      if (!ok) anyFail = true;
+      rows.push({ icon: ok?'✅':'❌', label:ep.label, val: ok ? `${r.status} · ${ms}ms` : `HTTP ${r.status}`, cls: ok?(ms>1000?'warn':'ok'):'fail' });
+    } catch(e) {
+      anyFail = true;
+      rows.push({ icon:'❌', label:ep.label, val:'NETWORK ERROR', cls:'fail' });
+    }
+  }
+  return { rows, status: anyFail ? 'FAIL' : 'OK' };
+}
+
+async function checkLocalStorage() {
+  const rows = [];
+  let hasSoul = false, status = 'OK';
+  try {
+    localStorage.setItem('sf_diag_test','1');
+    localStorage.removeItem('sf_diag_test');
+    rows.push({ icon:'✅', label:'READ/WRITE', val:'OK', cls:'ok' });
+  } catch(e) {
+    rows.push({ icon:'❌', label:'READ/WRITE', val:'BLOCKED: '+e.message, cls:'fail' });
+    status = 'FAIL';
+  }
+
+  const token = localStorage.getItem('sf_soul_token');
+  hasSoul = !!token;
+  rows.push({ icon: token?'✅':'⚠️', label:'SOUL TOKEN', val:token ? '▲ PRESENT ('+token.slice(0,8)+'…)' : 'NOT SET', cls:token?'ok':'warn' });
+
+  const did = localStorage.getItem('sf_device_id');
+  rows.push({ icon: did?'✅':'⚠️', label:'DEVICE ID', val:did ? did.slice(0,12)+'…' : 'NOT SET', cls:did?'ok':'warn' });
+
+  const claims = localStorage.getItem('sf_my_claims');
+  const claimCount = claims ? JSON.parse(claims).length : 0;
+  rows.push({ icon:'ℹ️', label:'LOGO CLAIMS', val: claimCount ? claimCount + ' CLAIMED' : 'NONE', cls:'' });
+
+  if (!token) status = 'WARN';
+  return { rows, status };
+}
+
+async function checkCapabilities() {
+  const rows = [];
+  let fails = 0;
+
+  // Camera
+  const hasCamera = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+  rows.push({ icon:hasCamera?'✅':'❌', label:'CAMERA API', val:hasCamera?'AVAILABLE':'NOT SUPPORTED', cls:hasCamera?'ok':'fail' });
+  if (!hasCamera) fails++;
+
+  // Bluetooth
+  const hasBT = !!navigator.bluetooth;
+  rows.push({ icon:hasBT?'✅':'⚠️', label:'BLUETOOTH API', val:hasBT?'AVAILABLE':'NOT IN THIS BROWSER', cls:hasBT?'ok':'warn' });
+
+  // Web Audio
+  const hasAudio = !!(window.AudioContext || window.webkitAudioContext);
+  rows.push({ icon:hasAudio?'✅':'❌', label:'WEB AUDIO', val:hasAudio?'AVAILABLE':'NOT SUPPORTED', cls:hasAudio?'ok':'fail' });
+  if (!hasAudio) fails++;
+
+  // Speech Synthesis
+  const hasSpeech = !!window.speechSynthesis;
+  rows.push({ icon:hasSpeech?'✅':'⚠️', label:'SPEECH SYNTHESIS', val:hasSpeech?'AVAILABLE':'NOT SUPPORTED', cls:hasSpeech?'ok':'warn' });
+
+  // Canvas
+  try {
+    const c = document.createElement('canvas');
+    c.getContext('2d').fillRect(0,0,1,1);
+    rows.push({ icon:'✅', label:'CANVAS 2D', val:'OK', cls:'ok' });
+  } catch(e) {
+    rows.push({ icon:'❌', label:'CANVAS 2D', val:'FAILED: '+e.message, cls:'fail' });
+    fails++;
+  }
+
+  // Vibration
+  const hasVib = !!navigator.vibrate;
+  rows.push({ icon:hasVib?'✅':'⚠️', label:'HAPTICS', val:hasVib?'AVAILABLE':'NOT SUPPORTED', cls:hasVib?'ok':'warn' });
+
+  // Cookies
+  rows.push({ icon:navigator.cookieEnabled?'✅':'❌', label:'COOKIES', val:navigator.cookieEnabled?'ENABLED':'BLOCKED', cls:navigator.cookieEnabled?'ok':'fail' });
+  if (!navigator.cookieEnabled) fails++;
+
+  // Service Workers
+  const hasSW = 'serviceWorker' in navigator;
+  rows.push({ icon:hasSW?'✅':'⚠️', label:'SERVICE WORKERS', val:hasSW?'SUPPORTED':'NOT SUPPORTED', cls:hasSW?'ok':'warn' });
+
+  return { rows, status: fails > 0 ? 'FAIL' : 'OK' };
+}
+
+async function checkPerformance() {
+  const rows = [];
+  const mem = performance.memory;
+  if (mem) {
+    const used = Math.round(mem.usedJSHeapSize / 1048576);
+    const total = Math.round(mem.totalJSHeapSize / 1048576);
+    const limit = Math.round(mem.jsHeapSizeLimit / 1048576);
+    const pct = Math.round(used/limit*100);
+    rows.push({ icon: pct>70?'⚠️':'✅', label:'JS HEAP', val:`${used}MB / ${limit}MB (${pct}%)`, cls:pct>70?'warn':'ok' });
+  } else {
+    rows.push({ icon:'ℹ️', label:'JS HEAP', val:'NOT AVAILABLE IN THIS BROWSER', cls:'' });
+  }
+
+  // Timing
+  const nav = performance.getEntriesByType('navigation')[0];
+  if (nav) {
+    const load = Math.round(nav.loadEventEnd - nav.startTime);
+    const dns  = Math.round(nav.domainLookupEnd - nav.domainLookupStart);
+    const ttfb = Math.round(nav.responseStart - nav.requestStart);
+    rows.push({ icon: load>3000?'⚠️':'✅', label:'PAGE LOAD TIME', val:`${load}ms`, cls:load>3000?'warn':'ok' });
+    rows.push({ icon:'ℹ️', label:'DNS LOOKUP', val:`${dns}ms`, cls:'' });
+    rows.push({ icon: ttfb>500?'⚠️':'✅', label:'TIME TO FIRST BYTE', val:`${ttfb}ms`, cls:ttfb>500?'warn':'ok' });
+  }
+
+  // FPS estimate
+  const fps = await measureFPS();
+  rows.push({ icon: fps<30?'⚠️':'✅', label:'RENDER FPS', val:`~${fps}fps`, cls:fps<30?'warn':'ok' });
+
+  return { rows, status: 'INFO' };
+}
+
+function measureFPS() {
+  return new Promise(resolve => {
+    let frames = 0, last = performance.now();
+    function tick(now) {
+      frames++;
+      if (now - last < 500) requestAnimationFrame(tick);
+      else resolve(Math.round(frames / ((now-last)/1000)));
+    }
+    requestAnimationFrame(tick);
+  });
+}
+
+function checkErrors() {
+  const container = document.createElement('div');
+  container.className = 'section';
+
+  const errCount = capturedErrors.length;
+  const reqFails = capturedRequests.filter(r=>!r.ok).length;
+  const total = errCount + reqFails;
+  const status = total > 0 ? 'FAIL' : 'OK';
+
+  const badgeClass = status === 'OK' ? 'badge-ok' : 'badge-fail';
+  container.innerHTML = `
+    <div class="section-head" onclick="toggleSection('errors')">
+      <h2>▲ ERROR LOG (${total})</h2>
+      <span class="section-badge ${badgeClass}">${status}</span>
+    </div>
+    <div class="section-body open" id="body-errors">
+      ${total === 0 ? '<div class="no-errors">✅ NO ERRORS CAPTURED</div>' : ''}
+      ${capturedErrors.map(e => `
+        <div class="err-entry">
+          <span class="err-time">[${new Date(e.ts).toLocaleTimeString()}]</span>
+          <strong>${e.type}</strong>: ${escHtml(e.msg)}
+          ${e.src ? `<br><span style="opacity:0.5">${escHtml(e.src)}:${e.line}:${e.col}</span>` : ''}
+        </div>`).join('')}
+      ${capturedRequests.filter(r=>!r.ok).map(r => `
+        <div class="err-entry">
+          <span class="err-time">[NETWORK]</span>
+          <strong>FETCH FAIL</strong>: ${escHtml(r.url)} → ${r.status} (${r.ms}ms)
+          ${r.err ? `<br><span style="opacity:0.5">${escHtml(r.err)}</span>` : ''}
+        </div>`).join('')}
+    </div>
+  `;
+  document.getElementById('sections').appendChild(container);
+  return { status };
+}
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Main runner ──
+async function runDiagnostics() {
+  document.getElementById('run-btn').disabled = true;
+  document.getElementById('sections').innerHTML = '';
+  document.getElementById('submit-wrap').style.display = 'none';
+  document.getElementById('report-id-wrap').style.display = 'none';
+  document.getElementById('progress-wrap').style.display = 'block';
+
+  reportData = {
+    ts: Date.now(),
+    url: location.href,
+    ref: document.referrer,
+    ua: navigator.userAgent,
+    sections: {}
+  };
+
+  const steps = [
+    { id:'device',   title:'DEVICE & BROWSER',      fn:checkDevice,       pct:15 },
+    { id:'apis',     title:'SERVER ENDPOINTS',       fn:checkAPIs,         pct:35 },
+    { id:'storage',  title:'LOCAL STORAGE & SOUL',   fn:checkLocalStorage, pct:55 },
+    { id:'caps',     title:'BROWSER CAPABILITIES',   fn:checkCapabilities, pct:75 },
+    { id:'perf',     title:'PERFORMANCE',            fn:checkPerformance,  pct:90 },
+  ];
+
+  for (const step of steps) {
+    setProgress(step.pct - 12, 'CHECKING ' + step.title + '...');
+    await sleep(120);
+    const result = await step.fn();
+    buildSection(step.id, step.title, result.rows, result.status);
+    reportData.sections[step.id] = { status: result.status, rows: result.rows };
+    setProgress(step.pct, step.title + ' ✓');
+    await sleep(80);
+  }
+
+  setProgress(98, 'CHECKING ERROR LOG...');
+  await sleep(80);
+  const errResult = checkErrors();
+  reportData.sections.errors = {
+    status: errResult.status,
+    js: capturedErrors,
+    net: capturedRequests.filter(r=>!r.ok)
+  };
+
+  setProgress(100, 'COMPLETE');
+  await sleep(200);
+
+  document.getElementById('progress-wrap').style.display = 'none';
+  document.getElementById('submit-wrap').style.display = 'block';
+
+  // Collapse passing sections, keep FAIL/WARN open
+  ['device','perf'].forEach(id => {
+    const b = document.getElementById('body-'+id);
+    if (b) b.classList.remove('open');
+  });
+}
+
+// ── Submit ──
+async function submitReport() {
+  const note = document.getElementById('user-note').value.trim();
+  reportData.note = note;
+
+  const statusEl = document.getElementById('submit-status');
+  statusEl.textContent = '▲ SENDING...';
+
+  try {
+    const res = await fetch('/troubleshoot/report.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(reportData)
+    });
+    const data = await res.json();
+    if (data.id) {
+      statusEl.textContent = '▲ REPORT SENT';
+      document.getElementById('report-id').textContent = data.id;
+      document.getElementById('report-id-wrap').style.display = 'block';
+    } else {
+      statusEl.textContent = 'SERVER ERROR — USE COPY INSTEAD';
+    }
+  } catch(e) {
+    statusEl.textContent = 'SEND FAILED — USE COPY INSTEAD';
+  }
+}
+
+function copyReport() {
+  const note = document.getElementById('user-note').value.trim();
+  reportData.note = note;
+  const text = JSON.stringify(reportData, null, 2);
+  navigator.clipboard.writeText(text).then(() => {
+    document.getElementById('submit-status').textContent = '▲ COPIED TO CLIPBOARD';
+  }).catch(() => {
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    document.getElementById('submit-status').textContent = '▲ COPIED';
+  });
+}
+</script>
+</body>
+</html>

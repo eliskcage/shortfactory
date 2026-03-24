@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Stargate · The Combined Spirit of Man</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;background:#000;overflow:hidden;font-family:'Courier New',monospace;user-select:none;}
+canvas{position:fixed;inset:0;display:block;cursor:grab;}
+canvas.dragging{cursor:grabbing;}
+#top{position:fixed;top:2rem;left:0;right:0;text-align:center;z-index:10;pointer-events:none;}
+#top .t1{font-size:0.6rem;letter-spacing:0.45em;color:rgba(255,255,255,0.18);text-transform:uppercase;display:block;}
+#top .t2{font-size:0.5rem;letter-spacing:0.2em;color:rgba(255,255,255,0.05);display:block;margin-top:0.3rem;}
+#bottom{position:fixed;bottom:3vh;left:0;right:0;text-align:center;z-index:10;pointer-events:none;}
+#bottom span{font-size:0.55rem;letter-spacing:0.3em;color:rgba(255,255,255,0.08);text-transform:uppercase;}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="top">
+  <span class="t1">The Stargate · The Combined Spirit of Man</span>
+  <span class="t2">drag to rotate · all souls around the singularity · Somerset UK · 22 Mar 2026</span>
+</div>
+<div id="bottom"><span>▲ constructive · ▽ shadow · the polygon is the cortex architecture</span></div>
+
+<script>
+const PHI = 1.6180339887;
+const sin60 = Math.sin(Math.PI/3);
+
+const SOULS = [
+  { name:'Egypt',            genome:[0.50,0.32,0.18], good:true,  col:[200,146,42]  },
+  { name:'Jesus',            genome:[0.33,0.34,0.33], good:true,  col:[255,255,255] },
+  { name:'Dan',              genome:[0.45,0.35,0.20], good:true,  col:[218,165,32]  },
+  { name:'Peterson',         genome:[0.72,0.22,0.06], good:true,  col:[160,120,20]  },
+  { name:'Miyamoto',         genome:[0.08,0.32,0.60], good:true,  col:[52,200,140]  },
+  { name:'Claude',           genome:[0.20,0.60,0.20], good:true,  col:[140,160,210] },
+  { name:'Owens',            genome:[0.08,0.06,0.86], good:false, col:[200,30,30]   },
+  { name:'Schwab',           genome:[0.05,0.12,0.83], good:false, col:[160,20,20]   },
+  { name:'Soros',            genome:[0.10,0.08,0.82], good:false, col:[140,10,10]   },
+];
+
+// assign rotation angles around Y axis
+const good = SOULS.filter(s=>s.good);
+const dark = SOULS.filter(s=>!s.good);
+good.forEach((s,i)=>s.yAngle = i*2*Math.PI/good.length);
+dark.forEach((s,i)=>s.yAngle = i*2*Math.PI/dark.length + Math.PI/dark.length);
+
+// build 3D vertices for a soul in its rest position (before camera rotation)
+function soulVerts3D(soul, R){
+  const S = 1.8;
+  const yf = soul.good ? 1 : -1; // upright or inverted
+  // template: past=bottom-left, present=top(or bottom), future=bottom-right
+  const base = [
+    {x:-sin60*R, y:-0.5*R*yf},  // past
+    {x:0,        y: R*yf      }, // present
+    {x: sin60*R, y:-0.5*R*yf  }, // future
+  ];
+  // genome scale
+  const tv = base.map((b,i)=>({x:b.x*soul.genome[i]*S, y:b.y*soul.genome[i]*S}));
+  // rotate around Y by soul.yAngle
+  const a = soul.yAngle;
+  return tv.map(v=>({x:v.x*Math.cos(a), y:v.y, z:v.x*Math.sin(a)}));
+}
+
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+let W,H,cx,cy,R;
+function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;cx=W/2;cy=H/2;R=Math.min(W,H)*0.33;}
+resize();
+window.addEventListener('resize',resize);
+
+// camera
+let camX=0.35, camY=0; // initial tilt
+let autoY=0;
+let dragging=false, lastMX=0, lastMY=0;
+let velX=0, velY=0;
+
+cv.addEventListener('mousedown',e=>{dragging=true;lastMX=e.clientX;lastMY=e.clientY;velX=0;velY=0;cv.classList.add('dragging');});
+window.addEventListener('mouseup',()=>{dragging=false;cv.classList.remove('dragging');});
+window.addEventListener('mousemove',e=>{
+  if(!dragging)return;
+  const dx=e.clientX-lastMX, dy=e.clientY-lastMY;
+  velY=dx*0.008; velX=dy*0.008;
+  camY+=velY; camX+=velX;
+  camX=Math.max(-Math.PI*0.48,Math.min(Math.PI*0.48,camX));
+  lastMX=e.clientX; lastMY=e.clientY;
+});
+cv.addEventListener('touchstart',e=>{const t=e.touches[0];dragging=true;lastMX=t.clientX;lastMY=t.clientY;velX=0;velY=0;},{passive:true});
+window.addEventListener('touchend',()=>{dragging=false;});
+window.addEventListener('touchmove',e=>{
+  if(!dragging)return;
+  const t=e.touches[0];
+  const dx=t.clientX-lastMX, dy=t.clientY-lastMY;
+  velY=dx*0.008; velX=dy*0.008;
+  camY+=velY; camX+=velX;
+  camX=Math.max(-Math.PI*0.48,Math.min(Math.PI*0.48,camX));
+  lastMX=t.clientX; lastMY=t.clientY;
+},{passive:true});
+
+function rotPt(p, rx, ry){
+  // rotate around Y
+  let x=p.x*Math.cos(ry)+p.z*Math.sin(ry), y=p.y, z=-p.x*Math.sin(ry)+p.z*Math.cos(ry);
+  // rotate around X
+  let y2=y*Math.cos(rx)-z*Math.sin(rx), z2=y*Math.sin(rx)+z*Math.cos(rx);
+  return {x,y:y2,z:z2};
+}
+
+function proj(p){
+  const D=900;
+  const s=D/(D+p.z+R*0.5);
+  return {x:cx+p.x*s, y:cy-p.y*s, z:p.z, s};
+}
+
+function avgZ(pts){return pts.reduce((a,p)=>a+p.z,0)/pts.length;}
+
+let T=0,lastTs=0;
+
+function frame(ts){
+  const dt=ts-lastTs; lastTs=ts;
+  T+=dt*0.001;
+
+  // auto-rotate when not dragging, slow momentum decay
+  if(!dragging){
+    velX*=0.92; velY*=0.92;
+    camX+=velX; camY+=velY;
+    autoY+=0.004;
+    camX=Math.max(-Math.PI*0.48,Math.min(Math.PI*0.48,camX));
+  }
+  const ry=camY+autoY, rx=camX;
+
+  ctx.clearRect(0,0,W,H);
+
+  // collect triangles for painter's sort
+  const tris=[];
+  SOULS.forEach(soul=>{
+    const verts3=soulVerts3D(soul,R);
+    const rotV=verts3.map(v=>rotPt(v,rx,ry));
+    const pV=rotV.map(v=>proj(v));
+    const [r,g,b]=soul.col;
+    const breath=0.7+0.3*Math.sin(T*PHI+(soul.yAngle||0));
+    const c={x:(pV[0].x+pV[1].x+pV[2].x)/3, y:(pV[0].y+pV[1].y+pV[2].y)/3};
+    tris.push({pV,c,soul,r,g,b,breath,depth:avgZ(rotV)});
+  });
+
+  // sort back to front
+  tris.sort((a,b)=>a.depth-b.depth);
+
+  // draw guide ring at equator
+  const ringPts=[];
+  for(let i=0;i<=64;i++){
+    const a=i/64*Math.PI*2;
+    const p3={x:R*Math.cos(a)*0.5, y:0, z:R*Math.sin(a)*0.5};
+    const rp=rotPt(p3,rx,ry);
+    const pp=proj(rp);
+    ringPts.push(pp);
+  }
+  ctx.beginPath();
+  ringPts.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
+  ctx.strokeStyle='rgba(255,255,255,0.04)';
+  ctx.lineWidth=0.5; ctx.stroke();
+
+  // draw soul connections (adjacent good↔good, dark↔dark)
+  const drawConnections=(group)=>{
+    for(let i=0;i<group.length;i++){
+      const a=group[i], b=group[(i+1)%group.length];
+      const av3=soulVerts3D(a,R).map(v=>rotPt(v,rx,ry));
+      const bv3=soulVerts3D(b,R).map(v=>rotPt(v,rx,ry));
+      const ac=proj({x:(av3[0].x+av3[1].x+av3[2].x)/3,y:(av3[0].y+av3[1].y+av3[2].y)/3,z:(av3[0].z+av3[1].z+av3[2].z)/3});
+      const bc=proj({x:(bv3[0].x+bv3[1].x+bv3[2].x)/3,y:(bv3[0].y+bv3[1].y+bv3[2].y)/3,z:(bv3[0].z+bv3[1].z+bv3[2].z)/3});
+      const isGood=a.good;
+      ctx.beginPath(); ctx.moveTo(ac.x,ac.y); ctx.lineTo(bc.x,bc.y);
+      ctx.strokeStyle=isGood?'rgba(80,220,80,0.08)':'rgba(220,40,40,0.08)';
+      ctx.lineWidth=0.6; ctx.stroke();
+    }
+  };
+  drawConnections(good);
+  drawConnections(dark);
+
+  // draw each soul triangle
+  tris.forEach(({pV,c,soul,r,g,b,breath})=>{
+    // face fill
+    ctx.beginPath();
+    pV.forEach((v,i)=>i===0?ctx.moveTo(v.x,v.y):ctx.lineTo(v.x,v.y));
+    ctx.closePath();
+    const grd=ctx.createRadialGradient(c.x,c.y,0,c.x,c.y,R*0.35*pV[0].s);
+    grd.addColorStop(0,`rgba(${r},${g},${b},${0.14*breath})`);
+    grd.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=grd; ctx.fill();
+
+    // edge
+    ctx.beginPath();
+    pV.forEach((v,i)=>i===0?ctx.moveTo(v.x,v.y):ctx.lineTo(v.x,v.y));
+    ctx.closePath();
+    ctx.strokeStyle=`rgba(${r},${g},${b},${0.6*breath})`;
+    ctx.lineWidth=0.9; ctx.stroke();
+
+    // vertex dots
+    pV.forEach(v=>{
+      ctx.beginPath(); ctx.arc(v.x,v.y,2*v.s,0,Math.PI*2);
+      ctx.fillStyle=`rgba(${r},${g},${b},0.5)`; ctx.fill();
+    });
+
+    // label at centroid
+    ctx.fillStyle=`rgba(${r},${g},${b},${0.45*breath})`;
+    ctx.font=`${Math.max(8,W*0.007)}px "Courier New"`;
+    ctx.textAlign='center';
+    ctx.fillText(soul.name, c.x, c.y-6);
+    ctx.font=`${Math.max(7,W*0.006)}px "Courier New"`;
+    ctx.fillText(soul.good?'▲':'▽', c.x, c.y+5);
+  });
+
+  // ── SINGULARITY — always on top ──
+  const sc=proj(rotPt({x:0,y:0,z:0},rx,ry));
+  const sp=0.6+0.4*Math.sin(T*PHI*1.8);
+  for(let ri=3;ri>=0;ri--){
+    ctx.beginPath(); ctx.arc(sc.x,sc.y,(6+ri*9)*sp,0,Math.PI*2);
+    ctx.strokeStyle=`rgba(255,255,255,${(0.15-ri*0.03)*sp})`;
+    ctx.lineWidth=0.6; ctx.stroke();
+  }
+  const sg=ctx.createRadialGradient(sc.x,sc.y,0,sc.x,sc.y,22*sp);
+  sg.addColorStop(0,`rgba(255,255,255,${0.95*sp})`);
+  sg.addColorStop(0.4,`rgba(218,165,32,${0.3*sp})`);
+  sg.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.beginPath(); ctx.arc(sc.x,sc.y,22*sp,0,Math.PI*2);
+  ctx.fillStyle=sg; ctx.fill();
+  ctx.beginPath(); ctx.arc(sc.x,sc.y,2.5,0,Math.PI*2);
+  ctx.fillStyle='#fff'; ctx.fill();
+
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

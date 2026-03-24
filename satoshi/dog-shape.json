@@ -1,0 +1,10 @@
+{
+  "id": "dog",
+  "label": "DOG",
+  "bodyRx": 0.96, "bodyRy": 0.44, "bodyRz": 0.54,
+  "headR": 0.45, "headOffset": 0.65,
+  "earH": 0.30, "earR": 0.17, "earUpright": false,
+  "legW": 0.096, "legL": 0.66,
+  "tailN": 3, "tailLen": 0.65, "tailBase": 0.058,
+  "neckTilt": -0.18
+}

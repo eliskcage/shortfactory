@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CORTEX // Brain Power Dashboard</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Outfit:wght@300;400;600;700;900&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --void:#03040a;
+  --deep:#080c18;
+  --panel:#0c1220;
+  --panel2:#111827;
+  --edge:#1e293b;
+  --edge2:#2d3f5a;
+  --neural:#00e5ff;
+  --synapse:#ff3cac;
+  --axon:#7fff00;
+  --gold:#ffd60a;
+  --platinum:#e2e8f0;
+  --text:#cbd5e1;
+  --muted:#475569;
+  --tier-s:#ff3cac;
+  --tier-a:#ff8c00;
+  --tier-b:#00e5ff;
+  --tier-c:#7fff00;
+  --glow-neural:0 0 20px rgba(0,229,255,0.4);
+  --glow-synapse:0 0 20px rgba(255,60,172,0.4);
+}
+
+html{scroll-behavior:smooth}
+body{
+  background:var(--void);
+  color:var(--text);
+  font-family:'DM Mono',monospace;
+  min-height:100vh;
+  overflow-x:hidden;
+  cursor:default;
+}
+
+/* ── NEURAL BACKGROUND ── */
+#neural-bg{
+  position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 20%, rgba(0,229,255,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 60% at 80% 80%, rgba(255,60,172,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 50% 50%, rgba(127,255,0,0.02) 0%, transparent 60%);
+}
+
+canvas#synapses{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:0.18}
+
+/* ── LAYOUT ── */
+.wrap{position:relative;z-index:1;max-width:1400px;margin:0 auto;padding:0 24px 80px}
+
+/* ── HEADER ── */
+header{
+  padding:48px 0 32px;
+  display:grid;
+  grid-template-columns:1fr auto;
+  align-items:start;
+  gap:24px;
+  border-bottom:1px solid var(--edge);
+  margin-bottom:32px;
+}
+
+.cortex-logo{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(36px,8vw,80px);
+  letter-spacing:4px;
+  line-height:0.9;
+  color:var(--platinum);
+}
+
+.cortex-logo .cx{
+  background:linear-gradient(135deg,var(--neural),var(--synapse));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+
+.cortex-sub{
+  font-size:11px;
+  color:var(--muted);
+  letter-spacing:3px;
+  text-transform:uppercase;
+  margin-top:6px;
+}
+
+/* ── XP PANEL ── */
+.xp-panel{
+  background:var(--panel);
+  border:1px solid var(--edge);
+  border-radius:16px;
+  padding:20px 28px;
+  min-width:280px;
+  position:relative;
+  overflow:hidden;
+}
+
+.xp-panel::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(0,229,255,0.05),transparent 60%);
+  pointer-events:none;
+}
+
+.xp-level{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:13px;
+  letter-spacing:3px;
+  color:var(--neural);
+  margin-bottom:4px;
+}
+
+.xp-title{
+  font-family:'Outfit',sans-serif;
+  font-size:22px;
+  font-weight:900;
+  color:var(--platinum);
+  margin-bottom:12px;
+}
+
+.xp-bar-wrap{
+  background:var(--edge);
+  border-radius:4px;
+  height:8px;
+  overflow:hidden;
+  margin-bottom:8px;
+}
+
+.xp-bar{
+  height:100%;
+  border-radius:4px;
+  background:linear-gradient(90deg,var(--neural),var(--synapse));
+  transition:width 0.8s cubic-bezier(0.16,1,0.3,1);
+  position:relative;
+}
+
+.xp-bar::after{
+  content:'';
+  position:absolute;right:0;top:0;bottom:0;width:4px;
+  background:white;
+  filter:blur(2px);
+  border-radius:2px;
+}
+
+.xp-nums{
+  display:flex;justify-content:space-between;
+  font-size:10px;color:var(--muted);
+}
+
+.xp-total-credits{
+  margin-top:12px;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:28px;
+  color:var(--gold);
+  letter-spacing:2px;
+}
+
+.xp-total-credits span{font-size:11px;color:var(--muted);letter-spacing:2px;font-family:'DM Mono',monospace;}
+
+/* ── TIER LEGEND ── */
+.tier-legend{
+  display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;
+}
+
+.tier-pill{
+  display:flex;align-items:center;gap:6px;
+  background:var(--panel);
+  border:1px solid var(--edge);
+  border-radius:20px;
+  padding:5px 12px;
+  font-size:10px;
+  letter-spacing:1px;
+}
+
+.tier-dot{width:8px;height:8px;border-radius:50%;}
+
+/* ── CONTROLS ── */
+.controls{
+  display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+  margin-bottom:28px;
+}
+
+.search-wrap{position:relative;flex:1;min-width:180px;max-width:320px;}
+.search-wrap::before{
+  content:'⌕';position:absolute;left:12px;top:50%;transform:translateY(-50%);
+  color:var(--muted);font-size:14px;
+}
+
+input[type=text]{
+  width:100%;
+  background:var(--panel);
+  border:1px solid var(--edge);
+  color:var(--text);
+  padding:9px 12px 9px 34px;
+  font-family:'DM Mono',monospace;
+  font-size:12px;
+  border-radius:8px;
+  outline:none;
+  transition:border-color 0.2s,box-shadow 0.2s;
+}
+
+input[type=text]:focus{border-color:var(--neural);box-shadow:var(--glow-neural);}
+input::placeholder{color:var(--muted);}
+
+.ctrl-btn{
+  padding:8px 16px;
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  letter-spacing:1.5px;
+  border-radius:8px;
+  border:1px solid var(--edge);
+  background:transparent;
+  color:var(--muted);
+  cursor:pointer;
+  transition:all 0.15s;
+  text-transform:uppercase;
+}
+
+.ctrl-btn:hover{border-color:var(--neural);color:var(--neural);}
+.ctrl-btn.active{background:var(--neural);color:var(--void);border-color:var(--neural);font-weight:600;}
+
+.reset-btn{
+  margin-left:auto;
+  padding:8px 16px;
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  letter-spacing:1px;
+  border-radius:8px;
+  border:1px solid rgba(255,60,172,0.3);
+  background:transparent;
+  color:var(--synapse);
+  cursor:pointer;
+  transition:all 0.15s;
+}
+.reset-btn:hover{background:rgba(255,60,172,0.1);}
+
+/* ── CATEGORY SECTIONS ── */
+.cat-section{margin-bottom:40px;}
+
+.cat-section-label{
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:16px;
+}
+
+.tier-badge{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:28px;
+  letter-spacing:2px;
+  width:44px;height:44px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:10px;
+  flex-shrink:0;
+}
+
+.tier-S .tier-badge{background:rgba(255,60,172,0.15);color:var(--tier-s);border:1px solid rgba(255,60,172,0.3);}
+.tier-A .tier-badge{background:rgba(255,140,0,0.15);color:var(--tier-a);border:1px solid rgba(255,140,0,0.3);}
+.tier-B .tier-badge{background:rgba(0,229,255,0.1);color:var(--tier-b);border:1px solid rgba(0,229,255,0.2);}
+.tier-C .tier-badge{background:rgba(127,255,0,0.08);color:var(--tier-c);border:1px solid rgba(127,255,0,0.15);}
+
+.tier-info{}
+.tier-name{
+  font-family:'Outfit',sans-serif;
+  font-size:16px;
+  font-weight:700;
+  color:var(--platinum);
+}
+.tier-desc{font-size:10px;color:var(--muted);letter-spacing:0.5px;margin-top:2px;}
+.tier-line{flex:1;height:1px;background:linear-gradient(90deg,var(--edge),transparent);}
+
+/* ── TOOL CARDS GRID ── */
+.tools-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:12px;
+}
+
+/* ── TOOL CARD ── */
+.tool-card{
+  background:var(--panel);
+  border:1px solid var(--edge);
+  border-radius:12px;
+  overflow:hidden;
+  transition:transform 0.2s,border-color 0.2s,box-shadow 0.2s;
+  position:relative;
+}
+
+.tool-card:hover{
+  transform:translateY(-3px);
+  box-shadow:0 12px 40px rgba(0,0,0,0.5);
+}
+
+.tool-card.connected{
+  border-color:rgba(127,255,0,0.4);
+  background:linear-gradient(135deg,rgba(127,255,0,0.03),var(--panel));
+}
+
+.tool-card.tier-S:hover{border-color:var(--tier-s);box-shadow:var(--glow-synapse);}
+.tool-card.tier-A:hover{border-color:var(--tier-a);box-shadow:0 0 20px rgba(255,140,0,0.3);}
+.tool-card.tier-B:hover{border-color:var(--tier-b);box-shadow:var(--glow-neural);}
+.tool-card.tier-C:hover{border-color:var(--tier-c);box-shadow:0 0 20px rgba(127,255,0,0.2);}
+
+/* Tier accent bar */
+.tool-card::before{
+  content:'';
+  display:block;
+  height:3px;
+  width:100%;
+}
+.tool-card.tier-S::before{background:linear-gradient(90deg,var(--synapse),transparent);}
+.tool-card.tier-A::before{background:linear-gradient(90deg,var(--tier-a),transparent);}
+.tool-card.tier-B::before{background:linear-gradient(90deg,var(--neural),transparent);}
+.tool-card.tier-C::before{background:linear-gradient(90deg,var(--axon),transparent);}
+
+.card-body{padding:14px 16px 12px;}
+
+.card-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;}
+
+.card-icon{
+  font-size:20px;
+  width:36px;height:36px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:8px;
+  background:var(--panel2);
+  flex-shrink:0;
+}
+
+.card-meta{flex:1;min-width:0;}
+
+.card-name{
+  font-family:'Outfit',sans-serif;
+  font-size:14px;
+  font-weight:700;
+  color:var(--platinum);
+  display:flex;align-items:center;gap:6px;
+  flex-wrap:wrap;
+}
+
+.card-category{
+  font-size:9px;
+  color:var(--muted);
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  margin-top:2px;
+}
+
+.card-desc{
+  font-size:11px;
+  color:var(--muted);
+  line-height:1.6;
+  margin-bottom:10px;
+}
+
+/* Credit badge */
+.credit-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:13px;
+  letter-spacing:1px;
+  padding:2px 8px;
+  border-radius:4px;
+  flex-shrink:0;
+}
+
+.tier-S .credit-badge{background:rgba(255,60,172,0.15);color:var(--synapse);}
+.tier-A .credit-badge{background:rgba(255,140,0,0.15);color:var(--tier-a);}
+.tier-B .credit-badge{background:rgba(0,229,255,0.1);color:var(--neural);}
+.tier-C .credit-badge{background:rgba(127,255,0,0.08);color:var(--axon);}
+
+.card-footer{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+}
+
+.connect-btn{
+  flex:1;
+  padding:8px 12px;
+  border-radius:7px;
+  border:none;
+  font-family:'Outfit',sans-serif;
+  font-size:12px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all 0.2s;
+  letter-spacing:0.5px;
+}
+
+.connect-btn:not(.connected-state){
+  background:var(--panel2);
+  border:1px solid var(--edge2);
+  color:var(--text);
+}
+
+.connect-btn:not(.connected-state):hover{
+  background:var(--neural);
+  color:var(--void);
+  border-color:var(--neural);
+}
+
+.connect-btn.connected-state{
+  background:rgba(127,255,0,0.12);
+  border:1px solid rgba(127,255,0,0.3);
+  color:var(--axon);
+}
+
+.open-link{
+  padding:8px 10px;
+  border-radius:7px;
+  border:1px solid var(--edge);
+  background:transparent;
+  color:var(--muted);
+  text-decoration:none;
+  font-size:11px;
+  transition:all 0.15s;
+  white-space:nowrap;
+}
+.open-link:hover{border-color:var(--neural);color:var(--neural);}
+
+/* ── UNLOCK TOAST ── */
+.toast{
+  position:fixed;bottom:32px;right:32px;z-index:999;
+  background:var(--panel);
+  border:1px solid var(--axon);
+  border-radius:12px;
+  padding:16px 20px;
+  display:flex;align-items:center;gap:12px;
+  box-shadow:0 8px 40px rgba(0,0,0,0.6),0 0 20px rgba(127,255,0,0.2);
+  transform:translateX(120%);
+  transition:transform 0.4s cubic-bezier(0.16,1,0.3,1);
+  max-width:320px;
+}
+
+.toast.show{transform:translateX(0);}
+
+.toast-icon{font-size:24px;}
+.toast-body{}
+.toast-title{font-family:'Outfit',sans-serif;font-weight:700;color:var(--platinum);font-size:13px;}
+.toast-msg{font-size:11px;color:var(--muted);margin-top:2px;}
+.toast-credits{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--gold);margin-top:4px;letter-spacing:1px;}
+
+/* ── HIDDEN ── */
+.hidden{display:none!important;}
+
+/* ── ACHIEVEMENT POPUP ── */
+.achievement{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.8);
+  z-index:1000;
+  background:linear-gradient(135deg,var(--panel),var(--panel2));
+  border:1px solid var(--gold);
+  border-radius:20px;
+  padding:40px;
+  text-align:center;
+  opacity:0;
+  pointer-events:none;
+  transition:all 0.4s cubic-bezier(0.16,1,0.3,1);
+  box-shadow:0 0 60px rgba(255,214,10,0.3);
+  min-width:300px;
+}
+
+.achievement.show{opacity:1;transform:translate(-50%,-50%) scale(1);pointer-events:auto;}
+
+.ach-icon{font-size:56px;margin-bottom:12px;}
+.ach-title{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:3px;color:var(--gold);}
+.ach-sub{font-size:12px;color:var(--muted);margin:6px 0 16px;letter-spacing:1px;}
+.ach-close{
+  padding:10px 28px;border-radius:8px;
+  background:var(--gold);color:var(--void);
+  border:none;cursor:pointer;
+  font-family:'Outfit',sans-serif;font-weight:700;font-size:13px;
+}
+
+/* overlay */
+.overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;
+  opacity:0;pointer-events:none;transition:opacity 0.3s;
+}
+.overlay.show{opacity:1;pointer-events:auto;}
+</style>
+</head>
+<body>
+<div style="position:fixed;top:0;left:0;right:0;z-index:9999;display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:rgba(3,4,10,0.85);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,0.06);font-family:monospace;"><a href="empire.html" style="font-size:9px;letter-spacing:0.25em;color:rgba(255,255,255,0.35);text-decoration:none;text-transform:uppercase;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.35)'">← Empire</a><span style="font-size:9px;letter-spacing:0.25em;color:rgba(255,255,255,0.2);text-transform:uppercase;">ShortFactory</span></div><style>body{padding-top:44px!important;}</style>
+<div id="neural-bg"></div>
+<canvas id="synapses"></canvas>
+
+<div class="wrap">
+
+  <!-- HEADER -->
+  <header>
+    <div>
+      <div class="cortex-logo"><span class="cx">CORTEX</span><br>BRAIN POWER</div>
+      <div class="cortex-sub">Neural Stack Integration Dashboard // Connect → Earn Credits → Evolve</div>
+    </div>
+    <div class="xp-panel">
+      <div class="xp-level" id="xp-level-label">LEVEL 1</div>
+      <div class="xp-title" id="xp-title-label">Dormant Node</div>
+      <div class="xp-bar-wrap"><div class="xp-bar" id="xp-bar" style="width:0%"></div></div>
+      <div class="xp-nums">
+        <span id="xp-cur">0 XP</span>
+        <span id="xp-next">next: 500 XP</span>
+      </div>
+      <div class="xp-total-credits" id="total-credits-display">0 <span>NEURAL CREDITS</span></div>
+    </div>
+  </header>
+
+  <!-- TIER LEGEND -->
+  <div class="tier-legend">
+    <div class="tier-pill"><div class="tier-dot" style="background:var(--tier-s)"></div>S-TIER — CORE BRAIN (+500 credits)</div>
+    <div class="tier-pill"><div class="tier-dot" style="background:var(--tier-a)"></div>A-TIER — HIGH SIGNAL (+250 credits)</div>
+    <div class="tier-pill"><div class="tier-dot" style="background:var(--tier-b)"></div>B-TIER — USEFUL FEED (+100 credits)</div>
+    <div class="tier-pill"><div class="tier-dot" style="background:var(--tier-c)"></div>C-TIER — UTILITY (+50 credits)</div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="controls">
+    <div class="search-wrap">
+      <input type="text" id="search" placeholder="search tools...">
+    </div>
+    <button class="ctrl-btn active" data-filter="all">ALL</button>
+    <button class="ctrl-btn" data-filter="disconnected">UNCONNECTED</button>
+    <button class="ctrl-btn" data-filter="connected">CONNECTED ✓</button>
+    <button class="reset-btn" id="reset-btn">↺ RESET CORTEX</button>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div id="main-content"></div>
+
+</div><!-- /wrap -->
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-icon" id="toast-icon">⚡</div>
+  <div class="toast-body">
+    <div class="toast-title" id="toast-title">SYNAPSE CONNECTED</div>
+    <div class="toast-msg" id="toast-msg">Tool connected to cortex</div>
+    <div class="toast-credits" id="toast-credits">+100 CREDITS</div>
+  </div>
+</div>
+
+<!-- ACHIEVEMENT OVERLAY -->
+<div class="overlay" id="overlay" onclick="closeAch()"></div>
+<div class="achievement" id="achievement">
+  <div class="ach-icon" id="ach-icon">🧠</div>
+  <div class="ach-title" id="ach-title">LEVEL UP</div>
+  <div class="ach-sub" id="ach-sub">Your cortex has evolved</div>
+  <button class="ach-close" onclick="closeAch()">CONTINUE →</button>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// DATA — Only tools that genuinely power an AI brain
+// Ranked S→C by direct cortex impact
+// ─────────────────────────────────────────────
+const TIERS = [
+  {
+    tier: "S",
+    name: "CORE NEURAL FABRIC",
+    desc: "Direct LLM inference, memory, embeddings & orchestration — the actual brain",
+    credits: 500,
+    tools: [
+      { icon:"🤖", name:"Groq API", cat:"Inference", desc:"Fastest LLM inference on the planet (Llama 3, Mixtral). Sub-100ms responses. Free tier: generous rate limits. The speed makes real-time cortex responses possible.", url:"https://groq.com" },
+      { icon:"🧠", name:"Hugging Face Hub", cat:"Models + Embeddings", desc:"200k+ models. Free Inference API for embeddings, classification, generation. The cortex's model library. Critical for semantic search & fine-tuning.", url:"https://huggingface.co" },
+      { icon:"🔍", name:"Weaviate Cloud", cat:"Vector DB", desc:"Vector database for semantic memory. Free: 14-day sandbox. Gives cortex long-term associative memory over documents, knowledge, history.", url:"https://weaviate.io/pricing" },
+      { icon:"📌", name:"Pinecone", cat:"Vector DB", desc:"Managed vector store. Free: 1 index, 100k vectors. Core memory layer — enables similarity search across embedded knowledge.", url:"https://pinecone.io" },
+      { icon:"⚡", name:"Together AI", cat:"Inference", desc:"70+ open-source LLMs via API. $1 free credit. Run Llama, Mistral, Code Llama without self-hosting. Backup inference node.", url:"https://together.ai" },
+      { icon:"🦜", name:"LangChain / LangSmith", cat:"Orchestration", desc:"LLM orchestration framework + tracing. Free tier on LangSmith. The nervous system connecting all cortex components together.", url:"https://smith.langchain.com" },
+      { icon:"🌊", name:"Ollama", cat:"Local Inference", desc:"Run LLMs fully offline. No rate limits, no cost. Cortex self-sufficiency layer — works when APIs go down.", url:"https://ollama.ai" },
+    ]
+  },
+  {
+    tier: "A",
+    name: "HIGH-SIGNAL DATA FEEDS",
+    desc: "Real-time data ingestion, search, pipelines & memory storage",
+    credits: 250,
+    tools: [
+      { icon:"🗄️", name:"Supabase", cat:"Postgres + pgvector", desc:"Postgres with pgvector extension = free vector search + relational data. Free: 500MB. One DB handles structured + semantic data for cortex.", url:"https://supabase.com" },
+      { icon:"⚡", name:"Upstash Redis", cat:"Cache + Queue", desc:"Serverless Redis. Free: 10k commands/day. Cortex short-term memory — rate limiting, context caching, pub/sub for streaming.", url:"https://upstash.com" },
+      { icon:"🔎", name:"Exa (Metaphor)", cat:"Neural Web Search", desc:"AI-native search API — searches by meaning not keywords. Free credits on signup. Gives cortex live web knowledge retrieval.", url:"https://exa.ai" },
+      { icon:"📡", name:"Serper.dev", cat:"Web Search API", desc:"Google Search API. $50 free credits. Cortex window to live web data — news, facts, current events injection.", url:"https://serper.dev" },
+      { icon:"🌊", name:"Qdrant Cloud", cat:"Vector DB", desc:"High-performance vector DB. Free: 1GB storage forever. Alternative vector memory with filtering + payload support.", url:"https://qdrant.io/cloud" },
+      { icon:"🔄", name:"Inngest", cat:"AI Workflows", desc:"Event-driven functions for AI pipelines. Free: 50k runs/month. Orchestrate multi-step cortex workflows reliably.", url:"https://inngest.com" },
+      { icon:"📊", name:"Neon Postgres", cat:"Serverless DB", desc:"Serverless Postgres with branching. Free: 0.5GB. Cortex knowledge graph — store entities, relationships, context.", url:"https://neon.tech" },
+    ]
+  },
+  {
+    tier: "B",
+    name: "SIGNAL AMPLIFIERS",
+    desc: "APIs that feed useful context, data and capabilities into the brain",
+    credits: 100,
+    tools: [
+      { icon:"🌐", name:"Cloudflare Workers AI", cat:"Edge Inference", desc:"Run ML models at edge. Free: 10k neurons/day. Distributed cortex nodes globally — latency-free inference anywhere.", url:"https://developers.cloudflare.com/workers-ai" },
+      { icon:"📰", name:"NewsAPI", cat:"Data Feed", desc:"Live news across 80k sources. Free: 100 requests/day (dev). Cortex current-events awareness layer.", url:"https://newsapi.org" },
+      { icon:"🐦", name:"Jina Reader", cat:"Web Scraping", desc:"Convert any URL to clean LLM-readable markdown. Free: generous rate limit. Cortex web comprehension layer.", url:"https://jina.ai/reader" },
+      { icon:"📦", name:"Replicate", cat:"Inference", desc:"Run vision, audio, video AI models via API. Free credits. Extends cortex into multimodal (images, audio, video).", url:"https://replicate.com" },
+      { icon:"🔗", name:"Tavily", cat:"AI Search", desc:"Search API built for AI agents. Free: 1k requests/month. Returns structured, relevant results for RAG pipelines.", url:"https://tavily.com" },
+      { icon:"💬", name:"OpenRouter", cat:"LLM Gateway", desc:"One API for 50+ LLMs (GPT-4, Claude, Gemini, Llama). Free models available. Cortex model routing & fallback layer.", url:"https://openrouter.ai" },
+      { icon:"🧩", name:"Composio", cat:"Agent Tools", cat2:"", desc:"250+ integrations (GitHub, Gmail, Slack) as tools for AI agents. Free tier. Cortex action layer — lets agents DO things.", url:"https://composio.dev" },
+    ]
+  },
+  {
+    tier: "C",
+    name: "INFRASTRUCTURE LAYER",
+    desc: "Deployment, monitoring and delivery infrastructure the brain runs on",
+    credits: 50,
+    tools: [
+      { icon:"🚀", name:"Vercel", cat:"Deployment", desc:"Deploy cortex frontend/API. Free: unlimited personal projects, serverless functions, 100GB bandwidth.", url:"https://vercel.com" },
+      { icon:"⚙️", name:"GitHub Actions", cat:"CI/CD", desc:"Automate cortex model updates, data pipeline triggers, retraining jobs. Free: 2k mins/month.", url:"https://github.com/features/actions" },
+      { icon:"📊", name:"Grafana Cloud", cat:"Monitoring", desc:"Monitor LLM latency, token usage, pipeline health. Free: 10k metrics series. Cortex health dashboard.", url:"https://grafana.com/products/cloud" },
+      { icon:"🔔", name:"Novu", cat:"Notifications", desc:"Multi-channel notifications when cortex events fire (alerts, summaries, digests). Free: 30k events/month.", url:"https://novu.co" },
+      { icon:"📋", name:"Axiom", cat:"Log Analytics", desc:"Ingest and query logs from LLM calls, agent runs, pipelines. Free: 0.5TB/month. Debug cortex behavior.", url:"https://axiom.co" },
+    ]
+  }
+];
+
+// ─── LEVELS ───
+const LEVELS = [
+  {min:0,    max:499,   level:1, title:"Dormant Node"},
+  {min:500,  max:1499,  level:2, title:"Awakening Cortex"},
+  {min:1500, max:2999,  level:3, title:"Neural Cluster"},
+  {min:3000, max:4999,  level:4, title:"Synaptic Web"},
+  {min:5000, max:7999,  level:5, title:"Cognitive Engine"},
+  {min:8000, max:11999, level:6, title:"Emergent Mind"},
+  {min:12000,max:17999, level:7, title:"Sentient Stack"},
+  {min:18000,max:Infinity,level:8,title:"FULL CORTEX POWER"},
+];
+
+// ─── STATE ───
+function getState(){try{return JSON.parse(localStorage.getItem('cortex_v2')||'{}')}catch{return{}}}
+function saveState(s){localStorage.setItem('cortex_v2',JSON.stringify(s))}
+
+let filter = 'all', search = '';
+
+function totalCredits(){
+  const s = getState();
+  let c = 0;
+  TIERS.forEach(tier => {
+    tier.tools.forEach((t,i) => {
+      if(s[`${tier.tier}:${i}`]) c += tier.credits;
+    });
+  });
+  return c;
+}
+
+function getLevelData(credits){
+  return LEVELS.find(l => credits >= l.min && credits <= l.max) || LEVELS[LEVELS.length-1];
+}
+
+function updateXPPanel(){
+  const credits = totalCredits();
+  const lv = getLevelData(credits);
+  const nextLv = LEVELS.find(l => l.level === lv.level+1);
+  const pct = nextLv ? Math.round(((credits - lv.min)/(nextLv.min - lv.min))*100) : 100;
+
+  document.getElementById('xp-level-label').textContent = `LEVEL ${lv.level}`;
+  document.getElementById('xp-title-label').textContent = lv.title;
+  document.getElementById('xp-bar').style.width = pct + '%';
+  document.getElementById('xp-cur').textContent = credits + ' XP';
+  document.getElementById('xp-next').textContent = nextLv ? `next: ${nextLv.min} XP` : 'MAX LEVEL';
+  document.getElementById('total-credits-display').innerHTML = `${credits.toLocaleString()} <span>NEURAL CREDITS</span>`;
+}
+
+// ─── RENDER ───
+function render(){
+  const s = getState();
+  const q = search.toLowerCase();
+  const content = document.getElementById('main-content');
+
+  updateXPPanel();
+
+  let html = '';
+  TIERS.forEach(tier => {
+    const filtered = tier.tools.map((t,i) => ({...t, idx:i, connected:!!s[`${tier.tier}:${i}`]})).filter(t => {
+      if(q && !t.name.toLowerCase().includes(q) && !t.desc.toLowerCase().includes(q) && !t.cat.toLowerCase().includes(q)) return false;
+      if(filter === 'connected' && !t.connected) return false;
+      if(filter === 'disconnected' && t.connected) return false;
+      return true;
+    });
+
+    if(!filtered.length) return;
+
+    html += `
+    <div class="cat-section tier-${tier.tier}">
+      <div class="cat-section-label">
+        <div class="tier-badge">${tier.tier}</div>
+        <div class="tier-info">
+          <div class="tier-name">${tier.name}</div>
+          <div class="tier-desc">${tier.desc} — <strong style="color:var(--tier-${tier.tier.toLowerCase() === 's' ? 'S' : tier.tier})">${tier.tools.filter((_,i) => s[`${tier.tier}:${i}`]).length}/${tier.tools.length} connected</strong></div>
+        </div>
+        <div class="tier-line"></div>
+      </div>
+      <div class="tools-grid">
+        ${filtered.map(t => `
+        <div class="tool-card tier-${tier.tier} ${t.connected?'connected':''}">
+          <div class="card-body">
+            <div class="card-top">
+              <div class="card-icon">${t.icon}</div>
+              <div class="card-meta">
+                <div class="card-name">
+                  ${t.name}
+                  <span class="credit-badge">+${tier.credits}⚡</span>
+                </div>
+                <div class="card-category">${t.cat}</div>
+              </div>
+            </div>
+            <div class="card-desc">${t.desc}</div>
+            <div class="card-footer">
+              <button class="connect-btn ${t.connected?'connected-state':''}" onclick="toggle('${tier.tier}',${t.idx})">
+                ${t.connected ? '✓ CONNECTED TO CORTEX' : '⚡ CONNECT TO CORTEX'}
+              </button>
+              <a class="open-link" href="${t.url}" target="_blank" rel="noopener">↗</a>
+            </div>
+          </div>
+        </div>
+        `).join('')}
+      </div>
+    </div>`;
+  });
+
+  if(!html) html = `<div style="text-align:center;padding:80px;color:var(--muted);font-size:13px">// no tools match filter</div>`;
+  content.innerHTML = html;
+}
+
+// ─── TOAST ───
+let toastTimer;
+function showToast(icon, title, msg, credits, isConnect){
+  const t = document.getElementById('toast');
+  t.style.borderColor = isConnect ? 'var(--axon)' : 'var(--synapse)';
+  document.getElementById('toast-icon').textContent = icon;
+  document.getElementById('toast-title').textContent = title;
+  document.getElementById('toast-msg').textContent = msg;
+  document.getElementById('toast-credits').textContent = (isConnect ? '+' : '-') + credits + ' CREDITS';
+  document.getElementById('toast-credits').style.color = isConnect ? 'var(--gold)' : 'var(--synapse)';
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+// ─── ACHIEVEMENT ───
+function showAchievement(icon, title, sub){
+  document.getElementById('ach-icon').textContent = icon;
+  document.getElementById('ach-title').textContent = title;
+  document.getElementById('ach-sub').textContent = sub;
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('achievement').classList.add('show');
+}
+
+function closeAch(){
+  document.getElementById('overlay').classList.remove('show');
+  document.getElementById('achievement').classList.remove('show');
+}
+
+// ─── TOGGLE ───
+let prevLevel = getLevelData(0).level;
+
+function toggle(tier, idx){
+  const s = getState();
+  const key = `${tier}:${idx}`;
+  const wasConnected = !!s[key];
+  const tierData = TIERS.find(t => t.tier === tier);
+  const tool = tierData.tools[idx];
+
+  s[key] = !wasConnected;
+  saveState(s);
+
+  const credits = tierData.credits;
+  const isConnect = !wasConnected;
+
+  showToast(
+    isConnect ? '⚡' : '💔',
+    isConnect ? 'SYNAPSE CONNECTED' : 'SYNAPSE SEVERED',
+    `${tool.name} ${isConnect ? 'wired into' : 'disconnected from'} cortex`,
+    credits,
+    isConnect
+  );
+
+  // Level up check
+  const newTotal = totalCredits();
+  const newLv = getLevelData(newTotal);
+  if(newLv.level > prevLevel){
+    setTimeout(() => showAchievement('🧠', `LEVEL ${newLv.level}`, `${newLv.title} — cortex evolution detected`), 600);
+    prevLevel = newLv.level;
+  }
+
+  // S-tier all done
+  if(tier === 'S'){
+    const sDone = TIERS[0].tools.every((_,i) => s[`S:${i}`]);
+    if(sDone) setTimeout(() => showAchievement('🔥', 'CORE ACTIVATED', 'All S-Tier neural fabric connected. Full inference unlocked.'), 600);
+  }
+
+  render();
+}
+
+// ─── CONTROLS ───
+document.getElementById('search').addEventListener('input', e => { search = e.target.value; render(); });
+document.querySelectorAll('.ctrl-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.ctrl-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    filter = b.dataset.filter;
+    render();
+  });
+});
+document.getElementById('reset-btn').addEventListener('click', () => {
+  if(confirm('Wipe all cortex connections? This resets all credits.')) {
+    localStorage.removeItem('cortex_v2');
+    prevLevel = 1;
+    render();
+  }
+});
+
+// ─── NEURAL CANVAS ───
+(function(){
+  const canvas = document.getElementById('synapses');
+  const ctx = canvas.getContext('2d');
+  let W,H,nodes=[],raf;
+
+  function resize(){
+    W=canvas.width=window.innerWidth;
+    H=canvas.height=window.innerHeight;
+  }
+
+  function init(){
+    resize();
+    nodes=[];
+    for(let i=0;i<40;i++){
+      nodes.push({
+        x:Math.random()*W, y:Math.random()*H,
+        vx:(Math.random()-0.5)*0.3, vy:(Math.random()-0.5)*0.3,
+        r:Math.random()*2+1
+      });
+    }
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    // connections
+    for(let i=0;i<nodes.length;i++){
+      for(let j=i+1;j<nodes.length;j++){
+        const dx=nodes[i].x-nodes[j].x, dy=nodes[i].y-nodes[j].y;
+        const d=Math.sqrt(dx*dx+dy*dy);
+        if(d<160){
+          ctx.strokeStyle=`rgba(0,229,255,${(1-d/160)*0.3})`;
+          ctx.lineWidth=0.5;
+          ctx.beginPath();ctx.moveTo(nodes[i].x,nodes[i].y);ctx.lineTo(nodes[j].x,nodes[j].y);ctx.stroke();
+        }
+      }
+    }
+    // nodes
+    nodes.forEach(n=>{
+      ctx.fillStyle='rgba(0,229,255,0.6)';
+      ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,Math.PI*2);ctx.fill();
+      n.x+=n.vx; n.y+=n.vy;
+      if(n.x<0||n.x>W) n.vx*=-1;
+      if(n.y<0||n.y>H) n.vy*=-1;
+    });
+    raf=requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize',init);
+  init(); draw();
+})();
+
+// ─── INIT ───
+prevLevel = getLevelData(totalCredits()).level;
+render();
+</script>
+</body>
+</html>

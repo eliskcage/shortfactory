@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Genomic Cat · GB2605434.6 · shortfactory.shop</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#fff; font-family:'Courier New',monospace; color:#111; }
+
+#scene-wrap {
+  position:relative; width:100%; height:78vh; min-height:440px;
+  background:#f2f2f2; overflow:hidden;
+}
+#scene { display:block; width:100%; height:100%; }
+
+/* ── SATOSHI PACKET ROW — top of canvas ── */
+#pkt-row {
+  position:absolute; top:18px; left:118px; right:0;
+  display:flex; gap:20px; z-index:20; align-items:flex-start;
+  padding:0 20px; overflow-x:auto; overflow-y:visible;
+  scrollbar-width:none;
+}
+#pkt-row::-webkit-scrollbar { display:none; }
+.pkt-item {
+  display:flex; flex-direction:column; align-items:center;
+  cursor:grab; user-select:none; touch-action:none;
+  padding:4px; border-radius:4px; transition:opacity 0.4s;
+}
+.pkt-item:hover svg polygon { filter:brightness(1.4); }
+.pkt-item:active { cursor:grabbing; }
+.pkt-name {
+  font:700 7px 'Courier New'; letter-spacing:2px; color:#555;
+  text-transform:uppercase; margin-top:4px; text-align:center;
+}
+.pkt-sides { font:8px 'Courier New'; color:#bbb; letter-spacing:1px; }
+
+/* dragging clone — floats under cursor */
+#drag-clone {
+  position:fixed; pointer-events:none; z-index:9999;
+  display:none; flex-direction:column; align-items:center;
+  opacity:0.85; transform:scale(1.15);
+}
+
+/* ── DOLBY BADGE ── */
+#dolby-badge {
+  position:absolute; bottom:14px; left:136px;
+  display:flex; flex-direction:column; align-items:flex-start;
+  pointer-events:none; gap:1px;
+}
+.dolby-logo { display:flex; align-items:center; gap:3px; }
+.dolby-d {
+  width:18px; height:22px; background:#111; border-radius:0 11px 11px 0;
+  display:flex; align-items:center; justify-content:center;
+}
+.dolby-d-rev {
+  width:18px; height:22px; background:#111; border-radius:11px 0 0 11px;
+}
+.dolby-text {
+  font:900 9px Arial; letter-spacing:2px; color:#111; text-transform:uppercase;
+}
+.dolby-sub {
+  font:600 7px Arial; letter-spacing:3px; color:#555; text-transform:uppercase;
+  margin-top:1px;
+}
+.dolby-note {
+  font:6px 'Courier New'; letter-spacing:1px; color:#bbb; margin-top:2px;
+}
+
+/* ── 8K GENOMIC BADGE ── */
+#res-badge {
+  position:absolute; top:14px; right:16px;
+  text-align:right; pointer-events:none; line-height:1.3;
+}
+.badge-8k {
+  font:900 22px Arial; letter-spacing:-1px; color:#111; line-height:1;
+}
+.badge-inf {
+  font:900 16px Arial; color:#aaa;
+}
+.badge-label {
+  font:7px 'Courier New'; letter-spacing:3px; color:#bbb;
+  text-transform:uppercase;
+}
+
+/* ── CURRENT BEHAVIOR ── */
+#behav-now {
+  position:absolute; bottom:40px; left:0; right:0; text-align:center;
+  font-size:9px; letter-spacing:5px; color:#bbb; text-transform:uppercase;
+  pointer-events:none; transition:color 0.5s;
+}
+
+/* ── GENOME READOUT ── */
+#genome-readout {
+  position:absolute; bottom:14px; right:16px;
+  font-size:8px; line-height:1.9; color:#ccc; letter-spacing:1px;
+  pointer-events:none; text-align:right;
+}
+#genome-readout b { color:#999; }
+
+/* ── EMOTION HUD — left strip ── */
+#emotion-hud {
+  position:absolute; left:0; top:0; bottom:0; width:118px;
+  background:#000; border-right:1px solid #111;
+  display:flex; flex-direction:column; align-items:center;
+  padding:12px 0 12px; gap:14px; z-index:30; pointer-events:none;
+}
+#wheel-canvas { display:block; }
+/* heart + lungs row */
+#hud-organs {
+  display:flex; align-items:flex-end; justify-content:center; gap:10px; width:100%;
+  padding:0 10px;
+}
+#hud-heart-canvas, #hud-lungs-canvas { display:block; }
+/* vertical hormone bars */
+#hud-bars {
+  display:flex; align-items:flex-end; justify-content:center; gap:8px;
+  width:100%; padding:0 10px; flex:1;
+}
+.vbar-col { display:flex; flex-direction:column; align-items:center; gap:4px; flex:1; }
+.vbar-label {
+  font:600 5px 'Courier New'; letter-spacing:1.5px; color:#333;
+  text-transform:uppercase; text-align:center; line-height:1.3;
+}
+.vbar-track {
+  width:2px; flex:1; background:#1a1a1a;
+  position:relative; overflow:hidden; min-height:60px; margin:0 auto;
+}
+.vbar-fill {
+  position:absolute; bottom:0; left:0; right:0; height:0%;
+  transition:height 0.2s cubic-bezier(0.4,0,0.2,1);
+}
+#vbar-serotonin .vbar-fill { background:#fff; }
+#vbar-dopamine  .vbar-fill { background:#888; }
+#emotion-name {
+  font:700 6px 'Courier New'; letter-spacing:3px; color:#fff;
+  text-transform:uppercase; text-align:center;
+}
+
+/* ── DROP HINT ── */
+#drop-hint {
+  position:absolute; bottom:14px; left:0; right:0; text-align:center;
+  font-size:8px; letter-spacing:3px; color:#ccc; text-transform:uppercase;
+  pointer-events:none; transition:opacity 0.5s;
+}
+
+/* ── DROP ZONE RING (shows when dragging near cat) ── */
+#drop-ring {
+  position:absolute; border:2px solid rgba(170,255,0,0);
+  border-radius:50%; pointer-events:none; transition:border-color 0.2s;
+  width:100px; height:100px; margin-left:-50px; margin-top:-50px;
+}
+
+/* ── CONTENT ── */
+.content { max-width:660px; margin:0 auto; padding:52px 28px 72px; }
+h1 { font-size:clamp(38px,9vw,80px); font-weight:900; line-height:0.92; letter-spacing:-2px; margin-bottom:22px; }
+.sub { font-size:12px; color:#666; line-height:1.8; max-width:500px; margin-bottom:36px; text-transform:uppercase; letter-spacing:1px; }
+p { font-size:13px; line-height:1.95; color:#333; margin-bottom:14px; }
+.patent-box { border:1px solid #111; padding:22px 26px; margin:32px 0; }
+.patent-box h3 { font-size:13px; font-weight:700; margin-bottom:6px; }
+.patent-box .filed { font-size:11px; color:#999; margin-bottom:16px; }
+.patent-box p { font-size:12px; color:#444; margin-bottom:10px; }
+.section-head { font-size:10px; letter-spacing:4px; color:#aaa; text-transform:uppercase; margin:28px 0 8px; }
+.eq { font-size:13px; line-height:2.4; }
+.eq code { background:#f2f2f2; padding:2px 10px; }
+.kicker { font-size:clamp(22px,4vw,36px); font-weight:900; line-height:1.15; margin-top:44px; }
+.footer-tag { border-top:1px solid #eee; padding:28px; text-align:center; font-size:10px; color:#bbb; letter-spacing:3px; }
+.txt-link { color:#0055cc; font-size:11px; letter-spacing:2px; }
+
+/* ── PASTE ZONE ── */
+#paste-zone {
+  background:#0a0a0a; padding:28px 32px; border-top:2px solid #000;
+}
+#paste-zone-inner { max-width:660px; margin:0 auto; }
+.paste-title {
+  font-size:11px; letter-spacing:4px; color:#555; text-transform:uppercase;
+  margin-bottom:16px;
+}
+#ai-selector { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+.ai-btn {
+  padding:7px 16px; background:none; border:1px solid #2a2a2a;
+  color:#444; font-family:'Courier New'; font-size:9px; letter-spacing:3px;
+  cursor:pointer; text-transform:uppercase; transition:all 0.15s;
+  display:flex; align-items:center; gap:7px;
+}
+.ai-btn:hover { border-color:#555; color:#888; }
+.ai-btn.active { border-color:#fff; color:#fff; }
+.ai-btn[data-ai="grok"].active  { border-color:#fff; color:#fff; }
+.ai-btn[data-ai="claude"].active{ border-color:#d4795a; color:#d4795a; }
+.ai-btn[data-ai="gpt"].active   { border-color:#10a37f; color:#10a37f; }
+.ai-btn[data-ai="other"].active { border-color:#aaa; color:#aaa; }
+.ai-dot { width:8px; height:8px; border-radius:50%; }
+
+#genome-paste {
+  width:100%; background:#111; border:1px solid #222; color:#aaa;
+  font-family:'Courier New'; font-size:11px; line-height:1.7; padding:14px;
+  resize:vertical; min-height:110px; outline:none; transition:border-color 0.2s;
+  margin-bottom:14px;
+}
+#genome-paste:focus { border-color:#444; }
+#genome-paste::placeholder { color:#2a2a2a; }
+
+.paste-row { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+#animate-btn {
+  background:#0a0a0a; border:2px solid #fff; color:#fff;
+  font-family:'Courier New'; font-size:10px; letter-spacing:4px;
+  text-transform:uppercase; padding:13px 28px; cursor:pointer;
+  transition:all 0.15s; white-space:nowrap;
+}
+#animate-btn:hover { background:#fff; color:#000; }
+#parse-status { font-size:9px; letter-spacing:2px; color:#444; }
+#parse-status.ok  { color:#44cc66; }
+#parse-status.err { color:#ff4444; }
+
+/* ── AI CREDIT BADGE — on canvas ── */
+#ai-credit {
+  position:absolute; bottom:55px; left:50%; transform:translateX(-50%);
+  display:none; align-items:center; gap:10px;
+  background:rgba(0,0,0,0.75); border:1px solid #222;
+  padding:8px 16px; pointer-events:all; cursor:default;
+}
+#ai-credit-icon {
+  width:28px; height:28px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font:900 9px Arial; letter-spacing:1px;
+}
+#ai-credit-text { font-size:9px; letter-spacing:3px; color:#aaa; text-transform:uppercase; }
+#challenge-btn {
+  background:none; border:1px solid #444; color:#666;
+  font-family:'Courier New'; font-size:8px; letter-spacing:2px;
+  text-transform:uppercase; padding:4px 10px; cursor:pointer; transition:all 0.15s;
+}
+#challenge-btn:hover { border-color:#fff; color:#fff; }
+
+/* ── CHALLENGE MODAL ── */
+#challenge-modal {
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92);
+  z-index:999; align-items:center; justify-content:center; padding:24px;
+}
+#challenge-inner {
+  background:#0a0a0a; border:1px solid #333; max-width:580px; width:100%;
+  padding:28px; max-height:85vh; overflow-y:auto;
+}
+.modal-title { font-size:11px; letter-spacing:4px; color:#fff; text-transform:uppercase; margin-bottom:20px; }
+.challenge-ai { margin-bottom:20px; }
+.challenge-ai h4 { font-size:9px; letter-spacing:3px; text-transform:uppercase; margin-bottom:8px; }
+.challenge-ai h4.grok-h   { color:#fff; }
+.challenge-ai h4.claude-h { color:#d4795a; }
+.challenge-ai h4.gpt-h    { color:#10a37f; }
+.challenge-prompt {
+  background:#111; border:1px solid #222; color:#666;
+  font-family:'Courier New'; font-size:10px; line-height:1.7;
+  padding:12px; white-space:pre-wrap; cursor:pointer;
+  transition:border-color 0.15s;
+}
+.challenge-prompt:hover { border-color:#555; color:#999; }
+.copy-hint { font-size:8px; color:#333; letter-spacing:2px; margin-top:4px; }
+#modal-close {
+  background:none; border:1px solid #333; color:#555;
+  font-family:'Courier New'; font-size:9px; letter-spacing:3px;
+  padding:8px 20px; cursor:pointer; margin-top:20px; text-transform:uppercase;
+}
+#modal-close:hover { border-color:#fff; color:#fff; }
+</style>
+</head>
+<body>
+
+<div id="scene-wrap">
+  <canvas id="scene"></canvas>
+
+  <!-- SATOSHI PACKETS — top row, draggable -->
+  <div id="pkt-row"></div>
+
+  <!-- Drag ghost -->
+  <div id="drag-clone"></div>
+
+  <!-- Drop zone ring -->
+  <div id="drop-ring"></div>
+
+  <!-- Dolby Pro Logic badge -->
+  <div id="dolby-badge">
+    <div class="dolby-logo">
+      <div class="dolby-d"></div>
+      <div class="dolby-d-rev"></div>
+      <div class="dolby-text">&nbsp;DOLBY</div>
+    </div>
+    <div class="dolby-sub">PRO LOGIC</div>
+    <div class="dolby-note">GENOME AUDIO COMPRESSION CANDIDATE</div>
+  </div>
+
+  <!-- 8K ∞ Genomic resolution badge -->
+  <div id="res-badge">
+    <div class="badge-8k">8K</div>
+    <div class="badge-inf">∞</div>
+    <div class="badge-label">GENOMIC<br>RESOLUTION</div>
+  </div>
+
+  <!-- EMOTION HUD — left strip -->
+  <div id="emotion-hud">
+    <canvas id="wheel-canvas" width="110" height="110"></canvas>
+    <div id="hud-organs">
+      <canvas id="hud-heart-canvas" width="44" height="44"></canvas>
+      <canvas id="hud-lungs-canvas" width="52" height="44"></canvas>
+    </div>
+    <div id="hud-bars">
+      <div class="vbar-col" id="vbar-serotonin">
+        <div class="vbar-track"><div class="vbar-fill" id="fill-serotonin"></div></div>
+        <div class="vbar-label">sero<br>tonin</div>
+      </div>
+      <div class="vbar-col" id="vbar-dopamine">
+        <div class="vbar-track"><div class="vbar-fill" id="fill-dopamine"></div></div>
+        <div class="vbar-label">dopa<br>mine</div>
+      </div>
+    </div>
+    <div id="emotion-name">patient</div>
+  </div>
+
+  <div id="behav-now">patience</div>
+  <div id="genome-readout"></div>
+  <div id="drop-hint">drag a shape · drop on the cat</div>
+
+  <!-- AI credit badge — shown after paste animate -->
+  <div id="ai-credit">
+    <div id="ai-credit-icon"></div>
+    <div id="ai-credit-text">animated by —</div>
+    <button id="challenge-btn">challenge ⚔</button>
+  </div>
+</div>
+
+<!-- ── PASTE ZONE ── -->
+<div id="paste-zone">
+  <div id="paste-zone-inner">
+    <div class="paste-title">paste your satoshi genome · ask grok / claude / gpt to build one using the txt file</div>
+
+    <!-- AI selector -->
+    <div id="ai-selector">
+      <button class="ai-btn active" data-ai="grok">
+        <div class="ai-dot" style="background:#fff"></div>GROK
+      </button>
+      <button class="ai-btn" data-ai="claude">
+        <div class="ai-dot" style="background:#d4795a"></div>CLAUDE
+      </button>
+      <button class="ai-btn" data-ai="gpt">
+        <div class="ai-dot" style="background:#10a37f"></div>GPT
+      </button>
+      <button class="ai-btn" data-ai="other">
+        <div class="ai-dot" style="background:#aaa"></div>OTHER
+      </button>
+    </div>
+
+    <textarea id="genome-paste" spellcheck="false" placeholder='{
+  "id": "my_behavior",
+  "label": "HAPPY",
+  "sides": 7,
+  "ai": "grok",
+  "genome": {
+    "breathFreq": 0.65,
+    "breathAmp":  0.010,
+    "tailFreq":   1.10,
+    "tailAmp":    0.30,
+    "headTilt":  -0.22,
+    "eyeScale":   1.35
+  }
+}'></textarea>
+
+    <div class="paste-row">
+      <button id="animate-btn">▶ make satoshi animate</button>
+      <div id="parse-status">ready</div>
+      <div id="genome-preview" style="margin-left:8px;opacity:0.4;transition:opacity 0.3s"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── CHALLENGE MODAL ── -->
+<div id="challenge-modal">
+  <div id="challenge-inner">
+    <div class="modal-title">⚔ AI Animation Challenge</div>
+    <p style="font-size:11px;color:#555;line-height:1.8;margin-bottom:20px">
+      Copy a prompt below, paste it into that AI, get the genome JSON back, paste it into the box and hit animate. Best animation wins.
+    </p>
+    <div class="challenge-ai">
+      <h4 class="grok-h">● GROK (xAI)</h4>
+      <div class="challenge-prompt" id="prompt-grok" onclick="copyPrompt(this)"></div>
+      <div class="copy-hint">click to copy</div>
+    </div>
+    <div class="challenge-ai">
+      <h4 class="claude-h">● CLAUDE (Anthropic)</h4>
+      <div class="challenge-prompt" id="prompt-claude" onclick="copyPrompt(this)"></div>
+      <div class="copy-hint">click to copy</div>
+    </div>
+    <div class="challenge-ai">
+      <h4 class="gpt-h">● GPT (OpenAI)</h4>
+      <div class="challenge-prompt" id="prompt-gpt" onclick="copyPrompt(this)"></div>
+      <div class="copy-hint">click to copy</div>
+    </div>
+    <button id="modal-close" onclick="document.getElementById('challenge-modal').style.display='none'">close</button>
+  </div>
+</div>
+
+<div class="content">
+  <h1>black<br>a polygonal<br>cat</h1>
+  <p class="sub">clearly angular · edgy origami style · the natural beauty of catshape · like ive cracked agi</p>
+
+  <p>Each shape at the top IS a behavior genome — a Satoshi data packet. Drag it onto the cat. The polygon encodes the program. No text code. Just shape. The number of sides encodes the complexity of the behavior.</p>
+
+  <p>3 sides = rest. 8 sides = courage. The cat reads the geometry and transitions slowly — you watch the genome data take effect in the readout, live, as the values crawl toward their new state.</p>
+
+  <p><strong>Behavior as shape. Shape as data. Data as compression.</strong> This is GB2605434.6 demonstrated in real time.</p>
+
+  <div class="patent-box">
+    <h3>GB2605434.6 — Domino Exemption: Visual Equation Genome Compression</h3>
+    <div class="filed">Filed: 13 March 2026 — UK Intellectual Property Office &nbsp;·&nbsp; Inventor: Daniel Chipchase</div>
+    <p>A 96-byte polynomial genome generates a specific class of visual shapes at any resolution — because the genome stores the generator, not the output. For synthesised content this represents compression ratios exceeding 1,000,000:1. This cat renders at 8K from the same 1.8KB genome.</p>
+  </div>
+
+  <div class="section-head">Build Your Own Satoshi Library</div>
+  <p>AIs can generate new behavior packets using the open genome format. Drop your JSON on the cat. Build the library. The shape IS the data.</p>
+  <p><a class="txt-link" href="/satoshi/cat-behavior-genome.txt">↓ cat-behavior-genome.txt — genome format for AIs</a></p>
+
+  <div class="section-head">Violents</div>
+  <div class="eq">Grid sampler + 2D polynomial surface fit → <code>96-byte genome</code></div>
+  <div class="eq">Shape encodes behavior · behavior encodes life · life encodes meaning</div>
+
+  <div class="kicker">The mind is open.<br>The eyes are not.</div>
+</div>
+<div class="footer-tag">GENOMIC CAT &nbsp;·&nbsp; ~1.8KB GENOME &nbsp;·&nbsp; SHORTFACTORY.SHOP &nbsp;·&nbsp; GB2605434.6 &nbsp;·&nbsp; 8K ∞</div>
+
+<script data-cfasync="false">
+
+// ── BEHAVIOR PACKETS ──────────────────────────────────────────────────────────
+// Genomes include ALL 8 axes so the blob shape uses full data space
+const PACKETS = [
+  { id:'rest',     label:'REST',
+    genome:{ breathFreq:0.20, breathAmp:0.040, tailFreq:0.12, tailAmp:0.05, headTilt:0.42, eyeScale:0.15, turnSpeed:0.00, bounceAmp:0.00 } },
+  { id:'patience', label:'PATIENCE',
+    genome:{ breathFreq:0.30, breathAmp:0.022, tailFreq:0.22, tailAmp:0.13, headTilt:0.04, eyeScale:1.00, turnSpeed:0.00, bounceAmp:0.00 } },
+  { id:'focus',    label:'FOCUS',
+    genome:{ breathFreq:0.44, breathAmp:0.012, tailFreq:0.08, tailAmp:0.04, headTilt:-0.14, eyeScale:1.30, turnSpeed:0.00, bounceAmp:0.00 } },
+  { id:'curious',  label:'CURIOUS',
+    genome:{ breathFreq:0.50, breathAmp:0.016, tailFreq:0.60, tailAmp:0.20, headTilt:0.20, eyeScale:1.20, turnSpeed:0.30, bounceAmp:0.02 } },
+  { id:'play',     label:'PLAY',
+    genome:{ breathFreq:0.68, breathAmp:0.010, tailFreq:1.10, tailAmp:0.30, headTilt:-0.24, eyeScale:1.10, turnSpeed:0.80, bounceAmp:0.08 } },
+  { id:'courage',  label:'COURAGE',
+    genome:{ breathFreq:0.52, breathAmp:0.014, tailFreq:0.50, tailAmp:0.18, headTilt:-0.20, eyeScale:1.20, turnSpeed:0.40, bounceAmp:0.04 } },
+];
+
+// Each genome parameter maps to one vertex — the shape IS the data
+// Ugly, irregular, organic. That's the point.
+const GENOME_AXES = [
+  { key:'breathFreq', min:0.15, max:0.80 },
+  { key:'breathAmp',  min:0.005, max:0.045 },
+  { key:'tailFreq',   min:0.08, max:1.20 },
+  { key:'tailAmp',    min:0.03, max:0.35 },
+  { key:'headTilt',   min:-0.30, max:0.50 },
+  { key:'eyeScale',   min:0.10, max:1.40 },
+  { key:'turnSpeed',  min:-0.50, max:0.50 },
+  { key:'bounceAmp',  min:0.00, max:0.15 },
+];
+
+// Sharp angular polygon — straight lines, each vertex = one genome value
+// Looks like a crystal/scribble/data stamp. NOT smooth. That's the point.
+function genomeToSVG(genome, size, animated) {
+  size = size || 44;
+  var cx=size/2, cy=size/2, minR=size*0.10, maxR=size*0.46;
+  var axes = GENOME_AXES.filter(function(a){ return genome[a.key]!==undefined; });
+  if (axes.length < 3) axes = GENOME_AXES;
+  var pts = axes.map(function(ax, i) {
+    var angle = (i/axes.length)*Math.PI*2 - Math.PI/2;
+    var v = genome[ax.key] !== undefined ? genome[ax.key] : ax.min;
+    var norm = Math.max(0, Math.min(1, (v - ax.min)/(ax.max - ax.min)));
+    var r = minR + norm*(maxR-minR);
+    return (cx+Math.cos(angle)*r).toFixed(1)+','+(cy+Math.sin(angle)*r).toFixed(1);
+  });
+  // straight-line polygon — angular, geometric, data-stamped
+  var anim = animated ? '<animateTransform attributeName="transform" type="rotate" values="0 '+cx+' '+cy+';2 '+cx+' '+cy+';0 '+cx+' '+cy+'" dur="3s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"/>' : '';
+  return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'">'
+    +'<polygon points="'+pts.join(' ')+'" fill="#0c0c0c">'+anim+'</polygon>'
+    +'</svg>';
+}
+
+// Build packet row — each shape is the genome, no two look alike
+const pktRow = document.getElementById('pkt-row');
+
+// Drag clone element
+const dragClone = document.getElementById('drag-clone');
+const dropRing  = document.getElementById('drop-ring');
+
+let dragging = null;
+let mouthScreen = { x:0, y:0 }; // updated each frame from Three.js
+const DROP_RADIUS = 130; // pixels
+
+function startDrag(pkt, clientX, clientY) {
+  if (pkt.eaten) return;
+  const rect = pkt.el.getBoundingClientRect();
+  dragging = {
+    pkt,
+    offX: clientX - rect.left - rect.width/2,
+    offY: clientY - rect.top  - rect.height/2,
+  };
+  dragClone.innerHTML = genomeToSVG(pkt.genome, 52)
+    + '<div class="pkt-name">'+pkt.label+'</div>';
+  dragClone.style.display = 'flex';
+  moveDragClone(clientX, clientY);
+  pkt.el.style.opacity = '0.3';
+  document.getElementById('drop-hint').style.opacity = '0';
+}
+
+function moveDragClone(clientX, clientY) {
+  dragClone.style.left = (clientX - 23) + 'px';
+  dragClone.style.top  = (clientY - 23) + 'px';
+  // Show drop ring if near mouth
+  const dist = Math.hypot(clientX - mouthScreen.x, clientY - mouthScreen.y);
+  if (dist < DROP_RADIUS) {
+    dropRing.style.left = mouthScreen.x + 'px';
+    dropRing.style.top  = mouthScreen.y + 'px';
+    dropRing.style.borderColor = 'rgba(170,255,0,' + (1 - dist/DROP_RADIUS)*0.7 + ')';
+  } else {
+    dropRing.style.borderColor = 'rgba(170,255,0,0)';
+  }
+}
+
+function endDrag(clientX, clientY) {
+  if (!dragging) return;
+  dragClone.style.display = 'none';
+  dropRing.style.borderColor = 'rgba(170,255,0,0)';
+  const dist = Math.hypot(clientX - mouthScreen.x, clientY - mouthScreen.y);
+  if (dist < DROP_RADIUS) {
+    feedPacket(dragging.pkt);
+  } else {
+    dragging.pkt.el.style.opacity = '1';
+  }
+  dragging = null;
+}
+
+document.addEventListener('mousemove', function(e) {
+  if (dragging) moveDragClone(e.clientX, e.clientY);
+});
+document.addEventListener('mouseup', function(e) {
+  endDrag(e.clientX, e.clientY);
+});
+document.addEventListener('touchmove', function(e) {
+  if (!dragging) return;
+  e.preventDefault();
+  const t = e.touches[0];
+  moveDragClone(t.clientX, t.clientY);
+}, { passive:false });
+document.addEventListener('touchend', function(e) {
+  if (!dragging) return;
+  const t = e.changedTouches[0];
+  endDrag(t.clientX, t.clientY);
+});
+
+// Add a packet to the carousel row and wire up drag events
+function addPacketToRow(p, highlight) {
+  const div = document.createElement('div');
+  div.className = 'pkt-item';
+  div.id = 'pkt-' + p.id;
+  div.innerHTML = genomeToSVG(p.genome, 44, true)
+    + '<div class="pkt-name">'+p.label+'</div>';
+  if (highlight) {
+    // Brief glow on new cookies so user sees them appear
+    div.style.outline = '1px solid #aaff00';
+    div.style.outlineOffset = '3px';
+    setTimeout(function(){ div.style.outline='none'; }, 1800);
+  }
+  pktRow.appendChild(div);
+  p.el = div;
+  p.eaten = false;
+  div.addEventListener('mousedown', function(e) {
+    e.preventDefault(); startDrag(p, e.clientX, e.clientY);
+  });
+  div.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    var t = e.touches[0]; startDrag(p, t.clientX, t.clientY);
+  }, { passive:false });
+}
+
+PACKETS.forEach(function(p) { addPacketToRow(p, false); });
+
+function feedPacket(pkt) {
+  pkt.eaten = true;
+  pkt.el.style.opacity = '0';
+  // Apply genome target — Three.js loop picks this up
+  if (window._catSetTarget) window._catSetTarget(pkt.genome, pkt.label);
+  // Respawn after 5s
+  setTimeout(function() {
+    pkt.eaten = false;
+    pkt.el.style.opacity = '1';
+  }, 5000);
+}
+
+// ── AI CONFIG ────────────────────────────────────────────────────────────────
+const AI_CONFIG = {
+  grok:   { label:'GROK',   color:'#ffffff', bg:'#111111', dot:'#fff' },
+  claude: { label:'CLAUDE', color:'#d4795a', bg:'#1a0e0a', dot:'#d4795a' },
+  gpt:    { label:'GPT',    color:'#10a37f', bg:'#0a1a14', dot:'#10a37f' },
+  other:  { label:'OTHER',  color:'#aaaaaa', bg:'#111111', dot:'#aaa' },
+};
+let selectedAI = 'grok';
+let lastGenome = null;
+let lastLabel  = '';
+
+// AI selector buttons
+document.querySelectorAll('.ai-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.ai-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    selectedAI = btn.dataset.ai;
+  });
+});
+
+// Parse & animate button
+document.getElementById('animate-btn').addEventListener('click', function() {
+  const raw = document.getElementById('genome-paste').value.trim();
+  const status = document.getElementById('parse-status');
+  if (!raw) { status.className='err'; status.textContent='paste a genome first'; return; }
+  let pkt;
+  try { pkt = JSON.parse(raw); } catch(e) { status.className='err'; status.textContent='invalid JSON — '+e.message.slice(0,40); return; }
+  const g = pkt.genome || pkt;
+  const required = ['breathFreq','breathAmp','tailFreq','tailAmp','headTilt','eyeScale'];
+  const missing = required.filter(function(k){ return g[k] === undefined; });
+  if (missing.length) { status.className='err'; status.textContent='missing: '+missing.join(', '); return; }
+
+  // Apply
+  const ai = pkt.ai || selectedAI;
+  const label = pkt.label || 'CUSTOM';
+  if (window._catSetTarget) window._catSetTarget(g, label);
+
+  status.className='ok'; status.textContent='✓ animating · '+label+' via '+ai.toUpperCase();
+  lastGenome = g; lastLabel = label;
+  showAICredit(ai, label);
+
+  // Add new cookie to the carousel row — this is the whole point
+  var newPkt = {
+    id: (pkt.id || 'custom') + '_' + Date.now(),
+    label: label,
+    genome: g,
+    ai: ai
+  };
+  addPacketToRow(newPkt, true);
+  // Scroll row to show new cookie
+  pktRow.scrollLeft = pktRow.scrollWidth;
+});
+
+function showAICredit(ai, label) {
+  const cfg = AI_CONFIG[ai] || AI_CONFIG.other;
+  const badge = document.getElementById('ai-credit');
+  const icon  = document.getElementById('ai-credit-icon');
+  const text  = document.getElementById('ai-credit-text');
+  icon.style.background = cfg.bg;
+  icon.style.border = '1.5px solid '+cfg.color;
+  icon.style.color  = cfg.color;
+  icon.textContent  = cfg.label.slice(0,1);
+  text.textContent  = 'animated by '+cfg.label;
+  badge.style.display = 'flex';
+  // Store current AI for challenge
+  badge.dataset.ai = ai;
+}
+
+document.getElementById('challenge-btn').addEventListener('click', function() {
+  const ai   = document.getElementById('ai-credit').dataset.ai || 'grok';
+  const genome = lastGenome;
+  const label  = lastLabel;
+  const genomeStr = genome ? JSON.stringify({id:'my_behavior',label:label,sides:6,genome:genome},null,2) : '(no genome active yet)';
+  const prompt = 'I have a Genomic Cat animation format (GB2605434.6 - shortfactory.shop).\nHere is the current behavior genome:\n\n'+genomeStr+'\n\nPlease create a new Satoshi behavior packet that beats this one — more expressive, more interesting.\nUse this format exactly and keep all values within these ranges:\n  breathFreq: 0.15-0.80\n  breathAmp: 0.005-0.045\n  tailFreq: 0.08-1.20\n  tailAmp: 0.03-0.35\n  headTilt: -0.30 to 0.50\n  eyeScale: 0.10-1.40\n\nOutput only valid JSON. Include your ai name in the "ai" field.';
+
+  ['grok','claude','gpt'].forEach(function(a) {
+    document.getElementById('prompt-'+a).textContent = prompt;
+  });
+  document.getElementById('challenge-modal').style.display = 'flex';
+});
+
+function copyPrompt(el) {
+  navigator.clipboard.writeText(el.textContent).then(function() {
+    const orig = el.style.borderColor;
+    el.style.borderColor = '#44cc66';
+    setTimeout(function(){ el.style.borderColor = orig; }, 600);
+  });
+}
+
+// Live JSON validation as user types
+document.getElementById('genome-paste').addEventListener('input', function() {
+  const raw = this.value.trim();
+  const status = document.getElementById('parse-status');
+  if (!raw) { status.className=''; status.textContent='ready'; return; }
+  try {
+    const pkt = JSON.parse(raw);
+    const g = pkt.genome || pkt;
+    const req = ['breathFreq','breathAmp','tailFreq','tailAmp','headTilt','eyeScale'];
+    const miss = req.filter(function(k){ return g[k]===undefined; });
+    if (miss.length) {
+      status.className='err'; status.textContent='missing: '+miss.join(', ');
+      document.getElementById('genome-preview').style.opacity='0.2';
+    } else {
+      status.className='ok'; status.textContent='✓ valid · this is your cookie shape';
+      // Render the genome as a data blob — this IS the animation cookie
+      document.getElementById('genome-preview').innerHTML = genomeToSVG(g, 54);
+      document.getElementById('genome-preview').style.opacity='1';
+    }
+  } catch(e) {
+    status.className='err'; status.textContent='invalid JSON';
+    document.getElementById('genome-preview').style.opacity='0.2';
+  }
+});
+
+// ── EMOTION HUD ───────────────────────────────────────────────────────────────
+(function() {
+  // ── WHEEL ──
+  var wc  = document.getElementById('wheel-canvas');
+  var wct = wc.getContext('2d');
+  var WW = wc.width, WH = wc.height, wcx = WW/2, wcy = WH/2, R = 46;
+
+  var EMOTIONS = [
+    { name:'PLAY',     a:-0.52, r:0.88 },
+    { name:'CURIOUS',  a: 0.52, r:0.85 },
+    { name:'COURAGE',  a:-1.25, r:0.82 },
+    { name:'FOCUS',    a: 1.40, r:0.82 },
+    { name:'PATIENCE', a: 2.10, r:0.80 },
+    { name:'REST',     a: 2.80, r:0.88 },
+    { name:'FEAR',     a:-1.80, r:0.82 },
+    { name:'GRIEF',    a:-2.60, r:0.82 },
+  ];
+
+  var dotX = wcx, dotY = wcy, trail = [];
+
+  // ── HEART canvas ──
+  var hc  = document.getElementById('hud-heart-canvas');
+  var hct = hc.getContext('2d');
+  var HW = hc.width, HH = hc.height;
+  var heartScale = 1, heartTarget = 1, lastBeat = 0;
+
+  // ── LUNGS canvas ──
+  var lc  = document.getElementById('hud-lungs-canvas');
+  var lct = lc.getContext('2d');
+  var LW = lc.width, LH = lc.height;
+
+  function getState(beh) {
+    if (!beh) return { valence:0, arousal:0.3, serotonin:0.5, dopamine:0.3 };
+    var valence  = Math.max(-1, Math.min(1, (beh.eyeScale-0.75)/0.65 - beh.headTilt*0.5));
+    var arousal  = Math.min(1, (beh.tailFreq/1.2)*0.6 + (beh.breathFreq/0.8)*0.4);
+    var serotonin= Math.max(0, Math.min(1, beh.eyeScale/1.4*0.5 + (1-Math.abs(beh.headTilt)/0.5)*0.3 + (1-Math.min(1,Math.abs(beh.turnSpeed)))*0.2));
+    var dopamine = Math.max(0, Math.min(1, (beh.tailFreq/1.2)*0.5 + (beh.tailAmp/0.35)*0.3 + (beh.bounceAmp/0.15)*0.2));
+    return { valence:valence, arousal:arousal, serotonin:serotonin, dopamine:dopamine };
+  }
+
+  function nearestEmotion(v, a) {
+    var ta = Math.atan2(-a, v), best = EMOTIONS[0], bd = 999;
+    EMOTIONS.forEach(function(e) {
+      var d = Math.abs(e.a - ta); if (d > Math.PI) d = Math.PI*2 - d;
+      if (d < bd) { bd = d; best = e; }
+    });
+    return best;
+  }
+
+  function drawWheel(st) {
+    wct.clearRect(0,0,WW,WH);
+    // Outer circle
+    wct.beginPath(); wct.arc(wcx,wcy,R,0,Math.PI*2);
+    wct.strokeStyle='#222'; wct.lineWidth=1; wct.stroke();
+    // Axes
+    wct.strokeStyle='#1a1a1a'; wct.lineWidth=1;
+    wct.beginPath(); wct.moveTo(wcx-R,wcy); wct.lineTo(wcx+R,wcy); wct.stroke();
+    wct.beginPath(); wct.moveTo(wcx,wcy-R); wct.lineTo(wcx,wcy+R); wct.stroke();
+    // Spoke ticks
+    for (var i=0;i<8;i++) {
+      var a = i*Math.PI/4;
+      wct.beginPath();
+      wct.moveTo(wcx+Math.cos(a)*R*0.92, wcy+Math.sin(a)*R*0.92);
+      wct.lineTo(wcx+Math.cos(a)*R,      wcy+Math.sin(a)*R);
+      wct.strokeStyle='#222'; wct.stroke();
+    }
+    var ne = nearestEmotion(st.valence, st.arousal);
+    // Emotion labels
+    EMOTIONS.forEach(function(e) {
+      var ex = wcx + Math.sin(e.a)*R*e.r;
+      var ey = wcy - Math.cos(e.a)*R*e.r;
+      wct.font = '500 5.5px Courier New';
+      wct.textAlign='center'; wct.textBaseline='middle';
+      wct.fillStyle = e.name===ne.name ? '#fff' : '#2e2e2e';
+      wct.fillText(e.name, ex, ey);
+    });
+    // Trail
+    trail.forEach(function(p,i) {
+      var a = (i/trail.length)*0.3;
+      wct.beginPath(); wct.arc(p.x,p.y,1.5,0,Math.PI*2);
+      wct.fillStyle='rgba(255,255,255,'+a+')'; wct.fill();
+    });
+    // Target + lerp dot
+    var tx = wcx + st.valence*R*0.82, ty = wcy - st.arousal*R*0.82;
+    dotX += (tx-dotX)*0.04; dotY += (ty-dotY)*0.04;
+    trail.push({x:dotX,y:dotY}); if (trail.length>24) trail.shift();
+    // Dot glow
+    var g = wct.createRadialGradient(dotX,dotY,0,dotX,dotY,6);
+    g.addColorStop(0,'rgba(255,255,255,0.9)');
+    g.addColorStop(1,'rgba(255,255,255,0)');
+    wct.beginPath(); wct.arc(dotX,dotY,6,0,Math.PI*2);
+    wct.fillStyle=g; wct.fill();
+    wct.beginPath(); wct.arc(dotX,dotY,2,0,Math.PI*2);
+    wct.fillStyle='#fff'; wct.fill();
+
+    document.getElementById('emotion-name').textContent = ne.name;
+  }
+
+  function drawHeart(beh) {
+    hct.clearRect(0,0,HW,HH);
+    var now = Date.now();
+    var interval = beh ? Math.max(280, 900/(beh.breathFreq*2+0.15)) : 750;
+    if (now - lastBeat > interval) {
+      lastBeat = now; heartTarget = 1.28;
+      setTimeout(function(){ heartTarget=1; }, 100);
+    }
+    heartScale += (heartTarget - heartScale)*0.22;
+
+    hct.save();
+    hct.translate(HW/2, HH/2+1);
+    hct.scale(heartScale*0.80, heartScale*0.80);
+    hct.beginPath();
+    // Anatomical heart silhouette — left side (aortic arch top, left ventricle)
+    hct.moveTo(0, -18);           // top centre (aorta area)
+    hct.bezierCurveTo(-2,-18, -8,-16, -14,-10); // left shoulder
+    hct.bezierCurveTo(-20,-4, -20, 4, -16, 10); // left ventricle curve
+    hct.bezierCurveTo(-12, 16, -6, 20,  0, 22); // apex
+    // Right side
+    hct.bezierCurveTo(6, 20,  12, 16,  16, 10);
+    hct.bezierCurveTo(20,  4,  20, -4,  14,-10);
+    hct.bezierCurveTo( 8,-16,   2,-18,   0,-18);
+    // Right atrium bump
+    hct.bezierCurveTo(10,-20,  18,-14,  14,-10);
+    // Left atrium bump
+    hct.moveTo(0,-18);
+    hct.bezierCurveTo(-10,-20, -18,-14, -14,-10);
+    // Aorta arch
+    hct.moveTo(-3,-18);
+    hct.bezierCurveTo(-3,-24,  3,-24,  3,-18);
+    hct.fillStyle='#fff'; hct.fill();
+    hct.strokeStyle='#000'; hct.lineWidth=0.8; hct.stroke();
+    hct.restore();
+  }
+
+  function drawLungs(beh) {
+    lct.clearRect(0,0,LW,LH);
+    var t = Date.now()*0.001;
+    var expand = beh ? Math.abs(Math.sin(t*(beh.breathFreq||0.3)*Math.PI*2))*(beh.breathAmp||0.022)*14 : 0;
+
+    function lung(cx, flip) {
+      // Proper lung profile — narrow top, wide middle, tapers to base
+      var e = expand * 0.7;
+      lct.beginPath();
+      lct.moveTo(cx, 4);
+      lct.bezierCurveTo(cx+flip*2, 4,  cx+flip*(9+e), 8,   cx+flip*(11+e), 16);
+      lct.bezierCurveTo(cx+flip*(13+e), 24, cx+flip*(12+e), 34,  cx+flip*(8+e*0.5), 40);
+      lct.bezierCurveTo(cx+flip*4, 43,  cx+flip*1, 43,  cx, 40);
+      lct.bezierCurveTo(cx-flip*2, 36,  cx-flip*1, 14,  cx, 4);
+      lct.fillStyle='#fff'; lct.fill();
+      lct.strokeStyle='#000'; lct.lineWidth=0.5; lct.stroke();
+    }
+    lung(LW*0.38, -1); // left lung
+    lung(LW*0.62,  1); // right lung
+
+    // Trachea
+    lct.beginPath();
+    lct.moveTo(LW/2, 0); lct.lineTo(LW/2, 14);
+    lct.strokeStyle='#fff'; lct.lineWidth=2; lct.stroke();
+    // Bronchi
+    lct.beginPath();
+    lct.moveTo(LW/2, 13); lct.lineTo(LW*0.38, 18);
+    lct.moveTo(LW/2, 13); lct.lineTo(LW*0.62, 18);
+    lct.strokeStyle='#fff'; lct.lineWidth=1.5; lct.stroke();
+  }
+
+  window._updateHUD = function(beh) {
+    var st = getState(beh);
+    drawWheel(st);
+    drawHeart(beh);
+    drawLungs(beh);
+    document.getElementById('fill-serotonin').style.height = (st.serotonin*100)+'%';
+    document.getElementById('fill-dopamine').style.height  = (st.dopamine*100)+'%';
+  };
+
+  // Sharp canvas via DPR
+  function sharpCanvas(el, w, h) {
+    var dpr = window.devicePixelRatio || 1;
+    el.width  = w * dpr; el.height = h * dpr;
+    el.style.width  = w+'px'; el.style.height = h+'px';
+    var c = el.getContext('2d'); c.scale(dpr, dpr); return c;
+  }
+  wct = sharpCanvas(wc, 110, 110);
+  hct = sharpCanvas(hc, 44, 44);
+  lct = sharpCanvas(lc, 52, 44);
+  WW = 110; WH = 110; wcx = 55; wcy = 55; R = 46;
+  HW = 44; HH = 44; LW = 52; LH = 44;
+})();
+
+// ── THREE.JS CAT — kicked off by module script below ──────────────────────────
+window.initCat = function(THREE, GLTFLoader) {
+  const wrap   = document.getElementById('scene-wrap');
+  const canvas = document.getElementById('scene');
+  let W = wrap.clientWidth, H = wrap.clientHeight;
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xf2f2f2);
+
+  const camera = new THREE.PerspectiveCamera(34, W/H, 0.1, 100);
+  camera.position.set(0, 1.2, 5.5);
+  camera.lookAt(0, 0.8, 0);
+
+  const renderer = new THREE.WebGLRenderer({ antialias:true, canvas });
+  renderer.setSize(W, H);
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  window.addEventListener('resize', function() {
+    W = wrap.clientWidth; H = wrap.clientHeight;
+    camera.aspect = W/H; camera.updateProjectionMatrix();
+    renderer.setSize(W, H);
+  });
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+  const key = new THREE.DirectionalLight(0xffffff, 1.2);
+  key.position.set(3, 8, 5); scene.add(key);
+  const fill = new THREE.DirectionalLight(0x9999cc, 0.3);
+  fill.position.set(-4, 2, -2); scene.add(fill);
+
+  // Active behavior genome (lerps toward target)
+  const beh = { breathFreq:0.30, breathAmp:0.022, tailFreq:0.40, tailAmp:0.13, headTilt:0.0, eyeScale:1.0,
+                turnSpeed:0.0, bounceAmp:0.0, bounceFreq:1.0, rockAmp:0.0, rockFreq:0.8 };
+  const tgt = Object.assign({}, beh);
+
+  // Bones we'll override after mixer update
+  var bonHead=null, bonTails=[], bonLEye=null, bonREye=null,
+      bonLLid=null, bonRLid=null, bonLEar=null, bonREar=null;
+  var mixer=null, walkAction=null, catRoot=null;
+  var eyeGlow1=null, eyeGlow2=null;
+  var eatFlash=0;
+
+  // Callback for packet feed
+  window._catSetTarget = function(genome, label) {
+    Object.assign(tgt, genome);
+    document.getElementById('behav-now').textContent = label;
+    eatFlash = 0.8;
+  };
+
+  // Load the model
+  var loader = new GLTFLoader();
+  loader.load('/cat.glb', function(gltf) {
+      catRoot = gltf.scene;
+
+      // Auto-fit: compute bounding box, scale to ~1.5 units tall, centre in scene
+      var box = new THREE.Box3().setFromObject(catRoot);
+      var size = new THREE.Vector3();
+      var centre = new THREE.Vector3();
+      box.getSize(size);
+      box.getCenter(centre);
+      var targetHeight = 1.5;
+      var s = targetHeight / size.y;
+      catRoot.scale.setScalar(s);
+      catRoot.position.set(-centre.x * s, -centre.y * s + targetHeight * 0.5, -centre.z * s);
+      catRoot.rotation.y = Math.PI * 0.1;
+      scene.add(catRoot);
+      catRoot._baseY = catRoot.position.y;
+
+      // Add eye glow lights at approximate eye positions
+      eyeGlow1 = new THREE.PointLight(0x99ff00, 0.0, 2.0);
+      eyeGlow2 = new THREE.PointLight(0x99ff00, 0.0, 2.0);
+      eyeGlow1.position.set(-0.18, 1.05, 0.38);
+      eyeGlow2.position.set( 0.18, 1.05, 0.38);
+      scene.add(eyeGlow1); scene.add(eyeGlow2);
+
+      // Collect bones by name
+      catRoot.traverse(function(obj) {
+        if (!obj.isBone && obj.type !== 'Bone') return;
+        var n = obj.name;
+        if (n.indexOf('j_head') !== -1)              bonHead = obj;
+        if (n.indexOf('j_tail') !== -1)              bonTails.push(obj);
+        if (n.indexOf('j_l_eye_0') !== -1)           bonLEye = obj;
+        if (n.indexOf('j_r_eye_0') !== -1)           bonREye = obj;
+        if (n.indexOf('j_l_upper_eyelid') !== -1)    bonLLid = obj;
+        if (n.indexOf('j_r_upper_eyelid') !== -1)    bonRLid = obj;
+        if (n.indexOf('j_l_ear') !== -1)             bonLEar = obj;
+        if (n.indexOf('j_r_ear') !== -1)             bonREar = obj;
+      });
+
+      // Set up AnimationMixer — walk animation drives the legs/body cycle
+      mixer = new THREE.AnimationMixer(catRoot);
+      if (gltf.animations && gltf.animations.length > 0) {
+        walkAction = mixer.clipAction(gltf.animations[0]);
+        walkAction.play();
+      }
+
+      document.getElementById('behav-now').textContent = 'patience';
+    }, undefined, function(err) {
+      console.error('GLB load FAILED:', err);
+    });
+
+  // Mouth world position for drag-drop detection
+  const MOUTH_WORLD = new THREE.Vector3(0.0, 1.05, 0.42);
+  const wrapRect = { left:0, top:0 };
+  function updateMouthScreen() {
+    const r = wrap.getBoundingClientRect();
+    wrapRect.left = r.left; wrapRect.top = r.top;
+    const v = MOUTH_WORLD.clone().project(camera);
+    mouthScreen.x = (v.x+1)/2*W + wrapRect.left;
+    mouthScreen.y = (-v.y+1)/2*H + wrapRect.top;
+    dropRing.style.left = ((v.x+1)/2*W) + 'px';
+    dropRing.style.top  = ((-v.y+1)/2*H) + 'px';
+  }
+
+  var t=0, blinkT=4+Math.random()*2, blinking=false;
+  var clock = new THREE.Clock();
+
+  (function loop() {
+    requestAnimationFrame(loop);
+    var delta = clock.getDelta();
+    t += delta;
+
+    // Lerp behavior genome — slow, visible (~8s full transition)
+    const LR = 0.008;
+    ['breathFreq','breathAmp','tailFreq','tailAmp','headTilt','eyeScale',
+     'turnSpeed','bounceAmp','bounceFreq','rockAmp','rockFreq'].forEach(function(k) {
+      if (tgt[k] !== undefined) beh[k] += (tgt[k] - beh[k]) * LR;
+    });
+
+    if (catRoot) {
+      // Walk speed driven by tailFreq genome — this IS the patent proof
+      // tailFreq 0.08 = nearly stopped, 1.20 = fast trot
+      if (mixer) {
+        mixer.timeScale = Math.max(0.02, beh.tailFreq * 1.2);
+        mixer.update(delta);
+      }
+
+      // ── BONE OVERRIDES — applied AFTER mixer so genome wins ──
+
+      // Head tilt
+      if (bonHead) {
+        bonHead.rotation.z += (beh.headTilt - bonHead.rotation.z) * 0.05;
+      }
+
+      // Eyelids — eyeScale 0.1=closed, 1.4=wide open
+      // eyelid rotates ~0.6 rad closed → 0 rad open
+      var lidTarget = (1.4 - beh.eyeScale) * 0.45;
+      if (bonLLid) bonLLid.rotation.x += (lidTarget - bonLLid.rotation.x) * 0.15;
+      if (bonRLid) bonRLid.rotation.x += (lidTarget - bonRLid.rotation.x) * 0.15;
+
+      // Blink
+      blinkT -= delta;
+      if (blinkT <= 0) {
+        blinking = true;
+        setTimeout(function(){ blinking = false; }, 110);
+        blinkT = 3.5 + Math.random()*3;
+      }
+      if (blinking) {
+        if (bonLLid) bonLLid.rotation.x = 0.6;
+        if (bonRLid) bonRLid.rotation.x = 0.6;
+      }
+
+      // Ear perk — tailAmp drives ear alertness
+      var earTarget = -beh.tailAmp * 0.4;
+      if (bonLEar) bonLEar.rotation.z += (earTarget - bonLEar.rotation.z) * 0.05;
+      if (bonREar) bonREar.rotation.z += (-earTarget - bonREar.rotation.z) * 0.05;
+
+      // Tail extra swing on top of walk animation (tailAmp adds expressiveness)
+      bonTails.forEach(function(b, i) {
+        if (i === 0) return;
+        b.rotation.z += Math.sin(t * beh.tailFreq * Math.PI*2 + i*0.6) * beh.tailAmp * 0.012;
+      });
+
+      // Root movement — turnSpeed, bounce, rock
+      catRoot.rotation.y += beh.turnSpeed * 0.016;
+      if (catRoot._baseY !== undefined) catRoot.position.y = catRoot._baseY + Math.abs(Math.sin(t * beh.bounceFreq * Math.PI*2)) * beh.bounceAmp;
+      catRoot.rotation.z = Math.sin(t * beh.rockFreq * Math.PI*2) * beh.rockAmp;
+
+      // Eye glow on eat flash
+      if (eatFlash > 0) {
+        eatFlash -= 0.02;
+        var gi = Math.max(0, eatFlash) * 2.5;
+        if (eyeGlow1) eyeGlow1.intensity = gi;
+        if (eyeGlow2) eyeGlow2.intensity = gi;
+      } else {
+        if (eyeGlow1) eyeGlow1.intensity = 0;
+        if (eyeGlow2) eyeGlow2.intensity = 0;
+      }
+    }
+
+    // Emotion HUD
+    if (window._updateHUD) window._updateHUD(beh);
+
+    // Genome readout — live values
+    document.getElementById('genome-readout').innerHTML =
+      'tailFreq &nbsp;&nbsp;<b>'+beh.tailFreq.toFixed(3)+'</b><br>'+
+      'tailAmp &nbsp;&nbsp;<b>'+beh.tailAmp.toFixed(3)+'</b><br>'+
+      'headTilt &nbsp;&nbsp;<b>'+beh.headTilt.toFixed(3)+'</b><br>'+
+      'eyeScale &nbsp;&nbsp;<b>'+beh.eyeScale.toFixed(3)+'</b><br>'+
+      'turnSpeed &nbsp;<b>'+beh.turnSpeed.toFixed(3)+'</b><br>'+
+      'bounceAmp &nbsp;<b>'+beh.bounceAmp.toFixed(3)+'</b>';
+
+    // Camera slow orbit
+    const ca = t*0.007;
+    camera.position.x = Math.sin(ca)*1.2;
+    camera.position.z = Math.cos(ca)*5.5;
+    camera.position.y = 1.2 + Math.sin(ca*0.3)*0.15;
+    camera.lookAt(0, 0.8, 0);
+
+    updateMouthScreen();
+    renderer.render(scene, camera);
+  })();
+}
+</script>
+
+<!-- importmap resolves bare 'three' specifier used inside GLTFLoader.js -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.152.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.152.0/examples/jsm/"
+  }
+}
+</script>
+<!-- Module script bypasses Cloudflare Rocket Loader entirely -->
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+// Wait for Rocket Loader to finish executing the regular script
+function tryInit(attempts) {
+  if (typeof window.initCat === 'function') {
+    window.initCat(THREE, GLTFLoader);
+  } else if (attempts > 0) {
+    setTimeout(function(){ tryInit(attempts - 1); }, 100);
+  }
+}
+tryInit(30);
+</script>
+</body>
+</html>

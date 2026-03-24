@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Game Recorder — ShortFactory Test System</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#0a0a0a; color:#fff; font-family:'Courier New',monospace; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
+
+/* ── TOP BAR ── */
+#topbar {
+  background:#111; border-bottom:2px solid #222; padding:8px 14px;
+  display:flex; align-items:center; gap:10px; flex-shrink:0; flex-wrap:wrap;
+}
+#topbar .logo { color:#FFD700; font-weight:bold; font-size:13px; letter-spacing:2px; margin-right:6px; }
+.tb-btn {
+  font-family:'Courier New',monospace; font-size:11px; padding:6px 12px;
+  border:1px solid #333; background:#1a1a1a; color:#ccc; cursor:pointer;
+  border-radius:4px; transition:all 0.15s; letter-spacing:1px;
+}
+.tb-btn:hover { background:#252525; border-color:#555; }
+.tb-btn.active { background:#1a3a1a; border-color:#22c55e; color:#22c55e; }
+.tb-btn.danger { border-color:#c00; color:#f55; }
+.tb-btn.danger:hover { background:#2a0000; }
+#rec-dot { width:10px; height:10px; border-radius:50%; background:#444; flex-shrink:0; }
+#rec-dot.recording { background:#f00; box-shadow:0 0 8px #f00; animation:blink 1s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+#step-counter { font-size:11px; color:#666; margin-left:4px; }
+#status-msg { font-size:11px; color:#888; margin-left:auto; }
+#url-input {
+  font-family:'Courier New',monospace; font-size:11px; padding:5px 10px;
+  background:#0d0d0d; border:1px solid #333; color:#aaa; border-radius:4px;
+  width:320px;
+}
+
+/* ── MAIN ── */
+#main { display:flex; flex:1; overflow:hidden; }
+
+/* ── GAME FRAME ── */
+#game-wrap { flex:1; position:relative; overflow:hidden; }
+#game-frame { width:100%; height:100%; border:none; }
+#click-overlay {
+  position:absolute; inset:0; z-index:10; cursor:crosshair;
+  display:none; /* only shown in record mode */
+}
+#click-overlay.active { display:block; }
+
+/* Click ripple */
+.click-ripple {
+  position:absolute; width:30px; height:30px; border-radius:50%;
+  border:3px solid #FFD700; transform:translate(-50%,-50%) scale(0);
+  animation:ripple 0.6s forwards; pointer-events:none;
+}
+@keyframes ripple { to { transform:translate(-50%,-50%) scale(2); opacity:0; } }
+
+/* ── SIDE PANEL ── */
+#panel {
+  width:320px; background:#111; border-left:2px solid #222;
+  display:flex; flex-direction:column; flex-shrink:0; overflow:hidden;
+}
+#panel-tabs { display:flex; border-bottom:1px solid #222; }
+.ptab {
+  flex:1; padding:10px 4px; text-align:center; font-size:10px; letter-spacing:1px;
+  cursor:pointer; color:#555; border-bottom:2px solid transparent; transition:all 0.15s;
+}
+.ptab.active { color:#FFD700; border-bottom-color:#FFD700; background:#161616; }
+.tab-content { display:none; flex:1; overflow-y:auto; padding:12px; }
+.tab-content.active { display:flex; flex-direction:column; gap:10px; }
+
+/* RECORD TAB */
+.snap-box {
+  border:1px solid #222; border-radius:6px; background:#0d0d0d; overflow:hidden;
+  cursor:pointer; transition:border-color 0.15s;
+}
+.snap-box:hover { border-color:#444; }
+.snap-box.selected { border-color:#FFD700; }
+.snap-img { width:100%; display:block; }
+.snap-footer {
+  padding:8px; display:flex; gap:6px; align-items:center; flex-wrap:wrap;
+  border-top:1px solid #1a1a1a;
+}
+.snap-num { font-size:10px; color:#555; flex:1; }
+.snap-note {
+  width:100%; font-family:'Courier New',monospace; font-size:10px;
+  background:#111; border:1px solid #222; color:#aaa; padding:4px 6px;
+  border-radius:3px; resize:none; margin-top:4px;
+}
+.path-btn {
+  padding:4px 10px; font-size:10px; border-radius:3px; cursor:pointer;
+  border:2px solid transparent; font-family:'Courier New',monospace;
+  letter-spacing:1px; transition:all 0.15s;
+}
+.path-btn.A { border-color:#22c55e; color:#22c55e; background:rgba(34,197,94,0.1); }
+.path-btn.B { border-color:#f59e0b; color:#f59e0b; background:rgba(245,158,11,0.1); }
+.path-btn.C { border-color:#ef4444; color:#ef4444; background:rgba(239,68,68,0.1); }
+.path-btn.active.A { background:rgba(34,197,94,0.3); }
+.path-btn.active.B { background:rgba(245,158,11,0.3); }
+.path-btn.active.C { background:rgba(239,68,68,0.3); }
+
+/* REPLAY TAB */
+.replay-step {
+  border:1px solid #1a1a1a; border-radius:6px; background:#0d0d0d;
+  padding:8px; font-size:10px; cursor:pointer; transition:all 0.15s;
+}
+.replay-step:hover { border-color:#333; }
+.replay-step.current { border-color:#FFD700; background:#1a1600; }
+.replay-step.done { opacity:0.4; }
+.rs-img { width:100%; border-radius:3px; margin-bottom:6px; }
+.rs-meta { color:#666; line-height:1.8; }
+.rs-path { font-weight:bold; }
+.rs-path.A { color:#22c55e; }
+.rs-path.B { color:#f59e0b; }
+.rs-path.C { color:#ef4444; }
+.rs-coords { color:#4a9eff; }
+
+/* STATS TAB */
+.stat-row { display:flex; justify-content:space-between; font-size:11px; padding:6px 0; border-bottom:1px solid #1a1a1a; }
+.stat-row:last-child { border-bottom:none; }
+.stat-label { color:#666; }
+.stat-val { color:#FFD700; }
+
+/* scrollbar */
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:#0d0d0d; }
+::-webkit-scrollbar-thumb { background:#333; border-radius:2px; }
+
+/* Replay cursor dot */
+#replay-cursor {
+  position:absolute; width:20px; height:20px; border-radius:50%;
+  background:rgba(255,215,0,0.8); border:2px solid #FFD700;
+  transform:translate(-50%,-50%); pointer-events:none;
+  z-index:20; display:none; box-shadow:0 0 12px #FFD700;
+  transition:left 0.3s ease, top 0.3s ease;
+}
+
+/* ═══════════════════════════════════════════════════
+   GUIDE SYSTEM
+═══════════════════════════════════════════════════ */
+
+/* Spotlight backdrop */
+#guide-backdrop {
+  position:fixed; inset:0; z-index:9000; pointer-events:none;
+  background:rgba(0,0,0,0.82);
+  display:none;
+}
+#guide-backdrop.active { display:block; pointer-events:all; }
+
+/* The hole cut in the backdrop — updates via clip-path */
+#guide-backdrop.active { display:block; }
+
+/* Spotlight ring around target */
+#guide-ring {
+  position:fixed; z-index:9001; pointer-events:none;
+  border:3px solid #FFD700; border-radius:8px;
+  box-shadow:0 0 0 4000px rgba(0,0,0,0.82), 0 0 30px rgba(255,215,0,0.8);
+  transition:all 0.4s cubic-bezier(0.4,0,0.2,1);
+  display:none;
+}
+#guide-ring.active { display:block; }
+
+/* Pulse ring */
+#guide-ring::after {
+  content:'';
+  position:absolute; inset:-6px; border-radius:10px;
+  border:2px solid rgba(255,215,0,0.4);
+  animation:guidePulse 1.4s ease-in-out infinite;
+}
+@keyframes guidePulse {
+  0%,100% { transform:scale(1); opacity:0.6; }
+  50% { transform:scale(1.06); opacity:0.2; }
+}
+
+/* Animated arrow pointing at target */
+#guide-arrow {
+  position:fixed; z-index:9002; pointer-events:none;
+  font-size:28px; display:none;
+  filter:drop-shadow(0 0 8px #FFD700);
+  animation:bounceArrow 0.8s ease-in-out infinite alternate;
+  transition:all 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+#guide-arrow.active { display:block; }
+@keyframes bounceArrow { from { transform:translateX(0); } to { transform:translateX(10px); } }
+
+/* Speech bubble */
+#guide-bubble {
+  position:fixed; z-index:9003; display:none;
+  background:#1a1200; border:2px solid #FFD700;
+  border-radius:14px; padding:18px 22px;
+  max-width:340px; min-width:260px;
+  box-shadow:0 8px 40px rgba(0,0,0,0.8), 0 0 20px rgba(255,215,0,0.2);
+  transition:all 0.35s cubic-bezier(0.4,0,0.2,1);
+}
+#guide-bubble.active { display:block; }
+#guide-bubble::before {
+  content:''; position:absolute;
+  width:0; height:0;
+}
+
+#guide-step-num {
+  font-size:9px; color:#FFD700; letter-spacing:3px; text-transform:uppercase;
+  margin-bottom:6px; opacity:0.7;
+}
+#guide-title {
+  font-size:14px; font-weight:bold; color:#fff; margin-bottom:10px; line-height:1.4;
+}
+#guide-body {
+  font-size:12px; color:#aaa; line-height:1.8; margin-bottom:14px;
+}
+#guide-body strong { color:#FFD700; }
+#guide-body code {
+  background:#111; border:1px solid #333; padding:1px 5px; border-radius:3px;
+  color:#4a9eff; font-size:11px;
+}
+
+/* Y/N row */
+#guide-yn {
+  display:none; gap:8px; margin-bottom:12px;
+}
+#guide-yn.active { display:flex; }
+.yn-btn {
+  flex:1; padding:8px; border-radius:6px; cursor:pointer;
+  font-family:'Courier New',monospace; font-size:12px; font-weight:bold;
+  border:2px solid; transition:all 0.15s; text-align:center;
+}
+.yn-btn.yes { border-color:#22c55e; color:#22c55e; background:rgba(34,197,94,0.08); }
+.yn-btn.yes:hover { background:rgba(34,197,94,0.2); }
+.yn-btn.no  { border-color:#ef4444; color:#ef4444; background:rgba(239,68,68,0.08); }
+.yn-btn.no:hover  { background:rgba(239,68,68,0.2); }
+
+/* Action row */
+#guide-actions { display:flex; gap:8px; align-items:center; }
+.guide-btn {
+  padding:8px 16px; border-radius:6px; cursor:pointer;
+  font-family:'Courier New',monospace; font-size:11px;
+  border:1px solid #444; background:#222; color:#ccc;
+  transition:all 0.15s; letter-spacing:1px;
+}
+.guide-btn:hover { background:#333; border-color:#666; }
+.guide-btn.primary {
+  background:linear-gradient(135deg,#b8860b,#FFD700);
+  color:#1a0a00; border-color:#FFD700; font-weight:bold;
+}
+.guide-btn.primary:hover { box-shadow:0 0 16px rgba(255,215,0,0.4); }
+
+/* Thumb */
+#guide-thumb {
+  margin-left:auto; display:flex; gap:6px;
+}
+.thumb-btn {
+  font-size:16px; cursor:pointer; padding:4px 8px; border-radius:4px;
+  border:1px solid transparent; transition:all 0.15s;
+  background:transparent;
+}
+.thumb-btn:hover { background:#222; border-color:#444; }
+.thumb-btn.active-up   { background:rgba(34,197,94,0.15); border-color:#22c55e; }
+.thumb-btn.active-down { background:rgba(239,68,68,0.15);  border-color:#ef4444; }
+
+/* Progress bar */
+#guide-progress {
+  position:fixed; bottom:0; left:0; right:0; height:3px;
+  background:#111; z-index:9004; display:none;
+}
+#guide-progress.active { display:block; }
+#guide-progress-fill {
+  height:100%; background:linear-gradient(90deg,#b8860b,#FFD700);
+  transition:width 0.4s ease;
+}
+
+/* XP flash */
+#guide-xp {
+  position:fixed; z-index:9005; font-size:13px; font-weight:bold;
+  color:#FFD700; pointer-events:none; display:none;
+  text-shadow:0 0 12px #FFD700;
+  animation:xpFloat 1.2s forwards;
+}
+@keyframes xpFloat {
+  0%   { opacity:1; transform:translateY(0); }
+  100% { opacity:0; transform:translateY(-40px); }
+}
+
+/* Confetti particle */
+.confetti-p {
+  position:fixed; pointer-events:none; z-index:9006;
+  width:8px; height:8px; border-radius:2px;
+  animation:confettiFall linear forwards;
+}
+@keyframes confettiFall {
+  0%   { opacity:1; transform:translateY(0) rotate(0deg); }
+  100% { opacity:0; transform:translateY(100vh) rotate(720deg); }
+}
+
+/* Guide launch btn in topbar */
+#btn-guide { border-color:#b8860b; color:#FFD700; }
+#btn-guide:hover { background:#1a1000; border-color:#FFD700; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div class="logo">⚙ GAME RECORDER</div>
+  <button class="tb-btn" id="btn-guide" onclick="guideStart()">★ GUIDE</button>
+  <div style="width:1px;height:24px;background:#333;"></div>
+
+  <input id="url-input" type="text" value="/trump/game/index2.html" placeholder="Game URL..." />
+  <button class="tb-btn" onclick="loadGame()">LOAD</button>
+
+  <div style="width:1px;height:24px;background:#333;"></div>
+
+  <div id="rec-dot"></div>
+  <button class="tb-btn" id="btn-record" onclick="toggleRecord()">⏺ RECORD</button>
+  <button class="tb-btn" id="btn-capture" onclick="toggleCapture()" title="Hold crosshair to capture ONE click, then returns to normal cursor [Space]">🎯 CAPTURE</button>
+  <button class="tb-btn" onclick="snapNow()">📷 SNAP</button>
+  <button class="tb-btn" onclick="autoSnap()">⏱ AUTO</button>
+
+  <div style="width:1px;height:24px;background:#333;"></div>
+
+  <button class="tb-btn" id="btn-replay" onclick="startReplay()">▶ REPLAY</button>
+  <button class="tb-btn" onclick="stepReplay()">⏭ STEP</button>
+  <button class="tb-btn" onclick="stopReplay()">⏹ STOP</button>
+
+  <div style="width:1px;height:24px;background:#333;"></div>
+
+  <button class="tb-btn" id="btn-save" onclick="saveWalkthrough()">💾 SAVE</button>
+  <button class="tb-btn" onclick="loadWalkthrough()">📂 LOAD</button>
+  <button class="tb-btn danger" onclick="clearAll()">🗑 CLEAR</button>
+
+  <span id="step-counter">0 steps</span>
+  <span id="status-msg">Ready.</span>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- GAME FRAME -->
+  <div id="game-wrap">
+    <iframe id="game-frame" src="/trump/game/index2.html" allow="autoplay *"></iframe>
+    <div id="click-overlay" onclick="overlayClick(event)"></div>
+    <div id="replay-cursor"></div>
+  </div>
+
+  <!-- SIDE PANEL -->
+  <div id="panel">
+    <div id="panel-tabs">
+      <div class="ptab active" onclick="showTab('record')">RECORD</div>
+      <div class="ptab" onclick="showTab('replay')">REPLAY</div>
+      <div class="ptab" onclick="showTab('stats')">STATS</div>
+    </div>
+    <div id="tab-record" class="tab-content active"></div>
+    <div id="tab-replay" class="tab-content"></div>
+    <div id="tab-stats" class="tab-content">
+      <div id="stats-body"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- hidden file input for load -->
+<input type="file" id="file-input" accept=".json" style="display:none" onchange="onFileLoad(event)">
+
+<!-- ═══ GUIDE OVERLAY ═══ -->
+<div id="guide-backdrop"></div>
+<div id="guide-ring"></div>
+<div id="guide-arrow">👉</div>
+
+<div id="guide-bubble">
+  <div id="guide-step-num"></div>
+  <div id="guide-title"></div>
+  <div id="guide-body"></div>
+  <div id="guide-yn">
+    <div class="yn-btn yes" onclick="guideYN(true)">✓ YES, GOT IT</div>
+    <div class="yn-btn no"  onclick="guideYN(false)">✗ SHOW ME AGAIN</div>
+  </div>
+  <div id="guide-actions">
+    <button class="guide-btn" onclick="guidePrev()">← BACK</button>
+    <button class="guide-btn primary" id="guide-next-btn" onclick="guideNext()">NEXT →</button>
+    <button class="guide-btn" id="guide-skip-btn" onclick="guideEnd()" style="margin-left:4px;font-size:10px;color:#555;border-color:#222;display:none">SKIP</button>
+    <div id="guide-thumb">
+      <button class="thumb-btn" id="thumb-up"   onclick="guideThumb(1)"  title="This explanation was clear">👍</button>
+      <button class="thumb-btn" id="thumb-down" onclick="guideThumb(-1)" title="Needs a better explanation">👎</button>
+    </div>
+  </div>
+</div>
+
+<div id="guide-progress"><div id="guide-progress-fill"></div></div>
+<div id="guide-xp">+10 XP</div>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script>
+// ── STATE ──────────────────────────────────────────────────────────────────
+let steps = [];          // { img, x, y, selector, note, path, ts, gameState }
+let recording = false;
+let autoTimer = null;
+let replayIdx = 0;
+let replayTimer = null;
+let replayRunning = false;
+
+const frame   = document.getElementById('game-frame');
+const overlay = document.getElementById('click-overlay');
+const recDot  = document.getElementById('rec-dot');
+const stepCtr = document.getElementById('step-counter');
+const statusEl= document.getElementById('status-msg');
+const cursor  = document.getElementById('replay-cursor');
+
+// ── LOAD GAME ──────────────────────────────────────────────────────────────
+function loadGame() {
+  const url = document.getElementById('url-input').value.trim();
+  frame.src = url;
+  status('Loading: ' + url);
+}
+
+// ── RECORD ─────────────────────────────────────────────────────────────────
+// Two modes:
+//   RECORD = overlay always active, every click is captured (crosshair)
+//   CAPTURE = overlay inactive by default (normal cursor), press Space or 🎯 to arm
+//             ONE click, then disarms automatically
+let captureArmed = false;
+
+function toggleRecord() {
+  recording = !recording;
+  if (recording) captureArmed = false;  // record mode takes over
+  recDot.className = recording ? 'recording' : '';
+  overlay.className = recording ? 'active' : '';
+  document.getElementById('btn-record').className = 'tb-btn' + (recording ? ' active' : '');
+  document.getElementById('btn-capture').className = 'tb-btn';
+  status(recording ? '⏺ Recording — every click captured (crosshair blocks game)' : 'Recording stopped. Use 🎯 CAPTURE or [Space] to grab single clicks.');
+  if (autoTimer && !recording) { clearInterval(autoTimer); autoTimer = null; }
+}
+
+// Arm for ONE click capture then disarm — game is interactive otherwise
+function toggleCapture() {
+  if (recording) return;  // record mode handles everything
+  captureArmed = !captureArmed;
+  overlay.className = captureArmed ? 'active' : '';
+  document.getElementById('btn-capture').className = 'tb-btn' + (captureArmed ? ' active' : '');
+  status(captureArmed ? '🎯 Armed — click the game to capture ONE step, then cursor returns' : 'Capture disarmed — game cursor active');
+}
+
+// Space bar = arm/disarm capture without touching mouse
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' && e.target === document.body) {
+    e.preventDefault();
+    toggleCapture();
+  }
+});
+
+function overlayClick(e) {
+  if (!recording && !captureArmed) return;
+  // Disarm after single capture
+  if (captureArmed && !recording) {
+    captureArmed = false;
+    overlay.className = '';
+    document.getElementById('btn-capture').className = 'tb-btn';
+    status('🎯 Captured — cursor returned to game. [Space] to capture again.');
+  }
+  const rect = overlay.getBoundingClientRect();
+  const x = Math.round(e.clientX - rect.left);
+  const y = Math.round(e.clientY - rect.top);
+
+  // Show click ripple
+  const r = document.createElement('div');
+  r.className = 'click-ripple';
+  r.style.left = x + 'px';
+  r.style.top  = y + 'px';
+  overlay.appendChild(r);
+  setTimeout(() => r.remove(), 700);
+
+  // Try to find what element was at this point in the iframe
+  let selector = '';
+  try {
+    const iDoc = frame.contentDocument;
+    const iRect = frame.getBoundingClientRect();
+    const el = iDoc.elementFromPoint(x, y);
+    if (el) selector = getSelector(el);
+  } catch(e2) {}
+
+  snapNow(x, y, selector);
+}
+
+function getSelector(el) {
+  if (el.id) return '#' + el.id;
+  if (el.dataset && el.dataset.action) return '[data-action="' + el.dataset.action + '"]';
+  if (el.className && typeof el.className === 'string') return el.tagName.toLowerCase() + '.' + el.className.trim().split(' ')[0];
+  return el.tagName.toLowerCase();
+}
+
+// ── SNAPSHOT ───────────────────────────────────────────────────────────────
+function snapNow(x, y, selector) {
+  status('Capturing...');
+  html2canvas(frame.contentDocument ? frame.contentDocument.body : document.body, {
+    useCORS: true, allowTaint: true, scale: 0.5,
+    width: frame.offsetWidth, height: frame.offsetHeight,
+    windowWidth: frame.offsetWidth, windowHeight: frame.offsetHeight
+  }).then(canvas => {
+    const img = canvas.toDataURL('image/jpeg', 0.6);
+    const gs  = getGameState();
+    const step = {
+      img, x: x||null, y: y||null, selector: selector||'',
+      note: '', path: 'A', ts: Date.now(), gameState: gs
+    };
+    steps.push(step);
+    renderRecordTab();
+    updateStepCounter();
+    status('Snap #' + steps.length + ' saved' + (x != null ? ' @ ' + x + ',' + y : ''));
+  }).catch(err => {
+    // html2canvas can't read iframe cross-origin — fallback: store coords + state only
+    const gs = getGameState();
+    steps.push({
+      img: null, x: x||null, y: y||null, selector: selector||'',
+      note: '', path: 'A', ts: Date.now(), gameState: gs
+    });
+    renderRecordTab();
+    updateStepCounter();
+    status('Snap #' + steps.length + ' (no image — same-origin only)');
+  });
+}
+
+function autoSnap() {
+  if (autoTimer) { clearInterval(autoTimer); autoTimer = null; status('Auto-snap off'); return; }
+  autoTimer = setInterval(() => { if (recording) snapNow(); }, 3000);
+  status('Auto-snap every 3s');
+}
+
+// ── GAME STATE READER ──────────────────────────────────────────────────────
+function getGameState() {
+  try {
+    const G = frame.contentWindow.G;
+    if (!G) return null;
+    return {
+      purity:   Math.round(G.purity || 0),
+      oil:      Math.round(G.oilCash || 0),
+      barrels:  Math.round(G.oilBarrels || 0),
+      dsHP:     Math.round(G.deepStateHP || 0),
+      trumpHP:  Math.round(G.trumpHP || 100),
+      moves:    G.moves || 0,
+      round:    G.round || 0
+    };
+  } catch(e) { return null; }
+}
+
+// ── RENDER RECORD TAB ──────────────────────────────────────────────────────
+function renderRecordTab() {
+  const el = document.getElementById('tab-record');
+  el.innerHTML = '';
+  steps.forEach((s, i) => {
+    const box = document.createElement('div');
+    box.className = 'snap-box';
+    box.id = 'snap-' + i;
+
+    let html = '';
+    if (s.img) html += `<img class="snap-img" src="${s.img}">`;
+    html += `<div class="snap-footer">
+      <span class="snap-num">#${i+1} ${s.ts ? new Date(s.ts).toLocaleTimeString() : ''}</span>
+      ${s.x != null ? `<span style="font-size:10px;color:#4a9eff">@ ${s.x},${s.y}</span>` : ''}
+      <br>`;
+
+    if (s.gameState) {
+      const g = s.gameState;
+      html += `<span style="font-size:9px;color:#666">P:${g.purity}% DS:${g.dsHP} HP:${g.trumpHP} $:${g.oil}</span><br>`;
+    }
+
+    html += `<button class="path-btn A${s.path==='A'?' active':''}" onclick="setPath(${i},'A')">A ✓</button>
+      <button class="path-btn B${s.path==='B'?' active':''}" onclick="setPath(${i},'B')">B ?</button>
+      <button class="path-btn C${s.path==='C'?' active':''}" onclick="setPath(${i},'C')">C ✗</button>
+      <button style="margin-left:auto;font-size:9px;padding:3px 7px;background:#1a0000;border:1px solid #400;color:#f55;cursor:pointer;border-radius:3px" onclick="deleteStep(${i})">✕</button>
+      <textarea class="snap-note" rows="2" placeholder="Note / what should happen here..."
+        onchange="setNote(${i},this.value)">${s.note}</textarea>
+    </div>`;
+
+    box.innerHTML = html;
+    el.appendChild(box);
+  });
+
+  // scroll to bottom
+  el.scrollTop = el.scrollHeight;
+}
+
+function setPath(i, p) { steps[i].path = p; renderRecordTab(); }
+function setNote(i, v) { steps[i].note = v; }
+function deleteStep(i)  { steps.splice(i, 1); renderRecordTab(); updateStepCounter(); }
+
+// ── REPLAY ─────────────────────────────────────────────────────────────────
+function renderReplayTab() {
+  const el = document.getElementById('tab-replay');
+  el.innerHTML = '';
+  steps.forEach((s, i) => {
+    const div = document.createElement('div');
+    div.className = 'replay-step' + (i === replayIdx ? ' current' : '') + (i < replayIdx ? ' done' : '');
+    div.id = 'rstep-' + i;
+    div.onclick = () => { replayIdx = i; renderReplayTab(); };
+    let html = '';
+    if (s.img) html += `<img class="rs-img" src="${s.img}">`;
+    html += `<div class="rs-meta">
+      <span class="rs-path ${s.path}">[${s.path}]</span>
+      ${s.x != null ? `<span class="rs-coords"> → ${s.x},${s.y} ${s.selector}</span>` : ' (no click)'}
+      ${s.note ? `<br><span style="color:#888">${s.note}</span>` : ''}
+    </div>`;
+    div.innerHTML = html;
+    el.appendChild(div);
+  });
+  el.scrollTop = el.scrollHeight;
+}
+
+function startReplay() {
+  if (!steps.length) { status('No steps to replay'); return; }
+  stopReplay();
+  replayIdx = 0;
+  replayRunning = true;
+  showTab('replay');
+  document.getElementById('btn-replay').className = 'tb-btn active';
+  status('▶ Replaying...');
+  replayStep();
+}
+
+function replayStep() {
+  if (!replayRunning || replayIdx >= steps.length) {
+    stopReplay();
+    status('✅ Replay complete — ' + steps.length + ' steps');
+    return;
+  }
+
+  renderReplayTab();
+  const s = steps[replayIdx];
+
+  // Scroll to current in panel
+  const el = document.getElementById('rstep-' + replayIdx);
+  if (el) el.scrollIntoView({ behavior:'smooth', block:'nearest' });
+
+  if (s.x != null && s.y != null) {
+    // Move cursor visual
+    const wrap = document.getElementById('game-wrap').getBoundingClientRect();
+    cursor.style.display = 'block';
+    cursor.style.left = s.x + 'px';
+    cursor.style.top  = s.y + 'px';
+
+    // Fire the click in the iframe
+    setTimeout(() => {
+      try {
+        const iDoc = frame.contentDocument;
+        let target = null;
+        if (s.selector) {
+          try { target = iDoc.querySelector(s.selector); } catch(e2) {}
+        }
+        if (!target) target = iDoc.elementFromPoint(s.x, s.y);
+        if (target) {
+          target.dispatchEvent(new MouseEvent('click', { bubbles:true, cancelable:true, clientX:s.x, clientY:s.y }));
+          status('▶ Step ' + (replayIdx+1) + ' — clicked ' + (s.selector || s.x+','+s.y));
+        } else {
+          status('▶ Step ' + (replayIdx+1) + ' — no target found');
+        }
+      } catch(e) { status('▶ Step ' + (replayIdx+1) + ' — click error: ' + e.message); }
+
+      replayIdx++;
+      if (replayRunning) replayTimer = setTimeout(replayStep, 1200);
+    }, 400);
+
+  } else {
+    status('▶ Step ' + (replayIdx+1) + ' — snapshot only');
+    replayIdx++;
+    if (replayRunning) replayTimer = setTimeout(replayStep, 600);
+  }
+}
+
+function stepReplay() {
+  if (!steps.length) return;
+  replayRunning = false;
+  if (replayIdx < steps.length) { replayRunning = true; replayStep(); replayRunning = false; }
+}
+
+function stopReplay() {
+  replayRunning = false;
+  if (replayTimer) { clearTimeout(replayTimer); replayTimer = null; }
+  cursor.style.display = 'none';
+  document.getElementById('btn-replay').className = 'tb-btn';
+}
+
+// ── STATS TAB ──────────────────────────────────────────────────────────────
+function updateStats() {
+  const pathCounts = { A:0, B:0, C:0 };
+  steps.forEach(s => { if(s.path) pathCounts[s.path]++; });
+  document.getElementById('stats-body').innerHTML = `
+    <div class="stat-row"><span class="stat-label">Total steps</span><span class="stat-val">${steps.length}</span></div>
+    <div class="stat-row"><span class="stat-label">Path A (correct)</span><span class="stat-val" style="color:#22c55e">${pathCounts.A}</span></div>
+    <div class="stat-row"><span class="stat-label">Path B (alternative)</span><span class="stat-val" style="color:#f59e0b">${pathCounts.B}</span></div>
+    <div class="stat-row"><span class="stat-label">Path C (wrong)</span><span class="stat-val" style="color:#ef4444">${pathCounts.C}</span></div>
+    <div class="stat-row"><span class="stat-label">With screenshots</span><span class="stat-val">${steps.filter(s=>s.img).length}</span></div>
+    <div class="stat-row"><span class="stat-label">With coords</span><span class="stat-val">${steps.filter(s=>s.x!=null).length}</span></div>
+    <div class="stat-row"><span class="stat-label">With notes</span><span class="stat-val">${steps.filter(s=>s.note).length}</span></div>
+  `;
+}
+
+// ── SAVE / LOAD ────────────────────────────────────────────────────────────
+function saveWalkthrough() {
+  if (!steps.length) { status('Nothing to save'); return; }
+  const data = JSON.stringify({ v:1, game: document.getElementById('url-input').value, steps }, null, 2);
+  const blob = new Blob([data], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'walkthrough-' + Date.now() + '.json';
+  a.click();
+  status('Saved ' + steps.length + ' steps');
+}
+
+function loadWalkthrough() {
+  document.getElementById('file-input').click();
+}
+
+function onFileLoad(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      steps = data.steps || [];
+      if (data.game) document.getElementById('url-input').value = data.game;
+      renderRecordTab();
+      updateStepCounter();
+      status('Loaded ' + steps.length + ' steps from ' + file.name);
+    } catch(ex) { status('Load failed: ' + ex.message); }
+  };
+  reader.readAsText(file);
+}
+
+function clearAll() {
+  if (!confirm('Clear all ' + steps.length + ' steps?')) return;
+  steps = [];
+  renderRecordTab();
+  updateStepCounter();
+  status('Cleared');
+}
+
+// ── UTILS ──────────────────────────────────────────────────────────────────
+function showTab(name) {
+  document.querySelectorAll('.ptab').forEach((t,i) => {
+    const names = ['record','replay','stats'];
+    t.className = 'ptab' + (names[i]===name?' active':'');
+  });
+  document.querySelectorAll('.tab-content').forEach(t => t.className = 'tab-content');
+  document.getElementById('tab-' + name).className = 'tab-content active';
+  if (name === 'stats') updateStats();
+  if (name === 'replay') renderReplayTab();
+}
+
+function updateStepCounter() {
+  stepCtr.textContent = steps.length + ' step' + (steps.length===1?'':'s');
+}
+
+function status(msg) {
+  statusEl.textContent = msg;
+}
+
+// ── AUTO-INIT ──────────────────────────────────────────────────────────────
+// On open: load the game immediately, arm capture mode, start the guide if
+// this is a first visit. No setup required.
+window.addEventListener('load', () => {
+  // Load the game straight away
+  loadGame();
+
+  // Auto-arm capture mode so Space bar works from the start
+  setTimeout(() => {
+    if (!recording && !captureArmed) {
+      // Don't force crosshair on — just prime it silently so Space works
+      status('Game loaded. Press [Space] to capture a click, or ⏺ RECORD for full session.');
+    }
+  }, 1500);
+
+  // First visit? Launch guide automatically
+  const visited = localStorage.getItem('gr_visited');
+  if (!visited) {
+    localStorage.setItem('gr_visited', '1');
+    setTimeout(() => guideStart(), 2000);
+  }
+});
+
+// ── LISTEN FOR GAME EVENTS (win, room unlock, etc.) ───────────────────────
+window.addEventListener('message', (e) => {
+  const d = e.data;
+
+  // Game signals a win / ending screen shown
+  if (d === 'ending-shown' || (d && d.type === 'game-end')) {
+    status('🏆 Win detected — auto-saving walkthrough...');
+    setTimeout(() => autoSaveOnWin(), 800);
+  }
+
+  // ending-restart = player clicked Play Again inside the iframe
+  if (d === 'ending-restart') {
+    status('Game restarting...');
+  }
+});
+
+// Also poll the iframe for the ending overlay becoming visible
+setInterval(() => {
+  try {
+    const iDoc = frame.contentDocument;
+    if (!iDoc) return;
+    const ending = iDoc.getElementById('ending-overlay');
+    if (ending && (ending.classList.contains('show') || ending.style.display === 'flex')) {
+      if (!window._endingCaptured) {
+        window._endingCaptured = true;
+        status('🏆 Win screen detected — auto-saving...');
+        setTimeout(() => autoSaveOnWin(), 1000);
+      }
+    } else {
+      window._endingCaptured = false;
+    }
+  } catch(e2) {}
+}, 1500);
+
+function autoSaveOnWin() {
+  if (!steps.length) { status('No steps recorded this session.'); return; }
+  // Take a final snap of the win screen
+  snapNow();
+  setTimeout(() => {
+    saveWalkthrough();
+    status('✅ Walkthrough auto-saved — ' + steps.length + ' steps captured');
+  }, 1200);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  GUIDE SYSTEM
+// ═══════════════════════════════════════════════════════════════════════════
+
+const GUIDE_STEPS = [
+  {
+    target: null,
+    title: '👋 Welcome to the Game Recorder',
+    body: `This tool lets you <strong>record exactly how a game should be played</strong> — every click, every decision — then replay it automatically to test or demonstrate any game.<br><br>I\'ll walk you through each button. Hit <strong>NEXT</strong> to begin, or <strong>SKIP</strong> if you\'ve done this before.`,
+    yn: false
+  },
+  {
+    target: '#url-input',
+    title: '🎮 Step 1 — Load your game',
+    body: `Type the game URL in this box. It\'s already set to <code>/trump/game/index2.html</code>.<br><br>Then hit the <strong>LOAD</strong> button next to it. The game will appear in the big panel on the left.`,
+    yn: true,
+    ynQuestion: 'Did the game load in the left panel?'
+  },
+  {
+    target: '#btn-capture',
+    title: '🎯 Step 2 — CAPTURE (your main tool)',
+    body: `This is the button you\'ll use most. When you press it (or hit <strong>Space</strong>), it arms the crosshair for <strong>ONE click only</strong>.<br><br>After you click, the crosshair disappears and you\'re back to playing normally. Press Space again whenever you want to record the next click.`,
+    yn: true,
+    ynQuestion: 'Makes sense? One click = one captured step.'
+  },
+  {
+    target: '#btn-record',
+    title: '⏺ Step 3 — RECORD mode',
+    body: `RECORD keeps the crosshair <strong>permanently on</strong> — every single click gets captured. Use this when you want to log a full session without pressing Space each time.<br><br><strong>Warning:</strong> the crosshair blocks game interaction, so the game won\'t respond to your clicks — only the recorder sees them. Good for annotating, not for playing.`,
+    yn: true,
+    ynQuestion: 'Got the difference between CAPTURE and RECORD?'
+  },
+  {
+    target: null,
+    title: '📋 Step 4 — Annotating steps',
+    body: `After each captured click you\'ll see it in the <strong>RECORD panel</strong> on the right. Each step has three colour buttons:<br><br><strong style="color:#22c55e">A — Green</strong> = this is the correct path<br><strong style="color:#f59e0b">B — Yellow</strong> = valid alternative<br><strong style="color:#ef4444">C — Red</strong> = wrong move / test case<br><br>You can also type a note explaining what\'s happening. This is what trains the AI later.`,
+    yn: false
+  },
+  {
+    target: '#btn-replay',
+    title: '▶ Step 5 — Replay your walkthrough',
+    body: `Hit <strong>REPLAY</strong> to play back everything you recorded. A gold cursor dot will move to each click point and fire the actual click in the game.<br><br>Use <strong>⏭ STEP</strong> to go one click at a time — great for debugging exactly where things go wrong.`,
+    yn: true,
+    ynQuestion: 'Ready to try a replay?'
+  },
+  {
+    target: null,
+    title: '💡 Pro tip — the oil problem',
+    body: `Here\'s something specific to the Trump game. After pumping oil, <strong>a barrel pile appears in the top-right of the game, near the blue dot</strong>. You must click it to convert barrels into cash — then you can afford to build homes.<br><br>The AI autopilot now knows this. But when recording manually, make sure you capture that barrel-click as a step so the AI learns the correct sequence.`,
+    yn: false
+  },
+  {
+    target: '#btn-save',
+    title: '💾 Step 6 — Save your walkthrough',
+    body: `When you\'re happy with a recorded session, hit <strong>SAVE</strong>. It downloads a JSON file with every step, screenshot, coordinate, and annotation.<br><br>Later, <strong>LOAD</strong> that file back in and replay it on any version of the game. This is your permanent test suite.`,
+    yn: false
+  },
+  {
+    target: null,
+    title: '🧠 The bigger picture',
+    body: `Every walkthrough you record becomes a <strong>training dataset</strong>. Green paths show correct play. Red paths show failure modes. The more walkthroughs you build, the smarter the autopilot gets — eventually it won\'t need recording at all, it\'ll just know.<br><br>When two players record different paths through the same game, you can compare them. That\'s how 2-player debugging works.`,
+    yn: false
+  },
+  {
+    target: null,
+    title: '🏆 You\'re ready.',
+    body: `That\'s the full system. Here\'s your quick reference:<br><br><code>Space</code> — capture one click<br><code>⏺ RECORD</code> — capture every click<br><code>A/B/C</code> — label each step<br><code>▶ REPLAY</code> — play it back<br><code>💾 SAVE</code> — keep it forever<br><br>Go record a winning Trump run. The AI is watching. 👁`,
+    yn: false,
+    final: true
+  }
+];
+
+let guideStep = 0;
+let guideXP = 0;
+let guideFeedback = {}; // stepIndex → 1 or -1
+
+// Load saved feedback from localStorage
+try { guideFeedback = JSON.parse(localStorage.getItem('gr_guide_feedback') || '{}'); } catch(e) {}
+
+function guideStart() {
+  guideStep = 0;
+  guideXP = parseInt(localStorage.getItem('gr_guide_xp') || '0');
+  showGuideStep();
+}
+
+function showGuideStep() {
+  const s = GUIDE_STEPS[guideStep];
+  if (!s) { guideEnd(); return; }
+
+  // Check if this step was thumbed down before — show extended version
+  const fb = guideFeedback[guideStep];
+  const extended = fb === -1;
+
+  // Update elements
+  document.getElementById('guide-step-num').textContent = 'STEP ' + (guideStep+1) + ' OF ' + GUIDE_STEPS.length;
+  document.getElementById('guide-title').textContent = s.title;
+  document.getElementById('guide-body').innerHTML = s.body + (extended && s.extraBody ? '<br><br><span style="color:#f59e0b;font-size:11px">💡 Extra detail (you asked for this last time):</span><br>' + s.extraBody : '');
+
+  // Y/N
+  const ynEl = document.getElementById('guide-yn');
+  if (s.yn) {
+    ynEl.className = 'active';
+    ynEl.querySelector('.yes').textContent = '✓ YES — ' + (s.ynQuestion || 'Got it');
+    ynEl.querySelector('.no').textContent  = '✗ NO — show me again';
+    document.getElementById('guide-next-btn').style.display = 'none';
+  } else {
+    ynEl.className = '';
+    document.getElementById('guide-next-btn').style.display = '';
+    document.getElementById('guide-next-btn').textContent = s.final ? '🏆 FINISH' : 'NEXT →';
+  }
+
+  // Thumb state
+  document.getElementById('thumb-up').className   = 'thumb-btn' + (fb===1  ? ' active-up'   : '');
+  document.getElementById('thumb-down').className = 'thumb-btn' + (fb===-1 ? ' active-down' : '');
+
+  // Show/hide overlay
+  document.getElementById('guide-backdrop').className = s.target ? 'active' : '';
+
+  // Spotlight target
+  const ring  = document.getElementById('guide-ring');
+  const arrow = document.getElementById('guide-arrow');
+  if (s.target) {
+    const el = document.querySelector(s.target);
+    if (el) {
+      const r = el.getBoundingClientRect();
+      const pad = 8;
+      ring.style.left   = (r.left   - pad) + 'px';
+      ring.style.top    = (r.top    - pad) + 'px';
+      ring.style.width  = (r.width  + pad*2) + 'px';
+      ring.style.height = (r.height + pad*2) + 'px';
+      ring.className = 'active';
+      // Arrow points from left
+      arrow.style.left = (r.left - 44) + 'px';
+      arrow.style.top  = (r.top + r.height/2 - 16) + 'px';
+      arrow.className = 'active';
+      // Position bubble below target if room, else above
+      positionBubble(r);
+    }
+  } else {
+    ring.className = '';
+    arrow.className = '';
+    document.getElementById('guide-backdrop').className = '';
+    // Centre bubble
+    const bubble = document.getElementById('guide-bubble');
+    bubble.style.left = '50%';
+    bubble.style.top  = '50%';
+    bubble.style.transform = 'translate(-50%,-50%)';
+  }
+
+  // SKIP only visible on welcome step
+  document.getElementById('guide-skip-btn').style.display = (guideStep === 0) ? '' : 'none';
+
+  document.getElementById('guide-bubble').className = 'active';
+  document.getElementById('guide-progress').className = 'active';
+  document.getElementById('guide-progress-fill').style.width = ((guideStep / (GUIDE_STEPS.length-1)) * 100) + '%';
+}
+
+function positionBubble(targetRect) {
+  const bubble = document.getElementById('guide-bubble');
+  bubble.style.transform = '';
+  const bw = 340, bh = 220;
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const pad = 16;
+
+  // Try right of target
+  let left = targetRect.right + pad;
+  let top  = targetRect.top;
+  if (left + bw > vw) {
+    // Try left
+    left = targetRect.left - bw - pad;
+  }
+  if (left < pad) left = pad;
+  // Try below
+  if (top + bh > vh) top = Math.max(pad, vh - bh - pad);
+  bubble.style.left = left + 'px';
+  bubble.style.top  = top + 'px';
+}
+
+function guideNext() {
+  awardXP(10);
+  guideStep++;
+  if (guideStep >= GUIDE_STEPS.length) { guideEnd(); return; }
+  showGuideStep();
+}
+
+function guidePrev() {
+  if (guideStep > 0) { guideStep--; showGuideStep(); }
+}
+
+function guideYN(yes) {
+  if (yes) {
+    awardXP(15);
+    guideNext();
+  } else {
+    // They said no — flag this step, re-show with extra encouragement
+    guideFeedback[guideStep] = -1;
+    saveFeedback();
+    document.getElementById('guide-body').innerHTML += '<br><br><span style="color:#f59e0b">No worries — let\'s go through it again. Try clicking the highlighted button yourself, then come back.</span>';
+    document.getElementById('guide-yn').querySelector('.no').textContent = '✗ Still confused';
+  }
+}
+
+function guideThumb(val) {
+  guideFeedback[guideStep] = val;
+  saveFeedback();
+  document.getElementById('thumb-up').className   = 'thumb-btn' + (val===1  ? ' active-up'   : '');
+  document.getElementById('thumb-down').className = 'thumb-btn' + (val===-1 ? ' active-down' : '');
+  if (val === 1) { awardXP(5); status('👍 Feedback saved — thanks!'); }
+  else { status('👎 Got it — will explain better next time'); }
+}
+
+function saveFeedback() {
+  try { localStorage.setItem('gr_guide_feedback', JSON.stringify(guideFeedback)); } catch(e) {}
+}
+
+function awardXP(n) {
+  guideXP += n;
+  try { localStorage.setItem('gr_guide_xp', guideXP); } catch(e) {}
+  // Flash XP
+  const xpEl = document.getElementById('guide-xp');
+  xpEl.textContent = '+' + n + ' XP';
+  const bubble = document.getElementById('guide-bubble');
+  const r = bubble.getBoundingClientRect();
+  xpEl.style.left = (r.right - 60) + 'px';
+  xpEl.style.top  = (r.top - 10) + 'px';
+  xpEl.style.display = 'block';
+  xpEl.style.animation = 'none';
+  void xpEl.offsetWidth;
+  xpEl.style.animation = 'xpFloat 1.2s forwards';
+  setTimeout(() => { xpEl.style.display = 'none'; }, 1200);
+}
+
+function guideEnd() {
+  document.getElementById('guide-backdrop').className = '';
+  document.getElementById('guide-ring').className = '';
+  document.getElementById('guide-arrow').className = '';
+  document.getElementById('guide-bubble').className = '';
+  document.getElementById('guide-progress').className = '';
+  // Confetti if reached the end naturally
+  if (guideStep >= GUIDE_STEPS.length - 1) confettiBurst();
+  status('★ Guide complete! Total XP: ' + guideXP);
+}
+
+function confettiBurst() {
+  const colours = ['#FFD700','#22c55e','#4a9eff','#f59e0b','#ef4444','#fff'];
+  for (let i = 0; i < 60; i++) {
+    setTimeout(() => {
+      const p = document.createElement('div');
+      p.className = 'confetti-p';
+      p.style.left = (10 + Math.random() * 80) + 'vw';
+      p.style.top  = '-10px';
+      p.style.background = colours[Math.floor(Math.random() * colours.length)];
+      p.style.animationDuration = (1.5 + Math.random() * 2) + 's';
+      p.style.animationDelay = (Math.random() * 0.5) + 's';
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 3500);
+    }, i * 30);
+  }
+}
+</script>
+</body>
+</html>

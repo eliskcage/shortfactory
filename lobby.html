@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShortFactory — Testing Lobby</title>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1XY2CNLJCE"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1XY2CNLJCE');</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#05050a;--surface:#0d0d14;--border:#1a1a2e;
+  --gold:#f5c518;--green:#00e676;--red:#ff3355;--amber:#ffaa00;--blue:#00aaff;--dim:#64748b;
+  --rank-private:#64748b;--rank-corporal:#22c55e;--rank-sergeant:#3b82f6;
+  --rank-veteran:#a855f7;--rank-commander:#f59e0b;--rank-legendary:#ef4444;--rank-gigachad:#f5c518;
+}
+body{background:var(--bg);color:#e2e8f0;font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;min-height:100vh}
+
+/* ── TOP BAR ── */
+#topbar{position:sticky;top:0;z-index:100;background:rgba(5,5,10,.97);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+#tb-left{display:flex;align-items:center;gap:12px}
+#tb-title{font-weight:800;font-size:12px;letter-spacing:3px;color:var(--gold);text-transform:uppercase}
+#tb-subtitle{font-size:10px;color:var(--dim);letter-spacing:1px}
+#wallet{display:flex;align-items:center;gap:10px;background:rgba(245,197,24,.06);border:1px solid rgba(245,197,24,.2);border-radius:24px;padding:6px 14px 6px 8px;cursor:pointer;transition:all .2s}
+#wallet:hover{border-color:var(--gold)}
+#wallet-glyph{width:28px;height:28px;border-radius:50%;overflow:hidden;flex-shrink:0}
+#wallet-info{display:flex;flex-direction:column;gap:1px}
+#wallet-sft{font-size:13px;font-weight:800;color:var(--gold)}
+#wallet-rank{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim)}
+#factory-pulse{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--dim);letter-spacing:1px}
+.pulse-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── HERO ── */
+#hero{padding:48px 24px 36px;text-align:center;border-bottom:1px solid var(--border);position:relative;overflow:hidden}
+#hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 60% at 50% 0%,rgba(245,197,24,.04),transparent);pointer-events:none}
+#hero h1{font-size:clamp(28px,5vw,52px);font-weight:900;letter-spacing:4px;color:#fff;text-transform:uppercase;margin-bottom:8px}
+#hero h1 span{color:var(--gold)}
+#hero-sub{font-size:14px;color:var(--dim);max-width:520px;margin:0 auto 24px;line-height:1.7}
+#factory-stats{display:flex;gap:32px;justify-content:center;flex-wrap:wrap}
+.fstat{text-align:center}
+.fstat-num{font-size:24px;font-weight:900;color:#fff}
+.fstat-num.gold{color:var(--gold)}
+.fstat-num.green{color:var(--green)}
+.fstat-label{font-size:10px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin-top:2px}
+
+/* ── RANK STRIP ── */
+#rank-strip{padding:16px 24px;border-bottom:1px solid var(--border);display:flex;gap:8px;overflow-x:auto;justify-content:center;flex-wrap:wrap}
+.rank-badge{padding:5px 12px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;border:1px solid;opacity:.4;transition:all .3s}
+.rank-badge.active{opacity:1;box-shadow:0 0 12px currentColor}
+.rank-PRIVATE{color:var(--rank-private);border-color:var(--rank-private)}
+.rank-CORPORAL{color:var(--rank-corporal);border-color:var(--rank-corporal)}
+.rank-SERGEANT{color:var(--rank-sergeant);border-color:var(--rank-sergeant)}
+.rank-VETERAN{color:var(--rank-veteran);border-color:var(--rank-veteran)}
+.rank-COMMANDER{color:var(--rank-commander);border-color:var(--rank-commander)}
+.rank-LEGENDARY{color:var(--rank-legendary);border-color:var(--rank-legendary)}
+.rank-GIGACHAD{color:var(--rank-gigachad);border-color:var(--rank-gigachad)}
+
+/* ── GRID ── */
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:1px;background:var(--border);padding:0}
+
+/* ── CARD ── */
+.card{background:var(--bg);padding:0;display:flex;flex-direction:column;transition:background .2s;position:relative}
+.card:hover{background:#07070f}
+.card-left-bar{position:absolute;left:0;top:0;bottom:0;width:3px}
+.bar-red{background:var(--red)}
+.bar-amber{background:var(--amber)}
+.bar-green{background:var(--green)}
+.card-inner{padding:20px 20px 20px 24px;flex:1;display:flex;flex-direction:column;gap:14px}
+
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.card-name{font-weight:800;font-size:15px;color:#fff;letter-spacing:.5px}
+.card-badge{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:3px 8px;border-radius:12px;flex-shrink:0}
+.badge-new{background:rgba(255,51,85,.1);color:var(--red);border:1px solid var(--red)}
+.badge-live{background:rgba(0,230,118,.1);color:var(--green);border:1px solid var(--green)}
+.badge-wip{background:rgba(255,170,0,.1);color:var(--amber);border:1px solid var(--amber)}
+.badge-discovery{background:rgba(100,116,139,.1);color:var(--dim);border:1px solid #333}
+
+.card-desc{font-size:12px;color:var(--dim);line-height:1.6}
+
+.card-progress{display:flex;align-items:center;gap:10px}
+.prog-bar{flex:1;height:4px;background:#1a1a2e;border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;border-radius:2px;transition:width 1s ease}
+.prog-pct{font-size:11px;font-weight:700;color:var(--dim);min-width:28px;text-align:right}
+
+/* ── TASKS ── */
+.tasks-head{display:flex;align-items:center;justify-content:space-between}
+.tasks-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--dim)}
+.tasks-earned{font-size:10px;color:var(--gold)}
+.task-list{display:flex;flex-direction:column;gap:6px}
+.task-item{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;background:var(--surface);border-radius:6px;border:1px solid var(--border);cursor:pointer;transition:all .15s;position:relative}
+.task-item:hover{border-color:rgba(245,197,24,.3)}
+.task-item.done{opacity:.5;pointer-events:none}
+.task-item.done .task-name{text-decoration:line-through}
+.task-cb{width:16px;height:16px;border-radius:3px;border:1px solid #333;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px;font-size:10px;background:#0a0a12;transition:all .2s}
+.task-item.done .task-cb{background:var(--green);border-color:var(--green);color:#000}
+.task-body{flex:1;min-width:0}
+.task-name{font-size:12px;color:#cbd5e1;line-height:1.4}
+.task-sft{font-size:10px;font-weight:700;color:var(--gold);margin-top:2px}
+.task-locked{opacity:.3;pointer-events:none}
+.task-locked .task-cb{background:#111}
+
+.card-action{margin-top:auto;padding-top:4px}
+.btn-test{width:100%;padding:10px;background:rgba(245,197,24,.06);border:1px solid rgba(245,197,24,.2);color:var(--gold);font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border-radius:6px;transition:all .2s;text-decoration:none;display:block;text-align:center}
+.btn-test:hover{background:rgba(245,197,24,.12);border-color:var(--gold)}
+.btn-test.disabled{opacity:.3;pointer-events:none;cursor:default}
+
+/* ── LEADERBOARD ── */
+#leaderboard{border-top:1px solid var(--border);padding:40px 24px}
+#lb-title{font-size:11px;font-weight:700;letter-spacing:3px;color:var(--gold);text-transform:uppercase;text-align:center;margin-bottom:24px}
+#lb-list{max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:6px}
+.lb-row{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface);border-radius:8px;border:1px solid var(--border)}
+.lb-row.me{border-color:rgba(245,197,24,.3);background:rgba(245,197,24,.03)}
+.lb-pos{font-size:11px;font-weight:700;color:var(--dim);min-width:20px}
+.lb-glyph{width:24px;height:24px;border-radius:50%;overflow:hidden;flex-shrink:0}
+.lb-name{flex:1;font-size:12px;font-weight:600;color:#fff}
+.lb-sft{font-size:12px;font-weight:800;color:var(--gold)}
+.lb-rank-tag{font-size:9px;letter-spacing:1px;color:var(--dim)}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:24px;right:24px;background:rgba(5,5,10,.97);border:1px solid var(--gold);border-radius:10px;padding:14px 20px;transform:translateY(80px);opacity:0;transition:all .3s;z-index:999;max-width:280px}
+#toast.show{transform:translateY(0);opacity:1}
+#toast-title{font-size:13px;font-weight:800;color:var(--gold);margin-bottom:2px}
+#toast-body{font-size:12px;color:var(--dim)}
+
+/* ── WALLET MODAL ── */
+#wallet-modal{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;display:none;align-items:center;justify-content:center}
+#wallet-modal.open{display:flex}
+#wm-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;width:320px;text-align:center}
+#wm-canvas{border-radius:50%;border:2px solid var(--gold);margin:0 auto 16px;display:block}
+#wm-sft{font-size:36px;font-weight:900;color:var(--gold);margin-bottom:4px}
+#wm-rank{font-size:11px;letter-spacing:3px;color:var(--dim);text-transform:uppercase;margin-bottom:16px}
+#wm-tasks-done{font-size:12px;color:var(--dim);margin-bottom:20px}
+#wm-close{padding:10px 24px;background:none;border:1px solid var(--border);color:var(--dim);cursor:pointer;border-radius:6px;font-size:12px;letter-spacing:1px}
+#wm-close:hover{border-color:var(--gold);color:var(--gold)}
+#wm-address{font-size:9px;color:#333;word-break:break-all;margin-top:12px;letter-spacing:1px}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div id="tb-left">
+    <div id="tb-title">ShortFactory</div>
+    <div id="tb-subtitle">TESTING LOBBY</div>
+  </div>
+  <div id="factory-pulse"><div class="pulse-dot"></div><span id="factory-count">0 tasks completed today</span></div>
+  <div id="wallet" onclick="openWallet()">
+    <canvas id="wallet-glyph" width="28" height="28"></canvas>
+    <div id="wallet-info">
+      <div id="wallet-sft">0 SFT</div>
+      <div id="wallet-rank">PRIVATE</div>
+    </div>
+  </div>
+</div>
+
+<!-- HERO -->
+<div id="hero">
+  <h1>THE <span>TESTING</span> LOBBY</h1>
+  <p id="hero-sub">Help ship unfinished products. Complete test tasks, earn SFT tokens, collect royalties when they go live. The factory runs on you.</p>
+  <div id="factory-stats">
+    <div class="fstat"><div class="fstat-num gold" id="stat-products">6</div><div class="fstat-label">Products In Lab</div></div>
+    <div class="fstat"><div class="fstat-num" id="stat-tasks">24</div><div class="fstat-label">Test Tasks</div></div>
+    <div class="fstat"><div class="fstat-num green" id="stat-sft">∞</div><div class="fstat-label">SFT Available</div></div>
+  </div>
+</div>
+
+<!-- RANK STRIP -->
+<div id="rank-strip">
+  <div class="rank-badge rank-PRIVATE active" id="rank-PRIVATE">▪ Private — 0 SFT</div>
+  <div class="rank-badge rank-CORPORAL" id="rank-CORPORAL">▪ Corporal — 100 SFT</div>
+  <div class="rank-badge rank-SERGEANT" id="rank-SERGEANT">▪ Sergeant — 300 SFT</div>
+  <div class="rank-badge rank-VETERAN" id="rank-VETERAN">▪ Veteran — 750 SFT</div>
+  <div class="rank-badge rank-COMMANDER" id="rank-COMMANDER">▪ Commander — 2,000 SFT</div>
+  <div class="rank-badge rank-LEGENDARY" id="rank-LEGENDARY">▪ Legendary — 5,000 SFT</div>
+  <div class="rank-badge rank-GIGACHAD" id="rank-GIGACHAD">▪ GIGACHAD — 10,000 SFT</div>
+</div>
+
+<!-- GRID -->
+<div id="grid">
+
+  <!-- BRAINSHREDDER -->
+  <div class="card" id="card-brainshredder">
+    <div class="card-left-bar bar-red"></div>
+    <div class="card-inner">
+      <div class="card-top">
+        <div class="card-name">BrainShredder</div>
+        <div class="card-badge badge-new">NEW</div>
+      </div>
+      <div class="card-desc">Upload your chaos zip — notes, scripts, passwords, ideas. AI redacts secrets, organises everything, scores ideas 1–10. BUILD NOW / BUILD LATER / DUD. No backend yet. Frontend demo only.</div>
+      <div class="card-progress">
+        <div class="prog-bar"><div class="prog-fill bar-red" style="width:8%;background:var(--red)"></div></div>
+        <div class="prog-pct" style="color:var(--red)">8%</div>
+      </div>
+      <div class="tasks-head">
+        <div class="tasks-label">Test Tasks</div>
+        <div class="tasks-earned" id="earned-brainshredder">+0 SFT earned</div>
+      </div>
+      <div class="task-list" id="tasks-brainshredder">
+        <div class="task-item" data-card="brainshredder" data-id="bs1" data-sft="5" onclick="completeTask(this)">
+          <div class="task-cb"></div>
+          <div class="task-body">
+            <div class="task-name">Read the landing page top to bottom</div>
+            <div class="task-sft">+5 SFT</div>
+          </div>
+        </div>
+        <div class="task-item" data-card="brainshredder" data-id="bs2" data-sft="10" onclick="completeTask(this)">
+          <div class="task-cb"></div>
+          <div class="task-body">
+            <div class="task-name">Step through all 5 demo steps</div>
+            <div class="task-sft">+10 SFT</div>
+          </div>
+        </div>
+        <div class="task-item" data-card="brainshredder" data-id="bs3" data-sft="10" onclick="completeTask(this)">
+          <div class="task-cb"></div>
+          <div class="task-body">
+            <div class="task-name">Check the pricing section — does it make sense?</div>
+            <div class="task-sft">+10 SFT</div>
+          </div>
+        </div>
+        <div class="task-item" data-card="brainshredder" data-id="bs4" data-sft="25" onclick="completeTask(this)">
+          <div class="task-cb"></div>
+          <div class="task-body">
+            <div class="task-name">Report 1 bug, unclear copy or missing feature</div>
+            <div class="task-sft">+25 SFT</div>
+          </div>
+        </div>
+        <div class="task-item" data-card="brainshredder" data-id="bs5" data-sft="50" onclick="completeTask(this)">
+          <div class="task-cb"></div>
+          <div class="task-body">
+            <div class="task-name">Would you pay £9/mo for this? Leave honest verdict</div>
+            <div class="task-sft">+50 SFT</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-action">
+        <a href="/brainshredder.html" target="_blank" class="btn-test">Open BrainShredder →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- VOICE CONTRACT -->
+  <div class="card" id="card-voice">
+    <div class="card-left-bar bar-red"></div>
+    <div class="card-inner">
+      <div class="card-top">
+        <div class="card-name">Voice Contract Engine</div>
+        <div class="card-badge badge-new">NEW</div>
+      </div>
+      <div class="card-desc">Speak deal terms into a microphone. Keywords map to symbols. Satoshi genome glyph generated. Download as SVG contract. The spoken word becomes an encrypted covenant.</div>
+      <div class="card-progress">
+        <div class="prog-bar"><div class="prog-fill" style="width:12%;background:var(--red)"></div></div>
+        <div class="prog-pct" style="color:var(--red)">12%</div>
+      </div>
+      <div class="tasks-head">
+        <div class="tasks-label">Test Tasks</div>
+        <div class="tasks-earned" id="earned-voice">+0 SFT earned</div>
+      </div>
+      <div class="task-list" id="tasks-voice">
+        <div class="task-item" data-card="voice" data-id="vc1" data-sft="10" onclick="completeTask(this)">
+          <div class="task-cb"></div>
+          <div class="task-body">
+            <div class="task-name">Tap the mic button — does it ask for permission?</div>
+            <div class="task-sft">+10 SFT</div>
+          </div>
+        </div>
+        <div class="task-item" data-card="voice" data-id="vc2" data-sft="15" onclick="completeTask(this)">
+          <div class="task-cb"></div>
+          <div class="task-body">
+            <div class="task-name">Speak or type a deal term — do symbols appear?</div>
+            <div class="task-sft">+15 SFT</div>
+          </div>
+        </div>
+        <div class="task-item" data-card="voice" data-id="vc3" data-sft="15" onclick="completeTask(this)">
+          <div class="task-cb"></div>
+          <div class="task-body">
+            <div class="task-name">Get a Satoshi genome glyph to render on the canvas</div>
+            <div class="task-sft">+15 SFT</div>
+          </div>
+        </div>
+        <div class="task-item" data-card="voice" data-id="vc4" data-sft="20" onclick="completeTask(this)">
+          <div class="task-cb"></div>
+          <div class="task-body">
+            <div class="task-name">Download a contract SVG successfully</div>
+            <div class="task-sft">+20 SFT</div>
+          </div>
+        </div>
+        <div class="task-item" data-card="voice" data-id="vc5" data-sft="30" onclick="completeTask(this)">
+          <div class="task-cb"></div>
+          <div class="task-body">
+            <div class="task-name">List which words triggered which symbols — post findings</div>
+            <div class="task-sft">+30 SFT</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-action">
+        <a href="/mic.html" target="_blank" class="btn-test">Open Voice Contract →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- IMAGINATOR -->
+  <div class="card" id="card-imaginator">
+    <div class="card-left-bar bar-amber"></div>
+    <div class="card-inner">
+      <div class="card-top">
+        <div class="card-name">Imaginator</div>
+        <div class="card-badge badge-wip">60%</div>
+      </div>
+      <div class="card-desc">Upload a still image, pick a theme, get a YouTube Short back. Google auth + Drive + YouTube pipeline. Missing: reliable export, some theme failures.</div>
+      <div class="card-progress">
+        <div class="prog-bar"><div class="prog-fill" style="width:60%;background:var(--amber)"></div></div>
+        <div class="prog-pct" style="color:var(--amber)">60%</div>
+      </div>
+      <div class="tasks-head">
+        <div class="tasks-label">Test Tasks</div>
+        <div class="tasks-earned" id="earned-imaginator">+0 SFT earned</div>
+      </div>
+      <div class="task-list" id="tasks-imaginator">
+        <div class="task-item" data-card="imaginator" data-id="im1" data-sft="10" onclick="completeTask(this)">
+          <div class="task-cb"></div>
+          <div class="task-body">
+            <div class="task-name">Sign in with Google — does auth work?</div>
+            <div class="task-sft">+10 SFT</div>
+          </div>
+        </div>
+        <div class="task-item" data-card="imaginator" data-id="im2" data-sft="15" onclick="completeTask(this)">
+          <div class="task-cb"></div>
+          <div class="task-body">
+            <div class="task-name">Upload a still and try 3 different themes</div>
+            <div class="task-sft">+15 SFT</div>
+          </div>
+        </div>
+        <div class="task-item" data-card="imaginator" data-id="im3" data-sft="25" onclick="completeTask(this)">
+          <div class="task-cb"></div>
+          <div class="task-body">
+            <div class="task-name">Successfully export a YouTube Short to your channel</div>
+            <div class="task-sft">+25 SFT</div>
+          </div>
+        </div>
+        <div class="task-item" data-card="imaginator" data-id="im4" data-sft="20" onclick="completeTask(this)">
+          <div class="task-cb"></div>
+          <div class="task-body">
+            <div class="task-name">Report which theme failed or gave bad output</div>
+            <div class="task-sft">+20 SFT</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-action">
+        <a href="/imaginator/index2.php" target="_blank" class="btn-test">Open Imaginator →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- D4D -->
+  <div class="card" id="card-d4d">
+    <div class="card-left-bar bar-amber"></div>
+    <div class="card-inner">
+      <div class="card-top">
+        <div class="card-name">Dares4Dosh</div>
+        <div class="card-badge badge-wip">55%</div>
+      </div>
+      <div class="card-desc">React 19 dare feed. Upload a dare video, rank system (7 tiers), Soul Forge 5-game soul measurement. Missing: real video upload pipeline, dare approval flow.</div>
+      <div class="card-progress">
+        <div class="prog-bar"><div class="prog-fill" style="width:55%;background:var(--amber)"></div></div>
+        <div class="prog-pct" style="color:var(--amber)">55%</div>
+      </div>
+      <div class="tasks-head">
+        <div class="tasks-label">Test Tasks</div>
+        <div class="tasks-earned" id="earned-d4d">+0 SFT earned</div>
+      </div>
+      <div class="task-list" id="tasks-d4d">
+        <div class="task-item" data-card="d4d" data-id="d1" data-sft="10" onclick="completeTask(this)">
+          <div class="task-cb"></div>
+          <div class="task-body">
+            <div class="task-name">Browse the dare feed — does it load?</div>
+            <div class="task-sft">+10 SFT</div>
+          </div>
+        </div>
+        <div class="task-item" data-card="d4d" data-id="d2" data-sft="15" onclick="completeTask(this)">
+          <div class="task-cb"></div>
+          <div class="task-body">
+            <div class="task-name">Play all 5 Soul Forge games in one session</div>
+            <div class="task-sft">+15 SFT</div>
+          </div>
+        </div>
+        <div class="task-item" data-card="d4d" data-id="d3" data-sft="20" onclick="completeTask(this)">
+          <div class="task-cb"></div>
+          <div class="task-body">
+            <div class="task-name">Try to submit a dare — where does it break?</div>
+            <div class="task-sft">+20 SFT</div>
+          </div>
+        </div>
+        <div class="task-item" data-card="d4d" data-id="d4" data-sft="30" onclick="completeTask(this)">
+          <div class="task-cb"></div>
+          <div class="task-body">
+            <div class="task-name">Reach rank Corporal or above in Soul Forge</div>
+            <div class="task-sft">+30 SFT</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-action">
+        <a href="/dares4dosh/" target="_blank" class="btn-test">Open Dares4Dosh →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANDROID APP -->
+  <div class="card" id="card-android">
+    <div class="card-left-bar bar-red"></div>
+    <div class="card-inner">
+      <div class="card-top">
+        <div class="card-name">ALIVE Android App</div>
+        <div class="card-badge badge-new">10%</div>
+      </div>
+      <div class="card-desc">ALIVE creature as native Android app. S9 experiment first. TWA / WebView wrapper. Signed keystore exists. Not yet submitted to Play Store. Needs real device testing.</div>
+      <div class="card-progress">
+        <div class="prog-bar"><div class="prog-fill" style="width:10%;background:var(--red)"></div></div>
+        <div class="prog-pct" style="color:var(--red)">10%</div>
+      </div>
+      <div class="tasks-head">
+        <div class="tasks-label">Test Tasks</div>
+        <div class="tasks-earned" id="earned-android">+0 SFT earned</div>
+      </div>
+      <div class="task-list" id="tasks-android">
+        <div class="task-item" data-card="android" data-id="an1" data-sft="10" onclick="completeTask(this)">
+          <div class="task-cb"></div>
+          <div class="task-body">
+            <div class="task-name">Open alive.shortfactory.shop on your phone browser</div>
+            <div class="task-sft">+10 SFT</div>
+          </div>
+        </div>
+        <div class="task-item" data-card="android" data-id="an2" data-sft="15" onclick="completeTask(this)">
+          <div class="task-cb"></div>
+          <div class="task-body">
+            <div class="task-name">Add to home screen — does it feel like an app?</div>
+            <div class="task-sft">+15 SFT</div>
+          </div>
+        </div>
+        <div class="task-item" data-card="android" data-id="an3" data-sft="20" onclick="completeTask(this)">
+          <div class="task-cb"></div>
+          <div class="task-body">
+            <div class="task-name">Test creature sounds on phone — do they work?</div>
+            <div class="task-sft">+20 SFT</div>
+          </div>
+        </div>
+        <div class="task-item" data-card="android" data-id="an4" data-sft="40" onclick="completeTask(this)">
+          <div class="task-cb"></div>
+          <div class="task-body">
+            <div class="task-name">Install APK on Android and report full experience</div>
+            <div class="task-sft">+40 SFT</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-action">
+        <a href="/alive/" target="_blank" class="btn-test">Open ALIVE →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- PASSWORD REFUSAL SERVICE -->
+  <div class="card" id="card-prs">
+    <div class="card-left-bar" style="background:var(--dim)"></div>
+    <div class="card-inner" style="opacity:.5">
+      <div class="card-top">
+        <div class="card-name" style="color:#666">Password Refusal Service</div>
+        <div class="card-badge badge-discovery">DISCOVERY</div>
+      </div>
+      <div class="card-desc" style="color:#333" id="prs-cipher2"></div>
+      <div style="font-size:12px;color:#555;font-style:italic;margin-top:-4px">— ALIVE's final form</div>
+      <div class="card-progress">
+        <div class="prog-bar"><div class="prog-fill" style="width:2%;background:#222"></div></div>
+        <div class="prog-pct" style="color:#333">2%</div>
+      </div>
+      <div class="tasks-head">
+        <div class="tasks-label" style="color:#333">Test Tasks</div>
+        <div class="tasks-earned" style="color:#333">LOCKED</div>
+      </div>
+      <div class="task-list">
+        <div class="task-item task-locked">
+          <div class="task-cb"></div>
+          <div class="task-body">
+            <div class="task-name" style="color:#333">Vote to build this product</div>
+            <div class="task-sft" style="color:#333">+50 SFT — COMING SOON</div>
+          </div>
+        </div>
+        <div class="task-item task-locked">
+          <div class="task-cb"></div>
+          <div class="task-body">
+            <div class="task-name" style="color:#333">Design the NO button</div>
+            <div class="task-sft" style="color:#333">+100 SFT — COMING SOON</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-action">
+        <div class="btn-test disabled">Concept Only — Not Yet Built</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- LEADERBOARD -->
+<div id="leaderboard">
+  <div id="lb-title">FACTORY LEADERBOARD</div>
+  <div id="lb-list">
+    <div class="lb-row">
+      <div class="lb-pos">#1</div>
+      <canvas class="lb-glyph" width="24" height="24" id="lb1-glyph"></canvas>
+      <div class="lb-name">DAN <span class="lb-rank-tag">GIGACHAD</span></div>
+      <div class="lb-sft">9,999 SFT</div>
+    </div>
+    <div class="lb-row" id="my-lb-row">
+      <div class="lb-pos" id="my-pos">#2</div>
+      <canvas class="lb-glyph" width="24" height="24" id="my-lb-glyph"></canvas>
+      <div class="lb-name">YOU <span class="lb-rank-tag" id="my-lb-rank">PRIVATE</span></div>
+      <div class="lb-sft" id="my-lb-sft">0 SFT</div>
+    </div>
+    <div class="lb-row">
+      <div class="lb-pos">#3</div>
+      <canvas class="lb-glyph" width="24" height="24" id="lb3-glyph"></canvas>
+      <div class="lb-name">ANON_7741 <span class="lb-rank-tag">PRIVATE</span></div>
+      <div class="lb-sft">0 SFT</div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast">
+  <div id="toast-title"></div>
+  <div id="toast-body"></div>
+</div>
+
+<!-- WALLET MODAL -->
+<div id="wallet-modal" onclick="closeWallet(event)">
+  <div id="wm-box">
+    <canvas id="wm-canvas" width="100" height="100"></canvas>
+    <div id="wm-sft">0 SFT</div>
+    <div id="wm-rank">PRIVATE</div>
+    <div id="wm-tasks-done">0 tasks completed</div>
+    <button id="wm-close" onclick="document.getElementById('wallet-modal').classList.remove('open')">CLOSE</button>
+    <div id="wm-address"></div>
+  </div>
+</div>
+
+<script>
+// ── WALLET ─────────────────────────────────────────────────────────────────────
+const RANKS = [
+  {name:'PRIVATE',   min:0},
+  {name:'CORPORAL',  min:100},
+  {name:'SERGEANT',  min:300},
+  {name:'VETERAN',   min:750},
+  {name:'COMMANDER', min:2000},
+  {name:'LEGENDARY', min:5000},
+  {name:'GIGACHAD',  min:10000}
+];
+
+function getRank(sft) {
+  let r = RANKS[0];
+  for (const rank of RANKS) { if (sft >= rank.min) r = rank; }
+  return r;
+}
+
+function loadWallet() {
+  const raw = localStorage.getItem('sf_wallet');
+  if (raw) return JSON.parse(raw);
+  const seed = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  const w = {seed, sft:0, tasks:[], created: Date.now()};
+  localStorage.setItem('sf_wallet', JSON.stringify(w));
+  return w;
+}
+
+function saveWallet(w) {
+  localStorage.setItem('sf_wallet', JSON.stringify(w));
+}
+
+let wallet = loadWallet();
+
+function updateWalletUI() {
+  const rank = getRank(wallet.sft);
+  document.getElementById('wallet-sft').textContent = wallet.sft + ' SFT';
+  document.getElementById('wallet-rank').textContent = rank.name;
+  drawGlyph(document.getElementById('wallet-glyph'), wallet.seed, 28);
+  drawGlyph(document.getElementById('wm-canvas'), wallet.seed, 100);
+  drawGlyph(document.getElementById('my-lb-glyph'), wallet.seed, 24);
+  document.getElementById('my-lb-sft').textContent = wallet.sft + ' SFT';
+  document.getElementById('my-lb-rank').textContent = rank.name;
+  document.getElementById('wm-sft').textContent = wallet.sft + ' SFT';
+  document.getElementById('wm-rank').textContent = rank.name;
+  document.getElementById('wm-tasks-done').textContent = wallet.tasks.length + ' tasks completed';
+  document.getElementById('wm-address').textContent = 'SOUL ID: ' + wallet.seed.toUpperCase();
+  // rank strip
+  RANKS.forEach(r => {
+    const el = document.getElementById('rank-' + r.name);
+    if (el) el.classList.toggle('active', r.name === rank.name);
+  });
+  // factory count
+  document.getElementById('factory-count').textContent = wallet.tasks.length + ' tasks completed';
+}
+
+function openWallet() {
+  document.getElementById('wallet-modal').classList.add('open');
+}
+function closeWallet(e) {
+  if (e.target === document.getElementById('wallet-modal')) {
+    document.getElementById('wallet-modal').classList.remove('open');
+  }
+}
+
+// ── GLYPH RENDERER ─────────────────────────────────────────────────────────────
+function hashStr(s) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = (h * 16777619) >>> 0; }
+  return h;
+}
+function xorshift(seed) {
+  let s = seed >>> 0 || 1;
+  return function() { s ^= s << 13; s ^= s >> 17; s ^= s << 5; s = s >>> 0; return s / 4294967296; };
+}
+
+function drawGlyph(canvas, seed, size) {
+  const ctx = canvas.getContext('2d');
+  const rng = xorshift(hashStr(seed));
+  const COLS = 6, rows = 6, tw = size / COLS, th = size / rows;
+  ctx.clearRect(0, 0, size, size);
+  ctx.fillStyle = '#0d0d14';
+  ctx.fillRect(0, 0, size, size);
+  const hue = (hashStr(seed) % 360);
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const up = (r + c) % 2 === 0;
+      const v = rng();
+      if (v < 0.15) continue;
+      const alpha = 0.3 + v * 0.7;
+      ctx.fillStyle = `hsla(${hue},80%,60%,${alpha})`;
+      const x = c * tw, y = r * th;
+      ctx.beginPath();
+      if (up) { ctx.moveTo(x, y+th); ctx.lineTo(x+tw/2, y); ctx.lineTo(x+tw, y+th); }
+      else    { ctx.moveTo(x, y); ctx.lineTo(x+tw, y); ctx.lineTo(x+tw/2, y+th); }
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+}
+
+// ── TASK COMPLETION ────────────────────────────────────────────────────────────
+function completeTask(el) {
+  const id = el.dataset.id;
+  const sft = parseInt(el.dataset.sft);
+  const card = el.dataset.card;
+  if (wallet.tasks.includes(id)) return;
+  wallet.tasks.push(id);
+  wallet.sft += sft;
+  saveWallet(wallet);
+  el.classList.add('done');
+  el.querySelector('.task-cb').textContent = '✓';
+  updateEarned(card);
+  updateWalletUI();
+  showToast('+' + sft + ' SFT earned!', taskNameFor(id, el));
+  if (typeof gtag !== 'undefined') gtag('event', 'task_complete', {task_id: id, sft_earned: sft, card});
+}
+
+function taskNameFor(id, el) {
+  return el.querySelector('.task-name').textContent;
+}
+
+function updateEarned(card) {
+  const tasks = document.querySelectorAll('[data-card="'+card+'"].done');
+  let total = 0;
+  tasks.forEach(t => total += parseInt(t.dataset.sft));
+  const el = document.getElementById('earned-' + card);
+  if (el) el.textContent = '+' + total + ' SFT earned';
+}
+
+function showToast(title, body) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-title').textContent = title;
+  document.getElementById('toast-body').textContent = body.substring(0, 60);
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── RESTORE DONE TASKS ─────────────────────────────────────────────────────────
+function restoreTasks() {
+  wallet.tasks.forEach(id => {
+    const el = document.querySelector('[data-id="'+id+'"]');
+    if (el) {
+      el.classList.add('done');
+      el.querySelector('.task-cb').textContent = '✓';
+    }
+  });
+  // update earned per card
+  ['brainshredder','voice','imaginator','d4d','android'].forEach(updateEarned);
+}
+
+// ── PRS CIPHER ─────────────────────────────────────────────────────────────────
+(function(){
+  var p="The creature holds all keys. No username. No password. No gateway. Biometric only. Soul glyph is identity. Satoshi cipher encrypts your digital life onto the chain. The app has one button. It says NO.";
+  var key="SKYDADDY",B=32,R=95,o='';
+  for(var i=0;i<p.length;i++){var c=p.charCodeAt(i);if(c>=32&&c<=126){var k=key.charCodeAt(i%key.length)-B;o+=String.fromCharCode(((c-B+k)%R)+B);}else{o+=p[i];}}
+  var el=document.getElementById('prs-cipher2');
+  if(el)el.textContent=o;
+})();
+
+// ── DAN'S GLYPH ────────────────────────────────────────────────────────────────
+drawGlyph(document.getElementById('lb1-glyph'), 'danwonka9999', 24);
+drawGlyph(document.getElementById('lb3-glyph'), 'anon7741', 24);
+
+// ── INIT ───────────────────────────────────────────────────────────────────────
+restoreTasks();
+updateWalletUI();
+</script>
+</body>
+</html>

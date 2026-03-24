@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Multi-Eye Shape Synth</title>
+  <style>
+    body {
+      background: #111;
+      color: white;
+      font-family: Arial;
+      text-align: center;
+    }
+
+    input {
+      padding: 10px;
+      margin: 10px;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    svg {
+      margin-top: 20px;
+      border: 1px solid #333;
+      background: #000;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🧠 Shape Synth Visualizer</h1>
+
+<input id="word1" placeholder="word 1 (e.g. shoe)">
+<input id="word2" placeholder="word 2 (e.g. running)">
+<br>
+<button onclick="run()">MERGE</button>
+
+<svg id="canvas" width="400" height="400"></svg>
+
+<script>
+function hashWord(word) {
+  let hash = 0;
+  for (let i = 0; i < word.length; i++) {
+    hash += word.charCodeAt(i);
+  }
+  return hash;
+}
+
+function generateShape(word) {
+  const centerX = 200;
+  const centerY = 200;
+  const points = [];
+  const base = hashWord(word);
+
+  const segments = 12;
+
+  for (let i = 0; i < segments; i++) {
+    const angle = (i / segments) * Math.PI * 2;
+    const radius = 50 + ((base * (i + 1)) % 100);
+
+    const x = centerX + Math.cos(angle) * radius;
+    const y = centerY + Math.sin(angle) * radius;
+
+    points.push([x, y]);
+  }
+
+  return points;
+}
+
+function drawShape(points, color) {
+  const svg = document.getElementById("canvas");
+
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+
+  path.setAttribute("points", points.map(p => p.join(",")).join(" "));
+  path.setAttribute("fill", "none");
+  path.setAttribute("stroke", color);
+  path.setAttribute("stroke-width", 2);
+
+  svg.appendChild(path);
+}
+
+function clearCanvas() {
+  document.getElementById("canvas").innerHTML = "";
+}
+
+function interpolate(a, b, t) {
+  return a + (b - a) * t;
+}
+
+function mergeShapes(shapeA, shapeB, t) {
+  const merged = [];
+
+  for (let i = 0; i < shapeA.length; i++) {
+    const x = interpolate(shapeA[i][0], shapeB[i][0], t);
+    const y = interpolate(shapeA[i][1], shapeB[i][1], t);
+    merged.push([x, y]);
+  }
+
+  return merged;
+}
+
+function animate(shapeA, shapeB) {
+  let t = 0;
+
+  function frame() {
+    clearCanvas();
+
+    const merged = mergeShapes(shapeA, shapeB, t);
+
+    drawShape(shapeA, "blue");
+    drawShape(shapeB, "red");
+    drawShape(merged, "lime");
+
+    t += 0.02;
+
+    if (t <= 1) {
+      requestAnimationFrame(frame);
+    }
+  }
+
+  frame();
+}
+
+function run() {
+  const w1 = document.getElementById("word1").value;
+  const w2 = document.getElementById("word2").value;
+
+  if (!w1 || !w2) return;
+
+  const shapeA = generateShape(w1);
+  const shapeB = generateShape(w2);
+
+  animate(shapeA, shapeB);
+}
+</script>
+
+</body>
+</html>

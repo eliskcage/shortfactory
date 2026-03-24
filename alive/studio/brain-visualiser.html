@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CORTEX — BRAIN NODE VISUALISER</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#000; overflow:hidden; height:100vh; font-family:'Courier New',monospace; color:#0f0; }
+canvas { position:fixed; top:0; left:0; width:100%; height:100%; }
+
+/* HUD */
+#hud { position:fixed; top:10px; left:10px; font-size:9px; color:#0f0; letter-spacing:2px; pointer-events:none; line-height:1.8; z-index:10; }
+#hud .hud-val { color:#fff; }
+
+/* Zone labels */
+#zone-left  { position:fixed; top:50%; left:8%; transform:translateY(-50%); font-size:9px; letter-spacing:4px; color:#00cc6633; pointer-events:none; writing-mode:vertical-rl; z-index:5; }
+#zone-right { position:fixed; top:50%; right:8%; transform:translateY(-50%); font-size:9px; letter-spacing:4px; color:#cc333333; pointer-events:none; writing-mode:vertical-rl; z-index:5; }
+#zone-cortex{ position:fixed; top:10px; left:50%; transform:translateX(-50%); font-size:9px; letter-spacing:4px; color:#ffffff33; pointer-events:none; z-index:5; }
+
+/* Brain status */
+#brain-status { position:fixed; top:10px; right:10px; font-size:8px; letter-spacing:2px; z-index:10; text-align:right; }
+#brain-dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:#334; margin-left:6px; vertical-align:middle; }
+
+/* Debate feed */
+#debate-feed { position:fixed; bottom:60px; left:50%; transform:translateX(-50%); width:80%; max-width:900px; pointer-events:none; z-index:10; }
+#debate-left  { font-size:8px; color:#00cc6699; letter-spacing:1px; margin-bottom:2px; min-height:14px; }
+#debate-right { font-size:8px; color:#cc333399; letter-spacing:1px; margin-bottom:2px; min-height:14px; }
+#debate-synth { font-size:9px; color:#ffd70099; letter-spacing:2px; min-height:14px; }
+
+/* Input */
+#input-wrap { position:fixed; bottom:10px; left:50%; transform:translateX(-50%); display:flex; gap:8px; z-index:20; }
+#user-in { background:rgba(0,0,0,0.8); border:1px solid #0f04; color:#0ff; font-family:'Courier New',monospace; font-size:11px; padding:6px 12px; outline:none; width:280px; }
+.btn { background:transparent; border:1px solid; font-family:'Courier New',monospace; font-size:9px; padding:6px 10px; cursor:pointer; letter-spacing:1px; }
+.btn-green  { border-color:#0f04; color:#0f0; }
+.btn-green:hover { background:#0f01; }
+.btn-gold   { border-color:#ffd70055; color:#ffd700; }
+.btn-gold:hover { background:#ffd70011; }
+
+/* Info panel */
+#info-panel {
+  display:none; position:fixed; top:0; right:0; width:320px; height:100%;
+  background:rgba(0,0,0,0.95); border-left:1px solid #0f02; z-index:100;
+  overflow-y:auto; padding:20px;
+}
+#info-panel h2 { color:#ffd700; font-size:13px; letter-spacing:4px; margin-bottom:12px; }
+.info-row { display:flex; justify-content:space-between; margin-bottom:6px; font-size:9px; border-bottom:1px solid #0f01; padding-bottom:4px; }
+.info-label { color:#334; letter-spacing:2px; }
+.info-val   { color:#0ff; text-align:right; max-width:180px; word-break:break-word; }
+.info-def   { color:#aaa; font-size:8px; line-height:1.6; margin:10px 0; border:1px solid #0f01; padding:8px; }
+.info-connections { margin-top:10px; }
+.info-connections h3 { font-size:8px; color:#334; letter-spacing:2px; margin-bottom:4px; }
+.conn-tag { display:inline-block; border:1px solid #0f03; color:#0f0; font-size:7px; padding:2px 5px; margin:2px; cursor:pointer; letter-spacing:1px; }
+.conn-tag:hover { background:#0f01; }
+#info-close { background:transparent; border:1px solid #334; color:#556; padding:4px 12px; cursor:pointer; font-family:'Courier New',monospace; font-size:9px; margin-bottom:16px; width:100%; }
+
+/* Emotion bars */
+.emo-bar-wrap { margin-bottom:2px; font-size:7px; }
+.emo-label { color:#334; letter-spacing:1px; display:inline-block; width:50px; }
+.emo-bar { display:inline-block; height:4px; margin-left:4px; vertical-align:middle; }
+
+/* Velocity */
+#vel-canvas { position:fixed; bottom:60px; right:10px; z-index:10; opacity:0.7; }
+</style>
+</head>
+<body>
+
+<canvas id="main-canvas"></canvas>
+<canvas id="vel-canvas" width="130" height="50"></canvas>
+
+<div id="zone-left">LEFT HEMISPHERE — ANGEL</div>
+<div id="zone-right">RIGHT HEMISPHERE — DEMON</div>
+<div id="zone-cortex">CORTEX MIND — SYNTHESIS</div>
+
+<div id="hud">
+  <div>LEFT NODES: <span class="hud-val" id="h-left">—</span></div>
+  <div>RIGHT NODES: <span class="hud-val" id="h-right">—</span></div>
+  <div>CORTEX NODES: <span class="hud-val" id="h-cortex">—</span></div>
+  <div>CONNECTIONS: <span class="hud-val" id="h-conn">—</span></div>
+  <div>MESSAGES: <span class="hud-val" id="h-msgs">—</span></div>
+  <div>CLUSTERS: <span class="hud-val" id="h-clust">—</span></div>
+  <div style="margin-top:6px">LAST SYNC: <span class="hud-val" id="h-sync">—</span></div>
+  <div>VISIBLE NODES: <span class="hud-val" id="h-vis">—</span></div>
+</div>
+
+<div id="brain-status">
+  <span id="brain-label">BRAIN OFFLINE</span>
+  <span id="brain-dot"></span>
+</div>
+
+<div id="debate-feed">
+  <div id="debate-left"></div>
+  <div id="debate-right"></div>
+  <div id="debate-synth"></div>
+</div>
+
+<div id="input-wrap">
+  <input id="user-in" placeholder="search a word..." spellcheck="false"/>
+  <button class="btn btn-green" onclick="searchNode()">FIND ↵</button>
+  <button class="btn btn-gold" id="btn-toggle-mode" onclick="toggleMode()">SHOW: ACTIVE</button>
+  <button class="btn btn-green" onclick="resetView()">RESET</button>
+</div>
+
+<!-- Info panel -->
+<div id="info-panel">
+  <button id="info-close" onclick="closePanel()">✕ CLOSE</button>
+  <h2 id="info-title">—</h2>
+  <div class="info-row"><span class="info-label">HEMISPHERE</span><span class="info-val" id="info-hemi">—</span></div>
+  <div class="info-row"><span class="info-label">CLUSTER</span><span class="info-val" id="info-cluster">—</span></div>
+  <div class="info-row"><span class="info-label">SOURCE</span><span class="info-val" id="info-source">—</span></div>
+  <div class="info-row"><span class="info-label">LEARNED</span><span class="info-val" id="info-learned">—</span></div>
+  <div class="info-row"><span class="info-label">CONNECTIONS</span><span class="info-val" id="info-conncount">—</span></div>
+  <div class="info-row"><span class="info-label">FREQ RANK</span><span class="info-val" id="info-freq">—</span></div>
+  <div class="info-def" id="info-def">—</div>
+  <div style="margin:10px 0">
+    <div style="font-size:7px;color:#334;letter-spacing:2px;margin-bottom:6px">EMOTIONAL WEIGHT</div>
+    <div id="info-emotions"></div>
+  </div>
+  <div class="info-connections">
+    <h3>CLUSTER MEMBERS</h3>
+    <div id="info-cluster-members"></div>
+  </div>
+  <div class="info-connections" style="margin-top:10px">
+    <h3>BRAIN THOUGHT</h3>
+    <div id="info-brainthought" style="color:#ffd70077;font-size:8px;line-height:1.6;margin-top:4px"></div>
+  </div>
+</div>
+
+<script>
+// ── CANVAS SETUP ────────────────────────────────────────────────
+const cvs = document.getElementById('main-canvas');
+const ctx = cvs.getContext('2d');
+let W, H;
+function resize() { W = cvs.width = window.innerWidth; H = cvs.height = window.innerHeight; }
+resize();
+window.addEventListener('resize', resize);
+
+// ── COLOURS ─────────────────────────────────────────────────────
+const C = {
+  left:   '#00cc66',
+  right:  '#cc3333',
+  cortex: '#ffffff',
+  gold:   '#ffd700',
+  active: '#ffd700',
+  bg:     'rgba(0,0,0,0.15)',
+};
+
+const EMO_COLS = {
+  happy:   '#ffd700',
+  sad:     '#4b6cb7',
+  scared:  '#c084fc',
+  whisper: '#e8eaf0',
+  angry:   '#dc2626',
+  serious: '#2e6b9e',
+  silly:   '#84cc16',
+  neutral: '#0f0',
+};
+
+// ── STATE ───────────────────────────────────────────────────────
+let nodes    = [];  // { id, x, y, vx, vy, hemi, cluster, means, source, learned, freq, active, brainThought, emotion }
+let links    = [];  // { source, target, type }
+let debates  = [];  // recent debate objects
+let nodeMap  = {};  // id → node
+let brainOnline = false;
+let lastData = null;
+let selectedNode = null;
+let showMode = 'active'; // 'active' | 'all'
+let tick = 0;
+let velHistory = [];
+let highlightId = null;
+let debateLines = []; // { x1,y1,x2,y2, col, age, maxAge }
+let activeFlash = {}; // id → age countdown
+
+// Zone bands (% of width)
+const ZONE = {
+  leftEnd:   0.33,
+  rightStart:0.67,
+};
+
+// ── FORCE PARAMS ─────────────────────────────────────────────────
+const FORCE = {
+  repel:   80,
+  dampen:  0.88,
+  gravity: 0.0003,
+  zoneStr: 0.006,
+  linkStr: 0.03,
+  maxV:    3,
+};
+
+// ── ZONE TARGET ──────────────────────────────────────────────────
+function zoneTargetX(hemi) {
+  if (hemi === 'left')   return W * 0.20;
+  if (hemi === 'right')  return W * 0.80;
+  return W * 0.50; // cortex
+}
+
+function nodeColor(n) {
+  if (n.hemi === 'left')   return C.left;
+  if (n.hemi === 'right')  return C.right;
+  return C.cortex;
+}
+
+// ── DATA PROCESSING ──────────────────────────────────────────────
+function processData(d) {
+  lastData = d;
+  const newNodeMap = {};
+  const newNodes = [];
+  const newLinks = [];
+
+  // LEFT hemisphere — recent_words
+  const leftWords = d.recent_words || [];
+  leftWords.forEach((w, i) => {
+    const id = w.word;
+    const existing = nodeMap[id];
+    const n = existing || {
+      id, x: W * 0.15 + (Math.random()-0.5)*60,
+      y: H/2 + (Math.random()-0.5)*200,
+      vx:0, vy:0
+    };
+    n.hemi = 'left';
+    n.means = w.means;
+    n.source = w.source;
+    n.learned = w.learned;
+    n.freq = leftWords.length - i;
+    n.cluster = null;
+    n.emotion = 'neutral';
+    n.active = true;
+    newNodeMap[id] = n;
+    newNodes.push(n);
+    activeFlash[id] = 60;
+  });
+
+  // RIGHT hemisphere — right_recent_words
+  const rightWords = d.right_recent_words || [];
+  rightWords.forEach((w, i) => {
+    const id = w.word;
+    if (newNodeMap[id]) { newNodeMap[id].hemi = 'cortex'; return; } // in both = cortex
+    const existing = nodeMap[id];
+    const n = existing || {
+      id, x: W * 0.85 + (Math.random()-0.5)*60,
+      y: H/2 + (Math.random()-0.5)*200,
+      vx:0, vy:0
+    };
+    n.hemi = 'right';
+    n.means = w.means;
+    n.source = w.source;
+    n.learned = w.learned;
+    n.freq = rightWords.length - i;
+    n.cluster = null;
+    n.emotion = 'neutral';
+    n.active = true;
+    newNodeMap[id] = n;
+    newNodes.push(n);
+    activeFlash[id] = 60;
+  });
+
+  // CLUSTERS → add cluster head nodes + members
+  const clusters = d.clusters || {};
+  Object.entries(clusters).forEach(([head, members]) => {
+    // Add head if not present
+    if (!newNodeMap[head]) {
+      const existing = nodeMap[head];
+      const n = existing || {
+        id: head, x: W/2 + (Math.random()-0.5)*W*0.5,
+        y: H/2 + (Math.random()-0.5)*H*0.4,
+        vx:0, vy:0
+      };
+      n.hemi = 'cortex';
+      n.means = '';
+      n.source = 'cluster';
+      n.freq = (members||[]).length;
+      n.cluster = head;
+      n.active = false;
+      n.emotion = 'neutral';
+      newNodeMap[head] = n;
+      newNodes.push(n);
+    } else {
+      newNodeMap[head].cluster = head;
+    }
+    newNodeMap[head].clusterMembers = members || [];
+
+    // Add members
+    (members || []).forEach(m => {
+      if (!newNodeMap[m]) {
+        const existing = nodeMap[m];
+        const n = existing || {
+          id: m, x: newNodeMap[head].x + (Math.random()-0.5)*100,
+          y: newNodeMap[head].y + (Math.random()-0.5)*100,
+          vx:0, vy:0
+        };
+        n.hemi = 'cortex';
+        n.means = '';
+        n.source = 'cluster';
+        n.freq = 1;
+        n.cluster = head;
+        n.active = false;
+        n.emotion = 'neutral';
+        newNodeMap[m] = n;
+        newNodes.push(n);
+      }
+      // Link member to head
+      newLinks.push({ source: head, target: m, type: 'cluster' });
+    });
+  });
+
+  // MEMORY → mark as cortex if present
+  const mem = d.memory_recent || [];
+  mem.forEach(m => {
+    const topics = m.topics || [];
+    topics.forEach(t => {
+      if (newNodeMap[t]) {
+        if (newNodeMap[t].hemi === 'cortex') newNodeMap[t].freq = (newNodeMap[t].freq||1) + 1;
+        if (m.response) newNodeMap[t].brainThought = m.response.slice(0,120);
+        if (m.emotion) newNodeMap[t].emotion = m.emotion;
+      }
+    });
+  });
+
+  // DEBATES → build debate lines between nodes
+  const dbs = d.debates || [];
+  dbs.slice(-3).forEach(db => {
+    debates.unshift(db);
+    // Find a left node and right node to draw debate line between
+    const leftNode  = newNodes.find(n => n.hemi === 'left');
+    const rightNode = newNodes.find(n => n.hemi === 'right');
+    if (leftNode && rightNode) {
+      debateLines.push({
+        x1: leftNode.x, y1: leftNode.y,
+        x2: rightNode.x, y2: rightNode.y,
+        col: db.mode === 'synth' ? C.gold : '#aaaaaa',
+        age: 120, maxAge: 120,
+        left: db.left || '', right: db.right || '', reply: db.reply || ''
+      });
+    }
+  });
+  if (debates.length > 5) debates = debates.slice(0, 5);
+  if (debateLines.length > 6) debateLines = debateLines.slice(-6);
+
+  // Commit
+  nodeMap = newNodeMap;
+  nodes = newNodes;
+  links = newLinks;
+
+  // HUD
+  const ls = d.stats || {};
+  const rs = d.right_stats || {};
+  const cs = d.cortex_stats || {};
+  document.getElementById('h-left').textContent   = (ls.total_nodes||0).toLocaleString();
+  document.getElementById('h-right').textContent  = (rs.total_nodes||0).toLocaleString();
+  document.getElementById('h-cortex').textContent = (cs.total_nodes||0).toLocaleString();
+  document.getElementById('h-conn').textContent   = ((ls.connections||0)+(rs.connections||0)).toLocaleString();
+  document.getElementById('h-msgs').textContent   = ((ls.messages||0)+(rs.messages||0)+(cs.messages||0)).toLocaleString();
+  document.getElementById('h-clust').textContent  = Object.keys(clusters).length;
+  document.getElementById('h-vis').textContent    = nodes.length;
+  document.getElementById('h-sync').textContent   = new Date().toLocaleTimeString();
+
+  // Velocity
+  const avg = nodes.filter(n=>n.active).length / Math.max(nodes.length,1);
+  velHistory.push(avg);
+  if (velHistory.length > 40) velHistory.shift();
+
+  // Debate feed
+  if (debates.length > 0) {
+    const db = debates[0];
+    document.getElementById('debate-left').textContent  = db.left  ? 'L: ' + db.left.slice(0,90)  : '';
+    document.getElementById('debate-right').textContent = db.right ? 'R: ' + db.right.slice(0,90) : '';
+    document.getElementById('debate-synth').textContent = db.reply ? '✦ ' + db.reply.slice(0,100)  : '';
+  }
+
+  // Brain online
+  brainOnline = true;
+  document.getElementById('brain-dot').style.background = '#00cc66';
+  document.getElementById('brain-label').textContent = 'BRAIN ONLINE';
+}
+
+// ── FETCH ────────────────────────────────────────────────────────
+async function fetchBrain() {
+  try {
+    const r = await fetch('https://www.shortfactory.shop/alive/studio/api/brain-live', {
+      method:'POST', headers:{'Content-Type':'application/json'}
+    });
+    if (r.ok) processData(await r.json());
+  } catch(e) {
+    brainOnline = false;
+    document.getElementById('brain-dot').style.background = '#334';
+    document.getElementById('brain-label').textContent = 'BRAIN OFFLINE';
+  }
+}
+
+// Poll every 4s when visible
+let pollInterval = null;
+const observer = new IntersectionObserver(entries => {
+  if (entries[0].isIntersecting) {
+    if (!pollInterval) { fetchBrain(); pollInterval = setInterval(fetchBrain, 4000); }
+  } else {
+    if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+  }
+}, {threshold:0.1});
+observer.observe(cvs);
+
+// ── PHYSICS ──────────────────────────────────────────────────────
+function applyForces() {
+  const N = nodes.length;
+  if (!N) return;
+
+  for (let i = 0; i < N; i++) {
+    const a = nodes[i];
+
+    // Zone gravity — pull toward hemisphere zone
+    const tx = zoneTargetX(a.hemi);
+    a.vx += (tx - a.x) * FORCE.zoneStr;
+
+    // Vertical centre gravity
+    a.vy += (H/2 - a.y) * FORCE.gravity;
+
+    // Repulsion
+    for (let j = i+1; j < N; j++) {
+      const b = nodes[j];
+      const dx = a.x - b.x, dy = a.y - b.y;
+      const d2 = dx*dx + dy*dy;
+      if (d2 < 0.01) continue;
+      const d = Math.sqrt(d2);
+      const force = FORCE.repel / d2;
+      const fx = dx/d * force, fy = dy/d * force;
+      a.vx += fx; a.vy += fy;
+      b.vx -= fx; b.vy -= fy;
+    }
+  }
+
+  // Link attraction
+  links.forEach(l => {
+    const s = nodeMap[l.source], t = nodeMap[l.target];
+    if (!s || !t) return;
+    const dx = t.x - s.x, dy = t.y - s.y;
+    s.vx += dx * FORCE.linkStr;
+    s.vy += dy * FORCE.linkStr;
+    t.vx -= dx * FORCE.linkStr;
+    t.vy -= dy * FORCE.linkStr;
+  });
+
+  // Integrate
+  nodes.forEach(n => {
+    n.vx *= FORCE.dampen; n.vy *= FORCE.dampen;
+    const speed = Math.hypot(n.vx, n.vy);
+    if (speed > FORCE.maxV) { n.vx *= FORCE.maxV/speed; n.vy *= FORCE.maxV/speed; }
+    n.x += n.vx; n.y += n.vy;
+    // Bounds
+    const pad = 60;
+    if (n.x < pad) n.vx += 0.8;
+    if (n.x > W-pad) n.vx -= 0.8;
+    if (n.y < pad) n.vy += 0.8;
+    if (n.y > H-pad-80) n.vy -= 0.8;
+  });
+}
+
+// ── DRAW ─────────────────────────────────────────────────────────
+function draw() {
+  // Fade trail
+  ctx.fillStyle = 'rgba(0,0,0,0.18)';
+  ctx.fillRect(0, 0, W, H);
+
+  // Zone backgrounds
+  const lw = W * ZONE.leftEnd;
+  const rw = W * (1 - ZONE.rightStart);
+  const cw = W * (ZONE.rightStart - ZONE.leftEnd);
+
+  const lg = ctx.createLinearGradient(0,0,lw,0);
+  lg.addColorStop(0, 'rgba(0,204,102,0.04)');
+  lg.addColorStop(1, 'rgba(0,204,102,0)');
+  ctx.fillStyle = lg; ctx.fillRect(0, 0, lw, H);
+
+  const rg = ctx.createLinearGradient(W-rw,0,W,0);
+  rg.addColorStop(0, 'rgba(204,51,51,0)');
+  rg.addColorStop(1, 'rgba(204,51,51,0.04)');
+  ctx.fillStyle = rg; ctx.fillRect(W-rw, 0, rw, H);
+
+  // Zone dividers
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4,8]);
+  ctx.beginPath(); ctx.moveTo(lw, 0); ctx.lineTo(lw, H); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(W-rw, 0); ctx.lineTo(W-rw, H); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Debate lines
+  debateLines = debateLines.filter(dl => dl.age > 0);
+  debateLines.forEach(dl => {
+    dl.age--;
+    const alpha = (dl.age / dl.maxAge) * 0.4;
+    ctx.beginPath();
+    ctx.moveTo(dl.x1, dl.y1);
+    // Curved line through centre
+    ctx.quadraticCurveTo(W/2, H/2 - 60, dl.x2, dl.y2);
+    ctx.strokeStyle = dl.col.replace(')', `,${alpha})`).replace('#','rgba(').replace(/([0-9a-f]{2})/gi, m => parseInt(m,16)+',').slice(0,-2)+`)`;
+    ctx.strokeStyle = dl.col + Math.round(alpha*255).toString(16).padStart(2,'0');
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  });
+
+  // Links
+  links.forEach(l => {
+    const s = nodeMap[l.source], t = nodeMap[l.target];
+    if (!s || !t) return;
+    const alpha = 0.12 + (s.active||t.active ? 0.1 : 0);
+    ctx.beginPath();
+    ctx.moveTo(s.x, s.y);
+    ctx.lineTo(t.x, t.y);
+    ctx.strokeStyle = nodeColor(s).replace('#', '') === 'ffffff'
+      ? `rgba(180,180,180,${alpha})`
+      : hexAlpha(nodeColor(s), alpha);
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+  });
+
+  // Nodes
+  nodes.forEach(n => {
+    const col = nodeColor(n);
+    const isActive = !!n.active;
+    const isSelected = selectedNode && selectedNode.id === n.id;
+    const isHighlight = highlightId === n.id;
+    const flash = (activeFlash[n.id] || 0);
+    const flashAlpha = flash / 60;
+
+    const r = isSelected ? 14 : isActive ? 9 : 6;
+
+    // Glow for active/selected
+    if (isActive || isSelected || isHighlight || flash > 0) {
+      const glowR = r * (isSelected ? 3.5 : 2.5) + flashAlpha * 12;
+      const grd = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, glowR);
+      const gc = isHighlight ? C.gold : col;
+      grd.addColorStop(0, hexAlpha(gc, isSelected ? 0.35 : 0.15 + flashAlpha*0.2));
+      grd.addColorStop(1, hexAlpha(gc, 0));
+      ctx.beginPath(); ctx.arc(n.x, n.y, glowR, 0, Math.PI*2);
+      ctx.fillStyle = grd; ctx.fill();
+    }
+
+    // Node body
+    ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, Math.PI*2);
+    ctx.fillStyle = hexAlpha(col, isActive ? 0.85 : 0.45);
+    ctx.fill();
+
+    // Border
+    ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, Math.PI*2);
+    ctx.strokeStyle = isHighlight ? C.gold : hexAlpha(col, isActive ? 0.9 : 0.4);
+    ctx.lineWidth = isSelected ? 2 : 1;
+    ctx.stroke();
+
+    // Label
+    const showLabel = isActive || isSelected || isHighlight || r >= 9;
+    if (showLabel) {
+      const label = n.id.length > 16 ? n.id.slice(0,14)+'…' : n.id;
+      ctx.fillStyle = isHighlight ? C.gold : (isActive ? col : hexAlpha(col, 0.5));
+      ctx.font = `${isSelected ? 'bold ' : ''}${isActive ? 9 : 8}px Courier New`;
+      ctx.textAlign = 'center';
+      ctx.fillText(label, n.x, n.y + r + 11);
+    }
+
+    // Active indicator dot
+    if (flash > 0) {
+      ctx.beginPath(); ctx.arc(n.x, n.y - r - 3, 2, 0, Math.PI*2);
+      ctx.fillStyle = hexAlpha(C.gold, flashAlpha);
+      ctx.fill();
+      activeFlash[n.id] = flash - 1;
+    }
+  });
+
+  // Velocity curve
+  drawVelocity();
+}
+
+function hexAlpha(hex, alpha) {
+  if (hex.length === 7) {
+    const r = parseInt(hex.slice(1,3),16);
+    const g = parseInt(hex.slice(3,5),16);
+    const b = parseInt(hex.slice(5,7),16);
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
+  return hex;
+}
+
+// ── VELOCITY MINI CHART ──────────────────────────────────────────
+const velCvs = document.getElementById('vel-canvas');
+const velCtx = velCvs.getContext('2d');
+function drawVelocity() {
+  if (velHistory.length < 2) return;
+  velCtx.clearRect(0, 0, 130, 50);
+  velCtx.fillStyle = 'rgba(0,0,0,0.6)';
+  velCtx.fillRect(0,0,130,50);
+  velCtx.beginPath();
+  velHistory.forEach((v,i) => {
+    const x = (i/velHistory.length)*126+2;
+    const y = 46 - v*42;
+    i===0 ? velCtx.moveTo(x,y) : velCtx.lineTo(x,y);
+  });
+  velCtx.strokeStyle = '#00cc66';
+  velCtx.lineWidth = 1.5;
+  velCtx.stroke();
+  velCtx.fillStyle = '#334';
+  velCtx.font = '7px Courier New';
+  velCtx.textAlign = 'left';
+  velCtx.fillStyle = '#0f0';
+  velCtx.fillText('ACTIVITY', 3, 9);
+  velCtx.fillStyle = '#00cc6699';
+  velCtx.fillText(`${(velHistory[velHistory.length-1]*100).toFixed(0)}% active`, 3, 44);
+}
+
+// ── MAIN LOOP ────────────────────────────────────────────────────
+function loop() {
+  tick++;
+  applyForces();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+// ── CLICK HANDLER ────────────────────────────────────────────────
+cvs.addEventListener('click', e => {
+  const rect = cvs.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  let hit = null;
+  let minD = 20;
+  nodes.forEach(n => {
+    const d = Math.hypot(n.x-mx, n.y-my);
+    if (d < minD) { minD = d; hit = n; }
+  });
+  if (hit) { selectedNode = hit; showPanel(hit); }
+  else { selectedNode = null; closePanel(); }
+});
+
+// ── INFO PANEL ───────────────────────────────────────────────────
+function showPanel(n) {
+  document.getElementById('info-panel').style.display = 'block';
+  document.getElementById('info-title').textContent = n.id.toUpperCase();
+  document.getElementById('info-hemi').textContent = (n.hemi||'?').toUpperCase();
+  document.getElementById('info-hemi').style.color = nodeColor(n);
+  document.getElementById('info-cluster').textContent = n.cluster || '—';
+  document.getElementById('info-source').textContent = n.source || '—';
+  document.getElementById('info-learned').textContent = n.learned || '—';
+  document.getElementById('info-conncount').textContent = links.filter(l=>l.source===n.id||l.target===n.id).length;
+  document.getElementById('info-freq').textContent = n.freq || 1;
+
+  const def = n.means || '(definition not yet loaded)';
+  document.getElementById('info-def').textContent = def;
+
+  // Brain thought
+  const bt = n.brainThought;
+  document.getElementById('info-brainthought').textContent = bt || '(ask the brain something to see its thought here)';
+
+  // Cluster members
+  const members = n.clusterMembers || [];
+  const mhtml = members.map(m => `<span class="conn-tag" onclick="searchNode('${m}')">${m}</span>`).join('');
+  document.getElementById('info-cluster-members').innerHTML = mhtml || '<span style="color:#334;font-size:8px">no cluster members</span>';
+
+  // Emotion (from brain sound vector if available)
+  const emos = lastData && lastData.stats && lastData.stats.sound ? lastData.stats.sound : {};
+  const ehtml = Object.entries(emos).map(([k,v]) => {
+    const w = Math.round(v * 80);
+    return `<div class="emo-bar-wrap">
+      <span class="emo-label">${k.toUpperCase()}</span>
+      <span class="emo-bar" style="width:${w}px;background:${EMO_COLS[k]||'#0f0'};opacity:0.7"></span>
+      <span style="color:#334;font-size:7px;margin-left:4px">${v.toFixed(2)}</span>
+    </div>`;
+  }).join('');
+  document.getElementById('info-emotions').innerHTML = ehtml || '<span style="color:#334;font-size:8px">sound data not available</span>';
+}
+
+function closePanel() {
+  document.getElementById('info-panel').style.display = 'none';
+  selectedNode = null;
+}
+
+// ── SEARCH ───────────────────────────────────────────────────────
+function searchNode(term) {
+  const q = (term || document.getElementById('user-in').value.trim()).toLowerCase();
+  if (!q) return;
+  document.getElementById('user-in').value = '';
+  const hit = nodes.find(n => n.id.toLowerCase().includes(q));
+  if (hit) {
+    highlightId = hit.id;
+    selectedNode = hit;
+    showPanel(hit);
+    // Nudge toward centre so user can see it
+    hit.x = W/2 + (hit.hemi==='left' ? -100 : hit.hemi==='right' ? 100 : 0);
+    hit.y = H/2;
+    hit.vx = 0; hit.vy = 0;
+    activeFlash[hit.id] = 90;
+    setTimeout(() => { highlightId = null; }, 3000);
+  } else {
+    // Not in current view — show briefly in debate feed
+    document.getElementById('debate-synth').textContent = `"${q}" — not in current view. ask the brain to mention it.`;
+    setTimeout(() => { document.getElementById('debate-synth').textContent = ''; }, 3000);
+  }
+}
+
+document.getElementById('user-in').addEventListener('keydown', e => {
+  if (e.key === 'Enter') searchNode();
+});
+
+// ── MODE TOGGLE ──────────────────────────────────────────────────
+function toggleMode() {
+  showMode = showMode === 'active' ? 'all' : 'active';
+  document.getElementById('btn-toggle-mode').textContent = `SHOW: ${showMode.toUpperCase()}`;
+  nodes.forEach(n => {
+    if (showMode === 'all') n._visible = true;
+  });
+}
+
+function resetView() {
+  nodes.forEach(n => {
+    n.x = zoneTargetX(n.hemi) + (Math.random()-0.5)*80;
+    n.y = H/2 + (Math.random()-0.5)*200;
+    n.vx = 0; n.vy = 0;
+  });
+  closePanel();
+}
+
+// ── STARTUP ──────────────────────────────────────────────────────
+loop();
+setTimeout(fetchBrain, 500);
+</script>
+</body>
+</html>

@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>End of Turn Tally</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Anton', Impact, sans-serif;
+      background: #0a0a0a;
+      color: #fff;
+      min-height: 100vh;
+      max-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+      transition: opacity 3s ease;
+      overflow: hidden;
+    }
+    body.fade-out {
+      opacity: 0;
+    }
+    
+    .tally-container {
+      width: 100%;
+      max-width: 360px;
+      background: rgba(10,10,10,0.85);
+      border: 4px solid #cc0000;
+      padding: 16px 15px;
+      box-shadow: 0 0 40px rgba(200,0,0,0.5);
+      position: relative;
+      overflow: hidden;
+    }
+    .tally-container::before {
+      content: '';
+      position: absolute;
+      top: 8px; left: 8px; right: 8px; bottom: 8px;
+      border: 2px solid #cc0000;
+      pointer-events: none;
+      z-index: 10;
+    }
+    
+    #bg-video {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      z-index: 0;
+      opacity: 0;
+      transition: opacity 1.5s ease;
+    }
+    #bg-video.visible { opacity: 0.35; }
+    
+    .content-layer {
+      position: relative;
+      z-index: 5;
+    }
+    
+    h1 {
+      text-align: center;
+      color: #cc0000;
+      font-size: 26px;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      margin-bottom: 4px;
+      text-shadow: 2px 2px 0 #000, 0 0 20px rgba(200,0,0,0.8);
+    }
+    .round-label {
+      text-align: center;
+      color: #888;
+      font-size: 14px;
+      margin-bottom: 20px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+    
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #330000;
+      position: relative;
+    }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-row.lightning-active {
+      animation: lightningFlash 0.15s ease;
+    }
+    @keyframes lightningFlash {
+      0%, 100% { background: transparent; }
+      50% { background: rgba(255,255,255,0.3); }
+    }
+    .stat-label {
+      font-size: 14px;
+      color: #999;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .stat-icon { font-size: 18px; }
+    .stat-value {
+      font-size: 28px;
+      font-weight: bold;
+      color: #fff;
+      text-shadow: 2px 2px 0 #000;
+    }
+    .stat-change {
+      font-size: 12px;
+      margin-left: 6px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .stat-change.positive { color: #00ff88; }
+    .stat-change.negative { color: #ff4444; }
+    .stat-change.show { opacity: 1; }
+    
+    .oil-section {
+      background: linear-gradient(180deg, rgba(26,26,0,0.9) 0%, rgba(10,10,0,0.9) 100%);
+      border: 3px solid #ccaa00;
+      padding: 12px;
+      margin: 12px 0;
+      text-align: center;
+      position: relative;
+    }
+    .oil-section::before {
+      content: '★ PRODUCTION REPORT ★';
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #0a0a0a;
+      padding: 0 10px;
+      font-size: 10px;
+      color: #ccaa00;
+      letter-spacing: 2px;
+    }
+    .oil-label {
+      color: #ccaa00;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      margin-bottom: 8px;
+    }
+    .oil-value {
+      font-size: 48px;
+      font-weight: bold;
+      color: #ccaa00;
+      text-shadow: 3px 3px 0 #000, 0 0 30px rgba(204,170,0,0.5);
+    }
+    .oil-barrels {
+      font-size: 14px;
+      color: #888;
+      margin-top: 4px;
+      letter-spacing: 2px;
+    }
+    
+    .btn-continue {
+      width: 100%;
+      padding: 14px;
+      margin-top: 12px;
+      background: linear-gradient(180deg, #cc0000 0%, #880000 100%);
+      border: 3px solid #ff0000;
+      color: #fff;
+      font-family: 'Anton', Impact, sans-serif;
+      font-size: 18px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      cursor: pointer;
+      opacity: 0;
+      transition: transform 0.2s;
+      text-shadow: 2px 2px 0 #000;
+      position: relative;
+      overflow: visible;
+      z-index: 100;
+    }
+    .btn-continue * {
+      pointer-events: none;
+    }
+    .btn-continue.show { 
+      opacity: 1;
+      animation: electricReveal 2s ease-out forwards, electricPulse 1.5s ease-in-out 2s infinite;
+    }
+    @keyframes electricReveal {
+      0% { 
+        transform: scale(1.1);
+        box-shadow: 
+          0 0 80px #fff, 
+          0 0 120px #88f, 
+          0 0 160px #44f, 
+          0 0 200px #ff4400,
+          inset 0 0 40px rgba(255,255,255,0.8);
+        border-color: #fff;
+        background: linear-gradient(180deg, #fff 0%, #ff4444 100%);
+        filter: brightness(2);
+      }
+      15% { 
+        transform: scale(1.05);
+        box-shadow: 
+          0 0 60px #88f, 
+          0 0 100px #ff4400, 
+          0 0 140px #ff0000,
+          inset 0 0 30px rgba(136,136,255,0.5);
+        border-color: #aaf;
+        filter: brightness(1.5);
+      }
+      30% {
+        box-shadow: 
+          0 0 40px #ff4400, 
+          0 0 80px #ff0000, 
+          0 0 100px rgba(255,68,0,0.5);
+        border-color: #ff4444;
+        filter: brightness(1.2);
+      }
+      60% { 
+        box-shadow: 
+          0 0 30px #ff0000, 
+          0 0 60px rgba(255,0,0,0.6),
+          0 0 80px rgba(255,68,0,0.3);
+        border-color: #ff2222;
+        filter: brightness(1.1);
+      }
+      100% { 
+        transform: scale(1);
+        box-shadow: 
+          0 0 20px #ff0000, 
+          0 0 40px rgba(255,0,0,0.4),
+          0 0 60px rgba(255,68,0,0.2);
+        border-color: #ff0000;
+        background: linear-gradient(180deg, #cc0000 0%, #880000 100%);
+        filter: brightness(1);
+      }
+    }
+    @keyframes electricPulse {
+      0%, 100% { 
+        box-shadow: 
+          0 0 20px #ff0000, 
+          0 0 40px rgba(255,0,0,0.4),
+          0 0 60px rgba(255,68,0,0.2);
+      }
+      50% { 
+        box-shadow: 
+          0 0 30px #ff4400, 
+          0 0 50px rgba(255,68,0,0.5),
+          0 0 70px rgba(255,0,0,0.3);
+      }
+    }
+    .btn-continue:active { transform: scale(0.98); }
+    
+    /* DESTRUCTION EFFECTS */
+    .tally-container.destroying {
+      animation: containerDestroy 5s ease-in forwards;
+    }
+    @keyframes containerDestroy {
+      0% { transform: scale(1); opacity: 1; filter: none; }
+      20% { transform: scale(1.02); filter: brightness(1.3) saturate(1.5); }
+      40% { transform: scale(0.98) rotate(-1deg); filter: brightness(0.8) saturate(2); border-color: #ff4400; }
+      60% { transform: scale(0.95) rotate(1deg); opacity: 0.8; filter: brightness(0.5) saturate(3) blur(1px); }
+      80% { transform: scale(0.9) rotate(-2deg); opacity: 0.4; filter: brightness(0.3) blur(3px); }
+      100% { transform: scale(0.5) rotate(5deg) translateY(100px); opacity: 0; filter: blur(10px); }
+    }
+    .content-layer.destroying > * {
+      animation: elementShatter 4s ease-in forwards;
+    }
+    .content-layer.destroying > *:nth-child(1) { animation-delay: 0.1s; }
+    .content-layer.destroying > *:nth-child(2) { animation-delay: 0.3s; }
+    .content-layer.destroying > *:nth-child(3) { animation-delay: 0.5s; }
+    .content-layer.destroying > *:nth-child(4) { animation-delay: 0.8s; }
+    .content-layer.destroying > *:nth-child(5) { animation-delay: 1.0s; }
+    .content-layer.destroying > *:nth-child(6) { animation-delay: 1.2s; }
+    .content-layer.destroying > *:nth-child(7) { animation-delay: 1.4s; }
+    .content-layer.destroying > *:nth-child(8) { animation-delay: 1.6s; }
+    @keyframes elementShatter {
+      0% { transform: translateX(0) translateY(0) rotate(0); opacity: 1; }
+      30% { transform: translateX(var(--shatter-x, 10px)) translateY(-10px) rotate(var(--shatter-r, 2deg)); }
+      100% { transform: translateX(var(--shatter-x, 50px)) translateY(200px) rotate(var(--shatter-r, 15deg)); opacity: 0; }
+    }
+    .content-layer.destroying > *:nth-child(odd) { --shatter-x: -60px; --shatter-r: -20deg; }
+    .content-layer.destroying > *:nth-child(even) { --shatter-x: 60px; --shatter-r: 20deg; }
+    .content-layer.destroying > *:nth-child(3n) { --shatter-x: 0px; --shatter-r: 25deg; }
+    
+    .tap-start {
+      position: fixed;
+      inset: 0;
+      background: #0a0a0a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 64px;
+      color: #cc0000;
+      cursor: pointer;
+      z-index: 100;
+      animation: pulse 1.5s infinite;
+      font-family: 'Anton', Impact, sans-serif;
+      letter-spacing: 4px;
+    }
+    .tap-start span {
+      font-size: 20px;
+      margin-top: 16px;
+      border: 3px solid #cc0000;
+      padding: 12px 24px;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    
+    /* LIGHTNING OVERLAY */
+    .lightning-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      z-index: 20;
+      opacity: 0;
+    }
+    .lightning-overlay.flash {
+      animation: bigFlash 0.5s ease;
+    }
+    @keyframes bigFlash {
+      0% { opacity: 0; background: transparent; }
+      10% { opacity: 1; background: rgba(255,255,255,0.9); }
+      20% { opacity: 0.3; background: rgba(200,200,255,0.4); }
+      30% { opacity: 0.8; background: rgba(255,255,255,0.7); }
+      50% { opacity: 0.2; background: rgba(150,150,255,0.3); }
+      100% { opacity: 0; background: transparent; }
+    }
+    
+    .lightning-bolt {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 100%;
+      opacity: 0;
+      z-index: 25;
+    }
+    .lightning-bolt.strike {
+      animation: boltStrike 0.4s ease;
+    }
+    @keyframes boltStrike {
+      0% { opacity: 0; }
+      10% { opacity: 1; }
+      30% { opacity: 0.5; }
+      40% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+    .lightning-bolt svg {
+      width: 100%;
+      height: 100%;
+    }
+    
+    /* TERM 2 WARNING */
+    .term2-warning {
+      text-align: center;
+      margin-top: 10px;
+      padding: 8px;
+      background: rgba(255,0,0,0.2);
+      border: 2px solid #f00;
+      border-radius: 8px;
+      color: #ff4444;
+      font-size: 11px;
+      letter-spacing: 2px;
+      animation: warningPulse 1s infinite;
+    }
+    @keyframes warningPulse {
+      0%, 100% { box-shadow: 0 0 10px rgba(255,0,0,0.3); }
+      50% { box-shadow: 0 0 20px rgba(255,0,0,0.6); }
+    }
+  </style>
+</head>
+<body>
+  <div class="tap-start" id="tap-start" onclick="startTally()">
+    <div>⚡</div>
+    <span>VIEW RESULTS</span>
+  </div>
+
+  <div class="tally-container" id="tally-container" style="display:none;">
+    <video id="bg-video" muted loop playsinline>
+      <source src="https://www.shortfactory.shop/trump/background.webm" type="video/webm">
+    </video>
+    
+    <div class="lightning-overlay" id="lightning-overlay"></div>
+    <div class="lightning-bolt" id="lightning-bolt">
+      <svg viewBox="0 0 60 200" fill="none">
+        <path d="M35 0 L25 70 L40 75 L20 130 L38 135 L15 200 L25 140 L10 135 L28 80 L15 75 L35 0Z" 
+              fill="#fff" filter="drop-shadow(0 0 10px #fff) drop-shadow(0 0 20px #88f)"/>
+      </svg>
+    </div>
+    
+    <div class="content-layer">
+      <h1>⚡ TERM 1 COMPLETE ⚡</h1>
+      <div class="round-label">Round <span id="round-num">3</span> Summary</div>
+      
+      <div class="oil-section">
+        <div class="oil-label">OIL CASH EARNED</div>
+        <div class="oil-value">$<span id="oil-tally">0</span></div>
+        <div class="oil-barrels"><span id="oil-barrels">0</span> barrels seized</div>
+      </div>
+      
+      <div class="stat-row">
+        <span class="stat-label"><span class="stat-icon">☆</span> Purity</span>
+        <span>
+          <span class="stat-value" id="purity-val">0</span>%
+          <span class="stat-change positive" id="purity-change">+12</span>
+        </span>
+      </div>
+      
+      <div class="stat-row">
+        <span class="stat-label"><span class="stat-icon">$</span> Debt</span>
+        <span>
+          <span class="stat-value" id="debt-val">0</span>T
+          <span class="stat-change negative" id="debt-change">+4</span>
+        </span>
+      </div>
+      
+      <div class="stat-row" id="row-trump">
+        <span class="stat-label"><span class="stat-icon">★</span> Trump HP</span>
+        <span>
+          <span class="stat-value" id="trump-val">0</span>%
+        </span>
+      </div>
+      
+      <div class="stat-row" id="row-enemy">
+        <span class="stat-label"><span class="stat-icon">◆</span> DeepState</span>
+        <span>
+          <span class="stat-value" id="ds-val">0</span>%
+        </span>
+      </div>
+      
+      <div class="term2-warning">
+        ⚠️ TERM 2: DIFFICULTY DOUBLED ⚠️
+      </div>
+      
+      <button class="btn-continue" id="btn-continue" onclick="nextRound()">
+        BEGIN TERM 2 →
+      </button>
+    </div>
+  </div>
+
+  <audio id="sfx-lightning" src="https://www.shortfactory.shop/trump/lightning-strike.mp3" preload="auto"></audio>
+  <audio id="sfx-counter" src="https://www.shortfactory.shop/trump/arcadecounter.mp3" preload="auto"></audio>
+  <audio id="sfx-counter-final" src="https://www.shortfactory.shop/trump/arcadecounterfinal.mp3" preload="auto"></audio>
+  <audio id="sfx-hells" src="https://www.shortfactory.shop/trump/hellscommin.mp3" preload="auto"></audio>
+
+  <script>
+    // Read stats from URL params (passed from main game)
+    const params = new URLSearchParams(window.location.search);
+    
+    const turnData = {
+      round: parseInt(params.get('round')) || 15,
+      oilProduced: parseInt(params.get('oilCash')) || 847,
+      purity: { current: parseInt(params.get('purity')) || 50, change: 12 },
+      debt: { current: parseFloat(params.get('debt')) || 42, change: 4 },
+      trumpHP: parseInt(params.get('trumpHP')) || 85,
+      deepStateHP: parseInt(params.get('deepStateHP')) || 18
+    };
+
+    const sfxLightning = document.getElementById('sfx-lightning');
+    const sfxCounter = document.getElementById('sfx-counter');
+    const sfxCounterFinal = document.getElementById('sfx-counter-final');
+    const sfxHells = document.getElementById('sfx-hells');
+    const bgVideo = document.getElementById('bg-video');
+
+    function animateValue(el, start, end, duration, onComplete) {
+      const range = end - start;
+      const startTime = performance.now();
+      
+      function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        const current = Math.floor(start + range * easeOut);
+        el.textContent = current;
+        
+        if (progress < 1) {
+          requestAnimationFrame(update);
+        } else {
+          el.textContent = end;
+          if (onComplete) onComplete();
+        }
+      }
+      requestAnimationFrame(update);
+    }
+
+    function triggerLightning(big = false) {
+      sfxLightning.currentTime = 0;
+      sfxLightning.play().catch(() => {});
+      document.getElementById('lightning-overlay').classList.add('flash');
+      document.getElementById('lightning-bolt').classList.add('strike');
+      setTimeout(() => {
+        document.getElementById('lightning-overlay').classList.remove('flash');
+        document.getElementById('lightning-bolt').classList.remove('strike');
+      }, big ? 600 : 500);
+    }
+
+    let tallyRunning = false;
+
+    function runTally() {
+      // Prevent multiple runs
+      if (tallyRunning) return;
+      tallyRunning = true;
+
+      document.getElementById('round-num').textContent = turnData.round;
+
+      // Set change indicators
+      const purityChange = document.getElementById('purity-change');
+      purityChange.textContent = (turnData.purity.change >= 0 ? '+' : '') + turnData.purity.change;
+      purityChange.className = 'stat-change ' + (turnData.purity.change >= 0 ? 'positive' : 'negative');
+
+      const debtChange = document.getElementById('debt-change');
+      debtChange.textContent = (turnData.debt.change >= 0 ? '+' : '') + turnData.debt.change;
+      debtChange.className = 'stat-change ' + (turnData.debt.change >= 0 ? 'negative' : 'positive');
+
+      // Fade in video
+      setTimeout(() => bgVideo.classList.add('visible'), 300);
+
+      // Start counter sound (original for oil)
+      sfxCounter.loop = true;
+      sfxCounter.currentTime = 0;
+      sfxCounter.play().catch(() => {});
+
+      // Failsafe: stop all counter sounds after 10 seconds max
+      setTimeout(() => {
+        sfxCounter.loop = false;
+        sfxCounter.pause();
+        sfxCounterFinal.loop = false;
+        sfxCounterFinal.pause();
+      }, 10000);
+
+      // OIL TALLY - cap duration and ensure it completes
+      const oilDuration = Math.min(2500, Math.max(500, turnData.oilProduced * 3));
+      animateValue(document.getElementById('oil-tally'), 0, turnData.oilProduced, oilDuration, () => {
+        // Stop oil counter sound immediately when done
+        sfxCounter.loop = false;
+        sfxCounter.pause();
+        sfxCounter.currentTime = 0;
+
+        document.getElementById('oil-barrels').textContent = turnData.oilProduced.toLocaleString();
+
+        // Purity
+        setTimeout(() => {
+          animateValue(document.getElementById('purity-val'), 0, turnData.purity.current, 600);
+          document.getElementById('purity-change').classList.add('show');
+        }, 200);
+        
+        // Debt
+        setTimeout(() => {
+          animateValue(document.getElementById('debt-val'), 0, turnData.debt.current, 600);
+          document.getElementById('debt-change').classList.add('show');
+        }, 500);
+
+        // Start final counter sound for last 2 stats
+        setTimeout(() => {
+          sfxCounterFinal.loop = true;
+          sfxCounterFinal.currentTime = 0;
+          sfxCounterFinal.play().catch(() => {});
+        }, 850);
+
+        // TRUMP HP
+        setTimeout(() => {
+          document.getElementById('row-trump').classList.add('lightning-active');
+          animateValue(document.getElementById('trump-val'), 0, turnData.trumpHP, 400);
+          setTimeout(() => document.getElementById('row-trump').classList.remove('lightning-active'), 400);
+        }, 900);
+        
+        // ENEMY HP
+        setTimeout(() => {
+          document.getElementById('row-enemy').classList.add('lightning-active');
+          animateValue(document.getElementById('ds-val'), 0, turnData.deepStateHP, 400, () => {
+            // Stop final counter sound
+            sfxCounterFinal.loop = false;
+            sfxCounterFinal.pause();
+            sfxCounterFinal.currentTime = 0;
+            
+            // Fade video
+            bgVideo.classList.remove('visible');
+            
+            // Start lightning sound early so the crack lands with button
+            triggerLightning(true);
+            // Button appears 1.5s later when crack hits
+            setTimeout(() => {
+              document.getElementById('btn-continue').classList.add('show');
+            }, 1500);
+          });
+          setTimeout(() => document.getElementById('row-enemy').classList.remove('lightning-active'), 400);
+        }, 1400);
+      });
+    }
+
+    function nextRound() {
+      sfxHells.play().catch(() => {});
+      
+      // Disable button
+      const btn = document.getElementById('btn-continue');
+      btn.style.pointerEvents = 'none';
+      btn.style.animation = 'none';
+      
+      // Trigger destruction
+      document.getElementById('tally-container').classList.add('destroying');
+      document.querySelector('.content-layer').classList.add('destroying');
+      
+      // After destruction animation, fade body and notify parent
+      setTimeout(() => {
+        document.body.classList.add('fade-out');
+        
+        // Wait for 3 second fade to complete before telling parent
+        setTimeout(() => {
+          if(window.parent !== window) {
+            window.parent.postMessage('tally-continue', '*');
+          }
+        }, 3000);
+      }, 4000);
+    }
+
+    function startTally() {
+      document.getElementById('tap-start').style.display = 'none';
+      document.getElementById('tally-container').style.display = 'block';
+      bgVideo.play().catch(() => {});
+      
+      // Unlock all audio
+      [sfxLightning, sfxCounter, sfxCounterFinal, sfxHells].forEach(sfx => {
+        sfx.play().then(() => {
+          sfx.pause();
+          sfx.currentTime = 0;
+        }).catch(() => {});
+      });
+      
+      setTimeout(runTally, 400);
+    }
+  </script>
+<!-- User Interaction Tracking -->
+<script src="/tracking.js"></script>
+
+<!-- AI Feedback System - disabled (interferes with game UI) -->
+<!-- <script src="/ai_feedback.js"></script> -->
+
+</body>
+</html>

@@ -1,0 +1,33 @@
+/* ==================== CSS VARIABLES ==================== */
+/* Edit these to change the game's look globally */
+
+:root {
+  /* Main colors */
+  --gold: #ffd700;
+  --gold-dim: #b8860b;
+  --bg: #0a0a12;
+  --panel: rgba(0, 0, 0, 0.95);
+
+  /* Status colors */
+  --hp-low: #c00;
+  --hp-high: var(--gold);
+  --deepstate-red: #ff5555;
+  --oil-green: #90ee90;
+
+  /* Notification colors */
+  --tweet-blue: #1da1f2;
+  --email-white: #ffffff;
+  --text-green: #34c759;
+  --postit-yellow: #ffeb3b;
+  --bulletin-red: #d32f2f;
+
+  /* Typography */
+  --font-main: 'Segoe UI', sans-serif;
+  --font-retro: 'Press Start 2P', monospace;
+
+  /* Spacing */
+  --phone-max-width: 390px;
+  --phone-max-height: 780px;
+  --border-radius: 25px;
+  --border-radius-small: 10px;
+}

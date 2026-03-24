@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>TRICODE SPIDER</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; touch-action:none; }
+body { background:#000; overflow:hidden; font-family:'Courier New',monospace; }
+#cam { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; opacity:0.4; }
+#cv  { position:fixed; inset:0; width:100%; height:100%; }
+#hud {
+  position:fixed; bottom:0; left:0; right:0;
+  padding:12px 16px 24px;
+  background:linear-gradient(transparent,rgba(0,0,0,.88));
+}
+#msg     { font-size:8px; letter-spacing:4px; color:rgba(255,199,44,.45); margin-bottom:4px; }
+#payload { font-size:18px; letter-spacing:5px; color:#FFC72C; min-height:26px;
+           text-shadow:0 0 24px rgba(255,199,44,.9); }
+#genome  { font-size:6px; letter-spacing:2px; color:rgba(255,199,44,.22);
+           margin-top:5px; line-height:1.9; }
+#actions { display:none; flex-wrap:wrap; gap:7px; margin-top:10px; }
+.ab {
+  background:rgba(0,0,0,.7); border:1px solid rgba(255,199,44,.3);
+  color:rgba(255,199,44,.65); font-family:'Courier New',monospace;
+  font-size:8px; letter-spacing:2px; padding:8px 12px; cursor:pointer;
+  backdrop-filter:blur(4px); flex:1; min-width:80px;
+}
+.ab:active { background:rgba(255,199,44,.18); color:#FFC72C; border-color:#FFC72C; }
+.ab.seeking { color:#FFC72C; border-color:#FFC72C; animation:pulse .6s infinite alternate; }
+@keyframes pulse { from{opacity:.5} to{opacity:1} }
+#fine-tune { display:none; flex-wrap:wrap; gap:5px; margin-top:6px; }
+.fb { min-width:38px; flex:none !important; font-size:7px; padding:7px 9px; text-align:center; }
+#mirror-banner {
+  position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+  font-size:9px; letter-spacing:5px; color:rgba(44,255,100,0);
+  pointer-events:none; transition:color .5s, text-shadow .5s;
+  text-shadow: 0 0 0 transparent;
+}
+#mirror-banner.on { color:rgba(44,255,100,.9); text-shadow:0 0 30px rgba(44,255,100,.7); }
+#vcount { position:fixed; top:16px; left:16px; font-size:8px;
+          letter-spacing:3px; color:rgba(255,199,44,.3); }
+#progress-overlay {
+  position:fixed; top:10px; left:10px; right:44px;
+  background:rgba(0,0,0,.75); border:1px solid rgba(255,199,44,.18);
+  padding:9px 12px; backdrop-filter:blur(4px); display:none;
+}
+.prog-row { display:flex; align-items:center; gap:7px; margin:4px 0; }
+.prog-label { font-size:6px; letter-spacing:2px; color:rgba(255,199,44,.5); width:56px; flex-shrink:0; }
+.prog-bar { flex:1; height:5px; background:rgba(255,255,255,.08); border-radius:3px; overflow:hidden; }
+.prog-fill { height:100%; width:0%; border-radius:3px; transition:width .4s,background .6s; }
+.prog-pct  { font-size:7px; letter-spacing:1px; color:#FFC72C; width:30px; text-align:right; flex-shrink:0; }
+.prog-verts{ font-size:5px; letter-spacing:1px; color:rgba(255,199,44,.38); flex-shrink:0; }
+#win-flash {
+  position:fixed; inset:0; pointer-events:none; opacity:0;
+  background:radial-gradient(ellipse at center, rgba(44,255,100,.18) 0%, transparent 70%);
+  transition:opacity .4s;
+}
+#listen-dot {
+  position:fixed; top:16px; right:16px; width:9px; height:9px;
+  border-radius:50%; background:rgba(255,60,60,.0); transition:background .3s;
+}
+#listen-dot.on { background:#ff3c3c; box-shadow:0 0 10px #ff3c3c; }
+</style>
+</head>
+<body>
+<video id="cam" autoplay playsinline muted></video>
+<canvas id="cv"></canvas>
+<div id="progress-overlay">
+  <div class="prog-row">
+    <span class="prog-label">◬ PHONE</span>
+    <div class="prog-bar"><div class="prog-fill" id="fill-phone" style="background:#FFC72C"></div></div>
+    <span class="prog-pct" id="pct-phone">0%</span>
+    <span class="prog-verts" id="verts-phone">①── ②── ③──</span>
+  </div>
+  <div class="prog-row">
+    <span class="prog-label">□ LAPTOP</span>
+    <div class="prog-bar"><div class="prog-fill" id="fill-laptop" style="background:#FFC72C"></div></div>
+    <span class="prog-pct" id="pct-laptop">0%</span>
+    <span class="prog-verts" id="verts-laptop">syncing...</span>
+  </div>
+</div>
+<div id="win-flash"></div>
+<div id="listen-dot" title="Listening"></div>
+<div id="hud">
+  <div id="msg">TAP TO PLACE CORNERS</div>
+  <div id="payload"></div>
+  <div id="genome"></div>
+  <div id="actions">
+    <button class="ab" id="btn-seek" onclick="toggleSeek()">◎ SEEK REFLECTION</button>
+    <button class="ab" onclick="saveGenome()">💾 SAVE</button>
+    <button class="ab" onclick="flipCamera()">⟳ FLIP CAM</button>
+    <button class="ab" id="btn-gyro" onclick="enableGyro()">⟁ GYRO</button>
+    <button class="ab" onclick="reset()">↺ CLEAR</button>
+  </div>
+  <div id="fine-tune">
+    <button class="ab fb" onclick="holdPosition()" title="Freeze">⏸</button>
+    <button class="ab fb" onclick="nudgePitch(-14)" title="Pitch up">β↑</button>
+    <button class="ab fb" onclick="nudgePitch(14)" title="Pitch down">β↓</button>
+    <button class="ab fb" onclick="rotateTarget(-4)" title="Roll left">γ←</button>
+    <button class="ab fb" onclick="rotateTarget(4)" title="Roll right">γ→</button>
+    <button class="ab fb" onclick="nudgeYaw(-5)" title="Yaw left">α←</button>
+    <button class="ab fb" onclick="nudgeYaw(5)" title="Yaw right">α→</button>
+    <button class="ab fb" id="btn-set" onclick="setGeostation()" title="Lock geostationary">📍 SET</button>
+  </div>
+</div>
+<div id="mirror-banner">◈ HOLOGRAPHIC LOCK ◈</div>
+<div id="node-box" style="
+  position:fixed;top:14px;left:50%;transform:translateX(-50%);
+  background:rgba(0,0,0,.8);border:1px solid rgba(255,199,44,.4);
+  padding:8px 16px;font-family:'Courier New',monospace;font-size:7px;
+  letter-spacing:3px;color:rgba(255,199,44,.7);display:none;z-index:99;
+  text-align:center;backdrop-filter:blur(4px);
+">NODE 1 — WAITING</div>
+<div id="vcount"></div>
+
+<script data-cfasync="false">
+'use strict';
+
+// ═══════════════════════════════════════════════════════════════════
+// TRICODE SPIDER — Adaptive swarm with reflection seeking
+// Cells store barycentric coords → recomputed each frame from
+// live (tweened) vertices → whole regiment moves as one organism
+// ═══════════════════════════════════════════════════════════════════
+
+const cam=document.getElementById('cam');
+const cv=document.getElementById('cv');
+const ctx=cv.getContext('2d');
+const msgEl=document.getElementById('msg');
+const payloadEl=document.getElementById('payload');
+const genomeEl=document.getElementById('genome');
+const vcountEl=document.getElementById('vcount');
+const actionsEl=document.getElementById('actions');
+const btnSeek=document.getElementById('btn-seek');
+
+// ── Audio ────────────────────────────────────────────────────────────
+let AC=null;
+function getAC(){if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();return AC;}
+function tone(f,d,v=0.26,type='square',delay=0){
+  const ac=getAC(),o=ac.createOscillator(),g=ac.createGain();
+  o.connect(g);g.connect(ac.destination);o.type=type;o.frequency.value=f;
+  const t=ac.currentTime+delay;
+  g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(0.001,t+d);
+  o.start(t);o.stop(t+d+0.01);
+}
+function sndCorner1(){tone(520,.10);}
+function sndCorner2(){tone(520,.08);tone(340,.11,.26,'square',.10);}
+function sndCorner3(){tone(440,.07);tone(580,.07,.26,'square',.09);tone(760,.12,.28,'square',.18);}
+function sndSpawn(){[0,60,120,180,240,300,370,440].forEach((ms,i)=>tone(400+i*90+Math.random()*60,.07,.17,'sawtooth',ms/1000));}
+function sndSaved(){
+  const s=[900,1400,700,1100,1600,500,1200,800,1800,600,1000,1500,400,1700,900];
+  s.forEach((f,i)=>{tone(f,.07,.2,i%2?'square':'sawtooth',i*.055);if(i%3===0)tone(f*.5,.09,.1,'sine',i*.055+.02);});
+  [523,659,784].forEach(f=>tone(f,.35,.14,'sine',.95));
+}
+function sndSeekLock(){tone(880,.05);tone(1100,.05,.2,'sine',.07);tone(1320,.3,.15,'sine',.14);}
+
+// ── AI Voice Director ─────────────────────────────────────────────────
+let lastSpoke=0, lastMsg='', voiceReady=false;
+function speak(text,force){
+  if(!voiceReady&&!force) return;
+  const now=Date.now();
+  if(!force&&now-lastSpoke<4000) return;
+  if(text===lastMsg&&now-lastSpoke<12000) return;
+  lastSpoke=now; lastMsg=text;
+  if(window.speechSynthesis.speaking) window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.rate=0.95; u.pitch=1.05; u.volume=0.9;
+  // Pick a good voice if available
+  const voices=window.speechSynthesis.getVoices();
+  const pref=voices.find(function(v){return v.name.match(/Google UK English Female|Samantha|Karen|Moira|Fiona/i);})
+           ||voices.find(function(v){return v.lang==='en-GB'||v.lang==='en-US';});
+  if(pref) u.voice=pref;
+  window.speechSynthesis.speak(u);
+}
+// Load voices async
+window.speechSynthesis.onvoiceschanged=function(){voiceReady=true;};
+setTimeout(function(){voiceReady=true;},800); // fallback
+
+let voiceState='idle'; // idle | seeking | found | converging | locked
+let noTargetCount=0;
+function updateVoice(){
+  if(!locked) return;
+  if(!seeking){ voiceState='idle'; return; }
+  if(convergeLocked){
+    if(voiceState!=='locked'){
+      voiceState='locked';
+      speak('Perfect. Triangles locked. Eighty percent convergence achieved.',true);
+    }
+    return;
+  }
+  if(tweening&&tweenT>0){
+    const pct=Math.floor(tweenT*100);
+    if(tweenT>=0.6&&voiceState!=='converging_high'){
+      voiceState='converging_high';
+      speak('Almost there. Hold very still.');
+    } else if(tweenT>=0.3&&tweenT<0.6&&voiceState!=='converging_mid'){
+      voiceState='converging_mid';
+      speak('Good. Keep going. Looking good.');
+    } else if(tweenT>0&&tweenT<0.3&&voiceState!=='converging_start'){
+      voiceState='converging_start';
+      speak('Reflection found. Syncing. Try not to move.');
+    }
+    noTargetCount=0;
+  } else {
+    noTargetCount++;
+    if(voiceState!=='seeking'){
+      voiceState='seeking';
+      speak('Point your camera at the laptop screen. Find the orange triangle.');
+    } else if(noTargetCount>8&&Date.now()-lastSpoke>6000){
+      const hints=[
+        'Try moving the phone a little closer to the screen.',
+        'Hold the phone steady and face it directly at the triangle.',
+        'Make sure the laptop screen is bright and the triangle is visible.',
+        'Tilt the phone slightly until the triangle fills the frame.',
+      ];
+      speak(hints[Math.floor(Math.random()*hints.length)]);
+    }
+  }
+}
+
+// ── Reference geometry (spec: tricode_annulus.html) ─────────────────
+const REF_W=500, REF_H=Math.round(500*Math.sqrt(3)/2), N=28, HOLE=0.48;
+const RO=[{x:REF_W/2,y:6},{x:REF_W-6,y:REF_H-6},{x:6,y:REF_H-6}]; // apex,BR,BL
+const RCX=(RO[0].x+RO[1].x+RO[2].x)/3, RCY=(RO[0].y+RO[1].y+RO[2].y)/3;
+const RI=RO.map(p=>({x:p.x+(RCX-p.x)*HOLE,y:p.y+(RCY-p.y)*HOLE}));
+
+function inT(px,py,v){
+  function s(a,b,c){return(a.x-c.x)*(b.y-c.y)-(b.x-c.x)*(a.y-c.y);}
+  const d1=s({x:px,y:py},v[0],v[1]),d2=s({x:px,y:py},v[1],v[2]),d3=s({x:px,y:py},v[2],v[0]);
+  return !((d1<0||d2<0||d3<0)&&(d1>0||d2>0||d3>0));
+}
+function eDist(px,py,v){
+  let m=Infinity;
+  for(let i=0;i<v.length;i++){
+    const a=v[i],b=v[(i+1)%v.length];
+    const dx=b.x-a.x,dy=b.y-a.y,l=Math.sqrt(dx*dx+dy*dy);
+    const t=Math.max(0,Math.min(1,((px-a.x)*dx+(py-a.y)*dy)/(l*l)));
+    m=Math.min(m,Math.hypot(a.x+t*dx-px,a.y+t*dy-py));
+  }
+  return m;
+}
+
+// Barycentric helpers
+function baryOf(p,a,b,c){
+  const det=(b.y-c.y)*(a.x-c.x)+(c.x-b.x)*(a.y-c.y);
+  const u=((b.y-c.y)*(p.x-c.x)+(c.x-b.x)*(p.y-c.y))/det;
+  const v=((c.y-a.y)*(p.x-c.x)+(a.x-c.x)*(p.y-c.y))/det;
+  return {u,v,w:1-u-v};
+}
+function fromBary(b,a,p2,p3){return{x:b.u*a.x+b.v*p2.x+b.w*p3.x,y:b.u*a.y+b.v*p2.y+b.w*p3.y};}
+
+// Transform a reference point to screen given live vertices
+function r2s(rx,ry,v){
+  const b=baryOf({x:rx,y:ry},RO[0],RO[1],RO[2]);
+  return fromBary(b,v[0],v[1],v[2]);
+}
+
+// ── Build cell list (stores reference coords + bary, NOT screen coords) ─
+function buildCells(){
+  const typW=REF_W/(2*N-1);
+  const refCells=[];
+
+  for(let r=0;r<N;r++){
+    const nC=2*r+1,y0=r*(REF_H/N),y1=(r+1)*(REF_H/N);
+    const spanB=((r+1)/N)*REF_W,xL=(REF_W-spanB)/2,cw=spanB/nC;
+    for(let c=0;c<nC;c++){
+      const isUp=(c%2===0),x0=xL+c*cw,x1=x0+cw;
+      const rcx=(x0+x1)/2,rcy=(y0+y1)/2;
+      if(!inT(rcx,rcy,RO)||inT(rcx,rcy,RI)) continue;
+      const dO=eDist(rcx,rcy,RO),dI=eDist(rcx,rcy,RI);
+      let type='data',dark=0;
+      if(dO<typW*1.1){type='border';dark=1;}
+      else if(dO<typW*2.1){type='quiet';}
+      else if(dI<typW*1.1){type='inner-border';dark=1;}
+      else if(dI<typW*2.1){type='inner-quiet';}
+      if(type==='data'){
+        for(const corner of RO){
+          const d=Math.hypot(rcx-corner.x,rcy-corner.y);
+          if(d<typW*5){type='anchor';dark=Math.round(d/typW)%2===0?1:0;break;}
+        }
+      }
+      if(type==='data'&&dO>=typW*2.1&&dO<typW*3.1){type='timing';dark=r%2;}
+
+      // Store reference corner positions (for per-frame transform)
+      const refCorners=isUp?[
+        {x:(x0+x1)/2,y:y0},{x:x1,y:y1},{x:x0,y:y1}
+      ]:[
+        {x:x0,y:y0},{x:x1,y:y0},{x:(x0+x1)/2,y:y1}
+      ];
+
+      refCells.push({r,c,isUp,rcx,rcy,refCorners,type,dark,
+                     spawnDelay:r*26+Math.random()*50, ripple:0});
+    }
+  }
+
+  // Encode SF:TRIANGLE into data cells
+  const TEXT='SF:TRIANGLE',bits=[];
+  for(const ch of TEXT){const b=ch.charCodeAt(0);for(let i=7;i>=0;i--)bits.push((b>>i)&1);}
+  let bi=0,label=1;
+  for(const cell of refCells){
+    if(cell.type==='data'){cell.dark=bits[bi%bits.length];bi++;cell.label=label++;}
+    else cell.label=0;
+  }
+
+  // Neighbour graph (reference space, threshold = 2.2 × typW)
+  const nb=Array.from({length:refCells.length},()=>[]);
+  const thr=typW*2.2;
+  for(let i=0;i<refCells.length;i++)
+    for(let j=i+1;j<refCells.length;j++){
+      if(Math.hypot(refCells[i].rcx-refCells[j].rcx,
+                    refCells[i].rcy-refCells[j].rcy)<thr){
+        nb[i].push(j);nb[j].push(i);
+      }
+    }
+  refCells.nb=nb;
+  return refCells;
+}
+
+const CELLS=buildCells(); // fixed reference — never changes
+
+// ── Swarm state ───────────────────────────────────────────────────────
+let verts=[];           // touch-placed corners
+let locked=false;
+let homeVerts=null;     // where user drew the triangle [apex,BR,BL]
+let targetVerts=null;   // where reflection is detected [apex,BR,BL]
+let tweenT=0;           // 0=home, 1=target
+let tweening=false;
+let spawnTime=0;
+let animFrame=0;
+let seeking=false;      // camera reflection detection active
+let currentGenomeId=null;
+let syncInterval=null;
+let convergeLocked=false;
+let laptopTweenT=0;
+let winFlashed=false;
+let recognition=null;
+let orient={alpha:0,beta:0,gamma:0};  // gyroscope
+let vertexLocked=[false,false,false]; // per-vertex ding fired
+let pingTimer=null;
+let lastPingScore=0;
+let geoBase=null;       // {verts, orient} — geostationary baseline
+let mirrorMode=false;   // phone movements mirror to laptop
+
+// ── Live vertices (lerped) ────────────────────────────────────────────
+function easeInOut(t){return t<.5?2*t*t:(4-2*t)*t-1;}
+function lerpV(a,b,t){return{x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t};}
+function liveVerts(){
+  if(!tweening||!targetVerts) return homeVerts;
+  const e=easeInOut(Math.min(1,tweenT));
+  return homeVerts.map((v,i)=>lerpV(v,targetVerts[i],e));
+}
+
+// ── Ripple ────────────────────────────────────────────────────────────
+function triggerRipple(tx,ty){
+  if(!locked) return;
+  const lv=liveVerts();
+  let best=0,bd=Infinity;
+  CELLS.forEach((c,i)=>{
+    const s=r2s(c.rcx,c.rcy,lv);
+    const d=Math.hypot(s.x-tx,s.y-ty);
+    if(d<bd){bd=d;best=i;}
+  });
+  const visited=new Set([best]),queue=[[best,0]];
+  while(queue.length){
+    const[idx,hop]=queue.shift();
+    setTimeout(()=>{if(CELLS[idx])CELLS[idx].ripple=1.0;},hop*40);
+    for(const n of CELLS.nb[idx])if(!visited.has(n)){visited.add(n);queue.push([n,hop+1]);}
+  }
+}
+function decayRipples(){for(const c of CELLS)c.ripple=Math.max(0,c.ripple-.035);}
+
+// ── Orange detection (for seek) ───────────────────────────────────────
+function isOrange(r,g,b){return r>120&&g>55&&b<120&&r>g*.95&&g>b*1.2;}
+const seekCv=document.createElement('canvas');
+const sctx=seekCv.getContext('2d',{willReadFrequently:true});
+
+function detectReflection(){
+  if(!cam.videoWidth) return null;
+  const VW=cam.videoWidth,VH=cam.videoHeight;
+  const SW=Math.round(VW*.25),SH=Math.round(VH*.25);
+  seekCv.width=SW;seekCv.height=SH;
+  sctx.drawImage(cam,0,0,SW,SH);
+  const d=sctx.getImageData(0,0,SW,SH).data;
+
+  let topY=SH,botY=0; const allPts=[];
+  for(let y=0;y<SH;y+=2)for(let x=0;x<SW;x+=2){
+    const i=(y*SW+x)*4;
+    if(!isOrange(d[i],d[i+1],d[i+2])) continue;
+    allPts.push({x,y});
+    if(y<topY)topY=y; if(y>botY)botY=y;
+  }
+  if(allPts.length<20||botY-topY<20) return null;
+
+  const topPts=allPts.filter(p=>p.y<=topY+10);
+  const botPts=allPts.filter(p=>p.y>=botY-10);
+  const apex={x:topPts.reduce((s,p)=>s+p.x,0)/topPts.length,
+              y:topPts.reduce((s,p)=>s+p.y,0)/topPts.length};
+  const botMid=botPts.reduce((s,p)=>s+p.x,0)/botPts.length;
+  const botL=botPts.filter(p=>p.x<=botMid), botR=botPts.filter(p=>p.x>botMid);
+  if(!botL.length||!botR.length) return null;
+
+  const BL={x:botL.reduce((s,p)=>s+p.x,0)/botL.length,y:botL.reduce((s,p)=>s+p.y,0)/botL.length};
+  const BR={x:botR.reduce((s,p)=>s+p.x,0)/botR.length,y:botR.reduce((s,p)=>s+p.y,0)/botR.length};
+
+  // Scale back to display coords
+  const rx=window.innerWidth/SW,ry=window.innerHeight/SH;
+  return [
+    {x:apex.x*rx,y:apex.y*ry},
+    {x:BR.x*rx,y:BR.y*ry},
+    {x:BL.x*rx,y:BL.y*ry},
+  ];
+}
+
+// ── Draw ──────────────────────────────────────────────────────────────
+function draw(){
+  cv.width=window.innerWidth; cv.height=window.innerHeight;
+  ctx.clearRect(0,0,cv.width,cv.height);
+  const now=Date.now(), age=locked?now-spawnTime:0;
+
+  // Vertex placement guide
+  if(!locked&&verts.length>0){
+    ctx.strokeStyle='rgba(255,199,44,.5)'; ctx.lineWidth=1.5; ctx.setLineDash([6,8]);
+    ctx.beginPath(); ctx.moveTo(verts[0].x,verts[0].y);
+    for(let i=1;i<verts.length;i++)ctx.lineTo(verts[i].x,verts[i].y);
+    if(verts.length>=3)ctx.closePath(); ctx.stroke(); ctx.setLineDash([]);
+    verts.forEach((v,i)=>{
+      ctx.beginPath();ctx.arc(v.x,v.y,7,0,Math.PI*2);
+      ctx.fillStyle='#FFC72C';ctx.shadowColor='#FFC72C';ctx.shadowBlur=12;
+      ctx.fill();ctx.shadowBlur=0;
+    });
+  }
+
+  if(!locked){animFrame=requestAnimationFrame(draw);return;}
+
+  decayRipples();
+
+  // Advance tween
+  if(tweening){
+    tweenT+=0.004;
+    if(tweenT>=0.8&&!convergeLocked){
+      convergeLocked=true;
+      sndSeekLock();
+      msgEl.style.color='rgba(44,255,100,1)';
+      msgEl.textContent='✓ 80% CONVERGED — LOCKED';
+    }
+    if(tweenT>=1){tweenT=1;tweening=false;}
+  }
+
+  updateVoice();
+  updateProgress();
+  drawOrientHUD();
+
+  const lv=liveVerts();
+  const wavePhase=(now%4000)/4000;
+  const nb=CELLS.nb;
+
+  // ── Connection web ──
+  ctx.lineWidth=0.7;
+  for(let i=0;i<CELLS.length;i++){
+    const ci=CELLS[i];
+    const si=Math.max(0,Math.min(1,(age-ci.spawnDelay)/300));
+    if(si<=0) continue;
+    for(const j of nb[i]){
+      if(j<=i) continue;
+      const cj=CELLS[j];
+      const sj=Math.max(0,Math.min(1,(age-cj.spawnDelay)/300));
+      if(sj<=0||(!ci.dark&&!cj.dark)) continue;
+      const a=(si*sj*.17)+(ci.ripple+cj.ripple)*.25;
+      if(a<.01) continue;
+      const pi=r2s(ci.rcx,ci.rcy,lv), pj=r2s(cj.rcx,cj.rcy,lv);
+      ctx.beginPath();ctx.moveTo(pi.x,pi.y);ctx.lineTo(pj.x,pj.y);
+      ctx.strokeStyle=`rgba(255,199,44,${a})`;ctx.stroke();
+    }
+  }
+
+  // ── Cells ──
+  for(const cell of CELLS){
+    const t=Math.max(0,Math.min(1,(age-cell.spawnDelay)/300));
+    if(t<=0) continue;
+
+    // Compute live screen corners from reference corners + live verts
+    const sc=cell.refCorners.map(p=>r2s(p.x,p.y,lv));
+    const mx=(sc[0].x+sc[1].x+sc[2].x)/3, my=(sc[0].y+sc[1].y+sc[2].y)/3;
+    // Cache centroid for ripple / label
+    cell._sx=mx; cell._sy=my;
+
+    // Regiment wave
+    const rowFrac=cell.r/N;
+    const regPulse=Math.max(0,1-Math.abs(wavePhase-rowFrac)*12)*.45;
+
+    // Breathing
+    const breath=(cell.type==='data'||cell.type==='anchor')
+      ?0.87+0.08*Math.sin(now/900+cell.label*.18)+cell.ripple*.07
+      :1+cell.ripple*.05;
+
+    // Color — shifts gold→green as tweenT increases
+    const boost=cell.ripple*.55+regPulse*.14;
+    const a=Math.min(1,t+boost);
+    let col;
+    switch(cell.type){
+      case 'border':       col=goldToGreen(a,true);break;
+      case 'quiet':        col='rgba(17,17,17,'+(Math.min(1,t*.9))+')';break;
+      case 'inner-border': col=goldToGreen(a,true);break;
+      case 'inner-quiet':  col='rgba(17,17,17,'+(Math.min(1,t*.9))+')';break;
+      case 'anchor':       col=cell.dark?goldToGreen(a,true):'rgba(17,17,17,'+(Math.min(1,t*.9))+')';break;
+      case 'timing':       col=cell.dark?goldToGreen(a,true):'rgba(17,17,17,'+(Math.min(1,t*.9))+')';break;
+      case 'data':         col=cell.dark?goldToGreen(a,true):'rgba(17,17,17,'+(Math.min(1,t*.9))+')';break;
+      default: continue;
+    }
+
+    ctx.beginPath();
+    ctx.moveTo(mx+(sc[0].x-mx)*breath,my+(sc[0].y-my)*breath);
+    ctx.lineTo(mx+(sc[1].x-mx)*breath,my+(sc[1].y-my)*breath);
+    ctx.lineTo(mx+(sc[2].x-mx)*breath,my+(sc[2].y-my)*breath);
+    ctx.closePath(); ctx.fillStyle=col; ctx.fill();
+    if(cell.type!=='border'&&cell.type!=='inner-border'){
+      ctx.strokeStyle='rgba(255,199,44,.07)';ctx.lineWidth=.3;ctx.stroke();
+    }
+
+    // ── Cell label ──
+    if(cell.type==='data'&&cell.label>0&&t>.7){
+      const labelAlpha=Math.min(.55,t*.6)*Math.min(1,(age-cell.spawnDelay-400)/600);
+      if(labelAlpha>.05){
+        ctx.fillStyle=`rgba(255,199,44,${labelAlpha})`;
+        ctx.font='3.5px Courier New';
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText(cell.label,mx,my);
+      }
+    }
+  }
+
+  // Outer glow
+  if(age>1200){
+    const pulse=.22+.14*Math.sin(now/700);
+    ctx.beginPath();
+    ctx.moveTo(lv[0].x,lv[0].y);ctx.lineTo(lv[1].x,lv[1].y);ctx.lineTo(lv[2].x,lv[2].y);
+    ctx.closePath();
+    ctx.strokeStyle=`rgba(255,199,44,${pulse})`;ctx.lineWidth=2;
+    ctx.shadowColor='#FFC72C';ctx.shadowBlur=16;ctx.stroke();ctx.shadowBlur=0;
+  }
+
+  // If seeking — show detected reflection outline
+  if(seeking){
+    const det=detectReflection();
+    if(det){
+      ctx.beginPath();ctx.moveTo(det[0].x,det[0].y);ctx.lineTo(det[1].x,det[1].y);ctx.lineTo(det[2].x,det[2].y);
+      ctx.closePath();ctx.strokeStyle='rgba(255,255,255,.4)';ctx.lineWidth=1.5;ctx.setLineDash([4,6]);ctx.stroke();ctx.setLineDash([]);
+      // If found and not yet tweening to it, lock it in
+      if(!tweening||(targetVerts&&Math.hypot(det[0].x-targetVerts[0].x,det[0].y-targetVerts[0].y)>20)){
+        targetVerts=det; tweenT=0; tweening=true;
+        sndSeekLock();
+        msgEl.textContent='REFLECTION FOUND — MORPHING...';
+        msgEl.style.color='';
+      }
+    } else {
+      msgEl.textContent='SEEKING REFLECTION...';
+    }
+  }
+
+  animFrame=requestAnimationFrame(draw);
+}
+
+// ── Gold→Green color mix ──────────────────────────────────────────────
+function goldToGreen(alpha, isDark){
+  if(!isDark) return 'rgba(17,17,17,'+(alpha*0.95)+')';
+  const t=Math.min(1,tweenT*1.25);
+  const r=Math.round(255*(1-t)+44*t);
+  const g=Math.round(199*(1-t)+255*t);
+  const b=Math.round(44*(1-t)+100*t);
+  return 'rgba('+r+','+g+','+b+','+alpha+')';
+}
+
+// ── Per-vertex convergence scores ────────────────────────────────────
+function vertexScores(){
+  if(!homeVerts||!targetVerts) return [0,0,0];
+  const lv=liveVerts();
+  const maxD=Math.max(window.innerWidth,window.innerHeight)*0.55;
+  return lv.map(function(v,i){return Math.max(0,1-Math.hypot(v.x-targetVerts[i].x,v.y-targetVerts[i].y)/maxD);});
+}
+
+// ── Progress overlay update ───────────────────────────────────────────
+const fillPhone=document.getElementById('fill-phone');
+const fillLaptop=document.getElementById('fill-laptop');
+const pctPhone=document.getElementById('pct-phone');
+const pctLaptop=document.getElementById('pct-laptop');
+const vertsPhone=document.getElementById('verts-phone');
+const vertsLaptop=document.getElementById('verts-laptop');
+const progOverlay=document.getElementById('progress-overlay');
+const winFlashEl=document.getElementById('win-flash');
+const listenDot=document.getElementById('listen-dot');
+
+function updateProgress(){
+  if(!locked||!targetVerts){progOverlay.style.display='none';return;}
+  progOverlay.style.display='block';
+  const vs=vertexScores();
+  const phonePct=Math.round(tweenT*100);
+  const lapPct=Math.round(laptopTweenT*100);
+  // Gold→Green color on fills
+  const t=Math.min(1,tweenT*1.25);
+  const r=Math.round(255*(1-t)+44*t),g=Math.round(199*(1-t)+255*t),b=Math.round(44*(1-t)+100*t);
+  const fillCol='rgb('+r+','+g+','+b+')';
+  const lt=Math.min(1,laptopTweenT*1.25);
+  const lr=Math.round(255*(1-lt)+44*lt),lg=Math.round(199*(1-lt)+255*lt),lb=Math.round(44*(1-lt)+100*lt);
+  const fillLapCol='rgb('+lr+','+lg+','+lb+')';
+  fillPhone.style.width=phonePct+'%';fillPhone.style.background=fillCol;
+  fillLaptop.style.width=lapPct+'%';fillLaptop.style.background=fillLapCol;
+  pctPhone.style.color=fillCol;pctPhone.textContent=phonePct+'%';
+  pctLaptop.style.color=fillLapCol;pctLaptop.textContent=lapPct+'%';
+  const vn=['①','②','③'];
+  vertsPhone.textContent=vs.map(function(s,i){return vn[i]+Math.round(s*100)+'%';}).join(' ');
+  // Win flash
+  if(phonePct>=80&&lapPct>=80&&!winFlashed){
+    winFlashed=true;
+    winFlashEl.style.opacity='1';
+    setTimeout(function(){winFlashEl.style.opacity='0';},800);
+    speak('Win state. Both triangles aligned. You did it.',true);
+  }
+  if(phonePct<60||lapPct<60) winFlashed=false;
+}
+
+// ── Shape manipulation commands ───────────────────────────────────────
+function scaleTarget(f){
+  if(!targetVerts) return;
+  const cx=(targetVerts[0].x+targetVerts[1].x+targetVerts[2].x)/3;
+  const cy=(targetVerts[0].y+targetVerts[1].y+targetVerts[2].y)/3;
+  targetVerts=targetVerts.map(function(v){return{x:cx+(v.x-cx)*f,y:cy+(v.y-cy)*f};});
+  tweenT=0;tweening=true;convergeLocked=false;
+}
+function rotateTarget(deg){
+  if(!targetVerts) return;
+  const rad=deg*Math.PI/180;
+  const cx=(targetVerts[0].x+targetVerts[1].x+targetVerts[2].x)/3;
+  const cy=(targetVerts[0].y+targetVerts[1].y+targetVerts[2].y)/3;
+  targetVerts=targetVerts.map(function(v){
+    const dx=v.x-cx,dy=v.y-cy;
+    return{x:cx+dx*Math.cos(rad)-dy*Math.sin(rad),y:cy+dx*Math.sin(rad)+dy*Math.cos(rad)};
+  });
+  tweenT=0;tweening=true;convergeLocked=false;
+}
+function mirrorTarget(){
+  if(!targetVerts) return;
+  const cx=(targetVerts[0].x+targetVerts[1].x+targetVerts[2].x)/3;
+  targetVerts=targetVerts.map(function(v){return{x:2*cx-v.x,y:v.y};});
+  tweenT=0;tweening=true;convergeLocked=false;
+}
+
+// ── Axis nudge ────────────────────────────────────────────────────────
+function ensureTarget(){
+  if(!targetVerts) targetVerts=liveVerts().map(function(v){return{x:v.x,y:v.y};});
+}
+function nudgePitch(dy){
+  ensureTarget();
+  targetVerts=targetVerts.map(function(v){return{x:v.x,y:v.y+dy};});
+  tweenT=0;tweening=true;convergeLocked=false;
+}
+function nudgeYaw(deg){
+  ensureTarget();
+  const cx=(targetVerts[0].x+targetVerts[1].x+targetVerts[2].x)/3;
+  const shear=Math.sin(deg*Math.PI/180)*0.18;
+  targetVerts=targetVerts.map(function(v){return{x:v.x+(v.x-cx)*shear,y:v.y};});
+  tweenT=0;tweening=true;convergeLocked=false;
+}
+function holdPosition(){
+  targetVerts=liveVerts().map(function(v){return{x:v.x,y:v.y};});
+  homeVerts=targetVerts.map(function(v){return{x:v.x,y:v.y};});
+  tweenT=0;tweening=false;convergeLocked=false;
+  speak('Held.',true);
+}
+
+// ── Geostationary lock ────────────────────────────────────────────────
+function setGeostation(){
+  const lv=liveVerts();
+  geoBase={verts:lv.map(function(v){return{x:v.x,y:v.y};}),orient:{alpha:orient.alpha,beta:orient.beta,gamma:orient.gamma}};
+  mirrorMode=true;
+  document.getElementById('btn-set').textContent='◈ GEO LOCKED';
+  document.getElementById('btn-set').style.borderColor='rgba(44,255,100,.7)';
+  document.getElementById('btn-set').style.color='rgba(44,255,100,.9)';
+  document.getElementById('mirror-banner').classList.add('on');
+  speak('Geostationary position set. Holographic lock active. Move the phone.',true);
+  // Speed up sync for real-time mirror
+  if(syncInterval){clearInterval(syncInterval);syncInterval=null;}
+  startSyncFast();
+}
+function startSyncFast(){
+  if(syncInterval) clearInterval(syncInterval);
+  const interval=mirrorMode?350:1500;
+  syncInterval=setInterval(function(){
+    if(!currentGenomeId||!homeVerts) return;
+    const lv=liveVerts();
+    const W=window.innerWidth,H=window.innerHeight;
+    const orientDelta=geoBase?{da:angleDiff(orient.alpha,geoBase.orient.alpha),db:orient.beta-geoBase.orient.beta,dg:orient.gamma-geoBase.orient.gamma}:null;
+    fetch('/soul/tricode_sync.php?id='+currentGenomeId,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({side:'phone',verts:lv.map(function(v){return{x:+(v.x/W).toFixed(4),y:+(v.y/H).toFixed(4)};}),tweenT:tweenT,orient:orient,orientDelta:orientDelta,mirrorMode:mirrorMode})
+    }).catch(function(){});
+    fetch('/soul/tricode_sync.php?id='+currentGenomeId+'&t='+Date.now())
+    .then(function(r){return r.json();})
+    .then(function(state){
+      if(state.laptop&&state.laptop.verts&&state.laptop.ts>(Date.now()/1000-10)){
+        const lp=state.laptop.verts.map(function(v){return{x:v.x*W,y:v.y*H};});
+        if(!mirrorMode&&(!tweening||tweenT>=0.95)){targetVerts=lp;tweenT=0;tweening=true;convergeLocked=false;}
+        if(state.laptop.tweenT!==undefined) laptopTweenT=state.laptop.tweenT;
+      }
+      // Node 1 from pair3
+      if(state.laptop&&state.laptop.node1){
+        const n=state.laptop.node1;
+        const nb=document.getElementById('node-box');
+        nb.style.display='block';
+        nb.textContent='NODE 1   X: '+n.x+'   Y: '+n.y+'   ('+Math.round(n.x*W)+'px, '+Math.round(n.y*H)+'px)';
+      }
+    }).catch(function(){});
+  },interval);
+}
+function angleDiff(a,b){let d=a-b;while(d>180)d-=360;while(d<-180)d+=360;return d;}
+
+// ── Spoken guidance ───────────────────────────────────────────────────
+function speakGuidance(force){
+  if(!targetVerts){speak('No target found yet. Point at the laptop.',force);return;}
+  const vs=vertexScores();
+  const names=['top point','right base','left base'];
+  const worstI=vs.indexOf(Math.min.apply(null,vs));
+  const bestI=vs.indexOf(Math.max.apply(null,vs));
+  const overall=Math.round(tweenT*100);
+  speak('Overall '+overall+' percent. '+names[bestI]+' is best at '+Math.round(vs[bestI]*100)+' percent. Adjust the '+names[worstI]+' — currently '+Math.round(vs[worstI]*100)+' percent.',force);
+}
+
+// ── Speech recognition (voice commands) ──────────────────────────────
+function startListening(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR||recognition) return;
+  recognition=new SR();
+  recognition.continuous=true;recognition.interimResults=false;recognition.lang='en-US';
+  recognition.onstart=function(){listenDot.classList.add('on');};
+  recognition.onend=function(){listenDot.classList.remove('on');if(seeking)setTimeout(function(){try{recognition.start();}catch(e){}},400);};
+  recognition.onerror=function(e){if(e.error!=='no-speech')listenDot.classList.remove('on');};
+  recognition.onresult=function(e){
+    const txt=e.results[e.results.length-1][0].transcript.toLowerCase().trim();
+    if(txt.match(/freeze|hold|stop/)){tweening=false;speak('Frozen.',true);}
+    else if(txt.match(/reset|home|return/)){targetVerts=null;tweenT=0;tweening=false;convergeLocked=false;speak('Returning home.',true);}
+    else if(txt.match(/bigger|expand|larger|grow/)){scaleTarget(1.15);speak('Expanding.',true);}
+    else if(txt.match(/smaller|shrink|contract|reduce/)){scaleTarget(0.87);speak('Contracting.',true);}
+    else if(txt.match(/spin|rotate|turn/)){rotateTarget(30);speak('Rotating thirty degrees.',true);}
+    else if(txt.match(/flip|mirror/)){mirrorTarget();speak('Mirrored.',true);}
+    else if(txt.match(/save|lock|confirm/)){saveGenome();}
+    else if(txt.match(/sync|refresh|connect/)){speak('Forcing sync.',true);}
+    else if(txt.match(/help|guide|hint|where/)){speakGuidance(true);}
+    else if(txt.match(/commands|what can|options/)){speak('Say: freeze, reset, bigger, smaller, spin, flip, save, or help.',true);}
+  };
+  try{recognition.start();}catch(e){}
+}
+function stopListening(){
+  if(recognition){try{recognition.stop();}catch(e){}recognition=null;}
+  listenDot.classList.remove('on');
+}
+
+// ── Gyroscope ─────────────────────────────────────────────────────────
+function listenOrientation(){
+  window.addEventListener('deviceorientation',function(e){
+    orient.alpha=Math.round(e.alpha||0);
+    orient.beta=Math.round(e.beta||0);
+    orient.gamma=Math.round(e.gamma||0);
+  });
+}
+function setupOrientation(){
+  // Auto-start on Android (no permission needed)
+  if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission!=='function'){
+    listenOrientation();
+  }
+  // iOS needs explicit button tap — handled by enableGyro()
+}
+function enableGyro(){
+  const btn=document.getElementById('btn-gyro');
+  if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){
+    DeviceOrientationEvent.requestPermission().then(function(p){
+      if(p==='granted'){
+        listenOrientation();
+        btn.textContent='⟁ GYRO ON';btn.style.borderColor='rgba(44,255,100,.6)';btn.style.color='rgba(44,255,100,.8)';
+        speak('Gyroscope active.',true);
+      } else {
+        btn.textContent='⟁ DENIED';btn.style.color='#ff4444';
+      }
+    }).catch(function(e){btn.textContent='⟁ ERROR';btn.style.color='#ff4444';});
+  } else {
+    listenOrientation();
+    btn.textContent='⟁ GYRO ON';btn.style.borderColor='rgba(44,255,100,.6)';btn.style.color='rgba(44,255,100,.8)';
+    speak('Gyroscope active.',true);
+  }
+}
+
+// ── Draw orientation HUD (mini 3D triangle, top-right) ────────────────
+function drawOrientHUD(){
+  if(!orient.beta&&!orient.gamma) return;
+  const cx=cv.width-50,cy=52,r=32;
+  const b=orient.beta*Math.PI/180, g=orient.gamma*Math.PI/180;
+  // 3D triangle verts rotated by beta/gamma (orthographic)
+  const raw=[{x:0,y:-r,z:0},{x:r*0.866,y:r*0.5,z:0},{x:-r*0.866,y:r*0.5,z:0}];
+  const pts=raw.map(function(v){
+    const y1=v.y*Math.cos(b)-v.z*Math.sin(b), z1=v.y*Math.sin(b)+v.z*Math.cos(b);
+    const x2=v.x*Math.cos(g)-y1*Math.sin(g), y2=v.x*Math.sin(g)+y1*Math.cos(g);
+    return{x:cx+x2,y:cy+y2};
+  });
+  const gt=Math.min(1,tweenT*1.25);
+  const rc=Math.round(255*(1-gt)+44*gt),gc=Math.round(199*(1-gt)+255*gt),bc=Math.round(44*(1-gt)+100*gt);
+  ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);ctx.lineTo(pts[1].x,pts[1].y);ctx.lineTo(pts[2].x,pts[2].y);ctx.closePath();
+  ctx.strokeStyle='rgba('+rc+','+gc+','+bc+',.55)';ctx.lineWidth=1.2;
+  ctx.shadowColor='rgba('+rc+','+gc+','+bc+',1)';ctx.shadowBlur=6;ctx.stroke();ctx.shadowBlur=0;
+  // Axis labels
+  ctx.fillStyle='rgba(255,199,44,.22)';ctx.font='4.5px Courier New';ctx.textAlign='center';
+  ctx.fillText('β'+orient.beta+'° γ'+orient.gamma+'°',cx,cy+r+10);
+  ctx.textAlign='left';
+}
+
+// ── Proximity audio (metal-detector style) ────────────────────────────
+function sndGood(score){
+  // Ascending chirp — pitch scales with score
+  const base=400+score*600;
+  tone(base,0.06,0.16,'sine');
+  tone(base*1.25,0.05,0.12,'sine',0.07);
+  tone(base*1.5,0.04,0.09,'sine',0.13);
+}
+function sndBad(){
+  // Descending buzz
+  tone(320,0.08,0.18,'sawtooth');
+  tone(200,0.07,0.14,'square',0.12);
+}
+function sndVertexLock(idx){
+  // Individual vertex locked — three distinct tones
+  const freqs=[660,784,988];
+  tone(freqs[idx],0.06,0.2,'sine');
+  tone(freqs[idx]*2,0.04,0.12,'sine',0.08);
+}
+function sndProximityPing(score){
+  tone(280+score*800,0.035,0.08,'sine');
+}
+
+function doPing(){
+  if(!seeking||!locked||!targetVerts){pingTimer=null;return;}
+  const vs=vertexScores();
+  const score=(vs[0]+vs[1]+vs[2])/3;
+  const delta=score-lastPingScore;
+  lastPingScore=score;
+
+  // Per-vertex lock dings
+  vs.forEach(function(s,i){
+    if(s>=0.9&&!vertexLocked[i]){vertexLocked[i]=true;sndVertexLock(i);}
+    if(s<0.7) vertexLocked[i]=false;
+  });
+
+  // Directional good/bad
+  if(delta>0.018){sndGood(score);}
+  else if(delta<-0.018){sndBad();}
+  else if(score>0.08){sndProximityPing(score);}
+
+  // Rate: 2400ms when far, 120ms when very close
+  const delay=Math.max(120,2400-score*2280);
+  pingTimer=setTimeout(doPing,delay);
+}
+function startPings(){if(pingTimer)clearTimeout(pingTimer);lastPingScore=0;vertexLocked=[false,false,false];doPing();}
+function stopPings(){if(pingTimer){clearTimeout(pingTimer);pingTimer=null;}lastPingScore=0;}
+
+// ── Auto-save silently on lock to get genome ID ───────────────────────
+function autoSave(){
+  if(currentGenomeId) return;
+  const genome={type:'TRIANGLE',payload:'SF:TRIANGLE',vertices:verts,screen:{w:window.innerWidth,h:window.innerHeight}};
+  try{const s=JSON.parse(localStorage.getItem('tricode_genomes')||'[]');s.push({...genome,ts:Date.now()});localStorage.setItem('tricode_genomes',JSON.stringify(s));}catch(e){}
+  fetch('/soul/tricode_save.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(genome)})
+  .then(function(r){return r.json();})
+  .then(function(res){if(res.ok){currentGenomeId=res.id;}})
+  .catch(function(){});
+}
+
+// ── Sync push/pull ────────────────────────────────────────────────────
+function startSync(){ mirrorMode=false; startSyncFast(); }
+function stopSync(){if(syncInterval){clearInterval(syncInterval);syncInterval=null;}}
+
+// ── Lock shape ────────────────────────────────────────────────────────
+function tryLock(){
+  const sorted=[...verts].sort((a,b)=>a.y-b.y);
+  const apex=sorted[0], bot=sorted.slice(1).sort((a,b)=>a.x-b.x);
+  homeVerts=[apex, bot[1], bot[0]]; // [apex, BR, BL]
+  targetVerts=null; tweenT=0; tweening=false; convergeLocked=false;
+  locked=true; spawnTime=Date.now();
+  autoSave();
+  setupOrientation(); // Android auto-start; iOS uses the GYRO button
+  payloadEl.textContent='SF:TRIANGLE';
+  msgEl.textContent='SPIDERS LOCKED · TAP TO RIPPLE';
+  msgEl.style.color='';
+  const nv=homeVerts.map(v=>({x:(v.x/window.innerWidth).toFixed(3),y:(v.y/window.innerHeight).toFixed(3)}));
+  genomeEl.textContent=`APEX(${nv[0].x},${nv[0].y}) BR(${nv[1].x},${nv[1].y}) BL(${nv[2].x},${nv[2].y}) · ${CELLS.filter(c=>c.type==='data').length} DATA CELLS`;
+  actionsEl.style.display='flex';
+  document.getElementById('fine-tune').style.display='flex';
+}
+
+// ── Seek toggle ───────────────────────────────────────────────────────
+function toggleSeek(){
+  seeking=!seeking;
+  btnSeek.classList.toggle('seeking',seeking);
+  btnSeek.textContent=seeking?'◉ SEEKING...':'◎ SEEK REFLECTION';
+  if(seeking){ startSync(); startListening(); startPings(); voiceState='idle'; noTargetCount=0; speak('Alignment mode activated. Say commands: freeze, reset, bigger, smaller, spin, flip, or help.',true); }
+  else{ stopSync(); stopListening(); stopPings(); msgEl.textContent='SPIDERS LOCKED · TAP TO RIPPLE'; msgEl.style.color=''; if(window.speechSynthesis.speaking)window.speechSynthesis.cancel(); }
+}
+
+// ── Save ──────────────────────────────────────────────────────────────
+function saveGenome(){
+  const genome={type:'TRIANGLE',payload:'SF:TRIANGLE',vertices:verts,screen:{w:window.innerWidth,h:window.innerHeight}};
+  try{const s=JSON.parse(localStorage.getItem('tricode_genomes')||'[]');s.push({...genome,ts:Date.now()});localStorage.setItem('tricode_genomes',JSON.stringify(s));}catch(e){}
+  fetch('/soul/tricode_save.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(genome)})
+  .then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+  .then(res=>{
+    if(res.ok){currentGenomeId=res.id;sndSaved();msgEl.style.color='';msgEl.textContent='✓ GENOME #'+res.total+' SAVED · '+res.id;}
+    else{msgEl.style.color='#ff4444';msgEl.textContent='SAVE FAILED: '+(res.err||'unknown');}
+  }).catch(e=>{msgEl.style.color='#ff4444';msgEl.textContent='SAVE ERROR: '+e.message;});
+}
+
+// ── Camera flip ───────────────────────────────────────────────────────
+let facingMode='environment';
+async function flipCamera(){
+  facingMode=facingMode==='environment'?'user':'environment';
+  if(cam.srcObject)cam.srcObject.getTracks().forEach(t=>t.stop());
+  try{
+    const s=await navigator.mediaDevices.getUserMedia({video:{facingMode,width:{ideal:1920}},audio:false});
+    cam.srcObject=s;await cam.play();
+    msgEl.style.color='';
+    msgEl.textContent=facingMode==='user'?'▲ FRONT CAM — ALIGN WITH LAPTOP':'▲ BACK CAM — MAP THE WORLD';
+  }catch(e){msgEl.style.color='#ff4444';msgEl.textContent='CAM ERROR: '+e.message;}
+}
+
+// ── Reset ─────────────────────────────────────────────────────────────
+function reset(){
+  verts=[];locked=false;homeVerts=null;targetVerts=null;tweenT=0;tweening=false;seeking=false;
+  convergeLocked=false;currentGenomeId=null;laptopTweenT=0;winFlashed=false;orient={alpha:0,beta:0,gamma:0};geoBase=null;mirrorMode=false;stopSync();stopListening();stopPings();
+  document.getElementById('fine-tune').style.display='none';
+  document.getElementById('mirror-banner').classList.remove('on');
+  const bs=document.getElementById('btn-set');bs.textContent='📍 SET';bs.style.borderColor='';bs.style.color='';
+  msgEl.textContent='TAP TO PLACE CORNERS';msgEl.style.color='';
+  payloadEl.textContent='';genomeEl.textContent='';vcountEl.textContent='';
+  actionsEl.style.display='none';btnSeek.classList.remove('seeking');btnSeek.textContent='◎ SEEK REFLECTION';
+  cancelAnimationFrame(animFrame);draw();
+}
+
+// ── Touch ─────────────────────────────────────────────────────────────
+cv.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  if(locked){
+    const t=e.changedTouches[0],r=cv.getBoundingClientRect();
+    triggerRipple(t.clientX-r.left,t.clientY-r.top);
+    return;
+  }
+  const t=e.changedTouches[0],r=cv.getBoundingClientRect();
+  verts.push({x:t.clientX-r.left,y:t.clientY-r.top});
+  if(verts.length===1){sndCorner1();msgEl.textContent='TAP 2 MORE CORNERS';vcountEl.textContent='1/3';}
+  else if(verts.length===2){sndCorner2();msgEl.textContent='TAP 1 MORE CORNER';vcountEl.textContent='2/3';}
+  else if(verts.length===3){sndCorner3();vcountEl.textContent='3/3';setTimeout(()=>{sndSpawn();tryLock();},200);}
+},{passive:false});
+
+// ── Camera start ──────────────────────────────────────────────────────
+(async()=>{
+  try{
+    const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1920}},audio:false});
+    cam.srcObject=s;await cam.play();
+  }catch(e){msgEl.textContent='NO CAMERA: '+e.message;}
+  draw();
+})();
+</script>
+</body>
+</html>

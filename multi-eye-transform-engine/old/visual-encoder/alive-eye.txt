@@ -1,0 +1,208 @@
+# PRODUCT DESIGN BRIEF
+
+## Project: Multi-Eye Scan → 3D Concept Engine (ShortFactory)
+
+### 🎯 Core Idea
+
+Users scan real-world objects with their phone. The system converts scans into a **3D visual object + concept signature**, rewarding users instantly with **ShortFactory (SFT) credits**.
+
+The experience should feel like:
+
+> “I just discovered and captured something — and got rewarded instantly.”
+
+---
+
+# 🧠 User Loop (CRITICAL)
+
+### 1. Capture
+
+* User points camera at object
+* Guided UI encourages moving around it (multi-angle “many eyes”)
+
+### 2. Build (Instant Feedback)
+
+* Object begins forming in **live 3D (wireframe → solid)**
+* User sees shape emerging in real time
+
+### 3. Solve Moment ⚡ (Dopamine Peak)
+
+* System recognizes or approximates object
+* Displays:
+
+  * “This looks like: SHOE (82% match)”
+* OR:
+
+  * “New object discovered”
+
+### 4. Reward 💰
+
+* Instant SFT credit drop
+* Visual + audio feedback (VERY important)
+
+### 5. Store
+
+* Object added to:
+
+  * personal collection
+  * global library
+
+---
+
+# 🎨 Visual Direction
+
+## Core Feeling:
+
+* “Futuristic scanner meets playful discovery”
+* Think:
+
+  * holographic
+  * glowing wireframes
+  * evolving geometry
+
+---
+
+## 3D Object States
+
+### 1. Scan Phase
+
+* particles / dots forming structure
+* incomplete mesh
+* noisy → stabilizing
+
+### 2. Solve Phase
+
+* snap into clean shape
+* glow pulse
+* label appears
+
+### 3. Reward Phase
+
+* credits burst outward
+* satisfying pop / ripple
+
+---
+
+# 🧩 Key UI Elements
+
+### Scan Overlay
+
+* circular “eye” indicator
+* prompts like:
+
+  * “move left”
+  * “capture top angle”
+
+---
+
+### 3D Viewer
+
+* rotatable object
+* transitions:
+
+  * rough → refined
+
+---
+
+### Reward Feedback
+
+* BIG moment:
+
+  * number count-up
+  * particle burst
+  * sound cue
+
+---
+
+# 💰 Reward System (Dopamine Engine)
+
+Reward based on:
+
+* ✔ number of angles captured
+* ✔ scan completeness
+* ✔ uniqueness of object
+* ✔ contribution to existing object
+
+---
+
+## Feedback must be:
+
+* immediate
+* visible
+* satisfying
+
+---
+
+# 🧠 Concept Layer (Background System)
+
+Designer does NOT need to build this, but must reflect it:
+
+* objects become **nodes in a visual system**
+* each scan contributes to a larger structure
+* user feels part of something growing
+
+---
+
+# 🎮 Gamification Hooks
+
+* “New discovery” badge
+* “Completed object” bonus
+* “Rare object” multiplier
+* streaks for scanning
+
+---
+
+# 📱 UX Priorities
+
+1. **Instant feedback** (no dead time)
+2. **Clear progress** during scanning
+3. **Strong reward moment**
+4. **Simple interaction** (no complexity)
+
+---
+
+# ⚠️ Avoid
+
+* long processing delays
+* unclear scanning instructions
+* weak reward feedback
+* static visuals
+
+---
+
+# 🚀 North Star Experience
+
+User scans an object and feels:
+
+> “I captured something real, turned it into a digital form, and got rewarded instantly.”
+
+---
+
+# 🔮 Future (for awareness)
+
+* objects connect into a 3D “concept space”
+* users explore a visual memory world (VR-ready)
+
+---
+
+# ✅ Deliverables Needed
+
+* Scan UI concept
+* 3D object generation states (3 phases)
+* Reward animation system
+* Basic user flow screens
+
+---
+
+# 💬 Final Note
+
+This is NOT just a scanner.
+
+It is:
+
+> a **discovery + creation + reward engine**
+
+Every interaction should reinforce:
+
+* curiosity
+* control
+* instant payoff

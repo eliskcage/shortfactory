@@ -1,0 +1,2333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ShortFactory × Advertainment</title>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(r=>r.forEach(sw=>sw.unregister()));}</script>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
+
+:root {
+  --sf-pink: #ff3cac;
+  --sf-purple: #ff3cac;
+  --sf-green: #00ff88;
+  --sf-dark: #03040a;
+  --sf-card: rgba(255,255,255,0.03);
+  --sf-border: #1a1f2e;
+}
+
+body {
+  background: #03040a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100vh;
+  font-family: 'DM Mono', monospace;
+  overflow-x: hidden;
+  overflow-y: auto;
+  position: relative;
+}
+
+/* ═══════════════════════════════════════════════
+   NEURAL CANVAS BACKGROUND
+═══════════════════════════════════════════════ */
+#neural-canvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+  opacity: 0.07;
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════════
+   STATION HEADER
+═══════════════════════════════════════════════ */
+.station-header {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+}
+
+/* ═══════════════════════════════════════════════
+   PHONE SHELL - iPhone 14 Pro dimensions
+═══════════════════════════════════════════════ */
+.phone-shell {
+  width: 393px;
+  height: 852px;
+  background: #03040a;
+  border-radius: 55px;
+  border: 2px solid #1a1f2e;
+  box-shadow:
+    0 0 80px rgba(255,60,172,0.15),
+    0 0 160px rgba(0,229,255,0.06),
+    0 50px 150px rgba(0,0,0,0.95),
+    inset 0 0 0 1px #111;
+  position: relative;
+  overflow: hidden;
+  z-index: 10;
+  margin-bottom: 40px;
+}
+
+/* Dynamic Island */
+.dynamic-island {
+  position: absolute;
+  top: 12px; left: 50%;
+  transform: translateX(-50%);
+  width: 126px; height: 37px;
+  background: #000;
+  border-radius: 24px;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.di-time {
+  font-size: 15px;
+  font-weight: 500;
+  color: #fff;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.02em;
+}
+
+/* ═══════════════════════════════════════════════
+   SCREEN SYSTEM
+═══════════════════════════════════════════════ */
+.screen {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  display: none;
+  flex-direction: column;
+  background: var(--sf-dark);
+}
+
+.screen.active { display: flex; }
+
+/* ═══════════════════════════════════════════════
+   SCREEN 1: MYSTERIOUS LOADING
+═══════════════════════════════════════════════ */
+#screen-boot {
+  background: #03040a;
+  justify-content: center;
+  align-items: center;
+}
+
+.boot-container {
+  text-align: center;
+  position: relative;
+}
+
+.boot-shapes {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin-bottom: 50px;
+  position: relative;
+}
+
+.boot-shape {
+  width: 50px; height: 50px;
+  opacity: 0;
+  animation: boot-shape-in 0.6s ease forwards;
+}
+
+.boot-shape:nth-child(1) { animation-delay: 0.2s; }
+.boot-shape:nth-child(2) { animation-delay: 0.4s; }
+.boot-shape:nth-child(3) { animation-delay: 0.6s; }
+
+@keyframes boot-shape-in {
+  0% { opacity: 0; transform: scale(0) rotate(-180deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+.bs-circle {
+  width: 50px; height: 50px;
+  border: 3px solid var(--sf-pink);
+  border-radius: 50%;
+  animation: shape-pulse 2s ease-in-out infinite;
+}
+
+.bs-triangle {
+  width: 0; height: 0;
+  border-left: 25px solid transparent;
+  border-right: 25px solid transparent;
+  border-bottom: 43px solid var(--sf-pink);
+  animation: shape-pulse 2s ease-in-out infinite 0.3s;
+}
+
+.bs-square {
+  width: 50px; height: 50px;
+  border: 3px solid var(--sf-pink);
+  animation: shape-pulse 2s ease-in-out infinite 0.6s;
+}
+
+@keyframes shape-pulse {
+  0%, 100% { opacity: 1; filter: drop-shadow(0 0 8px rgba(255,60,172,0.5)); }
+  50% { opacity: 0.7; filter: drop-shadow(0 0 20px rgba(255,60,172,0.9)); }
+}
+
+.boot-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 48px;
+  color: #ffd60a;
+  letter-spacing: 0.1em;
+  opacity: 0;
+  animation: fade-up 0.8s ease 1s forwards;
+}
+
+.boot-logo span { color: #ffd60a; }
+
+.boot-tagline {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: #4a5168;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  margin-top: 8px;
+  opacity: 0;
+  animation: fade-up 0.8s ease 1.2s forwards;
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.boot-loading {
+  margin-top: 60px;
+  opacity: 0;
+  animation: fade-up 0.8s ease 1.5s forwards;
+}
+
+.boot-bar {
+  width: 200px;
+  height: 2px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 0 auto;
+}
+
+.boot-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: #ff3cac;
+  border-radius: 2px;
+  animation: boot-load 2.5s ease 1.8s forwards;
+}
+
+@keyframes boot-load {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+
+.boot-status {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: #4a5168;
+  margin-top: 16px;
+  letter-spacing: 0.1em;
+}
+
+/* ═══════════════════════════════════════════════
+   SCREEN 2: CHALLENGE INTRO
+═══════════════════════════════════════════════ */
+#screen-intro {
+  background: linear-gradient(180deg, #03040a 0%, #07020a 50%, #03040a 100%);
+}
+
+.intro-bg-image {
+  position: absolute;
+  inset: 0;
+  background-image: url('/trump/sqassets/grok-app-mobile.png');
+  background-size: cover;
+  background-position: center top;
+  opacity: 0;
+  animation: intro-bg-in 1.2s ease 0.3s forwards;
+}
+
+@keyframes intro-bg-in {
+  from { opacity: 0; transform: scale(1.05); }
+  to { opacity: 0.6; transform: scale(1); }
+}
+
+.intro-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(0,0,0,0.5) 0%,
+    rgba(0,0,0,0.2) 30%,
+    rgba(0,0,0,0.1) 50%,
+    rgba(0,0,0,0.7) 80%,
+    rgba(0,0,0,0.98) 100%
+  );
+}
+
+.intro-content {
+  position: relative;
+  z-index: 10;
+  padding: 0 24px;
+  margin-top: auto;
+  margin-bottom: 40px;
+}
+
+.intro-shapes {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.intro-shape {
+  width: 40px; height: 40px;
+  opacity: 0;
+  animation: shape-drop 0.6s ease forwards;
+}
+
+.intro-shape:nth-child(1) { animation-delay: 0.5s; }
+.intro-shape:nth-child(2) { animation-delay: 0.65s; }
+.intro-shape:nth-child(3) { animation-delay: 0.8s; }
+
+@keyframes shape-drop {
+  from { opacity: 0; transform: translateY(-30px) scale(0.5); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.is-circle { border: 2px solid #ff3cac; border-radius: 50%; }
+.is-triangle {
+  width: 0; height: 0;
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+  border-bottom: 35px solid #ff3cac;
+}
+.is-square { border: 2px solid #ff3cac; }
+
+.intro-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 44px;
+  color: #fff;
+  text-align: center;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  opacity: 0;
+  animation: fade-up 0.8s ease 1s forwards;
+}
+
+.intro-title span { color: #ff3cac; }
+
+.intro-subtitle {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+  text-align: center;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-top: 8px;
+  opacity: 0;
+  animation: fade-up 0.8s ease 1.2s forwards;
+}
+
+.intro-timer-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(255,60,172,0.15);
+  border: 1px solid rgba(255,60,172,0.4);
+  border-radius: 2px;
+  padding: 10px 24px;
+  margin: 24px auto;
+  width: fit-content;
+  opacity: 0;
+  animation: fade-up 0.8s ease 1.4s forwards;
+}
+
+.itb-icon { font-size: 18px; }
+.itb-text {
+  font-family: 'DM Mono', monospace;
+  font-size: 18px;
+  color: #ff3cac;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+}
+
+.intro-steps {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  opacity: 0;
+  animation: fade-up 0.8s ease 1.6s forwards;
+}
+
+.intro-step {
+  flex: 1;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 2px;
+  padding: 14px 8px;
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.intro-step:hover {
+  background: rgba(255,60,172,0.08);
+  border-color: rgba(255,60,172,0.3);
+}
+
+.step-icon { font-size: 24px; margin-bottom: 6px; }
+.step-label { font-size: 9px; color: rgba(255,255,255,0.4); letter-spacing: 0.1em; text-transform: uppercase; }
+.step-value { font-size: 13px; color: #ff3cac; font-weight: 500; margin-top: 4px; font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.05em; }
+
+.btn-begin {
+  width: 100%;
+  padding: 20px;
+  background: #ff3cac;
+  border: none;
+  border-radius: 2px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px;
+  letter-spacing: 0.15em;
+  color: #000;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  opacity: 0;
+  animation: fade-up 0.8s ease 1.8s forwards;
+  transition: transform 0.2s;
+}
+
+.btn-begin:active { transform: scale(0.97); }
+
+.btn-begin::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent 50%);
+}
+
+.btn-begin::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 40%,
+    rgba(255,255,255,0.1) 50%,
+    transparent 60%
+  );
+  animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) rotate(45deg); }
+}
+
+/* ═══════════════════════════════════════════════
+   SCREEN 3: MAIN HUB (GROK-STYLE)
+═══════════════════════════════════════════════ */
+#screen-hub {
+  background: #0a0c14;
+}
+
+.hub-statusbar {
+  height: 54px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 24px 10px;
+  flex-shrink: 0;
+}
+
+.hsb-left {
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  font-family: 'DM Mono', monospace;
+}
+
+.hsb-right {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 12px;
+  color: #fff;
+  font-family: 'DM Mono', monospace;
+}
+
+.hub-header {
+  padding: 12px 20px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #1a1f2e;
+  flex-shrink: 0;
+}
+
+.hh-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.hh-logo {
+  width: 32px; height: 32px;
+  background: #ff3cac;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  color: #000;
+}
+
+.hh-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 0.05em;
+}
+
+.hh-credits {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,60,172,0.08);
+  border: 1px solid rgba(255,60,172,0.25);
+  border-radius: 2px;
+  padding: 6px 14px;
+}
+
+.hh-credits-icon { font-size: 14px; }
+.hh-credits-val {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  color: #ff3cac;
+}
+
+.hub-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  scrollbar-width: none;
+}
+.hub-scroll::-webkit-scrollbar { display: none; }
+
+.hub-greeting {
+  margin-bottom: 24px;
+}
+
+.hub-greeting h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #eef0f5;
+  margin-bottom: 8px;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 0.05em;
+}
+
+.hub-greeting p {
+  font-size: 13px;
+  color: #8890a8;
+  line-height: 1.5;
+  font-family: 'DM Mono', monospace;
+}
+
+/* Challenge Banner */
+.challenge-banner {
+  background: rgba(255,60,172,0.06);
+  border: 1px solid #ff3cac;
+  border-radius: 2px;
+  padding: 18px;
+  margin-bottom: 24px;
+  cursor: pointer;
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+
+.challenge-banner::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,60,172,0.08), transparent);
+  animation: banner-scan 4s infinite;
+}
+
+@keyframes banner-scan {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+.challenge-banner:active {
+  transform: scale(0.98);
+  border-color: #ff3cac;
+}
+
+.cb-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.cb-live {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #ff3cac;
+  letter-spacing: 0.1em;
+  font-family: 'DM Mono', monospace;
+}
+
+.cb-live-dot {
+  width: 8px; height: 8px;
+  background: #ff3cac;
+  border-radius: 50%;
+  animation: live-pulse 1s infinite;
+}
+
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255,60,172,0.5); }
+  50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(255,60,172,0); }
+}
+
+.cb-timer {
+  font-family: 'DM Mono', monospace;
+  font-size: 14px;
+  color: #ff3cac;
+  font-weight: 500;
+}
+
+.cb-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #eef0f5;
+  margin-bottom: 4px;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 0.05em;
+}
+
+.cb-desc {
+  font-size: 12px;
+  color: #8890a8;
+  line-height: 1.4;
+  font-family: 'DM Mono', monospace;
+}
+
+/* Quick Actions */
+.section-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #4a5168;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  font-family: 'DM Mono', monospace;
+}
+
+.quick-chips {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+
+.qc-chip {
+  padding: 10px 16px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid #1a1f2e;
+  border-radius: 2px;
+  font-size: 12px;
+  color: #8890a8;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'DM Mono', monospace;
+}
+
+.qc-chip:active {
+  background: rgba(255,60,172,0.15);
+  border-color: rgba(255,60,172,0.4);
+  color: #ff3cac;
+  transform: scale(0.96);
+}
+
+/* Creation Card */
+.creation-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid #1a1f2e;
+  border-radius: 2px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-bottom: 20px;
+}
+
+.creation-card:active {
+  transform: scale(0.98);
+  border-color: rgba(255,60,172,0.3);
+}
+
+.cc-image {
+  width: 100%;
+  height: 180px;
+  background: linear-gradient(135deg, #0d0015, #07090f);
+  position: relative;
+  overflow: hidden;
+}
+
+.cc-image img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+
+.cc-body {
+  padding: 16px;
+}
+
+.cc-label {
+  font-size: 10px;
+  color: #4a5168;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  font-family: 'DM Mono', monospace;
+}
+
+.cc-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #eef0f5;
+  margin-bottom: 6px;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 0.05em;
+}
+
+.cc-meta {
+  font-size: 11px;
+  color: #8890a8;
+  font-family: 'DM Mono', monospace;
+}
+
+/* Bottom Input */
+.hub-input {
+  padding: 14px 20px 30px;
+  background: #0a0c14;
+  border-top: 1px solid #1a1f2e;
+  flex-shrink: 0;
+}
+
+.hi-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid #1a1f2e;
+  border-radius: 2px;
+  padding: 12px 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.hi-row:active {
+  border-color: rgba(255,60,172,0.4);
+  background: rgba(255,60,172,0.05);
+}
+
+.hi-add {
+  width: 24px; height: 24px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: rgba(255,255,255,0.5);
+}
+
+.hi-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  color: #8890a8;
+  pointer-events: none;
+  font-family: 'DM Mono', monospace;
+}
+
+.hi-btn {
+  background: #ff3cac;
+  border: none;
+  border-radius: 2px;
+  padding: 10px 18px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #000;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.05em;
+}
+
+/* ═══════════════════════════════════════════════
+   SCREEN 4: PROMPT SELECTOR
+═══════════════════════════════════════════════ */
+#screen-prompts {
+  background: #0a0c14;
+}
+
+.prompts-header {
+  padding: 60px 20px 20px;
+  flex-shrink: 0;
+}
+
+.ph-back {
+  font-size: 28px;
+  color: #8890a8;
+  cursor: pointer;
+  margin-bottom: 20px;
+  width: fit-content;
+  transition: color 0.2s;
+}
+
+.ph-back:active { color: #ff3cac; }
+
+.ph-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px;
+  color: #eef0f5;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.ph-title span { color: #ff3cac; }
+
+.ph-sub {
+  font-size: 13px;
+  color: #8890a8;
+  margin-bottom: 20px;
+  font-family: 'DM Mono', monospace;
+}
+
+.ph-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255,60,172,0.06);
+  border: 1px solid rgba(255,60,172,0.25);
+  border-radius: 2px;
+  padding: 14px 18px;
+}
+
+.php-label {
+  font-size: 11px;
+  color: #8890a8;
+  font-weight: 500;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.05em;
+}
+
+.php-dots {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.php-dot {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #4a5168;
+  transition: all 0.4s;
+  font-family: 'DM Mono', monospace;
+}
+
+.php-dot.done {
+  background: rgba(255,60,172,0.2);
+  border-color: #ff3cac;
+  color: #ff3cac;
+}
+
+.prompts-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 20px 30px;
+  scrollbar-width: none;
+}
+.prompts-scroll::-webkit-scrollbar { display: none; }
+
+.prompt-section {
+  margin-bottom: 28px;
+}
+
+.ps-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #4a5168;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'DM Mono', monospace;
+}
+
+.ps-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #1a1f2e;
+}
+
+.prompt-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.prompt-tile {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid #1a1f2e;
+  border-radius: 2px;
+  padding: 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.prompt-tile::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,60,172,0.1), transparent);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.prompt-tile:active {
+  transform: scale(0.96);
+  border-color: rgba(255,60,172,0.5);
+}
+
+.prompt-tile:active::before { opacity: 1; }
+
+.pt-icon { font-size: 32px; margin-bottom: 10px; }
+.pt-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #eef0f5;
+  margin-bottom: 6px;
+  line-height: 1.3;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 0.04em;
+}
+.pt-reward {
+  font-size: 11px;
+  color: #ff3cac;
+  font-weight: 500;
+  font-family: 'DM Mono', monospace;
+}
+
+.prompt-tile.squid {
+  border-color: rgba(255,60,172,0.15);
+  background: rgba(255,60,172,0.04);
+}
+
+/* ═══════════════════════════════════════════════
+   SCREEN 5: GENERATING
+═══════════════════════════════════════════════ */
+#screen-generating {
+  background: radial-gradient(ellipse at 50% 40%, rgba(255,60,172,0.08) 0%, transparent 60%),
+              #03040a;
+  align-items: center;
+  justify-content: center;
+}
+
+.gen-container {
+  text-align: center;
+  padding: 0 30px;
+  width: 100%;
+}
+
+.gen-visual {
+  width: 140px;
+  height: 140px;
+  margin: 0 auto 36px;
+  position: relative;
+}
+
+.gen-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid transparent;
+}
+
+.gen-ring-1 {
+  inset: 0;
+  border-top-color: #ff3cac;
+  border-right-color: rgba(255,60,172,0.3);
+  animation: gen-spin 1.5s linear infinite;
+}
+
+.gen-ring-2 {
+  inset: 15px;
+  border-top-color: #ff3cac;
+  border-left-color: rgba(255,60,172,0.3);
+  animation: gen-spin 1s linear infinite reverse;
+}
+
+.gen-ring-3 {
+  inset: 30px;
+  border-top-color: #ffd60a;
+  animation: gen-spin 0.7s linear infinite;
+}
+
+@keyframes gen-spin {
+  to { transform: rotate(360deg); }
+}
+
+.gen-shapes-center {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  gap: 6px;
+}
+
+.gsc {
+  animation: shape-breathe 1.2s ease-in-out infinite alternate;
+}
+
+.gsc:nth-child(2) { animation-delay: 0.2s; }
+.gsc:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes shape-breathe {
+  from { opacity: 0.4; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.gsc-c {
+  width: 14px; height: 14px;
+  border: 2px solid #ff3cac;
+  border-radius: 50%;
+}
+
+.gsc-t {
+  width: 0; height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-bottom: 12px solid #ff3cac;
+}
+
+.gsc-s {
+  width: 14px; height: 14px;
+  border: 2px solid #ff3cac;
+}
+
+.gen-prompt {
+  font-size: 17px;
+  font-weight: 500;
+  color: #eef0f5;
+  margin-bottom: 12px;
+  line-height: 1.4;
+  font-family: 'DM Mono', monospace;
+}
+
+.gen-status {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: #4a5168;
+  letter-spacing: 0.12em;
+  margin-bottom: 30px;
+  animation: text-blink 1s step-end infinite;
+}
+
+@keyframes text-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.gen-progress-track {
+  width: 100%;
+  height: 3px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 30px;
+}
+
+.gen-progress-fill {
+  height: 100%;
+  background: #ff3cac;
+  border-radius: 10px;
+  width: 0%;
+  transition: width 0.4s ease;
+}
+
+.gen-steps {
+  text-align: left;
+  max-width: 280px;
+  margin: 0 auto;
+}
+
+.gs-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  font-size: 12px;
+  color: #4a5168;
+  transition: all 0.3s;
+  font-family: 'DM Mono', monospace;
+}
+
+.gs-item.done { color: #8890a8; }
+.gs-item.active { color: #eef0f5; }
+
+.gs-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.12);
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+
+.gs-item.done .gs-dot { background: #00ff88; }
+.gs-item.active .gs-dot {
+  background: #ff3cac;
+  animation: dot-pulse 0.8s ease infinite;
+}
+
+@keyframes dot-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,60,172,0.4); }
+  50% { transform: scale(1.3); box-shadow: 0 0 0 4px rgba(255,60,172,0); }
+}
+
+/* ═══════════════════════════════════════════════
+   SCREEN 6: RESULT
+═══════════════════════════════════════════════ */
+#screen-result {
+  background: #0a0c14;
+}
+
+.result-header {
+  padding: 60px 20px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.rh-back {
+  font-size: 28px;
+  color: #8890a8;
+  cursor: pointer;
+}
+
+.rh-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #eef0f5;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 0.08em;
+}
+
+.rh-credits {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,60,172,0.12);
+  border: 1px solid rgba(255,60,172,0.35);
+  border-radius: 2px;
+  padding: 8px 16px;
+}
+
+.rhc-icon { font-size: 14px; }
+.rhc-val {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  color: #ff3cac;
+}
+
+.result-image-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.ri-image {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  animation: image-reveal 1s ease forwards;
+}
+
+@keyframes image-reveal {
+  from { transform: scale(1.1); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.ri-overlay {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: linear-gradient(180deg, transparent 20%, rgba(0,0,0,0.9) 100%);
+  padding: 50px 20px 20px;
+}
+
+.ri-prompt-label {
+  font-size: 10px;
+  color: #4a5168;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  font-family: 'DM Mono', monospace;
+}
+
+.ri-prompt-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #eef0f5;
+  line-height: 1.4;
+  font-family: 'DM Mono', monospace;
+}
+
+.result-actions {
+  display: flex;
+  gap: 10px;
+  padding: 18px 20px;
+  flex-shrink: 0;
+}
+
+.ra-btn {
+  flex: 1;
+  padding: 14px;
+  border-radius: 2px;
+  border: none;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.05em;
+}
+
+.ra-btn:active { transform: scale(0.96); }
+
+.ra-share {
+  background: #ff3cac;
+  color: #000;
+}
+
+.ra-save {
+  background: #00ff88;
+  color: #000;
+}
+
+.ra-remix {
+  background: #ff3cac;
+  color: #000;
+}
+
+.result-progress {
+  padding: 0 20px 24px;
+  flex-shrink: 0;
+}
+
+.rp-title {
+  font-size: 11px;
+  font-weight: 500;
+  color: #4a5168;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  font-family: 'DM Mono', monospace;
+}
+
+.rp-dots {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.rpd {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #4a5168;
+  transition: all 0.5s;
+  font-family: 'DM Mono', monospace;
+}
+
+.rpd.done {
+  background: rgba(255,60,172,0.2);
+  border-color: #ff3cac;
+  color: #ff3cac;
+}
+
+.rpd-spacer { flex: 1; }
+
+.rpd-total {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  color: #ff3cac;
+}
+
+/* Unlock Teaser */
+.unlock-teaser {
+  background: rgba(255,60,172,0.06);
+  border: 1px solid rgba(255,60,172,0.2);
+  border-radius: 2px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.unlock-teaser.unlocked {
+  opacity: 1;
+  pointer-events: auto;
+  border-color: rgba(255,60,172,0.5);
+  animation: unlock-glow 2s ease infinite alternate;
+}
+
+@keyframes unlock-glow {
+  from { box-shadow: 0 0 0 0 rgba(255,60,172,0); }
+  to { box-shadow: 0 0 30px rgba(255,60,172,0.25); }
+}
+
+.ut-icon { font-size: 32px; }
+.ut-content { flex: 1; }
+.ut-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #eef0f5;
+  margin-bottom: 4px;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 0.04em;
+}
+.ut-desc {
+  font-size: 11px;
+  color: #8890a8;
+  line-height: 1.4;
+  font-family: 'DM Mono', monospace;
+}
+
+/* ═══════════════════════════════════════════════
+   SCREEN 7: UNLOCK / REWARD
+═══════════════════════════════════════════════ */
+#screen-unlock {
+  background: linear-gradient(180deg, #07000e 0%, #03040a 100%);
+}
+
+.unlock-bg {
+  position: absolute;
+  inset: 0;
+  background-image: url('/trump/sqassets/advertainment-hard-takeover.jpg');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.15;
+  filter: blur(2px);
+}
+
+.unlock-content {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 60px 24px 36px;
+}
+
+.unlock-logo {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.ul-mark {
+  width: 70px; height: 70px;
+  background: #ff3cac;
+  clip-path: polygon(0 0, 70% 0, 100% 50%, 70% 100%, 0 100%, 30% 50%);
+  margin: 0 auto 14px;
+  animation: mark-glow 2.5s ease-in-out infinite;
+}
+
+@keyframes mark-glow {
+  0%, 100% { filter: drop-shadow(0 0 15px rgba(255,60,172,0.5)); }
+  50% { filter: drop-shadow(0 0 35px rgba(255,60,172,0.9)); }
+}
+
+.ul-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 42px;
+  color: #eef0f5;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.ul-title span { color: #ff3cac; }
+
+.ul-sub {
+  font-size: 12px;
+  color: #8890a8;
+  line-height: 1.6;
+  font-family: 'DM Mono', monospace;
+}
+
+/* Slideshow */
+.unlock-slideshow {
+  width: 100%;
+  height: 200px;
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 24px;
+  flex-shrink: 0;
+}
+
+.us-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+
+.us-slide.active { opacity: 1; }
+
+.us-slide img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  animation: kenburns 10s ease-in-out infinite alternate;
+}
+
+@keyframes kenburns {
+  from { transform: scale(1); }
+  to { transform: scale(1.08); }
+}
+
+.us-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.8) 100%);
+}
+
+/* Visualizer */
+.unlock-visualizer {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  align-items: flex-end;
+  height: 28px;
+  margin-bottom: 20px;
+}
+
+.uv-bar {
+  width: 4px;
+  background: linear-gradient(180deg, #ff3cac, rgba(255,60,172,0.3));
+  border-radius: 2px;
+  animation: viz-bounce 0.6s ease-in-out infinite alternate;
+}
+
+.uv-bar:nth-child(1) { animation-delay: 0s; height: 8px; }
+.uv-bar:nth-child(2) { animation-delay: 0.1s; height: 16px; }
+.uv-bar:nth-child(3) { animation-delay: 0.05s; height: 10px; }
+.uv-bar:nth-child(4) { animation-delay: 0.15s; height: 20px; }
+.uv-bar:nth-child(5) { animation-delay: 0.08s; height: 12px; }
+.uv-bar:nth-child(6) { animation-delay: 0.2s; height: 18px; }
+.uv-bar:nth-child(7) { animation-delay: 0.12s; height: 8px; }
+.uv-bar:nth-child(8) { animation-delay: 0.18s; height: 14px; }
+
+@keyframes viz-bounce {
+  from { transform: scaleY(0.3); opacity: 0.4; }
+  to { transform: scaleY(1); opacity: 1; }
+}
+
+/* Earnings Grid */
+.unlock-earnings {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.ue-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid #1a1f2e;
+  border-radius: 2px;
+  padding: 16px 10px;
+  text-align: center;
+}
+
+.uec-icon { font-size: 24px; margin-bottom: 6px; }
+.uec-val {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px;
+  color: #ffd60a;
+}
+.uec-label {
+  font-size: 9px;
+  color: #4a5168;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-top: 4px;
+  font-family: 'DM Mono', monospace;
+}
+
+/* Share Buttons */
+.unlock-share {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.us-btn {
+  padding: 16px;
+  border-radius: 2px;
+  border: none;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.05em;
+}
+
+.us-btn:active { transform: scale(0.96); }
+
+.usb-tiktok {
+  background: #07090f;
+  border: 1px solid #1a1f2e;
+  color: #eef0f5;
+}
+
+.usb-insta {
+  background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+  color: #fff;
+}
+
+.usb-x {
+  background: #07090f;
+  border: 1px solid #1a1f2e;
+  color: #eef0f5;
+}
+
+.usb-sf {
+  background: #ff3cac;
+  color: #000;
+}
+
+/* ═══════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════ */
+.toast {
+  position: absolute;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(255,60,172,0.95);
+  color: #000;
+  padding: 12px 24px;
+  border-radius: 2px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.05em;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ═══════════════════════════════════════════════
+   PARTICLES (Background atmosphere)
+═══════════════════════════════════════════════ */
+.particles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: #ff3cac;
+  border-radius: 50%;
+  opacity: 0.3;
+  animation: float-up 8s linear infinite;
+}
+
+@keyframes float-up {
+  0% { transform: translateY(100vh) scale(0); opacity: 0; }
+  10% { opacity: 0.3; }
+  90% { opacity: 0.3; }
+  100% { transform: translateY(-100vh) scale(1); opacity: 0; }
+}
+</style>
+</head>
+<body>
+
+<!-- Neural Canvas Background -->
+<canvas id="neural-canvas"></canvas>
+
+<!-- Station Header -->
+<div class="station-header">
+  <div style="text-align:center;padding:20px 0 8px;position:relative;z-index:10;">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.3em;color:#ff3cac;">ADVERTAINMENT</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:38px;letter-spacing:.15em;color:#eef0f5;line-height:1;">THE MACHINE</div>
+    <div style="font-family:'DM Mono',monospace;font-size:10px;color:#8890a8;letter-spacing:.15em;margin-top:4px;">ENTER THE APP · CREATE THE AD · EARN FOREVER</div>
+    <a href="/trump/advertainment-pipeline.html" style="display:inline-block;margin-top:12px;font-family:'DM Mono',monospace;font-size:10px;color:#4a5168;letter-spacing:.15em;text-decoration:none;">← BACK TO PIPELINE</a>
+  </div>
+</div>
+
+<div class="phone-shell">
+  <!-- Dynamic Island -->
+  <div class="dynamic-island">
+    <div class="di-time" id="clock">9:41</div>
+  </div>
+
+  <!-- Particles for atmosphere -->
+  <div class="particles" id="particles"></div>
+
+  <!-- Audio elements -->
+  <audio id="audio-ambient" loop preload="auto">
+    <source src="/trump/sqassets/needles_dalgona.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="audio-generate" preload="auto">
+    <source src="/trump/sqassets/4billion.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="audio-unlock" preload="auto">
+    <source src="/trump/sqassets/delivery.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- ═══════════════════════════════════════════════
+       SCREEN 1: BOOT / LOADING
+  ═══════════════════════════════════════════════ -->
+  <div class="screen active" id="screen-boot">
+    <div class="boot-container">
+      <div class="boot-shapes">
+        <div class="boot-shape"><div class="bs-circle"></div></div>
+        <div class="boot-shape"><div class="bs-triangle"></div></div>
+        <div class="boot-shape"><div class="bs-square"></div></div>
+      </div>
+      <div class="boot-logo">Short<span>Factory</span></div>
+      <div class="boot-tagline">Advertainment Pipeline</div>
+      <div class="boot-loading">
+        <div class="boot-bar">
+          <div class="boot-bar-fill"></div>
+        </div>
+        <div class="boot-status">INITIALIZING CHALLENGE SYSTEM</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       SCREEN 2: INTRO
+  ═══════════════════════════════════════════════ -->
+  <div class="screen" id="screen-intro">
+    <div class="intro-bg-image"></div>
+    <div class="intro-overlay"></div>
+    <div class="intro-content">
+      <div class="intro-shapes">
+        <div class="intro-shape"><div class="is-circle"></div></div>
+        <div class="intro-shape"><div class="is-triangle"></div></div>
+        <div class="intro-shape"><div class="is-square"></div></div>
+      </div>
+      <div class="intro-title">Short<span>Factory</span></div>
+      <div class="intro-subtitle">Advertainment Challenge</div>
+      <div class="intro-timer-badge">
+        <div class="itb-icon">⏱</div>
+        <div class="itb-text" id="intro-timer">29:47:12</div>
+      </div>
+      <div class="intro-steps">
+        <div class="intro-step">
+          <div class="step-icon">🎨</div>
+          <div class="step-label">Imagine</div>
+          <div class="step-value">+10 Credits</div>
+        </div>
+        <div class="intro-step">
+          <div class="step-icon">🎬</div>
+          <div class="step-label">Create</div>
+          <div class="step-value">Build Ad</div>
+        </div>
+        <div class="intro-step">
+          <div class="step-icon">💎</div>
+          <div class="step-label">Earn</div>
+          <div class="step-value">SFT Tokens</div>
+        </div>
+      </div>
+      <button class="btn-begin" onclick="startChallenge()">BEGIN THE CHALLENGE</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       SCREEN 3: MAIN HUB
+  ═══════════════════════════════════════════════ -->
+  <div class="screen" id="screen-hub">
+    <div class="hub-statusbar">
+      <div class="hsb-left" id="hub-clock">9:41</div>
+      <div class="hsb-right">
+        <span>██████</span>
+        <span>WiFi</span>
+        <span>100%</span>
+      </div>
+    </div>
+
+    <div class="hub-header">
+      <div class="hh-brand">
+        <div class="hh-logo">SF</div>
+        <div class="hh-name">Imagine</div>
+      </div>
+      <div class="hh-credits">
+        <div class="hh-credits-icon">🪙</div>
+        <div class="hh-credits-val" id="hub-credits">0</div>
+      </div>
+    </div>
+
+    <div class="hub-scroll">
+      <div class="hub-greeting">
+        <h2>What will you create?</h2>
+        <p>Your imagination becomes an advertisement. Create content. Earn rewards. The pipeline is yours.</p>
+      </div>
+
+      <div class="challenge-banner" onclick="goTo('screen-prompts')">
+        <div class="cb-top">
+          <div class="cb-live">
+            <div class="cb-live-dot"></div>
+            LIVE CHALLENGE
+          </div>
+          <div class="cb-timer" id="banner-timer">29:47:12</div>
+        </div>
+        <div class="cb-title">Squid Game Advertainment Challenge</div>
+        <div class="cb-desc">Complete 3 creative challenges. Unlock your personalized ShortFactory video. Convert credits to SFT tokens.</div>
+      </div>
+
+      <div class="section-label">Quick Start</div>
+      <div class="quick-chips">
+        <div class="qc-chip" onclick="selectPrompt('Dalgona candy challenge scene')">Dalgona</div>
+        <div class="qc-chip" onclick="selectPrompt('Red light green light robot')">Red Light</div>
+        <div class="qc-chip" onclick="selectPrompt('Giant piggy bank of cash')">Cash Pot</div>
+        <div class="qc-chip" onclick="selectPrompt('ShortFactory creators winning')">Winners</div>
+      </div>
+
+      <div class="section-label">Featured Template</div>
+      <div class="creation-card" onclick="goTo('screen-prompts')">
+        <div class="cc-image">
+          <img src="/trump/sqassets/card1.png" alt="Template" onerror="this.style.opacity=0.3">
+        </div>
+        <div class="cc-body">
+          <div class="cc-label">Advertainment Template</div>
+          <div class="cc-title">Squid Game Creator Challenge</div>
+          <div class="cc-meta">3 challenges = 30 credits = SFT tokens</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hub-input">
+      <div class="hi-row" onclick="goTo('screen-prompts')">
+        <div class="hi-add">+</div>
+        <div class="hi-input">Describe your imagination...</div>
+        <div class="hi-btn">Imagine</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       SCREEN 4: PROMPT SELECTOR
+  ═══════════════════════════════════════════════ -->
+  <div class="screen" id="screen-prompts">
+    <div class="prompts-header">
+      <div class="ph-back" onclick="goTo('screen-hub')">‹</div>
+      <div class="ph-title">Imagine <span>It</span></div>
+      <div class="ph-sub">Select a challenge. Each creation earns credits toward your SFT unlock.</div>
+      <div class="ph-progress">
+        <div class="php-label">Challenge Progress</div>
+        <div class="php-dots">
+          <div class="php-dot" id="pd-0">1</div>
+          <div class="php-dot" id="pd-1">2</div>
+          <div class="php-dot" id="pd-2">3</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="prompts-scroll">
+      <div class="prompt-section">
+        <div class="ps-label">Squid Game Themes</div>
+        <div class="prompt-grid">
+          <div class="prompt-tile squid" onclick="selectPrompt('Dalgona candy challenge with needle and honeycomb')">
+            <div class="pt-icon">🍬</div>
+            <div class="pt-name">Dalgona Challenge</div>
+            <div class="pt-reward">+10 Credits</div>
+          </div>
+          <div class="prompt-tile squid" onclick="selectPrompt('Giant robot doll scanning for movement')">
+            <div class="pt-icon">🤖</div>
+            <div class="pt-name">Red Light Robot</div>
+            <div class="pt-reward">+10 Credits</div>
+          </div>
+          <div class="prompt-tile squid" onclick="selectPrompt('Tug of war on elevated glass bridge')">
+            <div class="pt-icon">🌉</div>
+            <div class="pt-name">Tug of War</div>
+            <div class="pt-reward">+10 Credits</div>
+          </div>
+          <div class="prompt-tile squid" onclick="selectPrompt('Marbles game in rainy abandoned village')">
+            <div class="pt-icon">🔮</div>
+            <div class="pt-name">Marble Game</div>
+            <div class="pt-reward">+10 Credits</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="prompt-section">
+        <div class="ps-label">ShortFactory Originals</div>
+        <div class="prompt-grid">
+          <div class="prompt-tile" onclick="selectPrompt('Giant piggy bank overflowing with gold coins')">
+            <div class="pt-icon">🐷</div>
+            <div class="pt-name">Cash Piggy Bank</div>
+            <div class="pt-reward">+10 Credits</div>
+          </div>
+          <div class="prompt-tile" onclick="selectPrompt('Creator filming viral content on smartphone')">
+            <div class="pt-icon">📱</div>
+            <div class="pt-name">Viral Creator</div>
+            <div class="pt-reward">+10 Credits</div>
+          </div>
+          <div class="prompt-tile" onclick="selectPrompt('SFT tokens floating into digital wallet')">
+            <div class="pt-icon">💎</div>
+            <div class="pt-name">SFT Tokens</div>
+            <div class="pt-reward">+10 Credits</div>
+          </div>
+          <div class="prompt-tile" onclick="selectPrompt('Leaderboard showing top earning creators')">
+            <div class="pt-icon">🏆</div>
+            <div class="pt-name">Winners Board</div>
+            <div class="pt-reward">+10 Credits</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="prompt-section">
+        <div class="ps-label">Brand Campaigns</div>
+        <div class="prompt-grid">
+          <div class="prompt-tile" onclick="selectPrompt('Futuristic Coca Cola can in squid game arena')">
+            <div class="pt-icon">🥤</div>
+            <div class="pt-name">Coke × Squid</div>
+            <div class="pt-reward">+15 Brand Bonus</div>
+          </div>
+          <div class="prompt-tile" onclick="selectPrompt('Nike sneakers on squid game glass bridge')">
+            <div class="pt-icon">👟</div>
+            <div class="pt-name">Nike × Bridge</div>
+            <div class="pt-reward">+15 Brand Bonus</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       SCREEN 5: GENERATING
+  ═══════════════════════════════════════════════ -->
+  <div class="screen" id="screen-generating">
+    <div class="gen-container">
+      <div class="gen-visual">
+        <div class="gen-ring gen-ring-1"></div>
+        <div class="gen-ring gen-ring-2"></div>
+        <div class="gen-ring gen-ring-3"></div>
+        <div class="gen-shapes-center">
+          <div class="gsc"><div class="gsc-c"></div></div>
+          <div class="gsc"><div class="gsc-t"></div></div>
+          <div class="gsc"><div class="gsc-s"></div></div>
+        </div>
+      </div>
+      <div class="gen-prompt" id="gen-prompt">Imagining your creation...</div>
+      <div class="gen-status" id="gen-status">INITIALIZING IMAGINE ENGINE</div>
+      <div class="gen-progress-track">
+        <div class="gen-progress-fill" id="gen-progress"></div>
+      </div>
+      <div class="gen-steps">
+        <div class="gs-item" id="gs-0"><div class="gs-dot"></div>Reading your vision</div>
+        <div class="gs-item" id="gs-1"><div class="gs-dot"></div>Analyzing theme elements</div>
+        <div class="gs-item" id="gs-2"><div class="gs-dot"></div>Composing visual scene</div>
+        <div class="gs-item" id="gs-3"><div class="gs-dot"></div>Applying ShortFactory style</div>
+        <div class="gs-item" id="gs-4"><div class="gs-dot"></div>Rendering final output</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       SCREEN 6: RESULT
+  ═══════════════════════════════════════════════ -->
+  <div class="screen" id="screen-result">
+    <div class="result-header">
+      <div class="rh-back" onclick="goTo('screen-prompts')">‹</div>
+      <div class="rh-title">Your Creation</div>
+      <div class="rh-credits">
+        <div class="rhc-icon">🪙</div>
+        <div class="rhc-val" id="result-credit-gain">+10</div>
+      </div>
+    </div>
+
+    <div class="result-image-container">
+      <img class="ri-image" id="result-img" src="" alt="Generated">
+      <div class="ri-overlay">
+        <div class="ri-prompt-label">Your Prompt</div>
+        <div class="ri-prompt-text" id="result-prompt">—</div>
+      </div>
+    </div>
+
+    <div class="result-actions">
+      <button class="ra-btn ra-share" onclick="showToast('Opening share sheet...')">Share</button>
+      <button class="ra-btn ra-save" onclick="showToast('Saved to gallery!')">Save</button>
+      <button class="ra-btn ra-remix" onclick="goTo('screen-prompts')">Remix</button>
+    </div>
+
+    <div class="result-progress">
+      <div class="rp-title">Challenge Progress</div>
+      <div class="rp-dots">
+        <div class="rpd" id="rpd-0">1</div>
+        <div class="rpd" id="rpd-1">2</div>
+        <div class="rpd" id="rpd-2">3</div>
+        <div class="rpd-spacer"></div>
+        <div class="rpd-total" id="rp-total">0 🪙</div>
+      </div>
+
+      <div class="unlock-teaser" id="unlock-teaser" onclick="handleUnlock()">
+        <div class="ut-icon" id="ut-icon">🔒</div>
+        <div class="ut-content">
+          <div class="ut-title" id="ut-title">ShortFactory Video Locked</div>
+          <div class="ut-desc" id="ut-desc">Complete 3 challenges to unlock your personalized advertainment video!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       SCREEN 7: UNLOCK
+  ═══════════════════════════════════════════════ -->
+  <div class="screen" id="screen-unlock">
+    <div class="unlock-bg"></div>
+    <div class="unlock-content">
+      <div class="unlock-logo">
+        <div class="ul-mark"></div>
+        <div class="ul-title">Short<span>Factory</span></div>
+        <div class="ul-sub">Your advertainment video is ready! Share it and earn SFT tokens with every view.</div>
+      </div>
+
+      <div class="unlock-slideshow" id="unlock-slideshow">
+        <div class="us-slide active" id="us-0">
+          <img src="/trump/sqassets/card1.png" alt="">
+          <div class="us-overlay"></div>
+        </div>
+        <div class="us-slide" id="us-1">
+          <img src="/trump/sqassets/card2.png" alt="">
+          <div class="us-overlay"></div>
+        </div>
+        <div class="us-slide" id="us-2">
+          <img src="/trump/sqassets/card4.png" alt="">
+          <div class="us-overlay"></div>
+        </div>
+        <div class="us-slide" id="us-3">
+          <img src="/trump/sqassets/card7cash.png" alt="">
+          <div class="us-overlay"></div>
+        </div>
+      </div>
+
+      <div class="unlock-visualizer">
+        <div class="uv-bar"></div>
+        <div class="uv-bar"></div>
+        <div class="uv-bar"></div>
+        <div class="uv-bar"></div>
+        <div class="uv-bar"></div>
+        <div class="uv-bar"></div>
+        <div class="uv-bar"></div>
+        <div class="uv-bar"></div>
+      </div>
+
+      <div class="unlock-earnings">
+        <div class="ue-card">
+          <div class="uec-icon">🪙</div>
+          <div class="uec-val" id="ue-credits">30</div>
+          <div class="uec-label">Credits</div>
+        </div>
+        <div class="ue-card">
+          <div class="uec-icon">💎</div>
+          <div class="uec-val">0.3</div>
+          <div class="uec-label">SFT Tokens</div>
+        </div>
+        <div class="ue-card">
+          <div class="uec-icon">💰</div>
+          <div class="uec-val">+£?</div>
+          <div class="uec-label">Per 1K Views</div>
+        </div>
+      </div>
+
+      <div class="unlock-share">
+        <button class="us-btn usb-tiktok" onclick="showToast('Opening TikTok...')">TikTok</button>
+        <button class="us-btn usb-insta" onclick="showToast('Opening Instagram...')">Instagram</button>
+        <button class="us-btn usb-x" onclick="showToast('Opening X...')">X Post</button>
+        <button class="us-btn usb-sf" onclick="showToast('Uploading to ShortFactory...')">ShortFactory</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+const STATE = {
+  challengeCount: 0,
+  credits: 0,
+  currentPrompt: '',
+  timerSeconds: 29 * 3600 + 47 * 60 + 12,
+  slideIndex: 0,
+  resultImages: [
+    '/trump/sqassets/card1.png',
+    '/trump/sqassets/card2.png',
+    '/trump/sqassets/card4.png',
+    '/trump/sqassets/card7cash.png',
+    '/trump/sqassets/cardgrok.png',
+    '/trump/sqassets/pot-cash.png',
+    '/trump/sqassets/pigpot.jpg',
+    '/trump/sqassets/card8.jpg'
+  ]
+};
+
+// ═══════════════════════════════════════════════
+// CLOCK
+// ═══════════════════════════════════════════════
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2, '0');
+  const m = String(now.getMinutes()).padStart(2, '0');
+  const time = `${h}:${m}`;
+
+  document.getElementById('clock').textContent = time;
+  const hubClock = document.getElementById('hub-clock');
+  if (hubClock) hubClock.textContent = time;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ═══════════════════════════════════════════════
+// COUNTDOWN TIMER
+// ═══════════════════════════════════════════════
+function updateTimer() {
+  if (STATE.timerSeconds <= 0) return;
+  STATE.timerSeconds--;
+
+  const h = Math.floor(STATE.timerSeconds / 3600);
+  const m = Math.floor((STATE.timerSeconds % 3600) / 60);
+  const s = STATE.timerSeconds % 60;
+  const str = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+
+  const introTimer = document.getElementById('intro-timer');
+  const bannerTimer = document.getElementById('banner-timer');
+  if (introTimer) introTimer.textContent = str;
+  if (bannerTimer) bannerTimer.textContent = str;
+}
+setInterval(updateTimer, 1000);
+
+// ═══════════════════════════════════════════════
+// PARTICLES
+// ═══════════════════════════════════════════════
+function createParticles() {
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 20; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.animationDelay = Math.random() * 8 + 's';
+    p.style.animationDuration = (6 + Math.random() * 4) + 's';
+    container.appendChild(p);
+  }
+}
+createParticles();
+
+// ═══════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════
+function goTo(screenId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(screenId).classList.add('active');
+}
+
+// ═══════════════════════════════════════════════
+// AUDIO
+// ═══════════════════════════════════════════════
+function playAudio(id, volume = 0.3) {
+  const audio = document.getElementById(id);
+  if (audio) {
+    audio.volume = volume;
+    audio.play().catch(() => {});
+  }
+}
+
+// ═══════════════════════════════════════════════
+// BOOT SEQUENCE
+// ═══════════════════════════════════════════════
+function startChallenge() {
+  playAudio('audio-ambient', 0.2);
+  goTo('screen-hub');
+}
+
+// Auto-advance from boot screen
+setTimeout(() => {
+  goTo('screen-intro');
+}, 4500);
+
+// ═══════════════════════════════════════════════
+// PROMPT SELECTION
+// ═══════════════════════════════════════════════
+function selectPrompt(prompt) {
+  STATE.currentPrompt = prompt;
+  goTo('screen-generating');
+  playAudio('audio-generate', 0.3);
+  runGeneration(prompt);
+}
+
+// ═══════════════════════════════════════════════
+// GENERATION SEQUENCE
+// ═══════════════════════════════════════════════
+function runGeneration(prompt) {
+  document.getElementById('gen-prompt').textContent = `"${prompt}"`;
+  document.getElementById('gen-progress').style.width = '0%';
+
+  // Reset all steps
+  for (let i = 0; i < 5; i++) {
+    document.getElementById(`gs-${i}`).className = 'gs-item';
+  }
+
+  const steps = [
+    { time: 300, progress: 15, status: 'READING YOUR VISION...', step: 0 },
+    { time: 900, progress: 32, status: 'ANALYZING THEME ELEMENTS...', step: 1 },
+    { time: 1700, progress: 52, status: 'COMPOSING VISUAL SCENE...', step: 2 },
+    { time: 2600, progress: 72, status: 'APPLYING SHORTFACTORY STYLE...', step: 3 },
+    { time: 3500, progress: 90, status: 'RENDERING FINAL OUTPUT...', step: 4 }
+  ];
+
+  steps.forEach((s, idx) => {
+    setTimeout(() => {
+      document.getElementById('gen-progress').style.width = s.progress + '%';
+      document.getElementById('gen-status').textContent = s.status;
+      if (idx > 0) {
+        document.getElementById(`gs-${steps[idx-1].step}`).className = 'gs-item done';
+      }
+      document.getElementById(`gs-${s.step}`).className = 'gs-item active';
+    }, s.time);
+  });
+
+  setTimeout(() => {
+    document.getElementById('gen-progress').style.width = '100%';
+    document.getElementById('gen-status').textContent = 'COMPLETE';
+    document.getElementById('gs-4').className = 'gs-item done';
+    setTimeout(() => showResult(prompt), 400);
+  }, 4200);
+}
+
+// ═══════════════════════════════════════════════
+// SHOW RESULT
+// ═══════════════════════════════════════════════
+function showResult(prompt) {
+  const imgIndex = STATE.challengeCount % STATE.resultImages.length;
+  const imageUrl = STATE.resultImages[imgIndex];
+
+  document.getElementById('result-img').src = imageUrl;
+  document.getElementById('result-prompt').textContent = prompt;
+
+  // Calculate credits
+  const isBrand = prompt.toLowerCase().includes('coke') || prompt.toLowerCase().includes('nike');
+  const creditGain = isBrand ? 15 : 10;
+
+  STATE.challengeCount++;
+  STATE.credits += creditGain;
+
+  // Update progress dots
+  for (let i = 0; i < 3; i++) {
+    const dot = document.getElementById(`rpd-${i}`);
+    const pdot = document.getElementById(`pd-${i}`);
+    if (i < STATE.challengeCount) {
+      dot.className = 'rpd done';
+      if (pdot) pdot.className = 'php-dot done';
+    } else {
+      dot.className = 'rpd';
+      if (pdot) pdot.className = 'php-dot';
+    }
+  }
+
+  document.getElementById('rp-total').textContent = STATE.credits + ' 🪙';
+  document.getElementById('hub-credits').textContent = STATE.credits;
+  document.getElementById('result-credit-gain').textContent = '+' + creditGain;
+
+  // Check unlock
+  if (STATE.challengeCount >= 3) {
+    const teaser = document.getElementById('unlock-teaser');
+    teaser.classList.add('unlocked');
+    document.getElementById('ut-icon').textContent = '🚀';
+    document.getElementById('ut-title').textContent = 'Video Unlocked!';
+    document.getElementById('ut-desc').textContent = 'Tap to view your personalized ShortFactory advertainment video!';
+  }
+
+  goTo('screen-result');
+  showToast(`+${creditGain} Credits earned!`);
+}
+
+// ═══════════════════════════════════════════════
+// UNLOCK HANDLER
+// ═══════════════════════════════════════════════
+function handleUnlock() {
+  if (STATE.challengeCount >= 3) {
+    playAudio('audio-unlock', 0.4);
+    document.getElementById('ue-credits').textContent = STATE.credits;
+    goTo('screen-unlock');
+    startSlideshow();
+  } else {
+    showToast(`Complete ${3 - STATE.challengeCount} more challenges!`);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// SLIDESHOW
+// ═══════════════════════════════════════════════
+function startSlideshow() {
+  setInterval(() => {
+    const slides = document.querySelectorAll('.us-slide');
+    slides[STATE.slideIndex].classList.remove('active');
+    STATE.slideIndex = (STATE.slideIndex + 1) % slides.length;
+    slides[STATE.slideIndex].classList.add('active');
+  }, 2500);
+}
+
+// ═══════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════
+let toastTimeout = null;
+function showToast(message) {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.classList.add('show');
+
+  if (toastTimeout) clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => {
+    toast.classList.remove('show');
+  }, 2500);
+}
+
+// ═══════════════════════════════════════════════
+// NEURAL CANVAS BACKGROUND
+// ═══════════════════════════════════════════════
+(function() {
+  const canvas = document.getElementById('neural-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, nodes = [], animId;
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+
+  function initNodes() {
+    nodes = [];
+    const count = Math.floor((W * H) / 18000);
+    for (let i = 0; i < count; i++) {
+      nodes.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: (Math.random() - 0.5) * 0.4,
+        r: Math.random() * 2 + 1,
+        color: Math.random() > 0.5 ? '#ff3cac' : '#ffd60a'
+      });
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    // connections
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const dx = nodes[i].x - nodes[j].x;
+        const dy = nodes[i].y - nodes[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 140) {
+          ctx.beginPath();
+          ctx.strokeStyle = nodes[i].color;
+          ctx.globalAlpha = (1 - dist / 140) * 0.5;
+          ctx.lineWidth = 0.5;
+          ctx.moveTo(nodes[i].x, nodes[i].y);
+          ctx.lineTo(nodes[j].x, nodes[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+    ctx.globalAlpha = 1;
+    // nodes
+    nodes.forEach(n => {
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      ctx.fillStyle = n.color;
+      ctx.fill();
+      n.x += n.vx;
+      n.y += n.vy;
+      if (n.x < 0 || n.x > W) n.vx *= -1;
+      if (n.y < 0 || n.y > H) n.vy *= -1;
+    });
+    animId = requestAnimationFrame(draw);
+  }
+
+  resize();
+  initNodes();
+  draw();
+  window.addEventListener('resize', () => {
+    resize();
+    initNodes();
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+<?php
+// Chat proxy — forwards to medium server cortex
+$body = file_get_contents('php://input');
+$resp = file_get_contents('http://185.230.216.235:8643/alive/studio/api/chat-cortex', false,
+    stream_context_create(['http'=>[
+        'method'  => 'POST',
+        'header'  => 'Content-Type: application/json',
+        'content' => $body,
+        'timeout' => 20,
+        'ignore_errors' => true,
+    ]]));
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+echo $resp ?: json_encode(['error'=>'cortex offline']);

@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShortFactory — The Empire</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --void:#03040a;
+  --deep:#07090f;
+  --panel:#0c0e16;
+  --edge:#1a1f2e;
+  --edge2:#252d3f;
+  --white:#eef0f5;
+  --dim:#4a5168;
+  --muted:#8890a8;
+  --gold:#ffd60a;
+  --cyan:#00e5ff;
+  --pink:#ff3cac;
+  --lime:#c8ff00;
+  --orange:#ff4500;
+  --green:#00ff88;
+}
+
+html{scroll-behavior:smooth}
+body{background:var(--void);color:var(--white);font-family:'DM Mono',monospace;overflow-x:hidden;min-height:100vh;}
+
+/* ── NEURAL CANVAS ── */
+#neural{position:fixed;inset:0;z-index:0;pointer-events:none;}
+
+/* ── HERO ── */
+.hero{
+  position:relative;z-index:2;
+  min-height:100vh;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;
+  padding:60px 24px;
+}
+
+.sf-badge{
+  display:inline-block;
+  font-family:'DM Mono',monospace;
+  font-size:10px;letter-spacing:0.35em;text-transform:uppercase;
+  color:var(--dim);border:1px solid var(--edge2);
+  padding:8px 20px;border-radius:2px;
+  margin-bottom:40px;
+}
+
+.hero-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(64px,14vw,160px);
+  line-height:0.88;
+  letter-spacing:4px;
+  margin-bottom:24px;
+}
+
+.hero-title .line1{
+  background:linear-gradient(135deg,var(--white) 40%,var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  display:block;
+}
+.hero-title .line2{
+  background:linear-gradient(135deg,var(--pink) 30%,var(--gold));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  display:block;font-size:0.55em;letter-spacing:12px;
+}
+
+.hero-sub{
+  font-size:clamp(11px,1.5vw,14px);
+  color:var(--muted);
+  max-width:560px;
+  line-height:1.9;
+  letter-spacing:0.04em;
+  margin-bottom:52px;
+}
+
+.scroll-cue{
+  font-size:9px;letter-spacing:0.3em;color:var(--dim);text-transform:uppercase;
+  animation:bob 2s ease-in-out infinite;
+}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
+
+/* ── DIVIDER ── */
+.divider{
+  position:relative;z-index:2;
+  display:flex;align-items:center;gap:16px;
+  max-width:1200px;margin:0 auto;padding:0 24px 40px;
+}
+.div-line{flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--edge2),transparent);}
+.div-label{font-size:9px;letter-spacing:0.3em;color:var(--dim);text-transform:uppercase;white-space:nowrap;}
+
+/* ── CARDS GRID ── */
+.cards{
+  position:relative;z-index:2;
+  max-width:1300px;margin:0 auto;
+  padding:0 24px 120px;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(360px,1fr));
+  gap:20px;
+}
+
+/* ── CARD ── */
+.card{
+  background:var(--panel);
+  border:1px solid var(--edge);
+  border-radius:16px;
+  overflow:hidden;
+  position:relative;
+  cursor:pointer;
+  transition:transform 0.3s cubic-bezier(0.16,1,0.3,1),box-shadow 0.3s,border-color 0.3s;
+  text-decoration:none;color:inherit;
+  display:block;
+}
+.card:hover{transform:translateY(-6px);}
+
+.card-accent{height:3px;width:100%;}
+.card-c1 .card-accent{background:linear-gradient(90deg,var(--orange),var(--gold));}
+.card-c2 .card-accent{background:linear-gradient(90deg,var(--cyan),var(--pink));}
+.card-c3 .card-accent{background:linear-gradient(90deg,var(--lime),var(--cyan));}
+.card-c4 .card-accent{background:linear-gradient(90deg,var(--pink),#7d00ff);}
+.card-c5 .card-accent{background:linear-gradient(90deg,var(--green),var(--lime));}
+
+.card-c1:hover{border-color:rgba(255,69,0,0.5);box-shadow:0 20px 60px rgba(255,69,0,0.15);}
+.card-c2:hover{border-color:rgba(0,229,255,0.5);box-shadow:0 20px 60px rgba(0,229,255,0.12);}
+.card-c3:hover{border-color:rgba(200,255,0,0.4);box-shadow:0 20px 60px rgba(200,255,0,0.1);}
+.card-c4:hover{border-color:rgba(255,60,172,0.5);box-shadow:0 20px 60px rgba(255,60,172,0.15);}
+.card-c5:hover{border-color:rgba(0,255,136,0.4);box-shadow:0 20px 60px rgba(0,255,136,0.1);}
+
+.card-body{padding:28px 28px 24px;}
+
+.card-tag{
+  font-size:8px;letter-spacing:0.3em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:16px;
+  display:flex;align-items:center;gap:8px;
+}
+.tag-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.card-c1 .tag-dot{background:var(--orange);}
+.card-c2 .tag-dot{background:var(--cyan);}
+.card-c3 .tag-dot{background:var(--lime);}
+.card-c4 .tag-dot{background:var(--pink);}
+.card-c5 .tag-dot{background:var(--green);}
+
+.card-icon{font-size:36px;margin-bottom:16px;display:block;}
+
+.card-title{
+  font-family:'Syne',sans-serif;
+  font-size:24px;font-weight:800;
+  line-height:1.15;
+  margin-bottom:12px;
+  color:var(--white);
+}
+
+.card-desc{
+  font-size:11px;color:var(--muted);line-height:1.8;
+  margin-bottom:24px;
+}
+
+.card-footer{
+  display:flex;align-items:center;justify-content:space-between;
+  padding-top:16px;
+  border-top:1px solid var(--edge);
+}
+
+.card-cta{
+  font-family:'Syne',sans-serif;
+  font-size:11px;font-weight:700;
+  letter-spacing:0.1em;text-transform:uppercase;
+}
+.card-c1 .card-cta{color:var(--orange);}
+.card-c2 .card-cta{color:var(--cyan);}
+.card-c3 .card-cta{color:var(--lime);}
+.card-c4 .card-cta{color:var(--pink);}
+.card-c5 .card-cta{color:var(--green);}
+
+.card-arrow{
+  width:32px;height:32px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;
+  transition:transform 0.2s;
+  border:1px solid var(--edge2);
+}
+.card:hover .card-arrow{transform:translate(3px,-3px);}
+.card-c1 .card-arrow{border-color:rgba(255,69,0,0.4);color:var(--orange);}
+.card-c2 .card-arrow{border-color:rgba(0,229,255,0.4);color:var(--cyan);}
+.card-c3 .card-arrow{border-color:rgba(200,255,0,0.3);color:var(--lime);}
+.card-c4 .card-arrow{border-color:rgba(255,60,172,0.4);color:var(--pink);}
+.card-c5 .card-arrow{border-color:rgba(0,255,136,0.3);color:var(--green);}
+
+/* WIDE card */
+.card-wide{grid-column:1/-1;}
+@media(max-width:760px){.card-wide{grid-column:auto;}}
+
+/* ── STATS STRIP ── */
+.stats{
+  position:relative;z-index:2;
+  border-top:1px solid var(--edge);border-bottom:1px solid var(--edge);
+  display:flex;flex-wrap:wrap;
+  max-width:100%;margin:0 0 80px;
+  background:var(--deep);
+}
+.stat{
+  flex:1;min-width:160px;
+  padding:28px 32px;
+  border-right:1px solid var(--edge);
+}
+.stat:last-child{border-right:none;}
+.stat-val{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:42px;letter-spacing:2px;
+  color:var(--white);margin-bottom:4px;
+}
+.stat-label{font-size:9px;letter-spacing:0.2em;color:var(--dim);text-transform:uppercase;}
+
+/* ── FOOTER ── */
+footer{
+  position:relative;z-index:2;
+  border-top:1px solid var(--edge);
+  padding:40px 24px;
+  text-align:center;
+  font-size:10px;color:var(--dim);letter-spacing:0.15em;
+}
+footer strong{color:var(--muted);}
+
+/* ── SCROLL REVEAL ── */
+.reveal{opacity:0;transform:translateY(32px);transition:opacity 0.7s cubic-bezier(0.16,1,0.3,1),transform 0.7s cubic-bezier(0.16,1,0.3,1);}
+.reveal.vis{opacity:1;transform:none;}
+</style>
+</head>
+<body>
+
+<canvas id="neural"></canvas>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="sf-badge">ShortFactory · The Empire · EST. 2025</div>
+  <h1 class="hero-title">
+    <span class="line1">THE</span>
+    <span class="line1">EMPIRE</span>
+    <span class="line2">shortfactory</span>
+  </h1>
+  <p class="hero-sub">
+    Decentralised. Unstoppable. Yours.<br>
+    Every tool. Every experience. One living ecosystem.
+  </p>
+  <div class="scroll-cue">↓ &nbsp; enter the empire &nbsp; ↓</div>
+</section>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stat reveal"><div class="stat-val">20+</div><div class="stat-label">Live Products</div></div>
+  <div class="stat reveal"><div class="stat-val">65K</div><div class="stat-label">Cortex Nodes</div></div>
+  <div class="stat reveal"><div class="stat-val">88K</div><div class="stat-label">X Impressions</div></div>
+  <div class="stat reveal"><div class="stat-val">7</div><div class="stat-label">Rank Tiers</div></div>
+</div>
+
+<!-- SECTION LABEL -->
+<div class="divider reveal">
+  <div class="div-line"></div>
+  <div class="div-label">Experiences</div>
+  <div class="div-line"></div>
+</div>
+
+<!-- CARDS -->
+<div class="cards">
+
+  <!-- ADVERTAINMENT — wide hero card -->
+  <a class="card card-c1 card-wide reveal" href="shortfactory-advertainment.html">
+    <div class="card-accent"></div>
+    <div class="card-body">
+      <div class="card-tag"><div class="tag-dot"></div>Advertainment · Interactive Cinema</div>
+      <span class="card-icon">🎬</span>
+      <div class="card-title">Adverts Are Dead.<br>Long Live ADVERTainment.</div>
+      <div class="card-desc">A 3-minute interactive experience where your choices change the story, earn you real credits, and prove the future of advertising is yours to own. Three branching paths. Real pot. Real stakes.</div>
+      <div class="card-footer">
+        <div class="card-cta">Begin Experience →</div>
+        <div class="card-arrow">↗</div>
+      </div>
+    </div>
+  </a>
+
+  <!-- DARES4DOSH -->
+  <a class="card card-c1 reveal" href="/dares4dosh/">
+    <div class="card-accent"></div>
+    <div class="card-body">
+      <div class="card-tag"><div class="tag-dot"></div>Dare Economy · XMR Bounties</div>
+      <span class="card-icon">💀</span>
+      <div class="card-title">Dares4Dosh.</div>
+      <div class="card-desc">Real dares. Real money. Prove yourself. Upload the proof. Get voted in or out by the community. Earn XMR. Climb the ranks. PRIVATE → GIGACHAD.</div>
+      <div class="card-footer">
+        <div class="card-cta">Enter the Arena →</div>
+        <div class="card-arrow">↗</div>
+      </div>
+    </div>
+  </a>
+
+  <!-- STINKIN DIGGER -->
+  <a class="card card-c1 reveal" href="/stinkindigger/">
+    <div class="card-accent"></div>
+    <div class="card-body">
+      <div class="card-tag"><div class="tag-dot"></div>Merch Dare · @diggerstinkin</div>
+      <span class="card-icon">💩</span>
+      <div class="card-title">Stinkin Digger Tshits.</div>
+      <div class="card-desc">Your most savage tweets on a tee. Make it. Get it printed. Wear it in public. Film it. Tag us. You have 7 days. Complete the dare — get your own free merch page.</div>
+      <div class="card-footer">
+        <div class="card-cta">Make My Tshit →</div>
+        <div class="card-arrow">↗</div>
+      </div>
+    </div>
+  </a>
+
+  <!-- DIVIDER -->
+  <div style="grid-column:1/-1" class="reveal">
+    <div class="divider" style="margin:20px 0 0;padding:0">
+      <div class="div-line"></div>
+      <div class="div-label">Brain + Tech</div>
+      <div class="div-line"></div>
+    </div>
+  </div>
+
+  <!-- CORTEX POWER -->
+  <a class="card card-c2 reveal" href="cortex-power.html">
+    <div class="card-accent"></div>
+    <div class="card-body">
+      <div class="card-tag"><div class="tag-dot"></div>Neural Stack · Integration Dashboard</div>
+      <span class="card-icon">🧠</span>
+      <div class="card-title">Cortex Brain Power.</div>
+      <div class="card-desc">Wire your AI stack together and level up. S/A/B/C tier tools ranked by direct cortex impact. Connect each synapse, earn credits, evolve from Dormant Node to Full Cortex Power.</div>
+      <div class="card-footer">
+        <div class="card-cta">Build Your Stack →</div>
+        <div class="card-arrow">↗</div>
+      </div>
+    </div>
+  </a>
+
+  <!-- NEURO-VAULT -->
+  <a class="card card-c4 reveal" href="virtualbrainshortfactory.html">
+    <div class="card-accent"></div>
+    <div class="card-body">
+      <div class="card-tag"><div class="tag-dot"></div>VR · Pitch Deck · $500k–$2M Seed</div>
+      <span class="card-icon">🥽</span>
+      <div class="card-title">NEURO-VAULT.</div>
+      <div class="card-desc">A self-evolving, cloud-hosted VR brain where any data — passphrases, memories, secrets — becomes interactive 3D holographic nodes. Walk through your own mind. Fund it or watch Meta eat lunch.</div>
+      <div class="card-footer">
+        <div class="card-cta">Read the Pitch →</div>
+        <div class="card-arrow">↗</div>
+      </div>
+    </div>
+  </a>
+
+  <!-- SOLVEDDEMO -->
+  <a class="card card-c3 reveal" href="solveddemo.html">
+    <div class="card-accent"></div>
+    <div class="card-body">
+      <div class="card-tag"><div class="tag-dot"></div>Compression · SDF · Live Demo</div>
+      <span class="card-icon">◎</span>
+      <div class="card-title">The Pixel Is Dead.</div>
+      <div class="card-desc">Watch the Adam optimiser solve a shape in real-time using signed distance functions. 6 targets. Drag the handles or hit AUTO-SOLVE. Compression is understanding — not storage.</div>
+      <div class="card-footer">
+        <div class="card-cta">Run the Solver →</div>
+        <div class="card-arrow">↗</div>
+      </div>
+    </div>
+  </a>
+
+  <!-- DIVIDER -->
+  <div style="grid-column:1/-1" class="reveal">
+    <div class="divider" style="margin:20px 0 0;padding:0">
+      <div class="div-line"></div>
+      <div class="div-label">Ecosystem</div>
+      <div class="div-line"></div>
+    </div>
+  </div>
+
+  <!-- CORTEX DASHBOARD -->
+  <a class="card card-c2 reveal" href="/alive/studio/">
+    <div class="card-accent"></div>
+    <div class="card-body">
+      <div class="card-tag"><div class="tag-dot"></div>Split Brain · Live AI · Hebbian</div>
+      <span class="card-icon">⚡</span>
+      <div class="card-title">Cortex Dashboard.</div>
+      <div class="card-desc">Left hemisphere angel. Right hemisphere demon. Cortex synthesis. 65,987 nodes. Real-time Hebbian learning. Watch the brain think — live.</div>
+      <div class="card-footer">
+        <div class="card-cta">Open Dashboard →</div>
+        <div class="card-arrow">↗</div>
+      </div>
+    </div>
+  </a>
+
+  <!-- ALIVE -->
+  <a class="card card-c5 reveal" href="/alive/">
+    <div class="card-accent"></div>
+    <div class="card-body">
+      <div class="card-tag"><div class="tag-dot"></div>ALiVE · Organic AI Creature</div>
+      <span class="card-icon">🌊</span>
+      <div class="card-title">ALiVE.</div>
+      <div class="card-desc">An organic AI creature with 10 immutable BIOS values. Communicates via whistles. Responds with droid sounds. Learns. Grows. Evolves. Heading to the Play Store.</div>
+      <div class="card-footer">
+        <div class="card-cta">Meet the Creature →</div>
+        <div class="card-arrow">↗</div>
+      </div>
+    </div>
+  </a>
+
+  <!-- SOUL FORGE -->
+  <a class="card card-c4 reveal" href="/dares4dosh/soulforge/">
+    <div class="card-accent"></div>
+    <div class="card-body">
+      <div class="card-tag"><div class="tag-dot"></div>Soul Mint · 5-Game Ritual</div>
+      <span class="card-icon">🔥</span>
+      <div class="card-title">Soul Forge.</div>
+      <div class="card-desc">Five games measuring IQ, reaction, memory, luck, and dares. Your soul is computed. A token is minted. Your rank is set. The empire begins here.</div>
+      <div class="card-footer">
+        <div class="card-cta">Forge Your Soul →</div>
+        <div class="card-arrow">↗</div>
+      </div>
+    </div>
+  </a>
+
+</div>
+
+<footer>
+  <strong>ShortFactory</strong> &nbsp;·&nbsp; shortfactory.shop &nbsp;·&nbsp; Built with Cortex + AI workforce &nbsp;·&nbsp; @diggerstinkin
+</footer>
+
+<script>
+// ── NEURAL CANVAS ──
+(function(){
+  const c = document.getElementById('neural');
+  const ctx = c.getContext('2d');
+  let W, H, nodes = [], raf;
+
+  function resize(){
+    W = c.width = window.innerWidth;
+    H = c.height = window.innerHeight;
+  }
+
+  function init(){
+    resize();
+    nodes = [];
+    const count = Math.min(60, Math.floor(W * H / 18000));
+    for(let i = 0; i < count; i++){
+      nodes.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        vx: (Math.random() - 0.5) * 0.25,
+        vy: (Math.random() - 0.5) * 0.25,
+        r: Math.random() * 1.5 + 0.5,
+        hue: Math.random() > 0.6 ? 'cyan' : Math.random() > 0.5 ? 'pink' : 'lime'
+      });
+    }
+  }
+
+  const cols = { cyan: '0,229,255', pink: '255,60,172', lime: '200,255,0' };
+
+  function draw(){
+    ctx.clearRect(0, 0, W, H);
+    for(let i = 0; i < nodes.length; i++){
+      for(let j = i+1; j < nodes.length; j++){
+        const dx = nodes[i].x - nodes[j].x;
+        const dy = nodes[i].y - nodes[j].y;
+        const d = Math.sqrt(dx*dx + dy*dy);
+        if(d < 180){
+          const alpha = (1 - d/180) * 0.12;
+          ctx.strokeStyle = `rgba(${cols[nodes[i].hue]},${alpha})`;
+          ctx.lineWidth = 0.6;
+          ctx.beginPath();
+          ctx.moveTo(nodes[i].x, nodes[i].y);
+          ctx.lineTo(nodes[j].x, nodes[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+    nodes.forEach(n => {
+      ctx.fillStyle = `rgba(${cols[n.hue]},0.5)`;
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r, 0, Math.PI*2);
+      ctx.fill();
+      n.x += n.vx; n.y += n.vy;
+      if(n.x < 0 || n.x > W) n.vx *= -1;
+      if(n.y < 0 || n.y > H) n.vy *= -1;
+    });
+    raf = requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', init);
+  init(); draw();
+})();
+
+// ── SCROLL REVEAL ──
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if(e.isIntersecting) { e.target.classList.add('vis'); observer.unobserve(e.target); }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

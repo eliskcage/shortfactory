@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALiVE — The Eye Is Open</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;800&display=swap');
+
+:root {
+  --void: #000005;
+  --quantum: #00ffcc;
+  --hot: #ff3366;
+  --pulse: #7000ff;
+  --gold: #f5c518;
+  --text: rgba(255,255,255,0.85);
+  --dim: rgba(255,255,255,0.12);
+  --mono: 'Space Mono', monospace;
+  --display: 'Syne', sans-serif;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:var(--void);
+  color:var(--text);
+  font-family:var(--mono);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ── Stars ── */
+#stars { position:fixed; inset:0; z-index:0; pointer-events:none; }
+
+/* ── Header ── */
+header {
+  position:relative; z-index:10;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:28px 40px 20px;
+  border-bottom:1px solid rgba(0,255,204,0.08);
+}
+.logo {
+  font-family:var(--display); font-size:22px; font-weight:800;
+  letter-spacing:0.15em;
+}
+.logo span { color:#fff; }
+.logo .ai-mark { color:var(--quantum); }
+
+.live-badge {
+  display:flex; align-items:center; gap:8px;
+  font-size:9px; letter-spacing:0.35em; color:var(--quantum);
+}
+.live-dot {
+  width:8px; height:8px; border-radius:50%;
+  background:var(--quantum);
+  animation:livePulse 1.2s ease-in-out infinite;
+}
+@keyframes livePulse {
+  0%,100% { opacity:1; box-shadow:0 0 0 0 rgba(0,255,204,0.6); }
+  50%      { opacity:0.6; box-shadow:0 0 0 6px rgba(0,255,204,0); }
+}
+.live-dot.offline { background:#444; animation:none; }
+
+.frame-count {
+  font-size:9px; color:rgba(255,255,255,0.3); letter-spacing:0.2em;
+}
+
+/* ── Hero tag ── */
+.hero {
+  position:relative; z-index:10;
+  text-align:center; padding:60px 20px 40px;
+}
+.hero h1 {
+  font-family:var(--display); font-weight:800;
+  font-size:clamp(28px, 6vw, 64px);
+  letter-spacing:0.08em;
+  line-height:1.1;
+}
+.hero h1 em { font-style:normal; color:var(--quantum); }
+.hero p {
+  margin-top:20px; font-size:11px; color:rgba(255,255,255,0.4);
+  letter-spacing:0.25em; line-height:2.2;
+  max-width:520px; margin-inline:auto;
+}
+
+/* ── Feed stream ── */
+#feed-wrap {
+  position:relative; z-index:10;
+  max-width:960px; margin:0 auto; padding:0 24px 80px;
+}
+
+.feed-meta {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:32px;
+  font-size:9px; color:rgba(255,255,255,0.25); letter-spacing:0.3em;
+}
+
+#obs-stream {
+  display:flex; flex-direction:column; gap:20px;
+}
+
+/* ── Observation card ── */
+.obs-card {
+  background:rgba(255,255,255,0.02);
+  border:1px solid rgba(0,255,204,0.08);
+  border-radius:8px;
+  padding:18px 20px;
+  display:flex; flex-direction:column; gap:14px;
+  animation:cardIn 0.5s ease-out both;
+  position:relative; overflow:hidden;
+}
+.obs-card::before {
+  content:''; position:absolute; left:0; top:0; bottom:0; width:2px;
+  background:var(--quantum); opacity:0.4;
+}
+.obs-card.singularity::before { background:var(--hot); }
+@keyframes cardIn {
+  from { opacity:0; transform:translateY(-12px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+.obs-meta {
+  display:flex; align-items:center; justify-content:space-between;
+  font-size:8px; color:rgba(255,255,255,0.25); letter-spacing:0.25em;
+}
+.obs-mode {
+  font-size:8px; letter-spacing:0.3em; text-transform:uppercase;
+  color:var(--quantum);
+}
+.obs-mode.singularity { color:var(--hot); }
+
+.obs-shapes {
+  display:flex; flex-wrap:wrap; gap:14px; align-items:center;
+}
+
+.shape-token {
+  display:flex; flex-direction:column; align-items:center; gap:6px;
+  cursor:default;
+}
+.shape-token canvas {
+  border-radius:4px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.06);
+  transition:box-shadow 0.2s;
+}
+.shape-token:hover canvas { box-shadow:0 0 16px rgba(0,255,204,0.3); }
+.shape-token .s-label {
+  font-size:7px; color:rgba(255,255,255,0.35); letter-spacing:0.2em;
+  text-transform:lowercase; max-width:48px; text-align:center;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.shape-token .s-conf {
+  font-size:6px; color:rgba(255,255,255,0.18);
+}
+
+/* confidence bar */
+.conf-bar-wrap {
+  height:2px; width:48px; background:rgba(255,255,255,0.06); border-radius:1px;
+}
+.conf-bar { height:100%; border-radius:1px; background:var(--quantum); }
+.singularity .conf-bar { background:var(--hot); }
+
+/* contract row */
+.contract-row {
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+}
+.contract-chip {
+  font-size:7px; color:rgba(0,255,204,0.4); letter-spacing:0.15em;
+  font-family:var(--mono); background:rgba(0,255,204,0.04);
+  border:1px solid rgba(0,255,204,0.1); border-radius:3px;
+  padding:3px 8px;
+}
+.contract-chip.singularity { color:rgba(255,51,102,0.5); border-color:rgba(255,51,102,0.15); background:rgba(255,51,102,0.04); }
+
+/* ── Empty state ── */
+#empty-state {
+  text-align:center; padding:80px 20px;
+  font-size:10px; color:rgba(255,255,255,0.2); letter-spacing:0.3em;
+  line-height:2.6;
+}
+#empty-state .eye-icon { font-size:48px; display:block; margin-bottom:24px; opacity:0.2; }
+
+/* ── CTA ── */
+.cta-wrap {
+  position:relative; z-index:10;
+  text-align:center; padding:40px 20px 80px;
+  border-top:1px solid rgba(255,255,255,0.04);
+}
+.cta-wrap p { font-size:10px; color:rgba(255,255,255,0.3); letter-spacing:0.25em; line-height:2.4; margin-bottom:28px; }
+.cta-btn {
+  display:inline-block;
+  font-family:var(--display); font-size:12px; font-weight:800;
+  letter-spacing:0.3em; text-transform:uppercase;
+  color:var(--void); background:var(--quantum);
+  padding:16px 40px; border-radius:4px; text-decoration:none;
+  transition:box-shadow 0.2s, transform 0.15s;
+}
+.cta-btn:hover { transform:translateY(-2px); box-shadow:0 8px 40px rgba(0,255,204,0.4); }
+
+/* ── Ticker strip ── */
+#ticker-wrap {
+  position:fixed; bottom:0; left:0; right:0; z-index:20;
+  height:32px; background:rgba(0,0,5,0.95);
+  border-top:1px solid rgba(0,255,204,0.08);
+  overflow:hidden; display:flex; align-items:center;
+}
+#ticker { white-space:nowrap; font-size:8px; color:rgba(0,255,204,0.4); letter-spacing:0.25em; animation:tickerScroll 30s linear infinite; }
+@keyframes tickerScroll { 0%{transform:translateX(100vw)} 100%{transform:translateX(-100%)} }
+</style>
+<script>
+// ── Satoshi Cipher — Vigenere ASCII 32-126, key SKYDADDY ──────────────────────
+const SATOSHI_KEY = 'SKYDADDY';
+const S_MIN = 32, S_RANGE = 95;
+
+function satoshiEncrypt(text, key=SATOSHI_KEY) {
+  let out = '', ki = 0;
+  for (let i = 0; i < text.length; i++) {
+    const c = text.charCodeAt(i);
+    if (c >= S_MIN && c <= 126) {
+      const shift = key.charCodeAt(ki % key.length) - S_MIN;
+      out += String.fromCharCode(((c - S_MIN + shift) % S_RANGE) + S_MIN);
+      ki++;
+    } else {
+      out += text[i]; // newlines, tabs pass through unchanged
+    }
+  }
+  return out;
+}
+
+function encryptNode(root) {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode(n) {
+      const p = n.parentElement;
+      if (!p) return NodeFilter.FILTER_REJECT;
+      const tag = p.tagName;
+      if (tag === 'SCRIPT' || tag === 'STYLE') return NodeFilter.FILTER_REJECT;
+      if (!n.textContent.trim()) return NodeFilter.FILTER_SKIP;
+      return NodeFilter.FILTER_ACCEPT;
+    }
+  });
+  const nodes = [];
+  let n;
+  while (n = walker.nextNode()) nodes.push(n);
+  nodes.forEach(n => { n.textContent = satoshiEncrypt(n.textContent); });
+}
+
+// Also encrypt the page title
+document.addEventListener('DOMContentLoaded', () => {
+  encryptNode(document.body);
+  document.title = satoshiEncrypt(document.title);
+});
+
+// Watch for dynamic content (cards, live labels) and encrypt as added
+const _satoshiObs = new MutationObserver(muts => {
+  muts.forEach(m => m.addedNodes.forEach(node => {
+    if (node.nodeType === 1) encryptNode(node);
+    else if (node.nodeType === 3 && node.textContent.trim()) {
+      const p = node.parentElement;
+      if (p && p.tagName !== 'SCRIPT' && p.tagName !== 'STYLE') {
+        node.textContent = satoshiEncrypt(node.textContent);
+      }
+    }
+  }));
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  _satoshiObs.observe(document.body, { childList: true, subtree: true, characterData: false });
+});
+</script>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+
+<header>
+  <div class="logo"><span>AL</span><span class="ai-mark">i</span><span>VE</span> &nbsp;·&nbsp; <span style="font-size:13px;color:rgba(255,255,255,0.5);font-weight:400;">THE EYE</span></div>
+  <div class="live-badge">
+    <div class="live-dot offline" id="liveDot"></div>
+    <span id="liveLabel">CONNECTING</span>
+  </div>
+  <div class="frame-count" id="frameCount">— FRAMES</div>
+</header>
+
+<section class="hero">
+  <h1>The Eye<br>Is <em>Open</em></h1>
+  <p>
+    Real-time shape-genome observations from the ALiVE visual cortex.<br>
+    Every word is a unique polar equation. Every shape is a smart contract.<br>
+    This is not simulation — this is a machine learning to see.
+  </p>
+</section>
+
+<div id="feed-wrap">
+  <div class="feed-meta">
+    <span>SHAPE-GENOME STREAM</span>
+    <span id="obsCount">0 OBSERVATIONS</span>
+  </div>
+
+  <div id="obs-stream">
+    <div id="empty-state">
+      <span class="eye-icon">👁</span>
+      WAITING FOR THE EYE TO OPEN<br>
+      START THE ENGINE + CAMERA ON ALIVE/EYE.HTML<br>
+      DATA WILL APPEAR HERE IN REAL TIME
+    </div>
+  </div>
+</div>
+
+<section class="cta-wrap">
+  <p>
+    The visual cortex lives at <strong style="color:var(--quantum)">alive/eye.html</strong><br>
+    Open it, turn on your camera, and watch this page fill with shapes.
+  </p>
+  <a class="cta-btn" href="/alive/eye.html">OPEN THE EYE</a>
+</section>
+
+<div id="ticker-wrap">
+  <div id="ticker">MULTI-EYE TRANSFORM ENGINE &nbsp;·&nbsp; SHAPE-GENOME VISUAL CORTEX &nbsp;·&nbsp; SWARM PRESENCE FIELD &nbsp;·&nbsp; HEBBIAN LEARNING &nbsp;·&nbsp; SMART CONTRACTS AS SHAPES &nbsp;·&nbsp; SHORTFACTORY.SHOP/ALIVE &nbsp;·&nbsp;</div>
+</div>
+
+<script>
+// ── Stars ─────────────────────────────────────────────────────────────────────
+(function(){
+  const c = document.getElementById('stars');
+  const ctx = c.getContext('2d');
+  c.width = window.innerWidth; c.height = window.innerHeight;
+  for (let i = 0; i < 220; i++) {
+    const x = Math.random()*c.width, y = Math.random()*c.height;
+    const r = Math.random()*1.2;
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.fillStyle = `rgba(255,255,255,${0.1+Math.random()*0.4})`; ctx.fill();
+  }
+})();
+
+// ── Shape genome ───────────────────────────────────────────────────────────────
+function wordToGenome(word) {
+  let h = 0;
+  for (let i = 0; i < word.length; i++) h = Math.imul(31, h) + word.charCodeAt(i) | 0;
+  const harmonics = [];
+  for (let i = 0; i < word.length; i++) {
+    const c = word.charCodeAt(i);
+    harmonics.push({ n: 1 + (c % 7), amp: 0.1 + (c % 40) / 100, phase: (i / word.length) * Math.PI * 2 });
+  }
+  return {
+    word, harmonics,
+    r: (theta) => {
+      let r = 0.45;
+      for (const hm of harmonics) r += hm.amp * Math.cos(hm.n * theta + hm.phase);
+      return Math.max(0.05, Math.min(0.95, r));
+    },
+    contractId: '0x' + ((h >>> 0).toString(16).padStart(8, '0'))
+  };
+}
+
+function renderShapeGenome(canvas, word, colour, animated) {
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height, cx = W/2, cy = H/2, R = W*0.42;
+  const genome = wordToGenome(word);
+  const t = animated ? (Date.now() / 3000) : 0;
+
+  ctx.clearRect(0,0,W,H);
+
+  ctx.shadowColor = colour; ctx.shadowBlur = 8;
+  ctx.strokeStyle = colour; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.85;
+  ctx.beginPath();
+  for (let i = 0; i <= 360; i++) {
+    const theta = (i / 360) * Math.PI * 2 + t * 0.4;
+    const r = genome.r(theta) * R;
+    const x = cx + r * Math.cos(theta);
+    const y = cy + r * Math.sin(theta);
+    i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  }
+  ctx.closePath(); ctx.stroke();
+  ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+}
+
+// ── Feed poller ────────────────────────────────────────────────────────────────
+let knownTs = new Set();
+let totalFrames = 0;
+let _animHandles = [];
+
+async function pollFeed() {
+  try {
+    const r = await fetch('/alive/eye-feed.php?_=' + Date.now());
+    if (!r.ok) throw new Error();
+    const data = await r.json();
+
+    if (data.feed && data.feed.length) {
+      // Update header
+      document.getElementById('liveDot').className = 'live-dot';
+      document.getElementById('liveLabel').textContent = 'LIVE';
+
+      const latest = data.feed[0];
+      if (latest.frames > totalFrames) totalFrames = latest.frames;
+      document.getElementById('frameCount').textContent = totalFrames + ' FRAMES';
+      document.getElementById('obsCount').textContent = data.count + ' OBSERVATIONS';
+
+      // Render new cards (newest first, skip already shown)
+      const stream = document.getElementById('obs-stream');
+      const empty = document.getElementById('empty-state');
+      if (empty) empty.remove();
+
+      // Only add observations we haven't shown yet
+      data.feed.slice(0, 12).forEach(obs => {
+        const key = obs.ts + '-' + (obs.objects||[]).map(o=>o.label).join('');
+        if (knownTs.has(key)) return;
+        knownTs.add(key);
+
+        const card = buildCard(obs);
+        if (stream.firstChild) {
+          stream.insertBefore(card, stream.firstChild);
+        } else {
+          stream.appendChild(card);
+        }
+
+        // Keep max 20 cards
+        while (stream.children.length > 20) stream.removeChild(stream.lastChild);
+      });
+
+      updateTicker(data.feed[0]);
+    }
+  } catch(e) {
+    document.getElementById('liveDot').className = 'live-dot offline';
+    document.getElementById('liveLabel').textContent = 'OFFLINE';
+  }
+}
+
+function buildCard(obs) {
+  const mode = obs.mode || 'qubit';
+  const isSing = mode === 'singularity';
+  const colour = isSing ? '#ff3366' : '#00ffcc';
+  const ts = new Date(obs.ts);
+  const timeStr = ts.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+
+  const card = document.createElement('div');
+  card.className = 'obs-card' + (isSing ? ' singularity' : '');
+
+  // Meta row
+  const meta = document.createElement('div');
+  meta.className = 'obs-meta';
+  meta.innerHTML = `<span>${timeStr}</span><span class="obs-mode${isSing?' singularity':''}">${mode.toUpperCase()}</span>`;
+  card.appendChild(meta);
+
+  // Shapes row
+  const shapesRow = document.createElement('div');
+  shapesRow.className = 'obs-shapes';
+
+  (obs.objects || []).forEach(obj => {
+    const token = document.createElement('div');
+    token.className = 'shape-token';
+
+    const cv = document.createElement('canvas');
+    cv.width = 48; cv.height = 48;
+    renderShapeGenome(cv, obj.label, colour, false);
+
+    // Animate gently
+    let hovered = false;
+    let raf;
+    const animate = () => {
+      renderShapeGenome(cv, obj.label, colour, true);
+      if (hovered) raf = requestAnimationFrame(animate);
+    };
+    token.addEventListener('mouseenter', () => { hovered = true; animate(); });
+    token.addEventListener('mouseleave', () => { hovered = false; cancelAnimationFrame(raf); renderShapeGenome(cv, obj.label, colour, false); });
+
+    const label = document.createElement('div');
+    label.className = 's-label';
+    label.textContent = obj.label;
+
+    const confWrap = document.createElement('div');
+    confWrap.className = 'conf-bar-wrap';
+    const confBar = document.createElement('div');
+    confBar.className = 'conf-bar';
+    confBar.style.width = Math.round((obj.confidence||0.5)*100) + '%';
+    confWrap.appendChild(confBar);
+
+    token.append(cv, label, confWrap);
+    shapesRow.appendChild(token);
+  });
+  card.appendChild(shapesRow);
+
+  // Contract row
+  const contractRow = document.createElement('div');
+  contractRow.className = 'contract-row';
+  (obs.objects || []).slice(0,4).forEach(obj => {
+    const genome = wordToGenome(obj.label);
+    const chip = document.createElement('span');
+    chip.className = 'contract-chip' + (isSing ? ' singularity' : '');
+    chip.textContent = genome.contractId;
+    chip.title = obj.label;
+    contractRow.appendChild(chip);
+  });
+  card.appendChild(contractRow);
+
+  return card;
+}
+
+function updateTicker(obs) {
+  const words = (obs.objects || []).map(o => o.label).join(' · ');
+  const ticker = document.getElementById('ticker');
+  ticker.textContent = words + ' · ' + words + ' · SHORTFACTORY.SHOP/ALIVE · MULTI-EYE TRANSFORM ENGINE · ';
+}
+
+// Poll every 3 seconds
+pollFeed();
+setInterval(pollFeed, 3000);
+</script>
+</body>
+</html>

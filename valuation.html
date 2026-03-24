@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShortFactory — Company Valuation v3</title>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1XY2CNLJCE"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1XY2CNLJCE');</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#05050a;--surface:#0d0d14;--border:#1a1a2e;
+  --gold:#f5c518;--green:#00e676;--red:#ff3355;--dim:#64748b;--text:#e2e8f0;
+}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.6}
+
+/* NAV */
+.nav{padding:14px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:rgba(5,5,10,.97);backdrop-filter:blur(8px);z-index:100}
+.nav-logo{font-size:12px;font-weight:800;letter-spacing:3px;color:var(--gold);text-transform:uppercase}
+.nav-links{display:flex;gap:20px}
+.nav-links a{color:var(--dim);font-size:11px;text-decoration:none;letter-spacing:1px;text-transform:uppercase;transition:color .2s}
+.nav-links a:hover{color:#fff}
+.nav-ver{font-size:10px;color:var(--dim);letter-spacing:2px}
+
+/* HERO */
+.hero{padding:64px 28px 48px;text-align:center;border-bottom:1px solid var(--border);position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 50% at 50% 0%,rgba(245,197,24,.05),transparent);pointer-events:none}
+.hero-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--gold);margin-bottom:16px;opacity:.7}
+.hero h1{font-size:clamp(32px,6vw,60px);font-weight:900;letter-spacing:2px;color:#fff;margin-bottom:8px}
+.hero h1 span{color:var(--gold)}
+.hero-date{font-size:11px;color:var(--dim);letter-spacing:2px;margin-bottom:32px}
+
+/* REVEAL BAR */
+.reveal-bar{max-width:480px;margin:0 auto;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.reveal-bar input{flex:1;background:#0a0a12;border:1px solid #333;border-radius:6px;padding:8px 12px;color:#fff;font-size:12px;font-family:monospace;letter-spacing:2px;outline:none;min-width:140px}
+.reveal-bar input:focus{border-color:var(--gold)}
+.reveal-bar input::placeholder{color:#333;letter-spacing:1px}
+.reveal-btn{padding:8px 18px;background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.3);color:var(--gold);font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border-radius:6px;transition:all .2s;white-space:nowrap}
+.reveal-btn:hover{background:rgba(245,197,24,.2);border-color:var(--gold)}
+.reveal-status{width:100%;font-size:10px;color:var(--dim);letter-spacing:1px;text-align:center}
+.reveal-status.ok{color:var(--green)}
+.reveal-status.err{color:var(--red)}
+
+/* CENTRAL ESTIMATE */
+.central-wrap{max-width:800px;margin:0 auto;padding:40px 28px}
+.central-card{background:var(--surface);border:1px solid rgba(245,197,24,.2);border-radius:12px;padding:28px;text-align:center;position:relative;overflow:hidden}
+.central-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 60% at 50% 100%,rgba(245,197,24,.04),transparent);pointer-events:none}
+.central-label{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--dim);margin-bottom:8px}
+.central-value{font-size:clamp(36px,8vw,72px);font-weight:900;color:var(--gold);letter-spacing:2px;font-variant-numeric:tabular-nums;transition:all .4s}
+.central-value.encrypted{font-size:14px;font-family:monospace;color:#333;letter-spacing:1px;padding:12px 0;word-break:break-all}
+.central-sub{font-size:12px;color:var(--dim);margin-top:8px}
+.central-delta{display:inline-block;margin-top:12px;padding:4px 12px;background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.3);border-radius:20px;font-size:11px;font-weight:700;color:var(--green)}
+
+/* METHODOLOGY GRID */
+.section{max-width:1000px;margin:0 auto;padding:40px 28px}
+.section-label{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--gold);margin-bottom:24px;font-weight:700}
+.method-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.method-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:18px}
+.method-name{font-size:11px;font-weight:700;color:#fff;letter-spacing:1px;margin-bottom:10px}
+.method-range{font-size:18px;font-weight:900;color:var(--gold);transition:all .3s}
+.method-range.encrypted{font-size:10px;font-family:monospace;color:#2a2a2a;word-break:break-all;line-height:1.4}
+.method-central{font-size:11px;color:var(--dim);margin-top:4px}
+.method-central.encrypted{color:#1a1a1a;font-family:monospace;font-size:9px;word-break:break-all}
+.method-note{font-size:10px;color:var(--dim);margin-top:8px;line-height:1.5;border-top:1px solid var(--border);padding-top:8px}
+
+/* HISTORY */
+.history-row{display:flex;align-items:center;gap:16px;padding:14px 0;border-bottom:1px solid var(--border)}
+.history-ver{font-size:11px;font-weight:700;color:var(--gold);min-width:28px}
+.history-date{font-size:11px;color:var(--dim);min-width:90px}
+.history-val{font-size:14px;font-weight:800;color:#fff;min-width:80px}
+.history-delta{font-size:10px;padding:2px 8px;border-radius:12px;font-weight:700}
+.delta-up{background:rgba(0,230,118,.1);color:var(--green);border:1px solid rgba(0,230,118,.3)}
+.history-note{font-size:11px;color:var(--dim);flex:1}
+
+/* PATENTS */
+.patent-list{display:flex;flex-direction:column;gap:10px}
+.patent-row{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;display:flex;gap:14px;align-items:flex-start}
+.patent-row.filed{border-left:3px solid var(--gold)}
+.patent-row.assigned{border-left:3px solid var(--green)}
+.patent-num{font-size:11px;font-weight:700;color:var(--gold);white-space:nowrap;min-width:100px}
+.patent-body{flex:1}
+.patent-title{font-size:12px;font-weight:700;color:#fff;margin-bottom:3px}
+.patent-meta{font-size:11px;color:var(--dim)}
+.patent-claims{font-size:10px;color:var(--gold);margin-top:4px}
+.patent-badge{font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:10px;font-weight:700;white-space:nowrap}
+.badge-filed{background:rgba(245,197,24,.1);color:var(--gold);border:1px solid rgba(245,197,24,.3)}
+.badge-assigned{background:rgba(0,230,118,.1);color:var(--green);border:1px solid rgba(0,230,118,.3)}
+.badge-undisclosed{background:rgba(100,116,139,.1);color:var(--dim);border:1px solid #333}
+
+/* ASSETS */
+.asset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
+.asset-item{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 12px}
+.asset-name{font-size:12px;font-weight:700;color:#fff;margin-bottom:2px}
+.asset-val{font-size:10px;color:var(--dim)}
+.asset-item.highlight{border-color:rgba(245,197,24,.3)}
+.asset-item.highlight .asset-name{color:var(--gold)}
+
+/* UNDISCLOSED */
+.undisclosed-box{background:rgba(100,116,139,.04);border:1px dashed #2a2a2a;border-radius:8px;padding:20px;text-align:center}
+.undisclosed-cipher{font-family:monospace;font-size:11px;color:#222;word-break:break-all;line-height:1.8;margin-bottom:12px}
+.undisclosed-label{font-size:10px;color:#333;letter-spacing:2px;text-transform:uppercase}
+
+/* DIVIDER */
+.divider{border:none;border-top:1px solid var(--border);margin:0}
+
+/* FOOTER */
+footer{padding:32px 28px;text-align:center;border-top:1px solid var(--border)}
+footer p{font-size:11px;color:var(--dim);line-height:2}
+footer strong{color:var(--gold)}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo">ShortFactory</div>
+  <div class="nav-links">
+    <a href="/portfolio.html">Portfolio</a>
+    <a href="/about.html">About</a>
+    <a href="/lobby.html">Lobby</a>
+  </div>
+  <div class="nav-ver">VALUATION V3 · 22 MAR 2026</div>
+</nav>
+
+<div class="hero">
+  <div class="hero-eyebrow">Company Valuation Report</div>
+  <h1>SHORT<span>FACTORY</span></h1>
+  <div class="hero-date">Version 3 · 22 March 2026 · Confidential</div>
+  <div class="reveal-bar">
+    <input type="password" id="keyInput" placeholder="Enter reveal key..." onkeydown="if(event.key==='Enter')tryReveal()" autocomplete="off" />
+    <button class="reveal-btn" onclick="tryReveal()">REVEAL →</button>
+    <div class="reveal-status" id="revealStatus">Valuation figures are encrypted. Enter authorised key to reveal.</div>
+  </div>
+</div>
+
+<!-- CENTRAL ESTIMATE -->
+<div class="central-wrap">
+  <div class="central-card">
+    <div class="central-label">V3 Central Estimate</div>
+    <div class="central-value encrypted" id="centralVal"></div>
+    <div class="central-sub" id="centralSub">Four-methodology weighted average · All figures GBP</div>
+    <div class="central-delta" id="centralDelta" style="display:none">▲ +131% since V2 (16 Mar 2026)</div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- METHODOLOGY -->
+<div class="section">
+  <div class="section-label">Valuation Methodology</div>
+  <div class="method-grid">
+
+    <div class="method-card">
+      <div class="method-name">Asset / Replacement Cost</div>
+      <div class="method-range encrypted" id="m1-range"></div>
+      <div class="method-central encrypted" id="m1-central"></div>
+      <div class="method-note">Cost to replicate: 50+ products, 420+ files, 2 VPS servers, 75MB codebase, design system, CI/CD pipeline, 43 days labour at senior rate.</div>
+    </div>
+
+    <div class="method-card">
+      <div class="method-name">Comparable Transaction</div>
+      <div class="method-range encrypted" id="m2-range"></div>
+      <div class="method-central encrypted" id="m2-central"></div>
+      <div class="method-note">Early-stage AI/creator tools acquired 2023–2025. Comparable: AI content tool + token economy + community platform at seed stage.</div>
+    </div>
+
+    <div class="method-card">
+      <div class="method-name">Revenue Multiple (Projected)</div>
+      <div class="method-range encrypted" id="m3-range"></div>
+      <div class="method-central encrypted" id="m3-central"></div>
+      <div class="method-note">10× projected Year 1 ARR from: Kinetic Pro subscriptions, SFT token economy, Imaginator API, D4D dare commissions, Testing Lobby royalties.</div>
+    </div>
+
+    <div class="method-card" style="border-color:rgba(245,197,24,.2)">
+      <div class="method-name" style="color:var(--gold)">Strategic / IP Value ★</div>
+      <div class="method-range encrypted" id="m4-range"></div>
+      <div class="method-central encrypted" id="m4-central"></div>
+      <div class="method-note">5 patents filed (3 AGI-foundational). Live self-modifying AGI brain. Undisclosed quantum cipher concept. ALIVE sovereign form. Dominant driver of V3 uplift.</div>
+    </div>
+
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- VALUATION HISTORY -->
+<div class="section">
+  <div class="section-label">Valuation History</div>
+  <div class="history-row">
+    <div class="history-ver">V1</div>
+    <div class="history-date">7 Mar 2026</div>
+    <div class="history-val">£400,000</div>
+    <div class="history-delta delta-up">Baseline</div>
+    <div class="history-note">Initial assessment. 2 patents pending, ALIVE live, Trump game, Imaginator.</div>
+  </div>
+  <div class="history-row">
+    <div class="history-ver">V2</div>
+    <div class="history-date">16 Mar 2026</div>
+    <div class="history-val">£650,000</div>
+    <div class="history-delta delta-up">▲ +63%</div>
+    <div class="history-note">Patent GB2605434.6 live demo. Logo Genetics showpiece. 4 patents total. Material equations.</div>
+  </div>
+  <div class="history-row" style="border-bottom:none">
+    <div class="history-ver" style="color:var(--green)">V3</div>
+    <div class="history-date">22 Mar 2026</div>
+    <div class="history-val" id="v3-hist" style="color:var(--green);font-family:monospace;font-size:11px"></div>
+    <div class="history-delta delta-up" id="v3-delta" style="display:none">▲ +131%</div>
+    <div class="history-note">5 patents (3 AGI-foundational). Visual Cortex 65K nodes live. Testing Lobby. Clock Ring concept. ALIVE final form.</div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- PATENTS -->
+<div class="section">
+  <div class="section-label">Intellectual Property — Patents</div>
+  <div class="patent-list">
+
+    <div class="patent-row assigned">
+      <div>
+        <div class="patent-num">GB2520111.8</div>
+        <div class="patent-badge badge-assigned">ASSIGNED</div>
+      </div>
+      <div class="patent-body">
+        <div class="patent-title">Reverse Entropy Torrent / Bidirectional AI Video Editor</div>
+        <div class="patent-meta">Filed: 12 Nov 2025 · Assigned: 16 Mar 2026 · Inventor: Daniel Chipchase</div>
+        <div class="patent-claims">Crowd-sourced collaborative video editing · bidirectional temporal training · multi-user simultaneous editing · reverse inpainting</div>
+      </div>
+    </div>
+
+    <div class="patent-row filed">
+      <div>
+        <div class="patent-num">GB2605434.6</div>
+        <div class="patent-badge badge-filed">FILED</div>
+      </div>
+      <div class="patent-body">
+        <div class="patent-title">Domino Exemption — Image as Equation Compression</div>
+        <div class="patent-meta">Filed: Mar 2026 · Inventor: Daniel Chipchase</div>
+        <div class="patent-claims">1,036,800:1 compression at 8K · grid sampler + 2D polynomial surface fit · 96 bytes from 100MP image · live demo operational</div>
+      </div>
+    </div>
+
+    <div class="patent-row filed">
+      <div>
+        <div class="patent-num">GB2521847.3</div>
+        <div class="patent-badge badge-filed">FILED</div>
+      </div>
+      <div class="patent-body">
+        <div class="patent-title">Unified Genome-Based Cognitive Artifact Library for AGI Systems</div>
+        <div class="patent-meta">Filed: 16 Mar 2026 · Inventor: Daniel Chipchase</div>
+        <div class="patent-claims">17 claims · unified genome format all modalities · square-cube continuity · torus as boundary expression · imagination as genome arithmetic · robotics grasp planning</div>
+      </div>
+    </div>
+
+    <div class="patent-row filed">
+      <div>
+        <div class="patent-num">GB2605683.8</div>
+        <div class="patent-badge badge-filed">FILED</div>
+      </div>
+      <div class="patent-body">
+        <div class="patent-title">Computanium — Sixth State of Matter</div>
+        <div class="patent-meta">Filed: 17 Mar 2026 09:41:41 · Inventor: Daniel Chipchase</div>
+        <div class="patent-claims">11 claims · merge(A,B)→child with truth_score∈[0,1] · 5 physical embodiments (crystal, hologram, molecule, 3D print, hand notation) · 630 logged experiments</div>
+      </div>
+    </div>
+
+    <div class="patent-row filed">
+      <div>
+        <div class="patent-num">GB2605704.2</div>
+        <div class="patent-badge badge-filed">FILED</div>
+      </div>
+      <div class="patent-body">
+        <div class="patent-title">Geometric Virtual Machine — Programs as Geometric Objects</div>
+        <div class="patent-meta">Filed: 17 Mar 2026 12:08:08 · Inventor: Daniel Chipchase</div>
+        <div class="patent-claims">14 claims · programs executed by basis-plane measurement · qubit.html as Exhibit A · 3D shape language robotics world model in kilobytes</div>
+      </div>
+    </div>
+
+    <div class="patent-row" style="border-left:3px solid var(--dim);opacity:.5">
+      <div>
+        <div class="patent-num" style="color:var(--dim)">UNDISCLOSED</div>
+        <div class="patent-badge badge-undisclosed">CONCEPT</div>
+      </div>
+      <div class="patent-body">
+        <div class="patent-title" style="color:var(--dim)">Clock Ring Quantum Navigator</div>
+        <div class="patent-meta">Originated: 22 Mar 2026 · Status: Undisclosed — not yet filed</div>
+        <div class="patent-claims" style="color:var(--dim)">Infinite nested clock rings · BIP39 superposition geometry · inversion past singularity · quantum Computanium navigation layer · golden zip</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- LIVE INFRASTRUCTURE -->
+<div class="section">
+  <div class="section-label">Live Infrastructure &amp; Products</div>
+  <div class="asset-grid">
+    <div class="asset-item highlight"><div class="asset-name">▲ Computanium Portal</div><div class="asset-val">Soul vault · patent umbrella · dividend engine</div></div>
+    <div class="asset-item highlight"><div class="asset-name">ALIVE Ecosystem</div><div class="asset-val">Girl v3.1 · Boy Angular · Brainstem · 78% complete</div></div>
+    <div class="asset-item"><div class="asset-name">AGI Cortex Brain</div><div class="asset-val">65,987 nodes · self-modifying · 3 hemispheres</div></div>
+    <div class="asset-item"><div class="asset-name">Visual Cortex</div><div class="asset-val">Live AGI brain visualisation · cortex-live.html</div></div>
+    <div class="asset-item highlight"><div class="asset-name">⚗ Testing Lobby</div><div class="asset-val">Gamified QA · SFT economy · soul wallet</div></div>
+    <div class="asset-item"><div class="asset-name">BrainShredder</div><div class="asset-val">Chaos→code · idea scoring · beta</div></div>
+    <div class="asset-item"><div class="asset-name">Voice Contract</div><div class="asset-val">Spoken terms → genomic glyph SVG · beta</div></div>
+    <div class="asset-item"><div class="asset-name">Trump v Deep State</div><div class="asset-val">Playable game v2.9 · viral content engine</div></div>
+    <div class="asset-item"><div class="asset-name">Imaginator</div><div class="asset-val">Stills → YouTube Shorts · Google auth pipeline</div></div>
+    <div class="asset-item"><div class="asset-name">Dares4Dosh</div><div class="asset-val">React 19 dare feed · Soul Forge · 5-game soul mint</div></div>
+    <div class="asset-item"><div class="asset-name">Screensaver</div><div class="asset-val">Distributed GPU/CPU computing · WebGL art</div></div>
+    <div class="asset-item"><div class="asset-name">ComicVID</div><div class="asset-val">Video→halftone codec · IPFS persistence</div></div>
+    <div class="asset-item"><div class="asset-name">Fuel Dashboard</div><div class="asset-val">Crypto funding cockpit · 10 wallet QRs · BIP39</div></div>
+    <div class="asset-item"><div class="asset-name">Cortex Wiki</div><div class="asset-val">5 papers · 2 patents · Zenodo DOIs · architecture</div></div>
+    <div class="asset-item"><div class="asset-name">2 VPS Servers</div><div class="asset-val">82.165.134.4 + 185.230.216.235 · Cloudflare CDN</div></div>
+    <div class="asset-item"><div class="asset-name">CF Workers (4)</div><div class="asset-val">ai-leads · ai-image · ai-chat · D1 database</div></div>
+    <div class="asset-item"><div class="asset-name">50+ Products</div><div class="asset-val">420+ files · 75MB · 43 days building</div></div>
+    <div class="asset-item"><div class="asset-name">Satoshi Cipher</div><div class="asset-val">Vigenere ASCII 32-126 · vault · pairing · contracts</div></div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- UNDISCLOSED IP -->
+<div class="section">
+  <div class="section-label">Undisclosed Strategic IP</div>
+  <div class="undisclosed-box">
+    <div class="undisclosed-cipher" id="undisclosed-cipher"></div>
+    <div class="undisclosed-label">3 undisclosed concepts — Satoshi encrypted · key required to read</div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- RIPPLE GENOME -->
+<div class="section">
+  <div class="section-label">Consciousness Model — Theoretical IP</div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px;max-width:600px">
+    <div style="font-size:18px;color:var(--gold);font-weight:800;margin-bottom:8px">The Ripple Genome Model</div>
+    <div style="font-size:13px;color:var(--dim);line-height:1.8;margin-bottom:12px">"Consciousness is the ocean learning the shape of its own floor through the pattern of its own ripples."</div>
+    <div style="font-size:11px;color:#475569">Originated: 16 Mar 2026 · Daniel Chipchase · Foundation theory for ALIVE BIOS, Hebbian learning architecture, AGI value alignment</div>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);font-size:12px;color:var(--dim)">The <code style="color:var(--gold);font-size:11px">>>.&lt;&lt;</code> singularity symbol and dot-unpack theory (22 Mar 2026): consciousness as compressed information that unpacks from a single point — the absence of data IS the data.</div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- DISCLAIMER -->
+<div class="section" style="padding-bottom:20px">
+  <div style="background:rgba(100,116,139,.05);border:1px solid #1a1a2e;border-radius:8px;padding:16px;font-size:11px;color:var(--dim);line-height:1.8">
+    <strong style="color:#fff">Disclaimer:</strong> This valuation is prepared for internal and investor reference only. Figures represent good-faith estimates using standard early-stage methodology. Strategic/IP value reflects potential licensing income and acquisition premium, not guaranteed revenue. Patents are pending and subject to examination. Undisclosed IP concepts are not yet filed and carry no guaranteed protection. All figures GBP. Not financial advice.
+  </div>
+</div>
+
+<footer>
+  <p><strong>ShortFactory</strong> · shortfactory.shop</p>
+  <p>Building AGI infrastructure · Somerset, UK · Founder: Daniel Chipchase</p>
+  <p style="margin-top:8px;font-size:10px;color:#333">Valuation figures encrypted with Satoshi cipher · Authorised access only</p>
+</footer>
+
+<script>
+// ── SATOSHI CIPHER ────────────────────────────────────────────────────────────
+function satoshi(text, key) {
+  const B=32, R=95;
+  let o='';
+  for (let i=0;i<text.length;i++) {
+    const c=text.charCodeAt(i);
+    if (c>=32&&c<=126) {
+      const k=key.charCodeAt(i%key.length)-B;
+      o+=String.fromCharCode(((c-B+k)%R)+B);
+    } else { o+=text[i]; }
+  }
+  return o;
+}
+function satoshiDecode(text, key) {
+  const B=32, R=95;
+  let o='';
+  for (let i=0;i<text.length;i++) {
+    const c=text.charCodeAt(i);
+    if (c>=32&&c<=126) {
+      const k=key.charCodeAt(i%key.length)-B;
+      o+=String.fromCharCode(((c-B-k%R+R)%R)+B);
+    } else { o+=text[i]; }
+  }
+  return o;
+}
+
+// ── PLAINTEXT VALUES (rendered as cipher until key entered) ───────────────────
+const VALUES = {
+  central:     '£1,500,000',
+  m1_range:    '£320,000 — £550,000',
+  m1_central:  'Central: £435,000',
+  m2_range:    '£500,000 — £1,500,000',
+  m2_central:  'Central: £1,000,000',
+  m3_range:    '£180,000 — £600,000',
+  m3_central:  'Central: £390,000',
+  m4_range:    '£1,200,000 — £5,000,000',
+  m4_central:  'Central: £2,500,000',
+  v3_hist:     '£1,500,000',
+  undisclosed: 'PASSWORD REFUSAL SERVICE — ALIVE final form: creature holds all keys, no passwords, biometric soul glyph identity, Satoshi vault, NO button. CLOCK RING QUANTUM NAVIGATOR — BIP39 superposition geometry, infinite nested clock faces, inversion past singularity, quantum Computanium navigation, golden zip at game center. RIPPLE GENOME FULL THEORY — consciousness equations, ocean floor model, precognitive pattern recognition, triangulation confirmation protocol.'
+};
+
+const KEY = 'SKYDADDY';
+
+// Encode all values and display as cipher
+function encodeAll() {
+  Object.keys(VALUES).forEach(k => {
+    const el = document.getElementById(k === 'central' ? 'centralVal' :
+      k === 'undisclosed' ? 'undisclosed-cipher' :
+      k === 'v3_hist' ? 'v3-hist' :
+      k.replace('_','-'));
+    if (el) el.textContent = satoshi(VALUES[k], KEY);
+  });
+}
+
+// Reveal on correct key
+let revealed = false;
+function tryReveal() {
+  const input = document.getElementById('keyInput').value.trim().toUpperCase();
+  const status = document.getElementById('revealStatus');
+  if (input === KEY) {
+    revealAll();
+    status.textContent = '✓ Authorised. Valuation revealed.';
+    status.className = 'reveal-status ok';
+    document.getElementById('keyInput').value = '';
+  } else if (input) {
+    status.textContent = '✗ Invalid key. Access denied.';
+    status.className = 'reveal-status err';
+    setTimeout(() => {
+      status.textContent = 'Valuation figures are encrypted. Enter authorised key to reveal.';
+      status.className = 'reveal-status';
+    }, 2000);
+  }
+}
+
+function revealAll() {
+  if (revealed) return;
+  revealed = true;
+
+  const cv = document.getElementById('centralVal');
+  cv.textContent = VALUES.central;
+  cv.className = 'central-value';
+  document.getElementById('centralDelta').style.display = 'inline-block';
+
+  const maps = [
+    ['m1-range', 'm1_range'], ['m1-central', 'm1_central'],
+    ['m2-range', 'm2_range'], ['m2-central', 'm2_central'],
+    ['m3-range', 'm3_range'], ['m3-central', 'm3_central'],
+    ['m4-range', 'm4_range'], ['m4-central', 'm4_central'],
+  ];
+  maps.forEach(([id, key]) => {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = VALUES[key]; el.className = el.className.replace(' encrypted','').replace('encrypted',''); }
+  });
+
+  const vh = document.getElementById('v3-hist');
+  vh.textContent = VALUES.v3_hist;
+  vh.style.cssText = 'color:var(--green);font-size:14px;font-weight:800';
+  document.getElementById('v3-delta').style.display = 'inline-block';
+
+  const uc = document.getElementById('undisclosed-cipher');
+  uc.textContent = VALUES.undisclosed;
+  uc.style.cssText = 'font-size:12px;color:#94a3b8;line-height:1.8;word-break:normal;font-family:inherit;margin-bottom:12px';
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+encodeAll();
+</script>
+</body>
+</html>

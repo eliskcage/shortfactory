@@ -1,0 +1,138 @@
+SHORTFACTORY GENOMIC CAT — SATOSHI BEHAVIOR GENOME FORMAT v1.0
+================================================================
+Patent: GB2605434.6 — Domino Exemption: Visual Equation Genome Compression
+Filed:  13 March 2026, UK Intellectual Property Office
+Inventor: Daniel Chipchase, Somerset, UK
+Contact: dan@shortfactory.shop · shortfactory.shop
+
+WHAT IS A SATOSHI BEHAVIOR PACKET?
+-----------------------------------
+A Satoshi packet is a small JSON object whose polygon shape IS its program.
+The number of polygon sides encodes complexity. You do not need to read the
+values — the shape itself communicates the behavior type to any visual system.
+
+This is Visual Equation Genome Compression in action:
+  shape = data = program = compression
+
+GENOME PARAMETERS
+-----------------
+breathFreq  float  0.15 – 0.80   Breathing cycles per second.
+                                  Low = sleeping. High = excited.
+
+breathAmp   float  0.005 – 0.045 Chest expansion per breath.
+                                  Low = shallow/controlled. High = panting.
+
+tailFreq    float  0.08 – 1.20   Tail oscillation frequency.
+                                  Low = content/still. High = play/excited.
+
+tailAmp     float  0.03 – 0.35   Tail swing radius in radians.
+                                  Low = twitch. High = full sweep.
+
+headTilt    float  -0.30 – 0.50  Head rotation (radians).
+                                  Negative = alert/forward. Positive = sleepy/drooped.
+
+eyeScale    float  0.10 – 1.40   Iris vertical scale.
+                                  0.10 = eyes shut (REST). 1.40 = wide open (ALERT).
+
+SATOSHI PACKET JSON FORMAT
+--------------------------
+{
+  "id":     "unique_string",
+  "label":  "BEHAVIOR_NAME",
+  "sides":  <integer 3-12>,
+  "genome": {
+    "breathFreq": <float>,
+    "breathAmp":  <float>,
+    "tailFreq":   <float>,
+    "tailAmp":    <float>,
+    "headTilt":   <float>,
+    "eyeScale":   <float>
+  }
+}
+
+SIDES → COMPLEXITY MAPPING
+---------------------------
+3   Triangle   — Primitive rest state. Minimal processing.
+4   Square     — Balanced neutral state. Base personality.
+5   Pentagon   — Single-focus state. Directed attention.
+6   Hexagon    — Dual-axis awareness. Curiosity mode.
+7   Heptagon   — Multi-threaded state. Play/social mode.
+8   Octagon    — Full alert state. Courage/leadership mode.
+9+             — Extended states (fear, grief, joy, love etc.)
+
+BUILT-IN ETHOS PACKETS (ALIVE BIOS VALUES)
+-------------------------------------------
+These map to the 10 immutable BIOS values of the ALIVE system.
+BIOS values can only go UP — they are the ethical core of the creature.
+
+REST      3 sides  breathFreq=0.20  breathAmp=0.040  tailFreq=0.12  tailAmp=0.05  headTilt= 0.42  eyeScale=0.15
+PATIENCE  4 sides  breathFreq=0.30  breathAmp=0.022  tailFreq=0.22  tailAmp=0.13  headTilt= 0.04  eyeScale=1.00
+FOCUS     5 sides  breathFreq=0.44  breathAmp=0.012  tailFreq=0.08  tailAmp=0.04  headTilt=-0.14  eyeScale=1.30
+CURIOUS   6 sides  breathFreq=0.50  breathAmp=0.016  tailFreq=0.60  tailAmp=0.20  headTilt= 0.20  eyeScale=1.20
+PLAY      7 sides  breathFreq=0.68  breathAmp=0.010  tailFreq=1.10  tailAmp=0.30  headTilt=-0.24  eyeScale=1.10
+COURAGE   8 sides  breathFreq=0.52  breathAmp=0.014  tailFreq=0.50  tailAmp=0.18  headTilt=-0.20  eyeScale=1.20
+
+HOW TO CREATE A NEW SATOSHI PACKET (for AIs)
+---------------------------------------------
+1. Choose a behavior concept (e.g. GRIEF, JOY, TRUST, HUNGER)
+2. Choose sides 3-12 based on complexity
+3. Set genome values using the ranges and logic above
+4. Output valid JSON matching the format above
+5. The cat at shortfactory.shop/genomic-cats.html will accept it
+6. Transition speed: lerp factor 0.008 per frame at 60fps (~8 seconds full transition)
+
+EXAMPLE — AI-GENERATED PACKET: GRIEF
+--------------------------------------
+{
+  "id":     "grief",
+  "label":  "GRIEF",
+  "sides":  9,
+  "genome": {
+    "breathFreq": 0.18,
+    "breathAmp":  0.048,
+    "tailFreq":   0.10,
+    "tailAmp":    0.03,
+    "headTilt":   0.48,
+    "eyeScale":   0.20
+  }
+}
+
+EXAMPLE — AI-GENERATED PACKET: JOY
+------------------------------------
+{
+  "id":     "joy",
+  "label":  "JOY",
+  "sides":  10,
+  "genome": {
+    "breathFreq": 0.75,
+    "breathAmp":  0.008,
+    "tailFreq":   1.20,
+    "tailAmp":    0.35,
+    "headTilt":   -0.28,
+    "eyeScale":   1.40
+  }
+}
+
+TECHNICAL IMPLEMENTATION
+-------------------------
+The cat is built in Three.js r152.
+All behavior is driven by the genome object — no other animation code exists.
+The genome IS the program. The polygon IS the data.
+Feeding a packet lerps the active behavior toward the target genome over ~8s.
+
+Renderer:    Three.js WebGL, flat-shaded MeshPhongMaterial
+Body:        SphereGeometry(1, 9, 7) scaled by bodyRx/Ry/Rz
+Eyes:        MeshBasicMaterial #aaff00 + PointLight per eye
+Tail:        6 chained Group pivots, driven by tailFreq/tailAmp
+Breath:      bodyGrp.scale driven by breathFreq/breathAmp
+
+COMPRESSION NOTE
+-----------------
+This entire cat — geometry + behavior + personality — is encoded in under 2KB.
+The genome stores the GENERATOR, not the output.
+At 8K resolution the cat renders from the same 1.8KB genome.
+Compression ratio vs rendered output: > 1,000,000:1
+
+Shape = Data = Life.
+
+shortfactory.shop · GB2605434.6 · dan@shortfactory.shop

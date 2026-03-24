@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>▲ PROJECT GENOME</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root { --mcy:#FFC72C; --bg:#05050d; }
+body {
+  background:var(--bg); min-height:100vh;
+  font-family:'Courier New',monospace;
+  display:flex; flex-direction:column; align-items:center;
+  color:rgba(255,255,255,0.8);
+}
+
+header {
+  display:flex; align-items:center; justify-content:space-between;
+  width:100%; padding:14px 20px;
+  border-bottom:1px solid rgba(255,199,44,0.1);
+}
+header h1 { font-size:9px; letter-spacing:0.4em; color:var(--mcy); text-shadow:0 0 12px var(--mcy); }
+#overall-badge {
+  font-size:8px; letter-spacing:0.2em; padding:3px 10px;
+}
+.badge-ok   { background:rgba(0,200,80,0.12);  color:#00c850; }
+.badge-warn { background:rgba(255,160,0,0.12); color:#ffa000; }
+.badge-fail { background:rgba(255,50,80,0.12); color:#ff3250; }
+
+/* ── BIG BEACON (the thing the camera reads) ── */
+#beacon-wrap {
+  position:relative;
+  width:240px; height:240px;
+  margin:24px 0 18px;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+#beacon-canvas {
+  position:absolute; inset:0;
+  width:100%; height:100%;
+}
+#beacon-label {
+  position:absolute; bottom:-22px; left:50%; transform:translateX(-50%);
+  font-size:7px; letter-spacing:0.25em; color:rgba(255,199,44,0.35);
+  white-space:nowrap;
+}
+#genome-hex {
+  font-size:28px; letter-spacing:0.3em; font-weight:bold;
+  color:var(--mcy); text-shadow:0 0 20px var(--mcy);
+  position:relative; z-index:2;
+}
+
+/* ── System grid ── */
+#systems {
+  width:100%; max-width:480px;
+  padding:0 16px;
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+.sys-card {
+  border:1px solid rgba(255,199,44,0.08);
+  padding:10px 12px;
+  display:flex; flex-direction:column; gap:4px;
+}
+.sys-name  { font-size:7px; letter-spacing:0.2em; color:rgba(255,199,44,0.4); }
+.sys-status { font-size:9px; letter-spacing:0.15em; }
+.sys-detail { font-size:7px; letter-spacing:0.1em; color:rgba(255,255,255,0.3); }
+.ok   { color:#00c850; } .warn { color:#ffa000; } .fail { color:#ff3250; } .down { color:rgba(255,80,80,0.6); }
+
+/* ── Bit genome strip ── */
+#bit-strip {
+  display:flex; gap:3px; margin:14px 0 6px;
+  flex-wrap:wrap; justify-content:center; padding:0 16px;
+}
+.bit-group { display:flex; gap:2px; margin-right:6px; }
+.genome-bit {
+  width:14px; height:14px; border-radius:2px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:7px; font-weight:bold;
+}
+.gb-1-1 { background:rgba(0,200,80,0.2); color:#00c850; }
+.gb-1-0 { background:rgba(255,160,0,0.2); color:#ffa000; }
+.gb-0-1 { background:rgba(255,50,80,0.2); color:#ff3250; }
+.gb-0-0 { background:rgba(100,100,100,0.2); color:#444; }
+
+#bit-labels {
+  display:flex; gap:3px; flex-wrap:wrap; justify-content:center;
+  padding:0 16px; margin-bottom:14px;
+}
+.bit-sys-lbl {
+  width:34px; font-size:5.5px; letter-spacing:0.08em;
+  color:rgba(255,199,44,0.25); text-align:center; margin-right:6px;
+  line-height:1.3;
+}
+
+/* ── Footer ── */
+footer {
+  margin-top:auto; padding:16px;
+  font-size:6px; letter-spacing:0.2em;
+  color:rgba(255,199,44,0.2); text-align:center;
+}
+#last-check { font-size:7px; letter-spacing:0.15em; color:rgba(255,199,44,0.3); margin:12px 0 4px; }
+#elapsed    { font-size:6px; color:rgba(255,255,255,0.2); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>▲ PROJECT GENOME · SHORTFACTORY</h1>
+  <span id="overall-badge" class="badge-ok">—</span>
+</header>
+
+<!-- Big visual beacon — point camera at this -->
+<div id="beacon-wrap">
+  <canvas id="beacon-canvas" width="500" height="500"></canvas>
+  <div id="genome-hex">····</div>
+  <div id="beacon-label">▲ POINT SOUL EYE AT THIS BEACON</div>
+</div>
+
+<!-- Genome bit strip -->
+<div id="bit-strip"></div>
+<div id="bit-labels"></div>
+
+<!-- System grid -->
+<div id="systems">
+  <div class="sys-card" id="card-old_server">
+    <div class="sys-name">OLD SERVER</div>
+    <div class="sys-status">—</div>
+    <div class="sys-detail">82.165.134.4</div>
+  </div>
+  <div class="sys-card" id="card-new_server">
+    <div class="sys-name">NEW SERVER</div>
+    <div class="sys-status">—</div>
+    <div class="sys-detail">185.230.216.235</div>
+  </div>
+  <div class="sys-card" id="card-soul_api">
+    <div class="sys-name">SOUL API</div>
+    <div class="sys-status">—</div>
+    <div class="sys-detail">pair-check.php</div>
+  </div>
+  <div class="sys-card" id="card-gateway_api">
+    <div class="sys-name">GATEWAY API</div>
+    <div class="sys-status">—</div>
+    <div class="sys-detail">gateway/check.php</div>
+  </div>
+  <div class="sys-card" id="card-alive_page">
+    <div class="sys-name">ALIVE PAGE</div>
+    <div class="sys-status">—</div>
+    <div class="sys-detail">shortfactory.shop/alive/</div>
+  </div>
+  <div class="sys-card" id="card-brain_api">
+    <div class="sys-name">CORTEX BRAIN</div>
+    <div class="sys-status">—</div>
+    <div class="sys-detail">185.230.216.235/cortex</div>
+  </div>
+  <div class="sys-card" id="card-soul_activity">
+    <div class="sys-name">SOUL ACTIVITY</div>
+    <div class="sys-status">—</div>
+    <div class="sys-detail">pairings / hour</div>
+  </div>
+  <div class="sys-card" id="card-error_rate">
+    <div class="sys-name">ERROR RATE</div>
+    <div class="sys-status">—</div>
+    <div class="sys-detail">fail reports / hour</div>
+  </div>
+</div>
+
+<div id="last-check">—</div>
+<div id="elapsed">—</div>
+
+<footer>
+  ▲ 16-BIT GENOME · 8 SYSTEMS · 2 BITS EACH · 11=OK 10=WARN 01=FAIL 00=DOWN<br>
+  READ WITH SOUL EYE AT /soul/camera-pair.html
+</footer>
+
+<script>
+'use strict';
+
+const SYS_LABELS = {
+  old_server:'OLD SRV', new_server:'NEW SRV', soul_api:'SOUL',
+  gateway_api:'GATE', alive_page:'ALIVE', brain_api:'BRAIN',
+  soul_activity:'ACTIVITY', error_rate:'ERRORS'
+};
+
+let currentBits   = '0'.repeat(16);
+let currentGenome = '0000';
+let beaconRunning = false;
+
+// ── Fetch genome ──
+async function fetchGenome() {
+  try {
+    const r = await fetch('/status/pulse.php?_=' + Date.now());
+    const d = await r.json();
+    currentBits   = d.bits;
+    currentGenome = d.genome;
+    renderGenome(d);
+    if (!beaconRunning) { beaconRunning = true; startBeacon(); }
+    else updateBeacon();
+  } catch(e) {
+    document.getElementById('last-check').textContent = '▲ PULSE FAILED — ' + e.message;
+  }
+}
+
+function renderGenome(d) {
+  // Header badge
+  const badge = document.getElementById('overall-badge');
+  badge.textContent = d.overall;
+  badge.className = 'badge-' + d.overall.toLowerCase();
+
+  // Hex display
+  document.getElementById('genome-hex').textContent = d.genome;
+
+  // Bit strip
+  const strip = document.getElementById('bit-strip');
+  const lbls  = document.getElementById('bit-labels');
+  strip.innerHTML = ''; lbls.innerHTML = '';
+  const sysKeys = Object.keys(SYS_LABELS);
+  sysKeys.forEach((key, si) => {
+    const b0 = d.bits[si*2], b1 = d.bits[si*2+1];
+    const grp = document.createElement('div'); grp.className = 'bit-group';
+    [b0, b1].forEach(b => {
+      const el = document.createElement('div');
+      el.className = 'genome-bit gb-' + b0 + '-' + b1;
+      el.textContent = b;
+      grp.appendChild(el);
+    });
+    strip.appendChild(grp);
+
+    const lbl = document.createElement('div');
+    lbl.className = 'bit-sys-lbl';
+    lbl.textContent = SYS_LABELS[key];
+    lbls.appendChild(lbl);
+  });
+
+  // System cards
+  const sysData = d.systems;
+  Object.entries(sysData).forEach(([key, val]) => {
+    const card = document.getElementById('card-' + key);
+    if (!card) return;
+    const statusEl = card.children[1];
+    const detailEl = card.children[2];
+    const s = val.status || 'DOWN';
+    const cls = s === 'OK' ? 'ok' : s === 'WARN' ? 'warn' : s === 'FAIL' ? 'fail' : 'down';
+    statusEl.textContent = (s==='OK'?'✅ ':s==='WARN'?'⚠️ ':s==='FAIL'?'❌ ':'⬛ ') + s;
+    statusEl.className = 'sys-status ' + cls;
+    if (val.ms !== undefined) {
+      detailEl.textContent = val.ms + 'ms' + (val.count !== undefined ? ' · ' + val.count + ' events' : '');
+    } else if (val.count !== undefined) {
+      detailEl.textContent = val.count + ' events/hr';
+    }
+    card.style.borderColor = s==='OK'?'rgba(0,200,80,0.15)':s==='WARN'?'rgba(255,160,0,0.15)':'rgba(255,50,80,0.2)';
+  });
+
+  document.getElementById('last-check').textContent = '▲ LAST PULSE: ' + new Date().toLocaleTimeString();
+  document.getElementById('elapsed').textContent   = 'checked in ' + d.elapsed_ms + 'ms';
+}
+
+// ── Beacon drawing ──
+const canvas = document.getElementById('beacon-canvas');
+const ctx    = canvas.getContext('2d');
+const MCY    = '#FFC72C';
+const S      = 500;
+
+function drawBeacon(brightness) {
+  ctx.clearRect(0,0,S,S);
+  // Outer triangle
+  const alpha = 0.08 + brightness * 0.92;
+  ctx.strokeStyle = MCY; ctx.lineWidth = 6;
+  ctx.shadowColor = MCY; ctx.shadowBlur = brightness > 0.5 ? 40 : 6;
+  ctx.globalAlpha = alpha;
+  ctx.beginPath(); ctx.moveTo(S/2,18); ctx.lineTo(18,S-18); ctx.lineTo(S-18,S-18); ctx.closePath(); ctx.stroke();
+  // Inner triangle
+  ctx.lineWidth = 3; ctx.shadowBlur = brightness > 0.5 ? 20 : 3;
+  ctx.globalAlpha = alpha * 0.6;
+  ctx.beginPath(); ctx.moveTo(S/2,100); ctx.lineTo(100,S-80); ctx.lineTo(S-100,S-80); ctx.closePath(); ctx.stroke();
+  // Centre fill pulse
+  if (brightness > 0.5) {
+    ctx.globalAlpha = (brightness - 0.5) * 0.6;
+    ctx.fillStyle = MCY;
+    ctx.beginPath(); ctx.moveTo(S/2,18); ctx.lineTo(18,S-18); ctx.lineTo(S-18,S-18); ctx.closePath(); ctx.fill();
+  }
+  // Corner dots
+  [[S/2,18],[18,S-18],[S-18,S-18]].forEach(([px,py]) => {
+    ctx.globalAlpha = alpha;
+    ctx.shadowBlur = brightness > 0.5 ? 20 : 4;
+    ctx.fillStyle = MCY;
+    ctx.beginPath(); ctx.arc(px,py,8,0,Math.PI*2); ctx.fill();
+  });
+  ctx.globalAlpha=1; ctx.shadowBlur=0;
+}
+
+// Initial dim state
+drawBeacon(0.06);
+
+// ── Beacon protocol (matches soul-detector.js exactly) ──
+// SYNC: 3 × (120ms ON / 120ms OFF) = 720ms
+// DATA: 16 bits × 400ms each = 6400ms  (extended from 12 to 16 bits for genome)
+// GAP:  600ms
+// Total: ~7.7s cycle
+//
+// NOTE: camera-pair.html in GENOME MODE expects 16 bits, not 12
+
+let beaconBits = [];
+
+function updateBeacon() {
+  beaconBits = currentBits.split('').map(Number);
+}
+
+function startBeacon() {
+  beaconBits = currentBits.split('').map(Number);
+  cycle();
+}
+
+function cycle() {
+  let t = 0;
+  // SYNC
+  for (let i=0; i<3; i++) {
+    const on = t + i*240;
+    setTimeout(() => drawBeacon(1.0), on);
+    setTimeout(() => drawBeacon(0.06), on + 120);
+  }
+  t += 3*240 + 80;
+
+  // DATA (16 bits)
+  beaconBits.forEach((bit, i) => {
+    setTimeout(() => drawBeacon(bit ? 0.95 : 0.06), t + i*400);
+  });
+  t += 16*400 + 60;
+
+  // GAP
+  setTimeout(() => drawBeacon(0.06), t);
+  t += 600;
+
+  setTimeout(cycle, t);
+}
+
+// ── Poll every 30 seconds ──
+fetchGenome();
+setInterval(fetchGenome, 30000);
+</script>
+</body>
+</html>

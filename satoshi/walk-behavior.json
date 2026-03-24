@@ -1,0 +1,10 @@
+{
+  "id": "walk",
+  "label": "WALK",
+  "walkSpeed": 1.15, "walkVel": 0.90, "walkAmp": 0.60,
+  "walkLift": 0.07, "bobAmp": 0.026,
+  "tailFreq": 0.55, "tailAmp": 0.20,
+  "headNod": 0.035,
+  "breathFreq": 0, "breathAmp": 0,
+  "headTilt": 0
+}

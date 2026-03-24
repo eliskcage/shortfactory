@@ -1,0 +1,2123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQUID CHALLENGE — Station 02</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Mono', monospace;
+            background: #03040a;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* Neural canvas background */
+        #neural-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.08;
+            pointer-events: none;
+        }
+
+        /* Station header */
+        .station-header {
+            position: relative;
+            z-index: 10;
+        }
+
+        .phone-container {
+            position: relative;
+            width: 390px;
+            height: 844px;
+            background: linear-gradient(145deg, #03040a 0%, #07090f 50%, #0a0c14 100%);
+            border-radius: 50px;
+            border: 2px solid #1a1f2e;
+            overflow: hidden;
+            box-shadow: 0 0 80px rgba(255,60,172,0.15), 0 0 160px rgba(0,229,255,0.08);
+            z-index: 5;
+        }
+
+        .dynamic-island {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 35px;
+            background: #000;
+            border-radius: 20px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 12px rgba(255,60,172,0.2);
+        }
+
+        .rec-badge {
+            display: none;
+            background: #ff3cac;
+            color: #000;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 10px;
+            animation: recPulse 1s infinite;
+            font-family: 'DM Mono', monospace;
+            letter-spacing: 0.1em;
+        }
+
+        .rec-badge.active { display: block; }
+
+        @keyframes recPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .timer-overlay {
+            position: absolute;
+            top: 55px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(3,4,10,0.9);
+            padding: 8px 20px;
+            border-radius: 4px;
+            z-index: 999;
+            font-family: 'DM Mono', monospace;
+            font-size: 18px;
+            letter-spacing: 0.15em;
+            color: #00ff88;
+            border: 2px solid #00ff88;
+            display: none;
+        }
+
+        .timer-overlay.warning { color: #ff7c1a; border-color: #ff7c1a; }
+        .timer-overlay.danger { color: #ff3c3c; border-color: #ff3c3c; animation: timerShake 0.5s infinite; }
+
+        @keyframes timerShake {
+            0%, 100% { transform: translateX(-50%) rotate(0deg); }
+            25% { transform: translateX(-50%) rotate(-2deg); }
+            75% { transform: translateX(-50%) rotate(2deg); }
+        }
+
+        .screen {
+            position: absolute;
+            inset: 0;
+            padding: 60px 20px 30px;
+            display: none;
+            flex-direction: column;
+            transition: opacity 0.5s;
+        }
+
+        .screen.active { display: flex; }
+
+        /* Demo Screen */
+        #demo-screen {
+            background: linear-gradient(180deg, #03040a 0%, #07090f 100%);
+        }
+
+        .demo-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 36px;
+            font-weight: 400;
+            letter-spacing: 0.2em;
+            text-align: center;
+            background: linear-gradient(90deg, #ffd60a, #ff3cac);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .demo-subtitle {
+            text-align: center;
+            color: #8890a8;
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            margin-bottom: 30px;
+            font-family: 'DM Mono', monospace;
+        }
+
+        .demo-video-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            background: #000;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            border: 1px solid #ff3cac;
+        }
+
+        .demo-video-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .demo-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.7);
+        }
+
+        .play-btn {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #ff3cac, #00e5ff);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .play-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(255,60,172,0.5);
+        }
+
+        .play-btn::after {
+            content: '';
+            width: 0;
+            height: 0;
+            border-left: 25px solid white;
+            border-top: 15px solid transparent;
+            border-bottom: 15px solid transparent;
+            margin-left: 5px;
+        }
+
+        .start-btn {
+            width: 100%;
+            padding: 18px;
+            background: #ff3cac;
+            border: none;
+            border-radius: 2px;
+            color: #000;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 18px;
+            letter-spacing: 0.2em;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: auto;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 40px rgba(255,60,172,0.4);
+        }
+
+        /* Game Screen */
+        #game-screen {
+            background: linear-gradient(180deg, #03040a 0%, #07090f 50%, #0a0c14 100%);
+        }
+
+        .scene-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .scene-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .scene-counter {
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 0.15em;
+            color: #ffd60a;
+            text-transform: uppercase;
+        }
+
+        .chaos-meter {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .chaos-bar {
+            width: 60px;
+            height: 8px;
+            background: #0a0c14;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .chaos-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff88, #ffd60a, #ff3c3c);
+            transition: width 0.3s;
+        }
+
+        .video-frame {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            background: #000;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            border: 1px solid #ff3cac;
+        }
+
+        .video-frame video, .video-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .mystery-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,60,172,0.9);
+            padding: 5px 12px;
+            border-radius: 2px;
+            font-size: 11px;
+            font-family: 'DM Mono', monospace;
+            letter-spacing: 0.1em;
+            color: #000;
+        }
+
+        .question-box {
+            background: rgba(255,60,172,0.06);
+            border: 1px solid rgba(255,60,172,0.3);
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .question-text {
+            font-size: 14px;
+            font-family: 'DM Mono', monospace;
+            color: #eef0f5;
+            margin-bottom: 15px;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .option-btn {
+            padding: 12px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid #1a1f2e;
+            border-radius: 2px;
+            color: #eef0f5;
+            font-size: 11px;
+            font-family: 'DM Mono', monospace;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .option-btn:hover {
+            background: rgba(255,60,172,0.08);
+            border-color: #ff3cac;
+        }
+
+        .option-btn.selected {
+            background: rgba(255,60,172,0.15);
+            border-color: #ff3cac;
+            color: #ff3cac;
+        }
+
+        .option-btn.correct {
+            border-color: #00ff88;
+            background: rgba(0,255,136,0.1);
+            color: #00ff88;
+        }
+
+        .option-btn.wrong {
+            border-color: #ff3c3c;
+            background: rgba(255,60,60,0.1);
+        }
+
+        .voice-section {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            border: 1px solid #1a1f2e;
+            padding: 15px;
+            margin-top: auto;
+        }
+
+        .voice-label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #8890a8;
+            font-size: 10px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .voice-record {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .mic-btn {
+            width: 50px;
+            height: 50px;
+            background: rgba(255,60,172,0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid #ff3cac;
+        }
+
+        .mic-btn:hover {
+            background: rgba(255,60,172,0.2);
+        }
+
+        .mic-btn.recording {
+            animation: micPulse 1s infinite;
+        }
+
+        @keyframes micPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255,60,172,0.7); }
+            50% { box-shadow: 0 0 0 15px rgba(255,60,172,0); }
+        }
+
+        .mic-icon {
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 12px 12px 12px 12px;
+            position: relative;
+        }
+
+        .mic-icon::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 16px;
+            height: 8px;
+            border: 2px solid white;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+        }
+
+        .waveform {
+            flex: 1;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .wave-bar {
+            width: 4px;
+            background: linear-gradient(180deg, #00ff88, #ff3cac);
+            border-radius: 2px;
+            animation: wave 0.5s ease-in-out infinite;
+        }
+
+        @keyframes wave {
+            0%, 100% { height: 10px; }
+            50% { height: 30px; }
+        }
+
+        .continue-btn {
+            width: 100%;
+            padding: 15px;
+            background: #00ff88;
+            border: none;
+            border-radius: 2px;
+            color: #000;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 16px;
+            letter-spacing: 0.15em;
+            cursor: pointer;
+            margin-top: 15px;
+            opacity: 0.5;
+            pointer-events: none;
+            transition: all 0.3s;
+        }
+
+        .continue-btn.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Random Video Popup */
+        .video-popup {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 300px;
+            background: #0a0c14;
+            border-radius: 4px;
+            overflow: hidden;
+            z-index: 2000;
+            border: 2px solid #ff3cac;
+            transition: transform 0.3s;
+        }
+
+        .video-popup.active {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .video-popup video {
+            width: 100%;
+        }
+
+        .popup-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 30px;
+            height: 30px;
+            background: rgba(255,60,172,0.8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #000;
+            font-weight: bold;
+        }
+
+        /* User Camera Preview */
+        .user-camera {
+            position: absolute;
+            bottom: 120px;
+            right: 10px;
+            width: 80px;
+            height: 100px;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 2px solid #ff3cac;
+            z-index: 500;
+            display: none;
+        }
+
+        .user-camera.active { display: block; }
+
+        .user-camera video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+
+        .camera-label {
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255,60,172,0.9);
+            padding: 2px 8px;
+            border-radius: 2px;
+            font-size: 8px;
+            font-family: 'DM Mono', monospace;
+            letter-spacing: 0.1em;
+            color: #000;
+            white-space: nowrap;
+        }
+
+        /* Generating Screen */
+        #generating-screen {
+            background: #03040a;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .gen-container {
+            text-align: center;
+        }
+
+        .gen-spinner {
+            width: 100px;
+            height: 100px;
+            border: 4px solid transparent;
+            border-top-color: #ff3cac;
+            border-right-color: #00e5ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 30px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .gen-text {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 20px;
+            letter-spacing: 0.2em;
+            color: #ff3cac;
+            margin-bottom: 15px;
+        }
+
+        .gen-subtext {
+            color: #4a5168;
+            font-size: 11px;
+            font-family: 'DM Mono', monospace;
+            letter-spacing: 0.1em;
+            margin-bottom: 30px;
+        }
+
+        .gen-progress {
+            width: 250px;
+            height: 4px;
+            background: #0a0c14;
+            border-radius: 2px;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+
+        .gen-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff3cac, #00e5ff, #00ff88);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .gen-steps {
+            margin-top: 30px;
+            text-align: left;
+        }
+
+        .gen-step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            color: #4a5168;
+            font-size: 11px;
+            font-family: 'DM Mono', monospace;
+            letter-spacing: 0.05em;
+        }
+
+        .gen-step.active { color: #ff3cac; }
+        .gen-step.done { color: #00ff88; }
+
+        .step-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid currentColor;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+
+        .gen-step.done .step-icon {
+            background: #00ff88;
+            border-color: #00ff88;
+            color: #000;
+        }
+
+        /* Premiere Screen */
+        #premiere-screen {
+            background: #03040a;
+        }
+
+        .premiere-header {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .premiere-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 28px;
+            letter-spacing: 0.2em;
+            background: linear-gradient(90deg, #ffd60a, #ff3cac);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .premiere-subtitle {
+            color: #4a5168;
+            font-size: 10px;
+            font-family: 'DM Mono', monospace;
+            letter-spacing: 0.15em;
+            margin-top: 5px;
+            text-transform: uppercase;
+        }
+
+        .premiere-video {
+            flex: 1;
+            background: #07090f;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid #ffd60a;
+            position: relative;
+        }
+
+        .premiere-video video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .premiere-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .premiere-play {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #ffd60a, #ff7c1a);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .premiere-play::after {
+            content: '';
+            width: 0;
+            height: 0;
+            border-left: 25px solid #000;
+            border-top: 15px solid transparent;
+            border-bottom: 15px solid transparent;
+            margin-left: 5px;
+        }
+
+        /* Submit Screen */
+        #submit-screen {
+            background: linear-gradient(180deg, #03040a 0%, #07090f 100%);
+        }
+
+        .submit-header {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .submit-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 24px;
+            letter-spacing: 0.2em;
+            color: #00ff88;
+        }
+
+        .submit-subtitle {
+            color: #4a5168;
+            font-size: 10px;
+            font-family: 'DM Mono', monospace;
+            letter-spacing: 0.15em;
+            margin-top: 5px;
+            text-transform: uppercase;
+        }
+
+        .version-compare {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .version-box {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid #1a1f2e;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .version-box:hover {
+            border-color: #ff3cac;
+        }
+
+        .version-box.selected {
+            border-color: #00ff88;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+        }
+
+        .version-preview {
+            height: 180px;
+            background: #000;
+            position: relative;
+        }
+
+        .version-preview video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .version-label {
+            padding: 10px;
+            text-align: center;
+            background: #07090f;
+        }
+
+        .version-name {
+            font-family: 'Bebas Neue', sans-serif;
+            letter-spacing: 0.15em;
+            color: #eef0f5;
+            font-size: 13px;
+        }
+
+        .version-desc {
+            font-size: 10px;
+            font-family: 'DM Mono', monospace;
+            letter-spacing: 0.1em;
+            color: #4a5168;
+        }
+
+        .user-stamp {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            background: rgba(255,60,172,0.9);
+            padding: 3px 8px;
+            border-radius: 2px;
+            font-size: 9px;
+            font-family: 'DM Mono', monospace;
+            color: #000;
+        }
+
+        .submit-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: auto;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 2px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 16px;
+            letter-spacing: 0.15em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .submit-btn.with-user {
+            background: #ff3cac;
+            color: #000;
+        }
+
+        .submit-btn.without-user {
+            background: #00ff88;
+            color: #000;
+        }
+
+        .submit-btn:hover {
+            transform: scale(1.02);
+        }
+
+        .back-btn {
+            background: transparent;
+            border: 1px solid #1a1f2e;
+            color: #8890a8;
+            padding: 12px;
+            border-radius: 2px;
+            cursor: pointer;
+            font-size: 11px;
+            font-family: 'DM Mono', monospace;
+            letter-spacing: 0.1em;
+        }
+
+        /* AI Review Screen */
+        #review-screen {
+            background: linear-gradient(180deg, #03040a 0%, #07090f 100%);
+        }
+
+        .review-header {
+            text-align: center;
+            padding: 15px 0;
+        }
+
+        .review-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 24px;
+            letter-spacing: 0.2em;
+            color: #ff3cac;
+        }
+
+        .review-content {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .score-card {
+            background: rgba(255,60,172,0.05);
+            border: 1px solid rgba(255,60,172,0.2);
+            border-radius: 4px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .score-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .score-label {
+            flex: 1;
+            color: #8890a8;
+            font-size: 10px;
+            font-family: 'DM Mono', monospace;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .score-bar {
+            width: 120px;
+            height: 6px;
+            background: #0a0c14;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-right: 10px;
+        }
+
+        .score-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 1s;
+        }
+
+        .score-value {
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            color: #eef0f5;
+            min-width: 40px;
+        }
+
+        .viewer-analysis {
+            background: #07090f;
+            border: 1px solid #1a1f2e;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .analysis-title {
+            font-family: 'Bebas Neue', sans-serif;
+            letter-spacing: 0.15em;
+            font-size: 14px;
+            color: #ffd60a;
+            margin-bottom: 10px;
+        }
+
+        .analysis-text {
+            color: #8890a8;
+            font-size: 11px;
+            font-family: 'DM Mono', monospace;
+            line-height: 1.6;
+        }
+
+        .credits-earned {
+            background: rgba(255,214,10,0.1);
+            border: 1px solid #ffd60a;
+            border-radius: 4px;
+            padding: 15px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .credits-label {
+            font-family: 'DM Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: #ffd60a;
+        }
+
+        .credits-amount {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 36px;
+            letter-spacing: 0.1em;
+            color: #ffd60a;
+        }
+
+        .share-btn {
+            width: 100%;
+            padding: 15px;
+            background: #ff3cac;
+            border: none;
+            border-radius: 2px;
+            color: #000;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 16px;
+            letter-spacing: 0.2em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .share-btn:hover {
+            box-shadow: 0 0 30px rgba(255,60,172,0.4);
+        }
+
+        /* Particles */
+        .particles {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #ff3cac;
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: float 10s infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-10vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* Shapes */
+        .shape {
+            position: absolute;
+            opacity: 0.08;
+            pointer-events: none;
+        }
+
+        .shape-circle {
+            width: 100px;
+            height: 100px;
+            border: 3px solid #ff3cac;
+            border-radius: 50%;
+            top: 20%;
+            left: 10%;
+        }
+
+        .shape-triangle {
+            width: 0;
+            height: 0;
+            border-left: 50px solid transparent;
+            border-right: 50px solid transparent;
+            border-bottom: 86px solid #00e5ff;
+            top: 60%;
+            right: 5%;
+        }
+
+        .shape-square {
+            width: 70px;
+            height: 70px;
+            border: 3px solid #ffd60a;
+            bottom: 15%;
+            left: 15%;
+        }
+
+        /* Trust Question */
+        .trust-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(3,4,10,0.97);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+        }
+
+        .trust-overlay.active { display: flex; }
+
+        .trust-question {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 28px;
+            letter-spacing: 0.1em;
+            color: #ff3cac;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .trust-btn {
+            padding: 15px 40px;
+            border-radius: 2px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 18px;
+            letter-spacing: 0.15em;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s;
+        }
+
+        .trust-yes {
+            background: #00ff88;
+            border: none;
+            color: #000;
+        }
+
+        .trust-no {
+            background: transparent;
+            border: 2px solid #ff3c3c;
+            color: #ff3c3c;
+        }
+
+        .trust-video-container {
+            width: 100%;
+            max-width: 350px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .trust-video-container.active { display: block; }
+
+        .trust-video-container video {
+            width: 100%;
+        }
+    </style>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(r=>r.forEach(sw=>sw.unregister()));}</script>
+</head>
+<body>
+
+    <!-- Neural canvas background -->
+    <canvas id="neural-canvas"></canvas>
+
+    <!-- Station header -->
+    <div class="station-header" style="text-align:center; padding: 20px 0 8px; position:relative; z-index:10;">
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:13px; letter-spacing:0.3em; color:#ff3cac;">STATION 02</div>
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:38px; letter-spacing:0.15em; color:#eef0f5; line-height:1;">SQUID CHALLENGE</div>
+        <div style="font-family:'DM Mono',monospace; font-size:10px; color:#8890a8; letter-spacing:0.15em; margin-top:4px;">MAKE THE AD · EARN CREDITS · GO VIRAL</div>
+        <a href="/trump/advertainment-pipeline.html" style="display:inline-block;margin-top:12px;font-family:'DM Mono',monospace;font-size:10px;color:#4a5168;letter-spacing:0.15em;text-decoration:none;">← BACK TO PIPELINE</a>
+    </div>
+
+    <div class="phone-container">
+        <div class="dynamic-island">
+            <div class="rec-badge" id="recBadge">● REC</div>
+        </div>
+        <div class="timer-overlay" id="timerOverlay">03:00</div>
+
+        <!-- Particles -->
+        <div class="particles" id="particles"></div>
+
+        <!-- Shapes -->
+        <div class="shape shape-circle"></div>
+        <div class="shape shape-triangle"></div>
+        <div class="shape shape-square"></div>
+
+        <!-- User Camera Preview -->
+        <div class="user-camera" id="userCamera">
+            <video id="userCameraVideo" autoplay muted playsinline></video>
+            <div class="camera-label">YOUR REACTION</div>
+        </div>
+
+        <!-- Demo Screen -->
+        <div class="screen active" id="demo-screen">
+            <div class="demo-title">SHORTFACTORY × GROK</div>
+            <div class="demo-subtitle">Squid Games Advertainment Experience</div>
+
+            <div class="demo-video-container">
+                <video id="demoVideo" loop muted playsinline>
+                    <source src="/trump/sq-adverts.mp4" type="video/mp4">
+                </video>
+                <div class="demo-overlay" id="demoOverlay">
+                    <div class="play-btn" id="demoPlayBtn"></div>
+                </div>
+            </div>
+
+            <p style="color: #4a5168; font-size: 11px; font-family: 'DM Mono', monospace; letter-spacing: 0.08em; line-height: 1.8; text-align: center; margin-bottom: 20px;">
+                🎬 Create viral Squid Games content<br>
+                🎭 Add your voiceover &amp; reactions<br>
+                💰 Earn credits for uploads
+            </p>
+
+            <button class="start-btn" id="startBtn">ENTER THE GAME</button>
+        </div>
+
+        <!-- Game Screen -->
+        <div class="screen" id="game-screen">
+            <div class="scene-container">
+                <div class="scene-header">
+                    <div class="scene-counter" id="sceneCounter">SCENE 1/8</div>
+                    <div class="chaos-meter">
+                        <span style="color: #4a5168; font-size: 10px; letter-spacing: 0.15em; font-family: 'DM Mono', monospace; text-transform: uppercase;">CHAOS</span>
+                        <div class="chaos-bar">
+                            <div class="chaos-fill" id="chaosFill" style="width: 20%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="video-frame" id="videoFrame">
+                    <video id="sceneVideo" playsinline>
+                        <source src="" type="video/mp4">
+                    </video>
+                    <img id="sceneImage" src="" alt="Scene" style="display: none;">
+                    <div class="mystery-badge" id="mysteryBadge">???</div>
+                </div>
+
+                <div class="question-box">
+                    <div class="question-text" id="questionText">Loading...</div>
+                    <div class="options-grid" id="optionsGrid"></div>
+                </div>
+
+                <div class="voice-section">
+                    <div class="voice-label">
+                        <span>🎤 YOUR VOICEOVER</span>
+                        <span id="voiceStatus">Tap to record</span>
+                    </div>
+                    <div class="voice-record">
+                        <button class="mic-btn" id="micBtn">
+                            <div class="mic-icon"></div>
+                        </button>
+                        <div class="waveform" id="waveform" style="display: none;">
+                            <!-- Wave bars added by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <button class="continue-btn" id="continueBtn">FINALIZE SCENE</button>
+            </div>
+        </div>
+
+        <!-- Random Video Popup -->
+        <div class="video-popup" id="videoPopup">
+            <div class="popup-close" id="popupClose">×</div>
+            <video id="popupVideo" playsinline></video>
+        </div>
+
+        <!-- Trust Overlay -->
+        <div class="trust-overlay" id="trustOverlay">
+            <div class="trust-question">Do you trust ShortFactory?</div>
+            <div>
+                <button class="trust-btn trust-yes" id="trustYes">YES</button>
+                <button class="trust-btn trust-no" id="trustNo">NO</button>
+            </div>
+            <div class="trust-video-container" id="trustVideoContainer">
+                <video id="trustVideo" playsinline>
+                    <source src="/trump/sq-donttrust.mp4" type="video/mp4">
+                </video>
+            </div>
+        </div>
+
+        <!-- Generating Screen -->
+        <div class="screen" id="generating-screen">
+            <div class="gen-container">
+                <div class="gen-spinner"></div>
+                <div class="gen-text" id="genText">ANALYZING CHAOS...</div>
+                <div class="gen-subtext" id="genSubtext">Your madness becomes voiceover</div>
+
+                <div class="gen-progress">
+                    <div class="gen-progress-fill" id="genProgressFill"></div>
+                </div>
+
+                <div class="gen-steps">
+                    <div class="gen-step" id="step1">
+                        <div class="step-icon">1</div>
+                        <span>Stitching your scenes together...</span>
+                    </div>
+                    <div class="gen-step" id="step2">
+                        <div class="step-icon">2</div>
+                        <span>Injecting your reactions...</span>
+                    </div>
+                    <div class="gen-step" id="step3">
+                        <div class="step-icon">3</div>
+                        <span>Adding dramatic tension...</span>
+                    </div>
+                    <div class="gen-step" id="step4">
+                        <div class="step-icon">4</div>
+                        <span>Rendering final short...</span>
+                    </div>
+                    <div class="gen-step" id="step5">
+                        <div class="step-icon">5</div>
+                        <span>Preparing your premiere...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Premiere Screen -->
+        <div class="screen" id="premiere-screen">
+            <div class="premiere-header">
+                <div class="premiere-title">🎬 YOUR PREMIERE</div>
+                <div class="premiere-subtitle">World premiere of your Squid Games content</div>
+            </div>
+
+            <div class="premiere-video">
+                <video id="premiereVideo" playsinline></video>
+                <div class="premiere-overlay" id="premiereOverlay">
+                    <div class="premiere-play" id="premierePlay"></div>
+                </div>
+            </div>
+
+            <div style="padding: 15px; text-align: center;">
+                <button class="submit-btn with-user" id="toSubmitBtn" style="margin-bottom: 10px;">CONTINUE TO SUBMIT</button>
+            </div>
+        </div>
+
+        <!-- Submit Screen -->
+        <div class="screen" id="submit-screen">
+            <div class="submit-header">
+                <div class="submit-title">🎬 CHOOSE YOUR VERSION</div>
+                <div class="submit-subtitle">Select which version to submit</div>
+            </div>
+
+            <div class="version-compare">
+                <div class="version-box" id="versionWith">
+                    <div class="version-preview" id="previewWith">
+                        <video id="versionWithVideo" muted loop playsinline></video>
+                        <div class="user-stamp">🎭 YOU IN IT</div>
+                    </div>
+                    <div class="version-label">
+                        <div class="version-name">WITH YOUR REACTIONS</div>
+                        <div class="version-desc">+50% chaos credits</div>
+                    </div>
+                </div>
+                <div class="version-box" id="versionWithout">
+                    <div class="version-preview" id="previewWithout">
+                        <video id="versionWithoutVideo" muted loop playsinline></video>
+                    </div>
+                    <div class="version-label">
+                        <div class="version-name">CLEAN VERSION</div>
+                        <div class="version-desc">Just the scenes</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="submit-actions">
+                <button class="submit-btn with-user" id="submitWithUser">🎬 SUBMIT WITH YOUR REACTIONS</button>
+                <button class="submit-btn without-user" id="submitWithoutUser">📤 SUBMIT WITHOUT YOU</button>
+                <button class="back-btn" id="backToPremiere">← Back to Premiere</button>
+            </div>
+        </div>
+
+        <!-- Review Screen -->
+        <div class="screen" id="review-screen">
+            <div class="review-header">
+                <div class="review-title">🤖 AI REVIEW</div>
+            </div>
+
+            <div class="review-content">
+                <div class="score-card">
+                    <div class="score-item">
+                        <div class="score-label">Narrative Chaos</div>
+                        <div class="score-bar">
+                            <div class="score-fill" style="width: 0%; background: linear-gradient(90deg, #ff3cac, #00e5ff);" id="score1"></div>
+                        </div>
+                        <div class="score-value" id="scoreVal1">0%</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">Intrigue Factor</div>
+                        <div class="score-bar">
+                            <div class="score-fill" style="width: 0%; background: linear-gradient(90deg, #00e5ff, #00ff88);" id="score2"></div>
+                        </div>
+                        <div class="score-value" id="scoreVal2">0%</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">Monetization</div>
+                        <div class="score-bar">
+                            <div class="score-fill" style="width: 0%; background: linear-gradient(90deg, #ffd60a, #ff7c1a);" id="score3"></div>
+                        </div>
+                        <div class="score-value" id="scoreVal3">0%</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">Viewer Emotion</div>
+                        <div class="score-bar">
+                            <div class="score-fill" style="width: 0%; background: linear-gradient(90deg, #ff3cac, #ff7c1a);" id="score4"></div>
+                        </div>
+                        <div class="score-value" id="scoreVal4">0%</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">Conversation Starter</div>
+                        <div class="score-bar">
+                            <div class="score-fill" style="width: 0%; background: linear-gradient(90deg, #00ff88, #ff3cac);" id="score5"></div>
+                        </div>
+                        <div class="score-value" id="scoreVal5">0%</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">Brand Clarity</div>
+                        <div class="score-bar">
+                            <div class="score-fill" style="width: 0%; background: linear-gradient(90deg, #00ff88, #00e5ff);" id="score6"></div>
+                        </div>
+                        <div class="score-value" id="scoreVal6">0%</div>
+                    </div>
+                </div>
+
+                <div class="viewer-analysis">
+                    <div class="analysis-title">👁️ VIEWER ANALYSIS</div>
+                    <div class="analysis-text" id="analysisText">
+                        Loading analysis...
+                    </div>
+                </div>
+
+                <div class="credits-earned">
+                    <div class="credits-label">CREDITS EARNED</div>
+                    <div class="credits-amount" id="creditsAmount">0</div>
+                </div>
+
+                <button class="share-btn" id="shareBtn">🚀 UPLOAD TO YOUTUBE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- YouTube Upload Modal -->
+    <div id="yt-modal" style="display:none;position:fixed;inset:0;background:rgba(3,4,10,.96);z-index:9999;align-items:center;justify-content:center;flex-direction:column;padding:24px;">
+      <div style="width:100%;max-width:360px;background:#0a0c14;border:1px solid #1a1f2e;padding:28px 24px;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:.2em;color:#eef0f5;margin-bottom:4px;">UPLOAD TO YOUTUBE</div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:#8890a8;letter-spacing:.15em;margin-bottom:24px;">CHOOSE WHERE YOUR SHORT GOES</div>
+
+        <!-- Option 1: My Channel -->
+        <div style="border:1px solid #ff3cac;padding:16px;margin-bottom:12px;cursor:pointer;" id="yt-own" onclick="launchOwnYT()">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:.15em;color:#ff3cac;">MY YOUTUBE CHANNEL</div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:#8890a8;margin-top:4px;">Sign in with Google → upload direct to your channel → earn view credits forever</div>
+        </div>
+
+        <!-- Option 2: SF Channel -->
+        <div style="border:1px solid #ffd60a;padding:16px;margin-bottom:20px;cursor:pointer;" id="yt-sf" onclick="launchSFYT()">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:.15em;color:#ffd60a;">SHORTFACTORY CHANNEL</div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:#8890a8;margin-top:4px;">We publish it on our channel with your handle tagged → credits land in your account</div>
+          <div id="sf-form" style="display:none;margin-top:14px;">
+            <input id="sf-handle" placeholder="Your YouTube / Twitter handle" style="width:100%;background:#07090f;border:1px solid #1a1f2e;color:#eef0f5;font-family:'DM Mono',monospace;font-size:11px;padding:8px 10px;margin-bottom:8px;outline:none;">
+            <input id="sf-email" placeholder="Email for credit notification" style="width:100%;background:#07090f;border:1px solid #1a1f2e;color:#eef0f5;font-family:'DM Mono',monospace;font-size:11px;padding:8px 10px;margin-bottom:10px;outline:none;">
+            <button onclick="submitToSF()" style="width:100%;background:#ffd60a;border:none;color:#000;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.15em;padding:10px;cursor:pointer;">SUBMIT →</button>
+          </div>
+        </div>
+
+        <button onclick="document.getElementById('yt-modal').style.display='none'" style="width:100%;background:transparent;border:1px solid #1a1f2e;color:#4a5168;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;padding:10px;cursor:pointer;">CLOSE</button>
+      </div>
+    </div>
+
+    <script>
+        // Neural canvas animation
+        (function() {
+            const canvas = document.getElementById('neural-canvas');
+            const ctx = canvas.getContext('2d');
+            let nodes = [];
+            const NODE_COUNT = 60;
+            const COLORS = ['#ff3cac', '#00e5ff'];
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+
+            function initNodes() {
+                nodes = [];
+                for (let i = 0; i < NODE_COUNT; i++) {
+                    nodes.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        vx: (Math.random() - 0.5) * 0.4,
+                        vy: (Math.random() - 0.5) * 0.4,
+                        color: COLORS[Math.floor(Math.random() * COLORS.length)],
+                        r: Math.random() * 2 + 1
+                    });
+                }
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                // Update positions
+                nodes.forEach(n => {
+                    n.x += n.vx;
+                    n.y += n.vy;
+                    if (n.x < 0 || n.x > canvas.width) n.vx *= -1;
+                    if (n.y < 0 || n.y > canvas.height) n.vy *= -1;
+                });
+                // Draw connections
+                for (let i = 0; i < nodes.length; i++) {
+                    for (let j = i + 1; j < nodes.length; j++) {
+                        const dx = nodes[i].x - nodes[j].x;
+                        const dy = nodes[i].y - nodes[j].y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 120) {
+                            ctx.beginPath();
+                            ctx.moveTo(nodes[i].x, nodes[i].y);
+                            ctx.lineTo(nodes[j].x, nodes[j].y);
+                            ctx.strokeStyle = nodes[i].color;
+                            ctx.globalAlpha = (1 - dist / 120) * 0.5;
+                            ctx.lineWidth = 0.5;
+                            ctx.stroke();
+                            ctx.globalAlpha = 1;
+                        }
+                    }
+                }
+                // Draw nodes
+                nodes.forEach(n => {
+                    ctx.beginPath();
+                    ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+                    ctx.fillStyle = n.color;
+                    ctx.globalAlpha = 0.7;
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                });
+                requestAnimationFrame(draw);
+            }
+
+            resize();
+            initNodes();
+            draw();
+            window.addEventListener('resize', () => { resize(); initNodes(); });
+        })();
+
+        // Scene Data
+        const scenes = [
+            {
+                id: 1,
+                name: "Hard Takeover",
+                video: "/trump/sq-adverts.mp4",
+                question: "What happens when ADVERTainment takes over?",
+                options: ["Safe or Unsafe?", "Who funds ADVERTainment?", "Anti-woke = cash"],
+                mystery: "💰 Cash prize hidden",
+                color: "#ff0040"
+            },
+            {
+                id: 2,
+                name: "Debt Girl",
+                video: "/trump/sq-dareorfake.mp4",
+                question: "Is this a dare or is it fake?",
+                options: ["Real debt crisis", "Staged for views", "Both lol"],
+                mystery: "🎭 Actor or victim?",
+                color: "#8a2be2"
+            },
+            {
+                id: 3,
+                name: "Skull Boss",
+                video: "/trump/sq-greenjumpsuit.mp4",
+                question: "Who's really in control?",
+                options: ["The algorithm", "The players", "You decide"],
+                mystery: "🤖 AI overlord?",
+                color: "#00ff88"
+            },
+            {
+                id: 4,
+                name: "Cash Pot",
+                video: "/trump/sq-adverts.mp4",
+                question: "How bad do you want the bag?",
+                options: ["Dignity 4 sale", "Worth every penny", "I'm good"],
+                mystery: "💸 Price on your head",
+                color: "#ffd700"
+            },
+            {
+                id: 5,
+                name: "The Crowd",
+                video: "/trump/sq-dareorfake.mp4",
+                question: "Are you watching or participating?",
+                options: ["Just watching", "All in", "Recruiting others"],
+                mystery: "👁️ They see you",
+                color: "#ff8c00"
+            },
+            {
+                id: 6,
+                name: "SF Needs You",
+                video: "/trump/sq-greenjumpsuit.mp4",
+                question: "ShortFactory needs your content. What do you say?",
+                options: ["I'm in", "Show me money", "What's the catch?"],
+                mystery: "📋 Contract pending",
+                color: "#ff0040"
+            },
+            {
+                id: 7,
+                name: "Dares4Dosh",
+                video: "/trump/sq-dareorfake.mp4",
+                question: "Dares4Dosh - Would you do a dare for cash?",
+                options: ["Easy money", "Depends on dare", "Not worth it"],
+                mystery: "🎯 Dare accepted",
+                color: "#8a2be2"
+            },
+            {
+                id: 8,
+                name: "Green Jumpsuit",
+                video: "/trump/sq-greenjumpsuit.mp4",
+                question: "The green jumpsuit ensures AI can't cheat dares. Want one?",
+                options: ["Add to cart", "Size M please", "Not my style"],
+                mystery: "👕 Limited edition",
+                color: "#00ff88"
+            }
+        ];
+
+        // Random popup videos
+        const popupVideos = [
+            "/trump/sq-adverts.mp4",
+            "/trump/sq-dareorfake.mp4",
+            "/trump/sq-greenjumpsuit.mp4"
+        ];
+
+        // State
+        let currentScene = 0;
+        let selectedOption = null;
+        let isRecording = false;
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let userMediaStream = null;
+        let userReactionChunks = [];
+        let userReactionRecorder = null;
+        let completedScenes = [];
+        let chaosLevel = 20;
+        let timerInterval = null;
+        let timeLeft = 180; // 3 minutes
+
+        // DOM Elements
+        const demoScreen = document.getElementById('demo-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const generatingScreen = document.getElementById('generating-screen');
+        const premiereScreen = document.getElementById('premiere-screen');
+        const submitScreen = document.getElementById('submit-screen');
+        const reviewScreen = document.getElementById('review-screen');
+
+        const startBtn = document.getElementById('startBtn');
+        const demoPlayBtn = document.getElementById('demoPlayBtn');
+        const demoVideo = document.getElementById('demoVideo');
+        const demoOverlay = document.getElementById('demoOverlay');
+        const sceneVideo = document.getElementById('sceneVideo');
+        const sceneImage = document.getElementById('sceneImage');
+        const questionText = document.getElementById('questionText');
+        const optionsGrid = document.getElementById('optionsGrid');
+        const micBtn = document.getElementById('micBtn');
+        const waveform = document.getElementById('waveform');
+        const continueBtn = document.getElementById('continueBtn');
+        const sceneCounter = document.getElementById('sceneCounter');
+        const chaosFill = document.getElementById('chaosFill');
+        const mysteryBadge = document.getElementById('mysteryBadge');
+        const timerOverlay = document.getElementById('timerOverlay');
+        const recBadge = document.getElementById('recBadge');
+        const userCamera = document.getElementById('userCamera');
+        const userCameraVideo = document.getElementById('userCameraVideo');
+
+        const videoPopup = document.getElementById('video-popup') || document.getElementById('videoPopup');
+        const popupVideo = document.getElementById('popupVideo');
+        const popupClose = document.getElementById('popupClose');
+
+        const trustOverlay = document.getElementById('trustOverlay');
+        const trustYes = document.getElementById('trustYes');
+        const trustNo = document.getElementById('trustNo');
+        const trustVideoContainer = document.getElementById('trustVideoContainer');
+        const trustVideo = document.getElementById('trustVideo');
+
+        const genText = document.getElementById('genText');
+        const genSubtext = document.getElementById('genSubtext');
+        const genProgressFill = document.getElementById('genProgressFill');
+
+        const premiereVideo = document.getElementById('premiereVideo');
+        const premiereOverlay = document.getElementById('premiereOverlay');
+        const premierePlay = document.getElementById('premierePlay');
+        const toSubmitBtn = document.getElementById('toSubmitBtn');
+
+        const versionWithVideo = document.getElementById('versionWithVideo');
+        const versionWithoutVideo = document.getElementById('versionWithoutVideo');
+        const versionWith = document.getElementById('versionWith');
+        const versionWithout = document.getElementById('versionWithout');
+        const submitWithUser = document.getElementById('submitWithUser');
+        const submitWithoutUser = document.getElementById('submitWithoutUser');
+        const backToPremiere = document.getElementById('backToPremiere');
+
+        const analysisText = document.getElementById('analysisText');
+        const creditsAmount = document.getElementById('creditsAmount');
+        const shareBtn = document.getElementById('shareBtn');
+
+        // Generate particles
+        function createParticles() {
+            const particles = document.getElementById('particles');
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 10 + 's';
+                particle.style.background = ['#ff3cac', '#00e5ff', '#00ff88'][Math.floor(Math.random() * 3)];
+                particles.appendChild(particle);
+            }
+        }
+        createParticles();
+
+        // Create waveform bars
+        function createWaveform() {
+            waveform.innerHTML = '';
+            for (let i = 0; i < 20; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'wave-bar';
+                bar.style.animationDelay = (i * 0.05) + 's';
+                waveform.appendChild(bar);
+            }
+        }
+        createWaveform();
+
+        // Screen transitions
+        function showScreen(screen) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            screen.classList.add('active');
+        }
+
+        // Demo video play
+        demoPlayBtn.addEventListener('click', () => {
+            demoVideo.play();
+            demoOverlay.style.display = 'none';
+        });
+
+        // Start game
+        startBtn.addEventListener('click', async () => {
+            showScreen(gameScreen);
+            startTimer();
+            await initCamera();
+            loadScene(0);
+            recBadge.classList.add('active');
+            userCamera.classList.add('active');
+
+            // Start recording user reactions
+            startUserReactionRecording();
+
+            // Random video popup chance
+            scheduleRandomPopup();
+        });
+
+        // Initialize camera
+        async function initCamera() {
+            try {
+                userMediaStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'user' },
+                    audio: false
+                });
+                userCameraVideo.srcObject = userMediaStream;
+            } catch (err) {
+                console.log('Camera access denied or not available');
+            }
+        }
+
+        // Start recording user reactions
+        function startUserReactionRecording() {
+            if (userMediaStream) {
+                try {
+                    userReactionChunks = [];
+                    userReactionRecorder = new MediaRecorder(userMediaStream, { mimeType: 'video/webm' });
+                    userReactionRecorder.ondataavailable = (e) => {
+                        if (e.data.size > 0) {
+                            userReactionChunks.push(e.data);
+                        }
+                    };
+                    userReactionRecorder.start(1000); // Collect data every second
+                } catch (err) {
+                    console.log('Could not record user reactions:', err);
+                }
+            }
+        }
+
+        // Timer
+        function startTimer() {
+            timerOverlay.style.display = 'block';
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    finalizeAndGenerate();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(timeLeft / 60);
+            const secs = timeLeft % 60;
+            timerOverlay.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+            timerOverlay.classList.remove('warning', 'danger');
+            if (timeLeft <= 30) {
+                timerOverlay.classList.add('danger');
+            } else if (timeLeft <= 60) {
+                timerOverlay.classList.add('warning');
+            }
+        }
+
+        // Random video popup
+        function scheduleRandomPopup() {
+            const delay = 10000 + Math.random() * 20000; // 10-30 seconds
+            setTimeout(() => {
+                if (gameScreen.classList.contains('active')) {
+                    showRandomVideo();
+                }
+            }, delay);
+        }
+
+        function showRandomVideo() {
+            const randomVideo = popupVideos[Math.floor(Math.random() * popupVideos.length)];
+            popupVideo.src = randomVideo;
+            videoPopup.classList.add('active');
+            popupVideo.play();
+
+            popupVideo.onended = () => {
+                videoPopup.classList.remove('active');
+                scheduleRandomPopup();
+            };
+        }
+
+        popupClose.addEventListener('click', () => {
+            videoPopup.classList.remove('active');
+            popupVideo.pause();
+            scheduleRandomPopup();
+        });
+
+        // Load scene
+        function loadScene(index) {
+            currentScene = index;
+            selectedOption = null;
+            const scene = scenes[index];
+
+            sceneCounter.textContent = `SCENE ${index + 1}/${scenes.length}`;
+            questionText.textContent = scene.question;
+            mysteryBadge.textContent = scene.mystery;
+            mysteryBadge.style.background = scene.color + 'E6';
+
+            // Load video
+            sceneVideo.src = scene.video;
+            sceneVideo.style.display = 'block';
+            sceneImage.style.display = 'none';
+            sceneVideo.play().catch(() => {});
+
+            // Load options
+            optionsGrid.innerHTML = '';
+            scene.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = opt;
+                btn.onclick = () => selectOption(btn, opt);
+                optionsGrid.appendChild(btn);
+            });
+
+            continueBtn.classList.remove('active');
+            updateChaos();
+        }
+
+        function selectOption(btn, option) {
+            document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            selectedOption = option;
+            continueBtn.classList.add('active');
+            chaosLevel = Math.min(100, chaosLevel + 10);
+            updateChaos();
+        }
+
+        function updateChaos() {
+            chaosFill.style.width = chaosLevel + '%';
+        }
+
+        // Recording
+        micBtn.addEventListener('click', async () => {
+            if (!isRecording) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    recordedChunks = [];
+
+                    mediaRecorder.ondataavailable = (e) => {
+                        if (e.data.size > 0) recordedChunks.push(e.data);
+                    };
+
+                    mediaRecorder.start();
+                    isRecording = true;
+                    micBtn.classList.add('recording');
+                    waveform.style.display = 'flex';
+                    document.getElementById('voiceStatus').textContent = 'Recording...';
+
+                    chaosLevel = Math.min(100, chaosLevel + 15);
+                    updateChaos();
+                } catch (err) {
+                    console.log('Mic not available');
+                }
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+                micBtn.classList.remove('recording');
+                waveform.style.display = 'none';
+                document.getElementById('voiceStatus').textContent = 'Voice recorded ✓';
+            }
+        });
+
+        // Continue button
+        continueBtn.addEventListener('click', () => {
+            if (!selectedOption) return;
+
+            completedScenes.push({
+                scene: scenes[currentScene],
+                option: selectedOption,
+                hasVoice: isRecording || recordedChunks.length > 0
+            });
+
+            if (currentScene < scenes.length - 1) {
+                currentScene++;
+                loadScene(currentScene);
+            } else {
+                // Check for trust question before finalizing
+                showTrustQuestion();
+            }
+        });
+
+        // Trust question
+        function showTrustQuestion() {
+            trustOverlay.classList.add('active');
+        }
+
+        trustYes.addEventListener('click', () => {
+            trustOverlay.classList.remove('active');
+            finalizeAndGenerate();
+        });
+
+        trustNo.addEventListener('click', () => {
+            trustVideoContainer.classList.add('active');
+            trustVideo.play();
+            chaosLevel = 100;
+            updateChaos();
+
+            trustVideo.onended = () => {
+                trustOverlay.classList.remove('active');
+                trustVideoContainer.classList.remove('active');
+                finalizeAndGenerate();
+            };
+        });
+
+        // Generate/Premiere
+        function finalizeAndGenerate() {
+            clearInterval(timerInterval);
+            showScreen(generatingScreen);
+
+            // Stop user reaction recording
+            if (userReactionRecorder && userReactionRecorder.state !== 'inactive') {
+                userReactionRecorder.stop();
+            }
+
+            // Animate through generation steps
+            let progress = 0;
+            const steps = ['step1', 'step2', 'step3', 'step4', 'step5'];
+            const texts = [
+                'STITCHING SCENES...',
+                'INJECTING REACTIONS...',
+                'ADDING TENSION...',
+                'RENDERING SHORT...',
+                'PREPARING PREMIERE...'
+            ];
+            const subtexts = [
+                'Combining your ' + completedScenes.length + ' scenes',
+                'Your stressed face = gold',
+                'Building the drama',
+                'Almost ready for fame',
+                'Get ready to submit'
+            ];
+
+            let stepIndex = 0;
+            const genInterval = setInterval(() => {
+                progress += 2;
+                genProgressFill.style.width = progress + '%';
+
+                if (progress >= (stepIndex + 1) * 20 && stepIndex < steps.length) {
+                    document.getElementById(steps[stepIndex]).classList.add('done');
+                    if (stepIndex > 0) {
+                        document.getElementById(steps[stepIndex - 1]).classList.remove('active');
+                    }
+                    document.getElementById(steps[stepIndex]).classList.add('active');
+                    genText.textContent = texts[stepIndex];
+                    genSubtext.textContent = subtexts[stepIndex];
+                    stepIndex++;
+                }
+
+                if (progress >= 100) {
+                    clearInterval(genInterval);
+                    setTimeout(() => {
+                        showPremiere();
+                    }, 500);
+                }
+            }, 80);
+        }
+
+        // Premiere
+        function showPremiere() {
+            showScreen(premiereScreen);
+
+            // Create a combined video playlist simulation
+            let playIndex = 0;
+
+            premierePlay.onclick = () => {
+                premiereOverlay.style.display = 'none';
+                playNextScene();
+            };
+
+            function playNextScene() {
+                if (playIndex < completedScenes.length) {
+                    const sceneData = completedScenes[playIndex];
+                    premiereVideo.src = sceneData.scene.video;
+                    premiereVideo.play();
+                    playIndex++;
+
+                    premiereVideo.onended = () => {
+                        setTimeout(playNextScene, 300);
+                    };
+                } else {
+                    // Show trust video at the end
+                    premiereVideo.src = "/trump/sq-donttrust.mp4";
+                    premiereVideo.play();
+                }
+            }
+        }
+
+        // To submit screen
+        toSubmitBtn.addEventListener('click', () => {
+            showScreen(submitScreen);
+
+            // Set up both version previews
+            if (completedScenes.length > 0) {
+                versionWithVideo.src = completedScenes[0].scene.video;
+                versionWithoutVideo.src = completedScenes[0].scene.video;
+                versionWithVideo.play().catch(() => {});
+                versionWithoutVideo.play().catch(() => {});
+            }
+        });
+
+        // Version selection
+        versionWith.addEventListener('click', () => {
+            versionWith.classList.add('selected');
+            versionWithout.classList.remove('selected');
+        });
+
+        versionWithout.addEventListener('click', () => {
+            versionWithout.classList.add('selected');
+            versionWith.classList.remove('selected');
+        });
+
+        // Submit actions
+        submitWithUser.addEventListener('click', () => {
+            showReview(true);
+        });
+
+        submitWithoutUser.addEventListener('click', () => {
+            showReview(false);
+        });
+
+        backToPremiere.addEventListener('click', () => {
+            showScreen(premiereScreen);
+        });
+
+        // Review
+        function showReview(withUser) {
+            showScreen(reviewScreen);
+
+            const baseCredits = completedScenes.length * 100;
+            const bonus = withUser ? 0.5 : 0;
+            const totalCredits = Math.floor(baseCredits * (1 + bonus) * (chaosLevel / 50));
+
+            // Animate scores
+            const scores = [
+                Math.floor(50 + Math.random() * 40),
+                Math.floor(60 + Math.random() * 35),
+                Math.floor(40 + Math.random() * 50),
+                Math.floor(55 + Math.random() * 40),
+                Math.floor(45 + Math.random() * 45),
+                Math.floor(50 + Math.random() * 30)
+            ];
+
+            scores.forEach((score, i) => {
+                setTimeout(() => {
+                    document.getElementById('score' + (i + 1)).style.width = score + '%';
+                    document.getElementById('scoreVal' + (i + 1)).textContent = score + '%';
+                }, i * 200);
+            });
+
+            // Analysis text
+            const analyses = [
+                "Your Squid Games content generated significant viewer tension. The combination of " + completedScenes.length + " scenes created a narrative arc that keeps audiences guessing.",
+                "The " + (withUser ? "inclusion of your stressed reactions" : "clean version") + " provides " + (withUser ? "maximum authenticity and viral potential" : "professional polish for brand partnerships") + ".",
+                "Your chaos level of " + chaosLevel + "% indicates " + (chaosLevel > 70 ? "excellent dramatic tension" : "room for more chaos") + ".",
+                "Viewers will be " + (withUser ? "hooked by your genuine reactions" : "intrigued by the mystery") + ". Perfect for Dares4Dash integration."
+            ];
+
+            analysisText.innerHTML = analyses.join(' ');
+
+            // Animate credits
+            let currentCredits = 0;
+            const creditInterval = setInterval(() => {
+                currentCredits += Math.ceil(totalCredits / 30);
+                if (currentCredits >= totalCredits) {
+                    currentCredits = totalCredits;
+                    clearInterval(creditInterval);
+                }
+                creditsAmount.textContent = currentCredits.toLocaleString();
+            }, 50);
+        }
+
+        // Share
+        shareBtn.addEventListener('click', () => {
+            const m = document.getElementById('yt-modal');
+            m.style.display = 'flex';
+        });
+
+        // YouTube modal functions
+        function launchOwnYT() {
+            // Google OAuth → YouTube upload (same flow as Imaginator)
+            const credits = document.getElementById('creditsAmount').textContent;
+            const params = new URLSearchParams({
+                redirect: window.location.href,
+                credits: credits,
+                title: 'ShortFactory Squid Game Challenge — Advertainment',
+                description: 'Made with ShortFactory ADVERTainment pipeline. #ShortFactory #Advertainment #SquidGame\nhttps://www.shortfactory.shop/trump/advertainment-pipeline.html',
+                tags: 'ShortFactory,Advertainment,SquidGame,Viral,Challenge'
+            });
+            window.location.href = 'https://www.shortfactory.shop/imaginator/index2.php?' + params.toString();
+        }
+
+        function launchSFYT() {
+            const form = document.getElementById('sf-form');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function submitToSF() {
+            const handle = document.getElementById('sf-handle').value.trim();
+            const email = document.getElementById('sf-email').value.trim();
+            const credits = document.getElementById('creditsAmount').textContent;
+            if (!handle) { alert('Add your handle so we can tag you'); return; }
+            fetch('https://www.shortfactory.shop/alive/studio/cortex-receiver.php', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({
+                    type: 'yt_submission',
+                    handle, email, credits,
+                    page: 'squid-challenge',
+                    ts: Date.now()
+                })
+            }).catch(()=>{});
+            document.getElementById('yt-modal').innerHTML = `
+              <div style="text-align:center;padding:40px 24px;">
+                <div style="font-family:'Bebas Neue',sans-serif;font-size:40px;letter-spacing:.2em;color:#00ff88;">SUBMITTED!</div>
+                <div style="font-family:'DM Mono',monospace;font-size:11px;color:#8890a8;margin-top:12px;line-height:1.8;">We'll publish your short on the SF channel<br>and tag ${handle}<br><br>Credits will land in your account once it's live.</div>
+                <button onclick="document.getElementById('yt-modal').style.display='none'" style="margin-top:24px;background:#00ff88;border:none;color:#000;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:.15em;padding:12px 32px;cursor:pointer;">DONE</button>
+              </div>`;
+        }
+    </script>
+</body>
+</html>

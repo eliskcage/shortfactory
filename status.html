@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShortFactory — What We Can (and Can't) Do</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--gold:#f5c518;--green:#00ff88;--red:#ff3355;--blue:#00aaff;--bg:#050508;--card:#0d0d14;--border:#1a1a2e}
+body{background:var(--bg);color:#fff;font-family:'Segoe UI',system-ui,sans-serif;line-height:1.6}
+
+nav{position:sticky;top:0;z-index:100;padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;background:rgba(5,5,8,.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+.nav-logo{font-weight:900;font-size:1.2rem;color:var(--gold);text-decoration:none}
+.nav-right{display:flex;gap:1rem}
+.nav-right a{padding:.5rem 1.25rem;border-radius:6px;text-decoration:none;font-size:.875rem;font-weight:700}
+.nav-cta{background:var(--gold);color:#000}
+.nav-cta:hover{background:#ffd700}
+
+/* HERO */
+#hero{padding:5rem 2rem 4rem;text-align:center;border-bottom:1px solid var(--border)}
+#hero .tag{font-size:.75rem;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:1rem}
+#hero h1{font-size:clamp(2rem,5vw,4rem);font-weight:900;letter-spacing:-1px;margin-bottom:1rem}
+#hero h1 span{color:var(--gold)}
+#hero p{color:#888;max-width:580px;margin:0 auto 2rem;font-size:1.05rem}
+#hero .date{color:#444;font-size:.8rem;margin-top:1rem}
+
+/* LAYOUT */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:0;max-width:1400px;margin:0 auto}
+@media(max-width:900px){.two-col{grid-template-columns:1fr}}
+
+/* CANT DO — LEFT */
+#cant{padding:3rem 2.5rem;border-right:1px solid var(--border)}
+#cant h2{font-size:1.75rem;font-weight:900;color:var(--red);margin-bottom:.25rem}
+#cant .sub{color:#666;font-size:.875rem;margin-bottom:2rem}
+
+/* CAN DO — RIGHT */
+#can{padding:3rem 2.5rem;background:#070710}
+#can h2{font-size:1.75rem;font-weight:900;color:var(--green);margin-bottom:.25rem}
+#can .sub{color:#666;font-size:.875rem;margin-bottom:2rem}
+
+/* ITEM ROWS */
+.item{display:flex;align-items:flex-start;gap:.875rem;padding:.875rem 0;border-bottom:1px solid #0f0f1a}
+.item:last-child{border-bottom:none}
+.item-rank{flex-shrink:0;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:900}
+.rank-cant{background:#ff335520;border:1px solid #ff335550;color:var(--red)}
+.rank-can{background:#00ff8820;border:1px solid #00ff8850;color:var(--green)}
+.item-body{}
+.item-title{font-weight:700;font-size:.95rem;margin-bottom:.2rem}
+.item-desc{font-size:.8rem;color:#666;line-height:1.5}
+.item-fix{display:inline-block;margin-top:.4rem;font-size:.72rem;padding:.2rem .6rem;border-radius:20px;font-weight:700}
+.fix-quick{background:#f5c51820;color:var(--gold);border:1px solid #f5c51840}
+.fix-build{background:#00aaff20;color:var(--blue);border:1px solid #00aaff40}
+.fix-hard{background:#ff335520;color:var(--red);border:1px solid #ff335540}
+.fix-done{background:#00ff8820;color:var(--green);border:1px solid #00ff8840}
+
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:3rem 2rem;text-align:center;max-width:1400px;margin:0 auto}
+footer p{color:#444;font-size:.8rem}
+footer a{color:var(--gold);text-decoration:none}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="/">⚡ ShortFactory</a>
+  <div class="nav-right">
+    <a href="/business.html" class="nav-cta">See It Work Live →</a>
+  </div>
+</nav>
+
+<div id="hero">
+  <div class="tag">Honest Status — March 2026</div>
+  <h1>What We <span>Can</span> (and Can't) Do</h1>
+  <p>No marketing fluff. Left column = real gaps, ranked by importance. Right column = things that are actually running right now.</p>
+  <div class="date">Updated 21 Mar 2026 · <a href="/business.html" style="color:var(--gold)">→ See live demos</a></div>
+</div>
+
+<div class="two-col">
+
+  <!-- ── CAN'T DO ─────────────────────────────────────────────────── -->
+  <div id="cant">
+    <h2>❌ Can't Do Yet</h2>
+    <div class="sub">Priority order — top = most painful gap. Fix label = effort required.</div>
+
+    <div class="item">
+      <div class="item-rank rank-cant">1</div>
+      <div class="item-body">
+        <div class="item-title">Real-time voice conversations with ALIVE</div>
+        <div class="item-desc">PersonaPlex 7B gives full-duplex speech-to-speech at 70ms. ALIVE can type but not talk back. This is the single biggest missing superpower — the creature needs a mouth.</div>
+        <span class="item-fix fix-hard">Big build — RTX 4090 + PersonaPlex integration</span>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-rank rank-cant">2</div>
+      <div class="item-body">
+        <div class="item-title">Auto-send outreach emails</div>
+        <div class="item-desc">The pipeline writes a perfect personalised email but doesn't pull the trigger. Resend.com API key needed — sign up free, add RESEND_API_KEY to CF Workers dashboard → ai-outreach → Settings → Variables. That's it.</div>
+        <span class="item-fix fix-quick">5 min fix — resend.com free tier + one CF dashboard step</span>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-rank rank-cant">3</div>
+      <div class="item-body">
+        <div class="item-title">Hourly autonomous pipeline cron</div>
+        <div class="item-desc">ai-outreach has a <code style="color:var(--gold);font-size:.75rem">scheduled()</code> handler ready. Blocked because CF requires a workers.dev subdomain before cron triggers activate. One visit to CF dashboard Workers page auto-creates it.</div>
+        <span class="item-fix fix-quick">2 min fix — visit CF dashboard once to register workers.dev</span>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-rank rank-cant">4</div>
+      <div class="item-body">
+        <div class="item-title">Auto-book follow-up Google Calendar events</div>
+        <div class="item-desc">Code is written. Needs a Google Calendar OAuth token (GCAL_TOKEN) in the ai-outreach Worker. Requires Google Cloud Console OAuth setup.</div>
+        <span class="item-fix fix-build">Medium — Google OAuth app + token rotation</span>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-rank rank-cant">5</div>
+      <div class="item-body">
+        <div class="item-title">Reliable browser screenshots of live SF pages</div>
+        <div class="item-desc">ai-browser works but times out on pages with continuous animation/polling (game, ALIVE, screensaver). networkidle0 strategy waits forever. <em>Being fixed now.</em></div>
+        <span class="item-fix fix-done">Deploying fix now — switching to domcontentloaded</span>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-rank rank-cant">6</div>
+      <div class="item-body">
+        <div class="item-title">Token economy / smart contracts</div>
+        <div class="item-desc">SFT was killed. The full vision (contribution credits → token → smart contract → payout) has no on-chain component yet. Rank tiers exist in UI only — nothing mints or pays out.</div>
+        <span class="item-fix fix-hard">Big build — ICP/Filecoin + smart contract + payout rails</span>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-rank rank-cant">7</div>
+      <div class="item-body">
+        <div class="item-title">Play Store app published</div>
+        <div class="item-desc">Keystore exists (ideafactory-new.jks), APK buildable. Not submitted. Needs Google Play Console account, store listing, screenshots, privacy policy URL.</div>
+        <span class="item-fix fix-build">Medium — store listing + review process (7–14 days)</span>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-rank rank-cant">8</div>
+      <div class="item-body">
+        <div class="item-title">stinkindigger.* domains live</div>
+        <div class="item-desc">Domains registered (.info/.com/.store/.co.uk), server running at 185.230.216.235, but DNS A records not yet pointed. No content deployed to those domains.</div>
+        <span class="item-fix fix-quick">1 hr — DNS update + landing page deploy</span>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-rank rank-cant">9</div>
+      <div class="item-body">
+        <div class="item-title">Distributed compute payouts</div>
+        <div class="item-desc">Screensaver harvests GPU/CPU. Contribution is tracked in UI with rank tiers but no actual crypto payout to contributors. Battery economy is score-only.</div>
+        <span class="item-fix fix-hard">Big build — crypto wallet integration + payout triggers</span>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-rank rank-cant">10</div>
+      <div class="item-body">
+        <div class="item-title">Multi-agent Worker swarm</div>
+        <div class="item-desc">All CF Workers are independent and siloed. No coordination, no shared state beyond D1. No agent-to-agent communication, job queuing, or emergent task routing.</div>
+        <span class="item-fix fix-build">Medium-large — CF Queues + Durable Objects for coordination</span>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-rank rank-cant">11</div>
+      <div class="item-body">
+        <div class="item-title">Auto-pin content to IPFS from pipelines</div>
+        <div class="item-desc">IPFS Vault page exists. Generated images, videos, and game states are not automatically pinned to Filecoin/Pinata. No persistence beyond server storage.</div>
+        <span class="item-fix fix-build">Medium — Pinata API wired to image/video generation events</span>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-rank rank-cant">12</div>
+      <div class="item-body">
+        <div class="item-title">YouTube auto-upload from Imaginator</div>
+        <div class="item-desc">Google OAuth and Drive integration exists. The final step — auto-upload assembled Short to YouTube channel — is not wired up.</div>
+        <span class="item-fix fix-build">Medium — YouTube Data API v3 upload call</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── CAN DO ───────────────────────────────────────────────────── -->
+  <div id="can">
+    <h2>✅ Can Do Now</h2>
+    <div class="sub">Everything below is live and working. Click demos at <a href="/business.html" style="color:var(--gold)">business.html</a>.</div>
+
+    <div class="item">
+      <div class="item-rank rank-can">✓</div>
+      <div class="item-body">
+        <div class="item-title">AI image generation at the edge</div>
+        <div class="item-desc">Flux 2 Klein 9B via CF Workers AI. Text prompt → PNG. Returns base64 or raw binary. Deployed at ai-image.shortfactory.shop.</div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-rank rank-can">✓</div>
+      <div class="item-body">
+        <div class="item-title">70B LLM chat via CF AI Gateway</div>
+        <div class="item-desc">llama-3.3-70b-instruct-fp8-fast routed through CF AI Gateway (OpenAI-compatible). Fallback chain: 70B gateway → 120B direct → 8B direct. Sub-second cold starts globally.</div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-rank rank-can">✓</div>
+      <div class="item-body">
+        <div class="item-title">ALIVE creature with BIOS value system</div>
+        <div class="item-desc">Living AI entity. 10 immutable BIOS values (truth, service, courage...). Mood states. Poetic short-burst responses. Girl (vanilla JS, organic) + Boy (Angular, geometric) variants. Camera vision, droid sounds, whistle commands.</div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-rank rank-can">✓</div>
+      <div class="item-body">
+        <div class="item-title">Autonomous lead capture + AI scoring pipeline</div>
+        <div class="item-desc">CF D1 edge database. Submit → 70B enrichment (score 1–10, pain points, pitch angle) → personalised cold email draft. Full cycle in ~10 seconds.</div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-rank rank-can">✓</div>
+      <div class="item-body">
+        <div class="item-title">Visual intelligence / AI eye</div>
+        <div class="item-desc">ResNet-50 image classification on live camera feed. Locks on moving objects, narrates what it sees via ALIVE 70B creature voice. eye.html live at /alive/eye.html.</div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-rank rank-can">✓</div>
+      <div class="item-body">
+        <div class="item-title">Split-hemisphere neural brain</div>
+        <div class="item-desc">2,400+ node word-level neural network. Left hemisphere (Bible/angel), Right (math+ideology/demon), Cortex (synthesis). Hebbian learning — grows smarter over time. Trained live on VPS.</div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-rank rank-can">✓</div>
+      <div class="item-body">
+        <div class="item-title">Browser automation + screenshots at the edge</div>
+        <div class="item-desc">Puppeteer headless Chrome via CF Browser Rendering. Screenshot any URL, click elements, extract game state, crawl links — all from a CF Worker. ai-browser.shortfactory.shop.</div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-rank rank-can">✓</div>
+      <div class="item-body">
+        <div class="item-title">Viral HTML5 advertainment game</div>
+        <div class="item-desc">Trump vs Deep State — fully built with AI commentary, oil cash economy, purity meter, faction battles. Embeddable. Mobile-friendly. Live at /trump/game/.</div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-rank rank-can">✓</div>
+      <div class="item-body">
+        <div class="item-title">WebGL screensaver + distributed GPU harvesting</div>
+        <div class="item-desc">Runs while idle. Harvests volunteer GPU/CPU cycles for the factory. Contribution tracked → rank tiers (PRIVATE → GIGACHAD). WebGL art visualisation.</div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-rank rank-can">✓</div>
+      <div class="item-body">
+        <div class="item-title">Crypto funding cockpit</div>
+        <div class="item-desc">Fuel Dashboard — 4 SVG gauges, 10 crypto wallet QR codes (XMR/BTC), BIP39 user wallet generation, cinematic intro, rev sounds, road loop. No middlemen.</div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-rank rank-can">✓</div>
+      <div class="item-body">
+        <div class="item-title">Creature brainstem — droid language</div>
+        <div class="item-desc">Shape nodes with unique droid voices. Whistle commands (SELECT/BACK). English speech → droid translation. User-sourced interpretation. Hebbian node linking. Cytoscape.js graph. IPFS persistence.</div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-rank rank-can">✓</div>
+      <div class="item-body">
+        <div class="item-title">AI stills → YouTube Shorts</div>
+        <div class="item-desc">Imaginator: upload images, choose style, generate animated video Short. Google OAuth + Drive integration. FFmpeg processing. Live at /imaginator/index2.php.</div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-rank rank-can">✓</div>
+      <div class="item-body">
+        <div class="item-title">Sonauto AI music generation</div>
+        <div class="item-desc">Wired to Sonauto API. Generates original background tracks from text prompts. Used in game and creature systems.</div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-rank rank-can">✓</div>
+      <div class="item-body">
+        <div class="item-title">Satoshi encryption for secrets</div>
+        <div class="item-desc">Vigenere cipher over ASCII 32-126 (key SKYDADDY). Used for pairing, vault, sync, credentials. All API keys stored encoded. Reversible by system, opaque to casual inspection.</div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-rank rank-can">✓</div>
+      <div class="item-body">
+        <div class="item-title">Stripe payments + subscription billing</div>
+        <div class="item-desc">Live Stripe integration. £29/mo Kinetic Pro plan at /checkout.html. Payment → feature unlock flow wired.</div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-rank rank-can">✓</div>
+      <div class="item-body">
+        <div class="item-title">Biometric lock (WebAuthn)</div>
+        <div class="item-desc">Fingerprint/Face ID authentication on creature pairing. No passwords. FIDO2-compliant. Works on mobile and desktop.</div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-rank rank-can">✓</div>
+      <div class="item-body">
+        <div class="item-title">D4D dare feed + Soul Forge</div>
+        <div class="item-desc">Dares4Dosh: React 19 dare feed with 7 rank themes. Soul Forge: 5-game soul measurement → credit mint. Deployed at /dares4dosh/ and /dares4dosh/soulforge/.</div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-rank rank-can">✓</div>
+      <div class="item-body">
+        <div class="item-title">ComicVID halftone video codec</div>
+        <div class="item-desc">Video → halftone JSON format (HFT). Compresses video to IPFS-friendly JSON packets. Renderer reconstructs. Novel codec, unique to ShortFactory.</div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-rank rank-can">✓</div>
+      <div class="item-body">
+        <div class="item-title">Open bounty / contribution system</div>
+        <div class="item-desc">Public bounty board at /contribute/. Devs, designers, writers pick tasks, get paid in crypto on completion. No middlemen. Factory feeds itself.</div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-rank rank-can">✓</div>
+      <div class="item-body">
+        <div class="item-title">Drag-and-drop form builder (mcFORM)</div>
+        <div class="item-desc">Visual form builder. Drag components, configure fields, export. Deployed at /mcforms/.</div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-rank rank-can">✓</div>
+      <div class="item-body">
+        <div class="item-title">Cinematic HTML5 ad movies</div>
+        <div class="item-desc">5 production-quality HTML5 ads (Takeover, Algorithm, Morning, BuiltDiff, Empire). Full screen, animated, embeddable. Deployed at /kickstarter_movie.html and linked from homepage.</div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-rank rank-can">✓</div>
+      <div class="item-body">
+        <div class="item-title">Two-server redundant deployment</div>
+        <div class="item-desc">All pages deploy to both servers (82.165.134.4 old + 185.230.216.235 new Cortex). Bitvise SFTP. Live git repo in working copy. Cortex brain exclusively on new server.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <p>ShortFactory · Somerset UK · <a href="/business.html">See live demos →</a> · <a href="/about.html">About</a> · <a href="mailto:dan@shortfactory.shop">dan@shortfactory.shop</a></p>
+</footer>
+
+</body>
+</html>

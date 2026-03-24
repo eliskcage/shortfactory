@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>▲ QR BEACON v2</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#000; overflow:hidden; font-family:'Courier New',monospace;
+  display:flex; align-items:center; justify-content:center; min-height:100vh; }
+#beacon-canvas { display:block; }
+#status { position:fixed; top:12px; left:50%; transform:translateX(-50%);
+  font-size:8px; letter-spacing:.3em; color:rgba(255,199,44,.5); white-space:nowrap; }
+#type-lbl { position:fixed; top:28px; left:50%; transform:translateX(-50%);
+  font-size:7px; letter-spacing:.25em; color:rgba(255,255,255,.2); white-space:nowrap; }
+#code-lbl { position:fixed; bottom:14px; left:50%; transform:translateX(-50%);
+  font-size:9px; letter-spacing:.4em; color:rgba(255,199,44,.25); }
+#v1-link { position:fixed; bottom:10px; right:10px;
+  font-size:7px; letter-spacing:.2em; color:rgba(255,255,255,.12); text-decoration:none; }
+#v1-link:hover { color:rgba(255,255,255,.4); }
+/* Colour legend - line count → colour */
+#legend { position:fixed; top:12px; right:12px;
+  display:flex; flex-direction:column; gap:3px; }
+.leg { font-size:6px; letter-spacing:.15em; display:flex; align-items:center; gap:4px; }
+.leg-dot { width:6px; height:6px; border-radius:50%; }
+</style>
+</head>
+<body>
+<canvas id="beacon-canvas"></canvas>
+<div id="status">▲ QR SHAPE BEACON</div>
+<div id="type-lbl">—</div>
+<div id="code-lbl">—</div>
+<a id="v1-link" href="shape-beacon.html">← v1</a>
+
+<div id="legend">
+  <div class="leg"><div class="leg-dot" style="background:#FF3333"></div><span style="color:rgba(255,255,255,.2)">1 LINE</span></div>
+  <div class="leg"><div class="leg-dot" style="background:#33FF66"></div><span style="color:rgba(255,255,255,.2)">2 LINES</span></div>
+  <div class="leg"><div class="leg-dot" style="background:#3399FF"></div><span style="color:rgba(255,255,255,.2)">3 LINES</span></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script>
+'use strict';
+
+function djb2(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h)^s.charCodeAt(i);return(h>>>0).toString(16).toUpperCase().padStart(8,'0');}
+
+// ── Code ──
+let myCode = sessionStorage.getItem('sf_laptop_qr_code');
+if (!myCode) {
+  myCode = djb2(Date.now()+navigator.userAgent+Math.random()).slice(0,3).toUpperCase();
+  sessionStorage.setItem('sf_laptop_qr_code', myCode);
+}
+document.getElementById('code-lbl').textContent = '▲ ' + myCode;
+fetch('/soul/visual.php',{method:'POST',headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({code:myCode,ts:Date.now()})}).catch(()=>{});
+
+// ── Shape decode ──
+function codeToShape(hex3) {
+  const n = parseInt(hex3,16);
+  const b = n.toString(2).padStart(12,'0');
+  return { type:parseInt(b.slice(0,2),2), size:0.3+parseInt(b.slice(2,4),2)*0.18 };
+}
+
+// ── Line-count colour channel ──
+// tri=3 lines→blue  circle=1→red  square=4→green  compound=2→green
+const LINE_COUNTS  = [3, 1, 4, 2];
+const LINE_COLORS  = ['#FF3333','#33FF66','#3399FF','#33FF66']; // indexed by lineCount-1
+const TYPE_NAMES   = ['TRIANGLE · 3 LINES','CIRCLE · 1 LINE','SQUARE · 4 LINES','COMPOUND · 2 LINES'];
+function outlineColor(type){ return LINE_COLORS[LINE_COUNTS[type]-1]; }
+
+// ── State ──
+let myShape = codeToShape(myCode);
+let qrImg   = null;
+let gold    = false, goldPulse = 0;
+
+function setShape(code) {
+  myShape = codeToShape(code);
+  const col = outlineColor(myShape.type);
+  document.getElementById('type-lbl').textContent =
+    TYPE_NAMES[myShape.type] + '  ·  ' + code.toUpperCase();
+  document.getElementById('type-lbl').style.color = col + 'aa';
+  buildQR(code);
+}
+setShape(myCode);
+
+// ── Canvas ──
+const canvas = document.getElementById('beacon-canvas');
+const ctx = canvas.getContext('2d');
+function resize(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
+resize(); window.addEventListener('resize', resize);
+
+// ── Shape path (static, no rotation — easier to read) ──
+function shapePath(cx, cy, r, type) {
+  ctx.beginPath();
+  if (type===0) {
+    ctx.moveTo(cx, cy-r);
+    ctx.lineTo(cx-r*0.866, cy+r*0.5);
+    ctx.lineTo(cx+r*0.866, cy+r*0.5);
+    ctx.closePath();
+  } else if (type===1) {
+    ctx.arc(cx, cy, r, 0, Math.PI*2);
+  } else if (type===2) {
+    const s=r*0.85; ctx.rect(cx-s, cy-s, s*2, s*2);
+  } else {
+    ctx.arc(cx, cy, r, 0, Math.PI*2);
+  }
+}
+
+// QR rect: positioned so all three finder patterns stay inside the shape.
+// Triangle (apex up): largest inscribed square sits bottom-aligned.
+//   Max side = r*0.804. With 5% margin: s=r*0.72, bottom 5% above base.
+// Circle: square inscribed in circle, side = r*√2 * 0.93
+// Square: fill inner area, side = r*1.55
+function qrRect(cx, cy, r, type) {
+  if (type === 0) {
+    const s = r * 0.72;
+    return { x: cx - s/2, y: (cy + r*0.5) - s - r*0.06, s };
+  } else if (type === 1) {
+    const s = r * 1.32;
+    return { x: cx - s/2, y: cy - s/2, s };
+  } else {
+    const s = r * 1.55;
+    return { x: cx - s/2, y: cy - s/2, s };
+  }
+}
+
+// ── Render loop ──
+function draw() {
+  const W=canvas.width, H=canvas.height, S=Math.min(W,H);
+  const r = S * Math.max(myShape.size, 0.42) * 0.45;
+  const cx=W/2, cy=H/2;
+  const col = gold ? '#FFC72C' : outlineColor(myShape.type);
+
+  ctx.fillStyle='#000'; ctx.fillRect(0,0,W,H);
+
+  if (gold) {
+    goldPulse=(goldPulse+0.04)%(Math.PI*2);
+    const g=0.5+0.5*Math.sin(goldPulse);
+    const grad=ctx.createRadialGradient(cx,cy,0,cx,cy,S*0.55);
+    grad.addColorStop(0,`rgba(255,199,44,${0.1*g})`);
+    grad.addColorStop(1,'transparent');
+    ctx.fillStyle=grad; ctx.fillRect(0,0,W,H);
+  }
+
+  if (qrImg) {
+    // Clip to shape interior, draw QR
+    ctx.save();
+    shapePath(cx, cy, r, myShape.type);
+    ctx.clip();
+    const q = qrRect(cx, cy, r, myShape.type);
+    ctx.drawImage(qrImg, q.x, q.y, q.s, q.s);
+    ctx.restore();
+  }
+
+  // Outline in line-count colour
+  ctx.save();
+  shapePath(cx, cy, r, myShape.type);
+  ctx.strokeStyle = col;
+  ctx.lineWidth   = gold ? 5 : 3;
+  ctx.shadowColor = col;
+  ctx.shadowBlur  = gold ? 40 : 14;
+  ctx.stroke();
+  ctx.restore();
+
+  requestAnimationFrame(draw);
+}
+draw();
+
+// ── Build QR image ──
+function buildQR(code) {
+  qrImg = null;
+  QRCode.toDataURL('SF:'+code.toUpperCase(), {
+    width:512, margin:1,
+    color:{dark:'#000000',light:'#ffffff'},
+    errorCorrectionLevel:'H'
+  }).then(url => {
+    const img=new Image();
+    img.onload=()=>{ qrImg=img; };
+    img.src=url;
+  }).catch(e=>console.warn('QR gen failed',e));
+}
+
+// ── Poll for phone-confirmed shape ──
+let lastAt = 0;
+setInterval(async ()=>{
+  try {
+    const res = await fetch('/soul/data/last_shape.json?_='+Date.now());
+    if (!res.ok) return;
+    const d = await res.json();
+    if (!d.sc || d.at <= lastAt) return;
+    lastAt = d.at;
+    gold = true;
+    setShape(d.sc);
+    document.getElementById('status').textContent = '▲ CONFIRMED FROM PHONE · '+d.sc.toUpperCase();
+    document.getElementById('code-lbl').textContent = '▲ GENOME: '+d.sc.toUpperCase();
+  } catch(_){}
+}, 3000);
+</script>
+</body>
+</html>

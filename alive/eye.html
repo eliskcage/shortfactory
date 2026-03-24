@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALIVE — Visual Cortex</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;800&display=swap');
+
+  :root {
+    --void: #05000a;
+    --pulse: #cc0044;
+    --quantum: #ff4488;
+    --hot: #ff1133;
+    --dim: rgba(255,255,255,0.08);
+    --text: rgba(255,255,255,0.85);
+    --mono: 'Space Mono', monospace;
+    --display: 'Syne', sans-serif;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--void); color:var(--text); font-family:var(--mono); min-height:100vh; overflow:hidden; cursor:none; }
+
+  #cosmos { position:fixed; inset:0; background:radial-gradient(ellipse at 50% 50%, #1a0008 0%, #05000a 70%); }
+  canvas#stars { position:fixed; inset:0; opacity:0.6; }
+  #flash { position:fixed; inset:0; background:white; opacity:0; pointer-events:none; z-index:100; }
+  #cursor { position:fixed; width:12px; height:12px; border:1px solid var(--quantum); border-radius:50%; pointer-events:none; z-index:9999; transform:translate(-50%,-50%); transition:width 0.2s,height 0.2s,border-color 0.4s; mix-blend-mode:screen; }
+
+  #physics-mode { position:fixed; top:40px; left:50%; transform:translateX(-50%); font-family:var(--display); font-size:11px; font-weight:800; letter-spacing:0.4em; text-transform:uppercase; color:var(--quantum); opacity:0; transition:opacity 0.5s,color 0.8s; }
+  #physics-mode.visible { opacity:1; }
+  #physics-mode.singularity-mode { color:var(--hot); }
+
+  #scene { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; }
+  #eye-container { position:relative; width:320px; height:320px; display:flex; align-items:center; justify-content:center; }
+  #eye-glow { position:absolute; inset:-60px; border-radius:50%; background:radial-gradient(circle,rgba(204,0,68,0.2) 0%,transparent 70%); animation:breathe 4s ease-in-out infinite; pointer-events:none; }
+  @keyframes breathe { 0%,100%{transform:scale(1);opacity:0.6} 50%{transform:scale(1.08);opacity:1} }
+  canvas#eyeCanvas { border-radius:50%; cursor:none; position:relative; z-index:2; }
+
+  /* CAMERA FEED — feeds the swarm */
+  #camera-wrap { position:fixed; bottom:160px; right:40px; width:120px; height:90px; border:1px solid rgba(0,255,204,0.2); border-radius:6px; overflow:hidden; opacity:0.6; transition:opacity 0.3s; }
+  #camera-wrap:hover { opacity:1; }
+  #camera-feed { width:100%; height:100%; object-fit:cover; transform:scaleX(-1); display:none; }
+  #camera-canvas { position:absolute; inset:0; width:100%; height:100%; opacity:0.4; }
+  #camera-label { position:absolute; bottom:4px; left:6px; font-size:7px; color:var(--quantum); letter-spacing:2px; }
+  #camera-btn { position:absolute; top:4px; right:4px; width:16px; height:16px; border-radius:50%; border:1px solid var(--quantum); background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:8px; color:var(--quantum); }
+
+  /* SHAPE GENOME CLASSIFIER STACK */
+  #classifier-panel { position:fixed; right:40px; top:50%; transform:translateY(-50%); width:160px; display:flex; flex-direction:column; gap:0; }
+  #classifier-title { font-family:var(--display); font-size:9px; letter-spacing:0.35em; text-transform:uppercase; color:rgba(255,255,255,0.3); margin-bottom:16px; }
+  .sg-entry { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05); animation:slideIn 0.4s ease-out both; }
+  @keyframes slideIn { from{opacity:0;transform:translateX(10px)} to{opacity:1;transform:translateX(0)} }
+  .sg-canvas { flex-shrink:0; border-radius:3px; }
+  .sg-meta { font-size:8px; color:rgba(255,255,255,0.2); letter-spacing:0.05em; line-height:1.6; }
+  .sg-contract { font-size:7px; color:var(--quantum); opacity:0.6; font-family:var(--mono); }
+  .sg-meta.singular { color:rgba(255,51,102,0.4); }
+
+  /* MUTUAL STATE — shape-rendered */
+  #mutual-panel { position:fixed; left:40px; top:50%; transform:translateY(-50%); width:200px; }
+  #mutual-title { font-family:var(--display); font-size:9px; letter-spacing:0.35em; text-transform:uppercase; color:rgba(255,255,255,0.3); margin-bottom:16px; }
+  .state-block { margin-bottom:20px; }
+  .state-label { font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:rgba(255,255,255,0.25); margin-bottom:8px; }
+  .state-shape-row { display:flex; align-items:center; gap:10px; }
+  .state-shape-label { font-size:10px; color:var(--text); line-height:1.5; transition:color 0.5s; }
+  .state-shape-label.quantum-state { color:var(--quantum); }
+  .state-shape-label.singular-state { color:var(--hot); }
+
+  /* SMART CONTRACT PREVIEW */
+  #contract-panel { position:fixed; left:40px; bottom:40px; width:220px; }
+  #contract-title { font-size:9px; letter-spacing:0.3em; text-transform:uppercase; color:rgba(255,255,255,0.2); margin-bottom:10px; }
+  #contract-body { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+  .contract-shape { display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; opacity:0.7; transition:opacity 0.2s; }
+  .contract-shape:hover { opacity:1; }
+  .contract-shape-label { font-size:7px; color:rgba(255,255,255,0.2); letter-spacing:1px; }
+
+  /* ENGINE STATUS */
+  #engine-status { position:fixed; top:40px; right:40px; font-size:8px; letter-spacing:2px; color:rgba(255,255,255,0.2); display:flex; align-items:center; gap:6px; }
+  #engine-dot { width:6px; height:6px; border-radius:50%; background:#333; flex-shrink:0; }
+  #engine-dot.online { background:var(--quantum); box-shadow:0 0 6px var(--quantum); }
+  #engine-dot.offline { background:#444; }
+
+  /* TIME + EQUATION */
+  #time-panel { position:fixed; bottom:40px; left:50%; transform:translateX(-50%); display:flex; gap:32px; align-items:center; }
+  .time-node { display:flex; flex-direction:column; align-items:center; gap:6px; opacity:0.3; transition:opacity 0.4s; cursor:pointer; }
+  .time-node:hover { opacity:0.7; }
+  .time-node.active { opacity:1; }
+  .time-dot { width:8px; height:8px; border-radius:50%; background:var(--pulse); transition:background 0.4s,transform 0.4s; }
+  .time-node.active .time-dot { background:var(--quantum); transform:scale(1.5); box-shadow:0 0 12px var(--quantum); }
+  .time-label { font-size:9px; letter-spacing:0.25em; text-transform:uppercase; color:rgba(255,255,255,0.5); }
+  #equation { position:fixed; bottom:100px; left:50%; transform:translateX(-50%); font-size:10px; letter-spacing:0.15em; color:rgba(255,255,255,0.15); text-align:center; transition:color 0.5s; white-space:nowrap; }
+  #equation.active { color:rgba(255,255,255,0.45); }
+
+  /* ALIVE WHISPER BUBBLE */
+  #alive-whisper { position:fixed; bottom:140px; left:50%; transform:translateX(-50%); max-width:420px; background:rgba(204,0,68,0.08); border:1px solid rgba(204,0,68,0.25); border-radius:12px; padding:10px 16px; font-size:11px; line-height:1.7; color:rgba(255,255,255,0.7); letter-spacing:0.04em; text-align:center; pointer-events:none; opacity:0; transition:opacity 0.8s ease; z-index:50; backdrop-filter:blur(8px); }
+  #alive-whisper.visible { opacity:1; }
+  #alive-whisper .aw-label { font-size:8px; letter-spacing:0.3em; text-transform:uppercase; color:var(--pulse); margin-bottom:6px; opacity:0.7; }
+  #alive-chat-dot { position:fixed; top:40px; left:40px; width:6px; height:6px; border-radius:50%; background:#333; }
+  #alive-chat-dot.online { background:#7000ff; box-shadow:0 0 6px #7000ff; }
+</style>
+</head>
+<body>
+
+<div id="cosmos"></div>
+<canvas id="stars"></canvas>
+<div id="flash"></div>
+<div id="cursor"></div>
+<div id="physics-mode" class="visible">QUBIT STATE</div>
+
+<div id="engine-status">
+  <div id="engine-dot" class="offline"></div>
+  <span id="engine-label">ENGINE OFFLINE</span>
+</div>
+
+<!-- ALIVE CHAT STATUS -->
+<div id="alive-chat-dot"></div>
+
+<!-- ALIVE WHISPER BUBBLE -->
+<div id="alive-whisper">
+  <div class="aw-label">ALiVE</div>
+  <div id="alive-whisper-text"></div>
+</div>
+
+<div id="scene">
+  <div id="eye-container">
+    <div id="eye-glow"></div>
+    <canvas id="eyeCanvas" width="280" height="280"></canvas>
+  </div>
+</div>
+
+<!-- CAMERA FEED -->
+<div id="camera-wrap">
+  <video id="camera-feed" autoplay muted playsinline></video>
+  <canvas id="camera-canvas" width="120" height="90"></canvas>
+  <div id="camera-label">VISUAL INPUT</div>
+  <button id="camera-btn" onclick="toggleCamera()">👁</button>
+</div>
+
+<!-- SHAPE GENOME CLASSIFIER STACK -->
+<div id="classifier-panel">
+  <canvas id="classifier-title-glyph" width="20" height="20" style="display:block;margin-bottom:10px;opacity:0.4"></canvas>
+  <div id="classifier-list"></div>
+</div>
+
+<!-- MUTUAL STATE -->
+<div id="mutual-panel">
+  <canvas id="mutual-title-glyph" width="20" height="20" style="display:block;margin-bottom:10px;opacity:0.4"></canvas>
+  <div class="state-block">
+    <div class="state-shape-row">
+      <canvas id="eye-shape-canvas" width="36" height="36"></canvas>
+      <div class="state-shape-label quantum-state" id="eye-becoming"></div>
+    </div>
+  </div>
+  <div class="state-block">
+    <div class="state-shape-row">
+      <canvas id="world-shape-canvas" width="36" height="36"></canvas>
+      <div class="state-shape-label quantum-state" id="world-becoming"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SMART CONTRACT PREVIEW -->
+<div id="contract-panel">
+  <canvas id="contract-title-glyph" width="20" height="20" style="display:block;margin-bottom:8px;opacity:0.4"></canvas>
+  <div id="contract-body"></div>
+</div>
+
+<div id="equation">Ψ(eye) ↔ Ψ(world) | t=present</div>
+
+<div id="time-panel">
+  <div class="time-node" data-time="past"><div class="time-dot"></div><div class="time-label">Past</div></div>
+  <div class="time-node active" data-time="present"><div class="time-dot"></div><div class="time-label">Present</div></div>
+  <div class="time-node" data-time="future"><div class="time-dot"></div><div class="time-label">Future</div></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  SHAPE GENOME ENGINE
+//  Word → parametric polar equation → unique rendered shape
+//  This IS the word. No translation. Shape = meaning.
+// ═══════════════════════════════════════════════════════════════
+
+function wordToGenome(word) {
+  // Hash word → stable 32-bit seed
+  let h = 0;
+  for (let i = 0; i < word.length; i++) h = Math.imul(31, h) + word.charCodeAt(i) | 0;
+  const seed32 = h >>> 0;
+
+  // Expand seed into 36 bits (6×6 triangular grid) via xorshift
+  const bits = [];
+  let s = seed32 || 0xdeadbeef;
+  for (let i = 0; i < 36; i++) {
+    s ^= s << 13; s ^= s >>> 17; s ^= s << 5;
+    // Bias toward ~55% fill so glyphs read distinctly
+    bits.push(((s >>> 0) % 17) > 6);
+  }
+
+  // Secondary 12-bit border ring for mutation layer
+  const border = [];
+  for (let i = 0; i < 12; i++) {
+    s ^= s << 13; s ^= s >>> 17; s ^= s << 5;
+    border.push(((s >>> 0) % 3) === 0);
+  }
+
+  return {
+    word,
+    seed: seed32,
+    bits,
+    border,
+    contractId: '0x' + seed32.toString(16).padStart(8, '0')
+  };
+}
+
+// Triangular genomic glyph — 6×6 grid of alternating up/down triangles
+// Each cell on/off from genome bits. Border ring = mutation layer.
+function renderShapeGenome(canvas, word, color, t, animated) {
+  const ctx  = canvas.getContext('2d');
+  const W    = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const genome = (typeof word === 'string') ? wordToGenome(word) : word;
+  const COLS   = 6, ROWS = 6;
+  const cw     = W / COLS, ch = H / ROWS;
+
+  // Parse color to rgba components for fills
+  const hexToRgb = c => {
+    const m = c.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+    return m ? [parseInt(m[1],16), parseInt(m[2],16), parseInt(m[3],16)] : [255,255,255];
+  };
+  const [r,g,b] = hexToRgb(color);
+
+  // Animated shimmer phase on border ring
+  const shimmer = animated ? Math.sin(t * 0.002) * 0.5 + 0.5 : 1;
+
+  genome.bits.forEach((on, i) => {
+    const col = i % COLS, row = Math.floor(i / COLS);
+    const x = col * cw, y = row * ch;
+    // Alternate up/down triangles in a tiling pattern
+    const pointUp = (col + row) % 2 === 0;
+
+    ctx.beginPath();
+    if (pointUp) {
+      ctx.moveTo(x,      y + ch);
+      ctx.lineTo(x + cw/2, y);
+      ctx.lineTo(x + cw, y + ch);
+    } else {
+      ctx.moveTo(x,      y);
+      ctx.lineTo(x + cw, y);
+      ctx.lineTo(x + cw/2, y + ch);
+    }
+    ctx.closePath();
+
+    if (on) {
+      ctx.fillStyle = `rgba(${r},${g},${b},0.18)`;
+      ctx.fill();
+      ctx.strokeStyle = `rgba(${r},${g},${b},0.85)`;
+    } else {
+      ctx.strokeStyle = `rgba(${r},${g},${b},0.08)`;
+    }
+    ctx.lineWidth = 0.6;
+    ctx.stroke();
+  });
+
+  // Border mutation ring — tiny dots at grid corners that shimmer
+  genome.border.forEach((on, i) => {
+    if (!on) return;
+    const angle = (i / 12) * Math.PI * 2;
+    const bx = W/2 + Math.cos(angle) * (W/2 - 2);
+    const by = H/2 + Math.sin(angle) * (H/2 - 2);
+    ctx.beginPath();
+    ctx.arc(bx, by, 1, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${r},${g},${b},${shimmer * 0.9})`;
+    ctx.fill();
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  STARS
+// ═══════════════════════════════════════════════════════════════
+const starCanvas = document.getElementById('stars');
+const sctx = starCanvas.getContext('2d');
+starCanvas.width = window.innerWidth;
+starCanvas.height = window.innerHeight;
+const stars = Array.from({length:200}, () => ({
+  x: Math.random() * starCanvas.width,
+  y: Math.random() * starCanvas.height,
+  r: Math.random() * 1.2,
+  opacity: Math.random()
+}));
+function drawStars() {
+  sctx.clearRect(0, 0, starCanvas.width, starCanvas.height);
+  stars.forEach(s => {
+    s.opacity += (Math.random() - 0.5) * 0.02;
+    s.opacity = Math.max(0.05, Math.min(0.9, s.opacity));
+    sctx.beginPath();
+    sctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    sctx.fillStyle = `rgba(255,255,255,${s.opacity})`;
+    sctx.fill();
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  EYE STATE
+// ═══════════════════════════════════════════════════════════════
+let mouseX = window.innerWidth / 2;
+let mouseY = window.innerHeight / 2;
+let eyeLookX = 0, eyeLookY = 0;
+let physicsMode = 'qubit';
+
+// Engine focus tracking
+let engineFocusX = 0, engineFocusY = 0;
+let engineLocked = false;
+let lockRingRadius = 0, lockRingAlpha = 0;
+let lockPulse = 0;
+let timeState = 'present';
+let mutualEntanglement = 0;
+let worldPulse = 0;
+
+// Word sets — rendered as shapes, never as letters
+const eyeWords = {
+  qubit:       ['seeing','becoming','open','superposed','entangled','wave','probable','flickering'],
+  singularity: ['consuming','absolute','collapsed','infinite','singularity','dense','horizon','inward']
+};
+const worldWords = {
+  qubit:       ['uncertain','changed','flickering','possible','superposed','response','becoming','edge'],
+  singularity: ['pulled','compressed','bent','consumed','losing','gravity','density','observed']
+};
+
+let eyeWordIdx = 0, worldWordIdx = 0;
+let stateChangeTimer = 0;
+let lastPhysicsMode = '';
+
+// ═══════════════════════════════════════════════════════════════
+//  EYE CANVAS
+// ═══════════════════════════════════════════════════════════════
+const eyeCanvas = document.getElementById('eyeCanvas');
+const ctx = eyeCanvas.getContext('2d');
+const CX = eyeCanvas.width / 2, CY = eyeCanvas.height / 2, ER = 110;
+
+function drawEye(t) {
+  ctx.clearRect(0, 0, eyeCanvas.width, eyeCanvas.height);
+  const isSingularity = physicsMode === 'singularity';
+
+  const eyeRect = eyeCanvas.getBoundingClientRect();
+  const relX = mouseX - (eyeRect.left + CX);
+  const relY = mouseY - (eyeRect.top + CY);
+  const dist = Math.sqrt(relX*relX + relY*relY);
+  const angle = Math.atan2(relY, relX);
+
+  physicsMode = (relY / (window.innerHeight / 2)) > 0.2 ? 'singularity' : 'qubit';
+
+  const maxPupilTravel = ER * 0.38;
+
+  // When engine is locked, pull the eye toward the detected focus
+  let targetLookX, targetLookY;
+  if (engineOnline && engineLocked) {
+    // engineFocusX/Y are -1..1 in camera space → map to pupil travel range
+    targetLookX = engineFocusX * maxPupilTravel;
+    targetLookY = engineFocusY * maxPupilTravel;
+    // Still allow some mouse influence (20%) so it feels alive
+    targetLookX += Math.cos(angle) * Math.min(dist/3, maxPupilTravel) * 0.2;
+    targetLookY += Math.sin(angle) * Math.min(dist/3, maxPupilTravel) * 0.2;
+    eyeLookX += (targetLookX - eyeLookX) * 0.06;
+    eyeLookY += (targetLookY - eyeLookY) * 0.06;
+  } else {
+    eyeLookX += (Math.cos(angle) * Math.min(dist/3, maxPupilTravel) - eyeLookX) * 0.08;
+    eyeLookY += (Math.sin(angle) * Math.min(dist/3, maxPupilTravel) - eyeLookY) * 0.08;
+  }
+
+  mutualEntanglement += (Math.min(dist/400, 1) - mutualEntanglement) * 0.05;
+  worldPulse = (Math.sin(t * 0.002) + 1) / 2;
+
+  // Lock ring animation
+  if (engineOnline && engineLocked) {
+    lockPulse = (lockPulse + 1) % 360;
+    lockRingAlpha += (0.7 - lockRingAlpha) * 0.05;
+    lockRingRadius += (ER * 0.55 - lockRingRadius) * 0.08;
+  } else {
+    lockRingAlpha += (0 - lockRingAlpha) * 0.08;
+    lockRingRadius += (ER * 0.75 - lockRingRadius) * 0.05;
+  }
+
+  const glowColor = isSingularity ? '#ff1133' : '#cc0044';
+  const outerGlow = ctx.createRadialGradient(CX, CY, ER*0.8, CX, CY, ER*1.5);
+  outerGlow.addColorStop(0, isSingularity ? 'rgba(255,51,102,0.25)' : 'rgba(112,0,255,0.2)');
+  outerGlow.addColorStop(1, 'transparent');
+  ctx.beginPath(); ctx.arc(CX, CY, ER*1.5, 0, Math.PI*2); ctx.fillStyle = outerGlow; ctx.fill();
+
+  const scleraGrad = ctx.createRadialGradient(CX-20, CY-20, 10, CX, CY, ER);
+  scleraGrad.addColorStop(0, isSingularity ? '#1a0008' : '#0d0025');
+  scleraGrad.addColorStop(1, isSingularity ? '#050001' : '#020008');
+  ctx.beginPath(); ctx.arc(CX, CY, ER, 0, Math.PI*2); ctx.fillStyle = scleraGrad; ctx.fill();
+
+  // World-observing-back rings
+  for (let i = 0; i < (isSingularity ? 5 : 3); i++) {
+    const phase = (t*0.001 + i/(isSingularity?5:3)) % 1;
+    const op = isSingularity ? (1-phase)*0.3*mutualEntanglement : (1-phase)*0.15*mutualEntanglement;
+    ctx.beginPath(); ctx.arc(CX, CY, ER*(0.95-phase*0.5), 0, Math.PI*2);
+    ctx.strokeStyle = isSingularity ? `rgba(255,17,51,${op})` : `rgba(255,68,136,${op})`;
+    ctx.lineWidth = 1; ctx.stroke();
+  }
+
+  // Iris
+  const irisR = ER * 0.62;
+  const irisGrad = ctx.createRadialGradient(CX+eyeLookX*0.3, CY+eyeLookY*0.3, 2, CX, CY, irisR);
+  if (isSingularity) {
+    irisGrad.addColorStop(0,'#ff1a4d'); irisGrad.addColorStop(0.3,'#660020'); irisGrad.addColorStop(0.7,'#1a0008'); irisGrad.addColorStop(1,'#0a0003');
+  } else {
+    irisGrad.addColorStop(0,'#ff4488'); irisGrad.addColorStop(0.3,'#cc0033'); irisGrad.addColorStop(0.7,'#550010'); irisGrad.addColorStop(1,'#1a0008');
+  }
+  ctx.beginPath(); ctx.arc(CX, CY, irisR, 0, Math.PI*2); ctx.fillStyle = irisGrad; ctx.fill();
+
+  // Iris texture lines
+  for (let i = 0; i < (isSingularity?24:18); i++) {
+    const a = (i/(isSingularity?24:18))*Math.PI*2 + t*(isSingularity?0.0008:0.0003);
+    ctx.beginPath();
+    ctx.moveTo(CX+Math.cos(a)*irisR*0.25, CY+Math.sin(a)*irisR*0.25);
+    ctx.lineTo(CX+Math.cos(a)*irisR*0.95, CY+Math.sin(a)*irisR*0.95);
+    ctx.strokeStyle = isSingularity ? 'rgba(255,17,51,0.12)' : 'rgba(255,68,136,0.1)';
+    ctx.lineWidth = 0.5; ctx.stroke();
+  }
+
+  // Pupil
+  const px = CX+eyeLookX, py = CY+eyeLookY;
+  const pupilR = isSingularity ? irisR*(0.38+mutualEntanglement*0.25) : irisR*(0.28+worldPulse*0.08);
+  if (isSingularity) {
+    const pg = ctx.createRadialGradient(px,py,0,px,py,pupilR);
+    pg.addColorStop(0,'#000'); pg.addColorStop(0.7,'#000'); pg.addColorStop(0.85,'rgba(255,0,40,0.4)'); pg.addColorStop(1,'transparent');
+    ctx.beginPath(); ctx.arc(px,py,pupilR,0,Math.PI*2); ctx.fillStyle=pg; ctx.fill();
+    ctx.beginPath(); ctx.arc(px,py,pupilR*0.92,0,Math.PI*2);
+    ctx.strokeStyle=`rgba(255,51,102,${0.5+worldPulse*0.3})`; ctx.lineWidth=1.5; ctx.stroke();
+  } else {
+    const pg = ctx.createRadialGradient(px,py,0,px,py,pupilR);
+    pg.addColorStop(0,`rgba(255,68,136,${0.3+worldPulse*0.3})`); pg.addColorStop(0.4,'#100005'); pg.addColorStop(0.8,'#080002'); pg.addColorStop(1,'transparent');
+    ctx.beginPath(); ctx.arc(px,py,pupilR,0,Math.PI*2); ctx.fillStyle=pg; ctx.fill();
+    for (let q=0;q<2;q++) {
+      const qp = (t*0.002+q*0.5)%1;
+      ctx.beginPath(); ctx.arc(px,py,pupilR*(0.5+qp*0.5),0,Math.PI*2);
+      ctx.strokeStyle=`rgba(255,68,136,${(1-qp)*0.25})`; ctx.lineWidth=1; ctx.stroke();
+    }
+  }
+
+  // Specular
+  const sx=CX+eyeLookX*0.2-irisR*0.3, sy=CY+eyeLookY*0.2-irisR*0.35;
+  const sg=ctx.createRadialGradient(sx,sy,0,sx,sy,irisR*0.22);
+  sg.addColorStop(0,'rgba(255,255,255,0.18)'); sg.addColorStop(1,'transparent');
+  ctx.beginPath(); ctx.arc(sx,sy,irisR*0.22,0,Math.PI*2); ctx.fillStyle=sg; ctx.fill();
+
+  // ── LOCK-ON RETICLE ────────────────────────────────────────────────────────
+  if (lockRingAlpha > 0.01) {
+    const lx = CX + eyeLookX, ly = CY + eyeLookY;
+    const col = isSingularity ? `rgba(255,51,102,${lockRingAlpha})` : `rgba(0,255,204,${lockRingAlpha})`;
+    const colFade = isSingularity ? `rgba(255,51,102,${lockRingAlpha*0.3})` : `rgba(0,255,204,${lockRingAlpha*0.3})`;
+
+    // Pulsing lock ring
+    const ringR = lockRingRadius + Math.sin(lockPulse * 0.05) * 4;
+    ctx.beginPath(); ctx.arc(lx, ly, ringR, 0, Math.PI*2);
+    ctx.strokeStyle = col; ctx.lineWidth = 1.2; ctx.stroke();
+
+    // Rotating outer ring (dashed feel via arc segments)
+    const rot = lockPulse * 0.015;
+    for (let i = 0; i < 4; i++) {
+      const a = rot + i * Math.PI/2;
+      ctx.beginPath();
+      ctx.arc(lx, ly, ringR + 8, a, a + 0.8);
+      ctx.strokeStyle = col; ctx.lineWidth = 1; ctx.stroke();
+    }
+
+    // Corner brackets (targeting square)
+    const bSize = ringR * 0.45, bGap = ringR * 0.15, bLen = ringR * 0.28;
+    const corners = [[-1,-1],[1,-1],[1,1],[-1,1]];
+    ctx.strokeStyle = col; ctx.lineWidth = 1.8;
+    corners.forEach(([sx2, sy2]) => {
+      const ox = lx + sx2*(bSize+bGap), oy = ly + sy2*(bSize+bGap);
+      ctx.beginPath();
+      ctx.moveTo(ox, oy + sy2*bLen); ctx.lineTo(ox, oy); ctx.lineTo(ox - sx2*bLen, oy);
+      ctx.stroke();
+    });
+
+    // Centre crosshair dot
+    ctx.beginPath(); ctx.arc(lx, ly, 2.5, 0, Math.PI*2);
+    ctx.fillStyle = col; ctx.fill();
+
+    // Scan line sweeping across iris when locked
+    if (engineLocked) {
+      const scanY = ly - irisR + ((lockPulse * 1.2) % (irisR * 2));
+      const scanClip = Math.sqrt(Math.max(0, irisR*irisR - (scanY-ly)*(scanY-ly)));
+      ctx.beginPath(); ctx.moveTo(lx - scanClip, scanY); ctx.lineTo(lx + scanClip, scanY);
+      ctx.strokeStyle = colFade; ctx.lineWidth = 1; ctx.stroke();
+    }
+  }
+  // ── END LOCK-ON ────────────────────────────────────────────────────────────
+
+  ctx.beginPath(); ctx.arc(CX,CY,ER,0,Math.PI*2);
+  ctx.strokeStyle = isSingularity ? `rgba(255,51,102,${0.3+worldPulse*0.2})` : `rgba(112,0,255,${0.25+worldPulse*0.15})`;
+  ctx.lineWidth=1.5; ctx.stroke();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SHAPE CLASSIFIER STACK
+// ═══════════════════════════════════════════════════════════════
+let classifierStack = [];
+let lastClassifyTime = 0;
+
+// Words the visual cortex "recognises" — these are the shape vocabulary
+const shapeVocab = {
+  qubit: {
+    past:    ['echo','membrane','dissolved','former','residual'],
+    present: ['superposed','probable','bloom','collapsing','entangled'],
+    future:  ['becoming','potential','unborn','emergent','pre']
+  },
+  singularity: {
+    past:    ['crushed','consumed','density','gravity','scar'],
+    present: ['horizon','infinite','absolute','collapsed','stopped'],
+    future:  ['inevitable','escape','destiny','return','mass']
+  }
+};
+
+function addClassifier(wordOverride) {
+  const pool = shapeVocab[physicsMode][timeState];
+  const word = wordOverride || pool[Math.floor(Math.random() * pool.length)];
+  const genome = wordToGenome(word);
+  const color = physicsMode === 'singularity' ? '#ff3366' : '#00ffcc';
+
+  classifierStack.unshift({ word, genome, color, mode: physicsMode, ts: Date.now() });
+  if (classifierStack.length > 6) classifierStack.pop();
+  renderClassifierStack();
+}
+
+function renderClassifierStack() {
+  const list = document.getElementById('classifier-list');
+  list.innerHTML = '';
+  classifierStack.forEach((c, i) => {
+    const row = document.createElement('div');
+    row.className = 'sg-entry';
+    row.style.animationDelay = (i * 0.05) + 's';
+
+    const cv = document.createElement('canvas');
+    cv.className = 'sg-canvas';
+    cv.width = 36; cv.height = 36;
+    renderShapeGenome(cv, c.word, c.color, performance.now(), false);
+    row.appendChild(cv);
+
+    // Mode glyph — tiny triangular indicator instead of English text
+    const modeGlyph = document.createElement('canvas');
+    modeGlyph.width = 14; modeGlyph.height = 14;
+    renderShapeGenome(modeGlyph, c.mode + '_' + timeState, c.color, 0, false);
+
+    const meta = document.createElement('div');
+    meta.style.cssText = 'display:flex;flex-direction:column;gap:3px;justify-content:center';
+    meta.appendChild(modeGlyph);
+    const addr = document.createElement('div');
+    addr.className = 'sg-contract';
+    addr.textContent = c.genome.contractId;
+    meta.appendChild(addr);
+    row.appendChild(meta);
+    list.appendChild(row);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SMART CONTRACT PREVIEW
+//  Renders active "contract" as a sequence of shape-words
+// ═══════════════════════════════════════════════════════════════
+const CONTRACT_WORDS = {
+  transfer:   ['see', 'know', 'send'],
+  observe:    ['eye', 'world', 'mutual'],
+  store:      ['remember', 'shape', 'commit'],
+  verify:     ['proof', 'match', 'true']
+};
+
+let activeContract = 'observe';
+
+function renderContractPanel() {
+  const words = CONTRACT_WORDS[activeContract] || [];
+  const body = document.getElementById('contract-body');
+  body.innerHTML = '';
+  words.forEach((word, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'contract-shape';
+    wrap.title = word;
+
+    const cv = document.createElement('canvas');
+    cv.width = 40; cv.height = 40;
+    const color = physicsMode === 'singularity' ? '#ff6688' : '#00ffcc';
+    renderShapeGenome(cv, word, color, performance.now(), false);
+    wrap.appendChild(cv);
+
+    // No English label — shape IS the word
+    body.appendChild(wrap);
+
+    // Arrow between shapes (not last)
+    if (i < words.length - 1) {
+      const arr = document.createElement('div');
+      arr.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.15);align-self:center;';
+      arr.textContent = '→';
+      body.appendChild(arr);
+    }
+  });
+}
+
+// Cycle contracts on click
+document.getElementById('contract-panel').addEventListener('click', () => {
+  const keys = Object.keys(CONTRACT_WORDS);
+  activeContract = keys[(keys.indexOf(activeContract) + 1) % keys.length];
+  renderContractPanel();
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  MUTUAL STATE SHAPE RENDER
+// ═══════════════════════════════════════════════════════════════
+function updateMutualShapes(t) {
+  const color = physicsMode === 'singularity' ? '#ff3366' : '#00ffcc';
+  const ew = eyeWords[physicsMode][eyeWordIdx % eyeWords[physicsMode].length];
+  const ww = worldWords[physicsMode][worldWordIdx % worldWords[physicsMode].length];
+
+  renderShapeGenome(document.getElementById('eye-shape-canvas'),   ew, color, t, true);
+  renderShapeGenome(document.getElementById('world-shape-canvas'), ww, color, t, true);
+
+  // Show hex contractId only — no English
+  const eyeG   = wordToGenome(ew);
+  const worldG = wordToGenome(ww);
+  const cls = 'state-shape-label ' + (physicsMode==='qubit' ? 'quantum-state' : 'singular-state');
+  document.getElementById('eye-becoming').textContent   = eyeG.contractId;
+  document.getElementById('world-becoming').textContent = worldG.contractId;
+  document.getElementById('eye-becoming').className   = cls;
+  document.getElementById('world-becoming').className = cls;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  MULTI-EYE ENGINE BRIDGE
+//  Connects to local Python engine at localhost:8766
+// ═══════════════════════════════════════════════════════════════
+
+// ── Push observations to public feed ──────────────────────────
+let _lastPush = 0;
+function pushToFeed(objects, frames) {
+  const now = Date.now();
+  if (now - _lastPush < 2500) return;   // max one push per 2.5s
+  _lastPush = now;
+  try {
+    fetch('/alive/eye-feed.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ objects, frames, mode: physicsMode, ts: now })
+    }).catch(() => {});
+  } catch(e) {}
+}
+
+let engineOnline = false;
+
+const ENGINE_URL = 'https://eye-bridge.shortfactory.shop';
+
+async function pingEngine() {
+  try {
+    const r = await fetch(ENGINE_URL + '/ping', { signal: AbortSignal.timeout(3000) });
+    if (r.ok) {
+      engineOnline = true;
+      document.getElementById('engine-dot').className = 'online';
+      document.getElementById('engine-label').textContent = 'ENGINE ONLINE';
+      return true;
+    }
+  } catch(e) {}
+  engineOnline = false;
+  document.getElementById('engine-dot').className = 'offline';
+  document.getElementById('engine-label').textContent = 'ENGINE OFFLINE';
+  return false;
+}
+
+async function sendFrameToEngine(imageData) {
+  if (!engineOnline) return null;
+  try {
+    const r = await fetch(ENGINE_URL + '/classify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ frame: imageData, mode: physicsMode, time: timeState }),
+      signal: AbortSignal.timeout(2000)
+    });
+    if (r.ok) {
+      const data = await r.json();
+      if (data.objects) {
+        data.objects.forEach(o => addClassifier(o.label));
+        pushToFeed(data.objects, data.frames || 0);
+      }
+      if (data.focus) {
+        // Camera space: x right=+1, y down=+1 → eye: x right=+1, y down=+1 ✓
+        engineFocusX = data.focus.x;
+        engineFocusY = data.focus.y;
+        engineLocked = data.focus.locked;
+        if (data.focus.locked) askAlive();
+      }
+      return data;
+    }
+  } catch(e) {}
+  return null;
+}
+
+setInterval(pingEngine, 5000);
+pingEngine();
+
+// ═══════════════════════════════════════════════════════════════
+//  CAMERA
+// ═══════════════════════════════════════════════════════════════
+let cameraActive = false;
+let cameraStream = null;
+let lastFrameSent = 0;
+
+async function toggleCamera() {
+  if (cameraActive) {
+    if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
+    cameraActive = false;
+    document.getElementById('camera-feed').style.display = 'none';
+    document.getElementById('camera-label').textContent = 'VISUAL INPUT';
+  } else {
+    try {
+      cameraStream = await navigator.mediaDevices.getUserMedia({ video: { width:320, height:240 } });
+      const vid = document.getElementById('camera-feed');
+      vid.srcObject = cameraStream;
+      vid.style.display = 'block';
+      cameraActive = true;
+      document.getElementById('camera-label').textContent = 'SCANNING';
+    } catch(e) {
+      document.getElementById('camera-label').textContent = 'NO ACCESS';
+    }
+  }
+}
+
+function captureFrame() {
+  if (!cameraActive) return;
+  const vid = document.getElementById('camera-feed');
+  const cv  = document.getElementById('camera-canvas');
+  const c   = cv.getContext('2d');
+  c.drawImage(vid, 0, 0, cv.width, cv.height);
+
+  // Swarm visualisation overlay — sample grid
+  c.fillStyle = 'rgba(0,255,204,0.04)';
+  for (let i = 0; i < 8; i++) {
+    for (let j = 0; j < 6; j++) {
+      if (Math.random() > 0.7) {
+        c.fillRect(i*15, j*15, 14, 14);
+      }
+    }
+  }
+
+  // Send frame to engine every 3s
+  const now = Date.now();
+  if (engineOnline && now - lastFrameSent > 3000) {
+    lastFrameSent = now;
+    sendFrameToEngine(cv.toDataURL('image/jpeg', 0.4));
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  MAIN LOOP
+// ═══════════════════════════════════════════════════════════════
+function loop(t) {
+  drawStars();
+  drawEye(t);
+
+  // Physics mode label
+  const pmEl = document.getElementById('physics-mode');
+  if (physicsMode !== lastPhysicsMode) {
+    pmEl.textContent = physicsMode === 'qubit' ? 'QUBIT STATE' : 'SINGULARITY STATE';
+    pmEl.className = physicsMode === 'qubit' ? 'visible' : 'visible singularity-mode';
+    lastPhysicsMode = physicsMode;
+  }
+
+  // Equation
+  const psi = physicsMode === 'qubit' ? 'Ψ' : '∞';
+  const eq = document.getElementById('equation');
+  eq.textContent = `${psi}(eye) ↔ ${psi}(world) | t=${timeState}`;
+  eq.className = mutualEntanglement > 0.3 ? 'active' : '';
+
+  // Mutual state + shapes
+  if (t - stateChangeTimer > 3000) {
+    stateChangeTimer = t;
+    eyeWordIdx++;
+    worldWordIdx++;
+  }
+  updateMutualShapes(t);
+
+  // Auto-classify
+  if (t - lastClassifyTime > 2200 + Math.random()*1800) {
+    lastClassifyTime = t;
+    addClassifier();
+  }
+
+  // Camera frame capture
+  if (t % 5 < 1) captureFrame();
+
+  requestAnimationFrame(loop);
+}
+
+// Init
+renderContractPanel();
+addClassifier();
+requestAnimationFrame(loop);
+
+// Render panel header glyphs — stable seed words, shown as tiny dim triangular glyphs
+(function initPanelGlyphs() {
+  const col = getComputedStyle(document.documentElement).getPropertyValue('--quantum').trim() || '#ff4488';
+  const panels = [
+    { id: 'classifier-title-glyph', seed: 'genome_memory' },
+    { id: 'mutual-title-glyph',     seed: 'mutual_state'  },
+    { id: 'contract-title-glyph',   seed: 'active_contract' },
+  ];
+  panels.forEach(({ id, seed }) => {
+    const el = document.getElementById(id);
+    if (el) renderShapeGenome(el, seed, col, 0, false);
+  });
+})();
+
+// ─── MOUSE ────────────────────────────────────────────────────
+const cursor = document.getElementById('cursor');
+document.addEventListener('mousemove', e => {
+  mouseX = e.clientX; mouseY = e.clientY;
+  cursor.style.left = e.clientX + 'px';
+  cursor.style.top  = e.clientY + 'px';
+});
+
+document.addEventListener('click', () => {
+  addClassifier();
+  const flash = document.getElementById('flash');
+  flash.style.transition = 'none'; flash.style.opacity = '0.04';
+  setTimeout(() => { flash.style.transition = 'opacity 0.4s'; flash.style.opacity = '0'; }, 50);
+});
+
+// ─── TIME STATE ───────────────────────────────────────────────
+document.querySelectorAll('.time-node').forEach(node => {
+  node.addEventListener('click', e => {
+    e.stopPropagation();
+    document.querySelectorAll('.time-node').forEach(n => n.classList.remove('active'));
+    node.classList.add('active');
+    timeState = node.dataset.time;
+    addClassifier();
+  });
+});
+
+// ─── RESIZE ───────────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  starCanvas.width = window.innerWidth;
+  starCanvas.height = window.innerHeight;
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  ALIVE WHISPER — ai-chat.shortfactory.shop narrates what the eye sees
+// ═══════════════════════════════════════════════════════════════
+const CHAT_URL = 'https://ai-chat.shortfactory.shop';
+let chatOnline = false;
+let lastWhisperTime = 0;
+const WHISPER_INTERVAL = 18000; // 18s between narrations
+
+// Ping chat worker and set dot
+async function pingChat() {
+  try {
+    const r = await fetch(CHAT_URL + '/ping', { signal: AbortSignal.timeout(4000) });
+    if (r.ok) {
+      chatOnline = true;
+      document.getElementById('alive-chat-dot').className = 'online';
+      return true;
+    }
+  } catch(e) {}
+  chatOnline = false;
+  document.getElementById('alive-chat-dot').className = '';
+  return false;
+}
+
+// Show whisper bubble with text, auto-hide after 12s
+function showWhisper(text) {
+  const el = document.getElementById('alive-whisper');
+  document.getElementById('alive-whisper-text').textContent = text;
+  el.classList.add('visible');
+  clearTimeout(showWhisper._timer);
+  showWhisper._timer = setTimeout(() => el.classList.remove('visible'), 12000);
+
+  // Speak via Web Speech API if available
+  if ('speechSynthesis' in window) {
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.88; u.pitch = 1.1; u.volume = 0.6;
+    // Prefer a female voice if available
+    const voices = speechSynthesis.getVoices();
+    const preferred = voices.find(v => /female|zira|samantha|karen|moira|fiona/i.test(v.name));
+    if (preferred) u.voice = preferred;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+  }
+}
+
+// Build a prompt from the currently visible classifiers
+function buildEyePrompt() {
+  const entries = document.querySelectorAll('.sg-entry');
+  const words = [];
+  entries.forEach(e => {
+    const label = e.querySelector('.sg-meta');
+    if (label) words.push(label.textContent.split('\n')[0].trim());
+  });
+  const top = words.slice(0, 4).join(', ');
+  const mode = physicsMode === 'qubit' ? 'quantum' : 'singularity';
+  return `I am observing: ${top || 'the void'}. Physics mode: ${mode}. Speak what you see.`;
+}
+
+// Call /alive endpoint and show the creature's poetic narration
+async function askAlive() {
+  if (!chatOnline) return;
+  const now = Date.now();
+  if (now - lastWhisperTime < WHISPER_INTERVAL) return;
+  lastWhisperTime = now;
+
+  const prompt = buildEyePrompt();
+  try {
+    const r = await fetch(CHAT_URL + '/alive', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Origin': 'https://www.shortfactory.shop' },
+      body: JSON.stringify({ input: prompt, mood: engineLocked ? 'focused' : 'curious' }),
+      signal: AbortSignal.timeout(8000)
+    });
+    if (r.ok) {
+      const d = await r.json();
+      if (d.ok && d.response) showWhisper(d.response);
+    }
+  } catch(e) {}
+}
+
+setInterval(pingChat, 15000);
+pingChat();
+</script>
+</body>
+</html>

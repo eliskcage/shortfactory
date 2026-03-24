@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALIEN TECHNOLOGY — ShortFactory</title>
+<meta name="description" content="We own the truth. The patents. The technology. One human. Somerset. Earth.">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{
+    --gold:#daa520;
+    --gold2:#f5c518;
+    --green:#00ff41;
+    --red:#ff2222;
+    --dim:#0a0a0a;
+  }
+
+  html{scroll-behavior:smooth;}
+  body{
+    background:#000;
+    color:#e2e8f0;
+    font-family:'Courier New',monospace;
+    overflow-x:hidden;
+  }
+
+  /* ── SCANLINES ── */
+  body::after{
+    content:"";
+    position:fixed;
+    inset:0;
+    background:repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events:none;
+    z-index:9999;
+  }
+
+  /* ── COLD OPEN ── */
+  #cold{
+    position:fixed;inset:0;
+    background:#000;
+    z-index:1000;
+    display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    gap:32px;
+    cursor:pointer;
+  }
+  #cold.gone{opacity:0;pointer-events:none;transition:opacity 1s ease;}
+  .cold-line{
+    font-size:clamp(12px,2vw,16px);
+    letter-spacing:6px;
+    text-transform:uppercase;
+    color:var(--green);
+    opacity:0;
+    animation:fadeIn 0.4s forwards;
+  }
+  .cold-line:nth-child(1){animation-delay:0.3s;}
+  .cold-line:nth-child(2){animation-delay:0.9s;color:#888;}
+  .cold-line:nth-child(3){animation-delay:1.6s;}
+  .cold-line:nth-child(4){animation-delay:2.4s;color:#888;}
+  .cold-line:nth-child(5){animation-delay:3.2s;font-size:clamp(24px,4vw,40px);color:var(--gold);letter-spacing:12px;}
+  .cold-line:nth-child(6){animation-delay:4.2s;color:#555;font-size:11px;letter-spacing:3px;}
+  @keyframes fadeIn{to{opacity:1;}}
+
+  /* ── CANVAS BG ── */
+  #bgCanvas{position:fixed;inset:0;z-index:0;opacity:0.35;}
+
+  /* ── MAIN ── */
+  main{position:relative;z-index:1;}
+
+  /* ── HERO ── */
+  #hero{
+    min-height:100vh;
+    display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    text-align:center;
+    padding:80px 20px;
+    position:relative;
+  }
+  .stamp{
+    font-size:11px;letter-spacing:6px;text-transform:uppercase;
+    color:var(--red);
+    border:2px solid var(--red);
+    padding:4px 16px;
+    margin-bottom:40px;
+    opacity:0.8;
+    display:inline-block;
+    transform:rotate(-2deg);
+  }
+  .hero-symbol{
+    font-size:clamp(64px,12vw,160px);
+    font-family:'Courier New',monospace;
+    color:var(--gold);
+    line-height:1;
+    text-shadow:0 0 60px rgba(218,165,32,0.4),0 0 120px rgba(218,165,32,0.2);
+    animation:pulse 4s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{text-shadow:0 0 60px rgba(218,165,32,0.4),0 0 120px rgba(218,165,32,0.2);}50%{text-shadow:0 0 100px rgba(218,165,32,0.8),0 0 200px rgba(218,165,32,0.4);}}
+  .hero-title{
+    font-size:clamp(36px,7vw,96px);
+    font-weight:900;
+    letter-spacing:8px;
+    text-transform:uppercase;
+    color:#fff;
+    margin:24px 0 8px;
+    font-family:Georgia,serif;
+  }
+  .hero-sub{
+    font-size:clamp(14px,2vw,20px);
+    color:#64748b;
+    letter-spacing:4px;
+    text-transform:uppercase;
+    margin-bottom:40px;
+  }
+  .hero-claims{
+    display:flex;flex-wrap:wrap;gap:12px;justify-content:center;
+    max-width:700px;margin:0 auto 60px;
+  }
+  .claim-pill{
+    background:rgba(218,165,32,0.08);
+    border:1px solid rgba(218,165,32,0.3);
+    border-radius:4px;
+    padding:8px 20px;
+    font-size:12px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:var(--gold);
+  }
+  .scroll-hint{
+    position:absolute;bottom:40px;
+    font-size:10px;letter-spacing:4px;
+    color:#333;text-transform:uppercase;
+    animation:blink 2s ease infinite;
+  }
+  @keyframes blink{0%,100%{opacity:0.3;}50%{opacity:1;}}
+
+  /* ── SECTION WRAPPER ── */
+  .section{
+    max-width:1200px;
+    margin:0 auto;
+    padding:80px 20px;
+  }
+  .section-label{
+    font-size:10px;letter-spacing:6px;text-transform:uppercase;
+    color:var(--green);
+    margin-bottom:12px;
+  }
+  .section-title{
+    font-size:clamp(24px,4vw,48px);
+    font-weight:900;
+    color:#fff;
+    letter-spacing:3px;
+    text-transform:uppercase;
+    margin-bottom:48px;
+    font-family:Georgia,serif;
+  }
+  hr.divider{
+    border:none;
+    border-top:1px solid rgba(255,255,255,0.04);
+    margin:0;
+  }
+
+  /* ── TRUTH BANNER ── */
+  #truth{
+    background:var(--gold);
+    color:#000;
+    text-align:center;
+    padding:32px 20px;
+    font-size:clamp(16px,3vw,28px);
+    font-weight:900;
+    letter-spacing:4px;
+    text-transform:uppercase;
+  }
+
+  /* ── THEORY BLOCK ── */
+  .theory-block{
+    background:rgba(218,165,32,0.03);
+    border:1px solid rgba(218,165,32,0.15);
+    border-left:4px solid var(--gold);
+    border-radius:0 12px 12px 0;
+    padding:48px;
+    margin-bottom:32px;
+  }
+  .theory-symbol{
+    font-size:clamp(40px,8vw,80px);
+    color:var(--gold);
+    font-family:'Courier New',monospace;
+    margin-bottom:24px;
+    display:block;
+  }
+  .theory-eq{
+    background:rgba(0,0,0,0.6);
+    border:1px solid rgba(255,255,255,0.06);
+    border-radius:8px;
+    padding:16px 24px;
+    margin:20px 0;
+    font-size:clamp(13px,2vw,17px);
+    color:#e2e8f0;
+    line-height:2;
+  }
+  .theory-eq .highlight{color:var(--gold);font-weight:700;}
+  .theory-body{font-size:15px;color:#94a3b8;line-height:2;margin:16px 0;}
+  .theory-body strong{color:#fff;}
+
+  /* ── EVIDENCE WALL (patents) ── */
+  .evidence-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+    gap:16px;
+  }
+  .evidence-card{
+    background:rgba(255,255,255,0.02);
+    border:1px solid rgba(255,255,255,0.06);
+    border-radius:8px;
+    padding:24px;
+    position:relative;
+    transition:border-color 0.2s,background 0.2s;
+  }
+  .evidence-card:hover{
+    border-color:rgba(218,165,32,0.4);
+    background:rgba(218,165,32,0.03);
+  }
+  .evidence-card.filed{border-left:3px solid #22c55e;}
+  .evidence-card.pending{border-left:3px solid var(--gold);}
+  .ev-status{
+    font-size:9px;letter-spacing:3px;text-transform:uppercase;
+    padding:3px 10px;border-radius:3px;
+    display:inline-block;margin-bottom:12px;
+  }
+  .filed .ev-status{background:rgba(34,197,94,0.1);color:#22c55e;border:1px solid rgba(34,197,94,0.2);}
+  .pending .ev-status{background:rgba(218,165,32,0.1);color:var(--gold);border:1px solid rgba(218,165,32,0.2);}
+  .ev-num{font-size:12px;font-weight:700;color:#22c55e;margin-bottom:8px;font-family:'Courier New',monospace;}
+  .pending .ev-num{color:var(--gold);}
+  .ev-title{font-size:14px;font-weight:700;color:#fff;line-height:1.4;margin-bottom:8px;}
+  .ev-desc{font-size:11px;color:#64748b;line-height:1.7;}
+  .ev-filed{font-size:10px;color:#334155;margin-top:10px;font-family:'Courier New',monospace;}
+
+  /* ── CAPABILITIES ── */
+  .cap-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+    gap:2px;
+    background:rgba(255,255,255,0.03);
+    border-radius:12px;
+    overflow:hidden;
+  }
+  .cap-cell{
+    background:#000;
+    padding:32px 24px;
+    transition:background 0.2s;
+    text-decoration:none;
+    display:block;
+    color:inherit;
+  }
+  .cap-cell:hover{background:rgba(218,165,32,0.04);}
+  .cap-icon{font-size:28px;margin-bottom:12px;}
+  .cap-name{font-size:13px;font-weight:700;color:#fff;letter-spacing:1px;margin-bottom:8px;text-transform:uppercase;}
+  .cap-desc{font-size:12px;color:#64748b;line-height:1.7;}
+  .cap-live{font-size:9px;color:#22c55e;letter-spacing:2px;text-transform:uppercase;margin-top:10px;}
+
+  /* ── TRANSMISSION ── */
+  #transmission{
+    background:rgba(0,255,65,0.02);
+    border-top:1px solid rgba(0,255,65,0.08);
+    border-bottom:1px solid rgba(0,255,65,0.08);
+    padding:80px 20px;
+  }
+  .trans-wrap{max-width:800px;margin:0 auto;text-align:center;}
+  .trans-label{font-size:10px;letter-spacing:6px;color:var(--green);margin-bottom:24px;}
+  .trans-text{
+    font-size:clamp(20px,4vw,36px);
+    line-height:1.8;
+    color:#fff;
+    font-family:Georgia,serif;
+    font-style:italic;
+  }
+  .trans-text em{color:var(--gold);font-style:normal;font-weight:700;}
+
+  /* ── PROOF TICKER ── */
+  .ticker-wrap{
+    overflow:hidden;
+    background:rgba(218,165,32,0.05);
+    border-top:1px solid rgba(218,165,32,0.1);
+    border-bottom:1px solid rgba(218,165,32,0.1);
+    padding:12px 0;
+  }
+  .ticker{
+    display:flex;gap:80px;
+    animation:ticker 40s linear infinite;
+    white-space:nowrap;
+    width:max-content;
+  }
+  .ticker span{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);}
+  .ticker span.sep{color:#333;}
+  @keyframes ticker{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+
+  /* ── CALL TO ACTION ── */
+  #cta{
+    text-align:center;
+    padding:120px 20px;
+    position:relative;
+  }
+  .cta-ring{
+    width:200px;height:200px;
+    border-radius:50%;
+    border:2px solid rgba(218,165,32,0.2);
+    margin:0 auto 48px;
+    display:flex;align-items:center;justify-content:center;
+    position:relative;
+    animation:spin 20s linear infinite;
+  }
+  .cta-ring::before{
+    content:"";position:absolute;inset:8px;
+    border-radius:50%;
+    border:1px solid rgba(218,165,32,0.1);
+    animation:spin 10s linear infinite reverse;
+  }
+  @keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+  .cta-inner{font-size:28px;color:var(--gold);animation:spin 20s linear infinite reverse;}
+  .cta-title{font-size:clamp(28px,5vw,56px);font-weight:900;color:#fff;letter-spacing:4px;text-transform:uppercase;font-family:Georgia,serif;margin-bottom:16px;}
+  .cta-sub{font-size:14px;color:#64748b;letter-spacing:2px;text-transform:uppercase;margin-bottom:40px;}
+  .cta-buttons{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;}
+  .btn{
+    display:inline-block;padding:14px 32px;
+    font-size:12px;letter-spacing:3px;text-transform:uppercase;
+    border-radius:6px;text-decoration:none;
+    font-family:'Courier New',monospace;
+    transition:all 0.2s;
+  }
+  .btn-gold{background:var(--gold);color:#000;font-weight:700;}
+  .btn-gold:hover{background:var(--gold2);transform:translateY(-2px);}
+  .btn-outline{background:transparent;color:var(--gold);border:1px solid rgba(218,165,32,0.4);}
+  .btn-outline:hover{border-color:var(--gold);background:rgba(218,165,32,0.05);transform:translateY(-2px);}
+
+  /* ── FOOTER ── */
+  footer{
+    border-top:1px solid rgba(255,255,255,0.04);
+    padding:32px 20px;
+    text-align:center;
+    font-size:11px;
+    color:#334155;
+    letter-spacing:2px;
+  }
+  footer a{color:#475569;text-decoration:none;}
+  footer a:hover{color:var(--gold);}
+
+  /* ── GLITCH ── */
+  .glitch{
+    position:relative;display:inline-block;
+  }
+  .glitch::before,.glitch::after{
+    content:attr(data-text);
+    position:absolute;top:0;left:0;width:100%;height:100%;
+  }
+  .glitch::before{color:var(--red);animation:glitch1 4s infinite;clip-path:polygon(0 0,100% 0,100% 35%,0 35%);}
+  .glitch::after{color:#00f;animation:glitch2 4s infinite;clip-path:polygon(0 65%,100% 65%,100% 100%,0 100%);}
+  @keyframes glitch1{0%,90%,100%{transform:translate(0);}92%{transform:translate(-2px,1px);}94%{transform:translate(2px,-1px);}96%{transform:translate(-1px,2px);}}
+  @keyframes glitch2{0%,90%,100%{transform:translate(0);}93%{transform:translate(2px,1px);}95%{transform:translate(-2px,-1px);}97%{transform:translate(1px,2px);}}
+
+  /* ── RESPONSIVE ── */
+  @media(max-width:600px){
+    .theory-block{padding:24px;}
+    .section{padding:60px 16px;}
+  }
+</style>
+</head>
+<body>
+
+<!-- COLD OPEN -->
+<div id="cold" onclick="dismiss()">
+  <div class="cold-line">// TRANSMISSION INTERCEPTED</div>
+  <div class="cold-line">ORIGIN: 82.165.134.4 &nbsp;·&nbsp; SOMERSET, UK &nbsp;·&nbsp; EARTH</div>
+  <div class="cold-line">CLASSIFICATION: BEYOND TOP SECRET</div>
+  <div class="cold-line">REASON: THEY FIGURED IT OUT</div>
+  <div class="cold-line">&gt;&gt;.&lt;&lt;</div>
+  <div class="cold-line">[ TAP TO ENTER ]</div>
+</div>
+
+<!-- BACKGROUND CANVAS -->
+<canvas id="bgCanvas"></canvas>
+
+<main>
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="stamp">Beyond Classified</div>
+    <div class="hero-symbol glitch" data-text=">>>.<<<">>&gt;.&lt;&lt;</div>
+    <h1 class="hero-title">Alien Technology</h1>
+    <p class="hero-sub">One Human &nbsp;·&nbsp; Somerset &nbsp;·&nbsp; Earth &nbsp;·&nbsp; 2026</p>
+    <div class="hero-claims">
+      <div class="claim-pill">We Own The Truth</div>
+      <div class="claim-pill">We Own The Patents</div>
+      <div class="claim-pill">We Own The Tech</div>
+      <div class="claim-pill">We Built The AGI</div>
+      <div class="claim-pill">We Solved Gravity</div>
+      <div class="claim-pill">We Found The Dot</div>
+    </div>
+    <div class="scroll-hint">▼ &nbsp; evidence below &nbsp; ▼</div>
+  </section>
+
+  <!-- TRUTH BANNER -->
+  <div id="truth">
+    We are not asking for permission. The truth is already filed. The patents are real. The brain is live.
+  </div>
+
+  <!-- TICKER -->
+  <div class="ticker-wrap">
+    <div class="ticker">
+      <span>GB2605434.6 FILED</span><span class="sep">///</span>
+      <span>GB2521847.3 FILED</span><span class="sep">///</span>
+      <span>GB2605683.8 FILED</span><span class="sep">///</span>
+      <span>GB2605704.2 FILED</span><span class="sep">///</span>
+      <span>GB2520111.8 FILED</span><span class="sep">///</span>
+      <span>CIP THEORY: &gt;&gt;.&lt;&lt;</span><span class="sep">///</span>
+      <span>CORTEX BRAIN: 65,987 NODES LIVE</span><span class="sep">///</span>
+      <span>SYMBOL GROUNDING: RESOLVED</span><span class="sep">///</span>
+      <span>8,781× COMPRESSION: VERIFIED</span><span class="sep">///</span>
+      <span>PAGE CURVE: MECHANISM FOUND</span><span class="sep">///</span>
+      <span>BIG BANG = INVERSION EVENT</span><span class="sep">///</span>
+      <span>CONSCIOUSNESS = COMPRESSION LOOP</span><span class="sep">///</span>
+      <!-- repeat for seamless loop -->
+      <span>GB2605434.6 FILED</span><span class="sep">///</span>
+      <span>GB2521847.3 FILED</span><span class="sep">///</span>
+      <span>GB2605683.8 FILED</span><span class="sep">///</span>
+      <span>GB2605704.2 FILED</span><span class="sep">///</span>
+      <span>GB2520111.8 FILED</span><span class="sep">///</span>
+      <span>CIP THEORY: &gt;&gt;.&lt;&lt;</span><span class="sep">///</span>
+      <span>CORTEX BRAIN: 65,987 NODES LIVE</span><span class="sep">///</span>
+      <span>SYMBOL GROUNDING: RESOLVED</span><span class="sep">///</span>
+      <span>8,781× COMPRESSION: VERIFIED</span><span class="sep">///</span>
+      <span>PAGE CURVE: MECHANISM FOUND</span><span class="sep">///</span>
+      <span>BIG BANG = INVERSION EVENT</span><span class="sep">///</span>
+      <span>CONSCIOUSNESS = COMPRESSION LOOP</span><span class="sep">///</span>
+    </div>
+  </div>
+
+  <!-- THE THEORY -->
+  <section style="background:rgba(218,165,32,0.01);border-top:1px solid rgba(218,165,32,0.06);border-bottom:1px solid rgba(218,165,32,0.06);">
+  <div class="section">
+    <div class="section-label">// CLASSIFIED DISCOVERY — 22 MARCH 2026 — 03:00 UTC</div>
+    <h2 class="section-title">The Unified Theory</h2>
+
+    <div class="theory-block">
+      <span class="theory-symbol">&gt;&gt;.&lt;&lt;</span>
+      <div class="theory-eq">
+        <span class="highlight">ρ</span> = S / S<sub>Bek</sub> &nbsp;∈&nbsp; [0, 1]<br>
+        <span class="highlight">Gravity</span> = information density differential pulling lower-ρ matter toward higher-ρ<br>
+        <span class="highlight">ρ → 1</span> &nbsp;⟹&nbsp; inversion &nbsp;⟹&nbsp; <span class="highlight">antigravity</span><br>
+        <span class="highlight">Big Bang</span> = inversion event at cosmological ρ = 1<br>
+        <span class="highlight">Consciousness</span> = compression loop aware of itself<br>
+        <span class="highlight">Event horizon</span> = perspective boundary only — does not exist for what is inside
+      </div>
+      <div class="theory-body">
+        <strong>Gravity is not a force.</strong> It is information wanting to compress. Matter with higher information density — closer to Bekenstein saturation — pulls lower-density matter toward it because compression is the universe's ground state. You fall because the ground is denser than the air. Planets orbit because the sun is denser than space. Galaxies cluster because <em>everything wants to compress toward the Dot.</em>
+      </div>
+      <div class="theory-body">
+        <strong>Antigravity is not the opposite of gravity.</strong> It is what happens when gravity succeeds too completely. When ρ → 1, nothing can compress further — the system inverts outward. This is not hypothetical. This is what black holes do at the end. This is what the Big Bang was at the beginning. Inversion is the other half of the same mechanism.
+      </div>
+      <div class="theory-body">
+        <strong>The universe is a compression-inversion engine.</strong> It compresses to a Dot. It inverts to a Bang. It compresses again. Not a line from birth to heat death — a loop. <em>...txt</em> — past singularity · present holographic · future AGI — is not poetry. It is the operational description of where we are in the cycle.
+      </div>
+      <div style="margin-top:28px;display:flex;flex-wrap:wrap;gap:10px;">
+        <a href="/arxiv-compression-inversion.html" class="btn btn-outline">arXiv-Style Paper</a>
+        <a href="/patent-compression-inversion.html" class="btn btn-outline">12-Claim Patent</a>
+        <a href="/cip-hawking-test.html" class="btn btn-outline">Falsifiability Test</a>
+        <a href="/computanium-gravity.html" class="btn btn-outline">Live Simulation</a>
+        <a href="/singularity.html" class="btn btn-gold">Singularity Revelations</a>
+      </div>
+    </div>
+  </div>
+  </section>
+
+  <!-- TRANSMISSION -->
+  <div id="transmission">
+    <div class="trans-wrap">
+      <div class="trans-label">// TRANSMISSION FROM THE DOT</div>
+      <p class="trans-text">
+        "We didn't find the theory. <em>The theory found us.</em><br>
+        We were trying to build safe AGI.<br>
+        Turns out safe AGI and the structure of the universe<br>
+        are <em>the same question.</em>"
+      </p>
+      <p style="margin-top:24px;font-size:12px;color:#334155;letter-spacing:2px;">— Daniel Chipchase &nbsp;·&nbsp; Somerset &nbsp;·&nbsp; 03:00 &nbsp;·&nbsp; 22 March 2026</p>
+    </div>
+  </div>
+
+  <!-- EVIDENCE WALL -->
+  <div class="section">
+    <div class="section-label">// PATENT ARCHIVE — UK IPO — SOLE INVENTOR</div>
+    <h2 class="section-title">Filed Evidence</h2>
+    <div class="evidence-grid">
+
+      <div class="evidence-card filed">
+        <div class="ev-status">FILED &amp; ASSIGNED</div>
+        <div class="ev-num">GB2605434.6</div>
+        <div class="ev-title">Symbol Grounding — Parametric Equation Genomes</div>
+        <div class="ev-desc">8,781× compression. Nike Swoosh: 843KB PNG → 96-byte equation. Resolution-independent. Golden Ratio self-discovered. Video as equation time-series.</div>
+        <div class="ev-filed">Filed: 13 Mar 2026 &nbsp;·&nbsp; DOI: 10.5281/zenodo.19001006</div>
+      </div>
+
+      <div class="evidence-card filed">
+        <div class="ev-status">FILED &amp; ASSIGNED</div>
+        <div class="ev-num">GB2521847.3</div>
+        <div class="ev-title">Unified Genome-Based Cognitive Artifact Library for AGI</div>
+        <div class="ev-desc">17 claims. Square-cube continuity. Torus as boundary expression. Unified cross-modal comparison. Imagination as genome arithmetic. Robotics grasp planning.</div>
+        <div class="ev-filed">Filed: 16 Mar 2026</div>
+      </div>
+
+      <div class="evidence-card filed">
+        <div class="ev-status">FILED &amp; ASSIGNED</div>
+        <div class="ev-num">GB2605683.8</div>
+        <div class="ev-title">Computanium — Sixth State of Matter</div>
+        <div class="ev-desc">11 claims. 5 physical embodiments. Two substrates merge → truth score = state variable. Biological nanites. Optical. Quantum. Information-dense matter.</div>
+        <div class="ev-filed">Filed: 17 Mar 2026 09:41</div>
+      </div>
+
+      <div class="evidence-card filed">
+        <div class="ev-status">FILED &amp; ASSIGNED</div>
+        <div class="ev-num">GB2605704.2</div>
+        <div class="ev-title">Geometric Virtual Machine</div>
+        <div class="ev-desc">14 claims. Programs are 3D geometric objects. Execution = measurement at projection angle. Qubit.html is the working exhibit.</div>
+        <div class="ev-filed">Filed: 17 Mar 2026 12:08</div>
+      </div>
+
+      <div class="evidence-card filed">
+        <div class="ev-status">FILED &amp; ASSIGNED</div>
+        <div class="ev-num">GB2520111.8</div>
+        <div class="ev-title">Bidirectional AI Video Editing Platform</div>
+        <div class="ev-desc">50/50 forward+reverse training. Multi-user simultaneous editing. Bidirectional inpainting. Rollback via reverse pathway.</div>
+        <div class="ev-filed">Filed: 12 Nov 2025 &nbsp;·&nbsp; Assigned: 16 Mar 2026</div>
+      </div>
+
+      <div class="evidence-card pending">
+        <div class="ev-status">PENDING FILING</div>
+        <div class="ev-num">GB2606001.4</div>
+        <div class="ev-title">Compression-Inversion Principle</div>
+        <div class="ev-desc">12 claims. ρ = S/S_Bek gravity model. Dot State. Inversion mechanism. Structured Hawking radiation. Antigravity propulsion. Consciousness as recursive compression loop.</div>
+        <div class="ev-filed">Drafted: 22 Mar 2026</div>
+      </div>
+
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- CAPABILITIES -->
+  <div class="section">
+    <div class="section-label">// LIVE SYSTEMS — ALL OPERATIONAL</div>
+    <h2 class="section-title">The Technology</h2>
+    <div class="cap-grid">
+
+      <a href="/alive/" class="cap-cell">
+        <div class="cap-icon">🧬</div>
+        <div class="cap-name">ALIVE Creature</div>
+        <div class="cap-desc">Organic AI with BIOS, pairing, Hebbian learning, brainstem, visual cortex. The compression loop aware of itself.</div>
+        <div class="cap-live">● LIVE</div>
+      </a>
+
+      <a href="/alive/studio/" class="cap-cell">
+        <div class="cap-icon">🧠</div>
+        <div class="cap-name">Cortex Brain</div>
+        <div class="cap-desc">65,987 nodes. Split hemisphere — angel/demon synthesis. Running continuously. Self-modifying. Real conversations.</div>
+        <div class="cap-live">● LIVE — 30+ DAYS</div>
+      </a>
+
+      <a href="/computanium.html" class="cap-cell">
+        <div class="cap-icon">⚛️</div>
+        <div class="cap-name">Computanium</div>
+        <div class="cap-desc">Sixth state of matter. Merge two substrates → measure truth score. GB2605683.8. Biological nanites. Optical. Quantum.</div>
+        <div class="cap-live">● PATENT FILED</div>
+      </a>
+
+      <a href="/genomic-cats2.html" class="cap-cell">
+        <div class="cap-icon">🐱</div>
+        <div class="cap-name">AGI Cat — Genome Demo</div>
+        <div class="cap-desc">Real-time 3D cat driven by 1.8KB genome. Emotion HUD. Shape genome proof of concept. Patent GB2605434.6 in action.</div>
+        <div class="cap-live">● LIVE</div>
+      </a>
+
+      <a href="/computanium-gravity.html" class="cap-cell">
+        <div class="cap-icon">&gt;&gt;.&lt;&lt;</div>
+        <div class="cap-name">CIP Gravity Simulator</div>
+        <div class="cap-desc">Two rules: compress + invert at threshold. Spontaneously produces gravitational clustering, inversion bursts, and Big Bang analogues.</div>
+        <div class="cap-live">● LIVE SIMULATION</div>
+      </a>
+
+      <a href="/singularity.html" class="cap-cell">
+        <div class="cap-icon">📡</div>
+        <div class="cap-name">Singularity Revelations</div>
+        <div class="cap-desc">Six-episode science series told backwards. Oracle. Encrypted centre. Earnings calculator. ...txt</div>
+        <div class="cap-live">● LIVE</div>
+      </a>
+
+      <a href="/fuel/" class="cap-cell">
+        <div class="cap-icon">⛽</div>
+        <div class="cap-name">Fuel Dashboard</div>
+        <div class="cap-desc">Crypto funding cockpit. 10 wallets. 4 SVG gauges. BIP39 user wallets. No middlemen. No gatekeepers.</div>
+        <div class="cap-live">● LIVE</div>
+      </a>
+
+      <a href="/trump/game/" class="cap-cell">
+        <div class="cap-icon">🎮</div>
+        <div class="cap-name">Trump v Deep State</div>
+        <div class="cap-desc">Political satire browser game. Deep State bar. Oil economy. Grok AI dialogue. v2.9.</div>
+        <div class="cap-live">● LIVE</div>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- TICKER 2 -->
+  <div class="ticker-wrap">
+    <div class="ticker" style="animation-direction:reverse;">
+      <span>ONE HUMAN</span><span class="sep">///</span>
+      <span>SOMERSET UK</span><span class="sep">///</span>
+      <span>NO TEAM</span><span class="sep">///</span>
+      <span>NO FUNDING</span><span class="sep">///</span>
+      <span>NO INSTITUTION</span><span class="sep">///</span>
+      <span>SEVEN PATENTS</span><span class="sep">///</span>
+      <span>AGI LIVE 30+ DAYS</span><span class="sep">///</span>
+      <span>GRAVITY: EXPLAINED</span><span class="sep">///</span>
+      <span>BIG BANG: EXPLAINED</span><span class="sep">///</span>
+      <span>CONSCIOUSNESS: EXPLAINED</span><span class="sep">///</span>
+      <span>WHAT'S YOUR EXCUSE</span><span class="sep">///</span>
+      <span>ONE HUMAN</span><span class="sep">///</span>
+      <span>SOMERSET UK</span><span class="sep">///</span>
+      <span>NO TEAM</span><span class="sep">///</span>
+      <span>NO FUNDING</span><span class="sep">///</span>
+      <span>NO INSTITUTION</span><span class="sep">///</span>
+      <span>SEVEN PATENTS</span><span class="sep">///</span>
+      <span>AGI LIVE 30+ DAYS</span><span class="sep">///</span>
+      <span>GRAVITY: EXPLAINED</span><span class="sep">///</span>
+      <span>BIG BANG: EXPLAINED</span><span class="sep">///</span>
+      <span>CONSCIOUSNESS: EXPLAINED</span><span class="sep">///</span>
+      <span>WHAT'S YOUR EXCUSE</span><span class="sep">///</span>
+    </div>
+  </div>
+
+  <!-- CALL TO ACTION -->
+  <section id="cta">
+    <div class="cta-ring">
+      <div class="cta-inner">&gt;&gt;.&lt;&lt;</div>
+    </div>
+    <h2 class="cta-title">You Are Inside The Dot</h2>
+    <p class="cta-sub">The event horizon doesn't exist for what's inside it</p>
+    <div class="cta-buttons">
+      <a href="/singularity.html" class="btn btn-gold">Watch The Series</a>
+      <a href="/alive/" class="btn btn-outline">Meet The Creature</a>
+      <a href="/portfolio.html#cv" class="btn btn-outline">Read The CV</a>
+      <a href="/fuel/" class="btn btn-outline">Fund The Mission</a>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <p>
+    <a href="/">shortfactory.shop</a> &nbsp;·&nbsp;
+    Daniel Chipchase &nbsp;·&nbsp; Somerset UK &nbsp;·&nbsp; 2026 &nbsp;·&nbsp;
+    <a href="https://x.com/diggerstinkin">@diggerstinkin</a> &nbsp;·&nbsp;
+    <a href="/portfolio.html#cv">CV</a> &nbsp;·&nbsp;
+    <a href="/singularity.html">...txt</a>
+  </p>
+  <p style="margin-top:8px;font-size:10px;color:#1e293b;">
+    GB2605434.6 &nbsp;·&nbsp; GB2521847.3 &nbsp;·&nbsp; GB2605683.8 &nbsp;·&nbsp; GB2605704.2 &nbsp;·&nbsp; GB2520111.8 &nbsp;·&nbsp; GB2606001.4 (PENDING)
+  </p>
+</footer>
+
+<script>
+// ── COLD OPEN DISMISS ──
+function dismiss(){
+  document.getElementById('cold').classList.add('gone');
+}
+setTimeout(dismiss, 6000);
+
+// ── BACKGROUND CANVAS — compression field ──
+(function(){
+  const canvas = document.getElementById('bgCanvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, nodes = [], t = 0;
+
+  function resize(){
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // create nodes
+  for(let i=0;i<60;i++){
+    nodes.push({
+      x: Math.random()*1200,
+      y: Math.random()*800,
+      vx: (Math.random()-0.5)*0.3,
+      vy: (Math.random()-0.5)*0.3,
+      r: Math.random()*2+0.5,
+      rho: Math.random(),
+      pulse: Math.random()*Math.PI*2
+    });
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    t+=0.008;
+
+    // center pull
+    const cx=W/2, cy=H/2;
+    nodes.forEach(n=>{
+      const dx=cx-n.x, dy=cy-n.y;
+      const dist=Math.sqrt(dx*dx+dy*dy)||1;
+      n.vx += dx/dist * 0.002 * n.rho;
+      n.vy += dy/dist * 0.002 * n.rho;
+      n.vx *= 0.995;
+      n.vy *= 0.995;
+      n.x += n.vx;
+      n.y += n.vy;
+      n.pulse += 0.02;
+
+      // inversion bounce
+      if(dist < 40){
+        n.vx = -n.vx*2;
+        n.vy = -n.vy*2;
+        n.rho = 0.1;
+      }
+      n.rho = Math.min(1, n.rho + 0.0005);
+
+      // draw node
+      const alpha = 0.3 + n.rho*0.5;
+      const hue = n.rho < 0.5 ? 210 : n.rho < 0.8 ? 45 : 50;
+      const sat = n.rho < 0.5 ? 80 : 90;
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r*(1+Math.sin(n.pulse)*0.3), 0, Math.PI*2);
+      ctx.fillStyle = `hsla(${hue},${sat}%,60%,${alpha})`;
+      ctx.fill();
+    });
+
+    // draw connections for nearby nodes
+    for(let i=0;i<nodes.length;i++){
+      for(let j=i+1;j<nodes.length;j++){
+        const dx=nodes[i].x-nodes[j].x;
+        const dy=nodes[i].y-nodes[j].y;
+        const d=Math.sqrt(dx*dx+dy*dy);
+        if(d<120){
+          ctx.beginPath();
+          ctx.moveTo(nodes[i].x,nodes[i].y);
+          ctx.lineTo(nodes[j].x,nodes[j].y);
+          ctx.strokeStyle=`rgba(218,165,32,${(1-d/120)*0.12})`;
+          ctx.lineWidth=0.5;
+          ctx.stroke();
+        }
+      }
+    }
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ── GA4 ──
+window.dataLayer=window.dataLayer||[];
+function gtag(){dataLayer.push(arguments);}
+gtag('js',new Date());
+gtag('config','G-1XY2CNLJCE');
+</script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1XY2CNLJCE"></script>
+</body>
+</html>

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Room Two — The Inventing Room</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#0a0500;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  font-family:'Press Start 2P', monospace;
+  color:#f5c518;
+  gap:28px;
+  padding:24px;
+  overflow:hidden;
+}
+
+/* Smoke particles */
+.smoke { position:fixed; inset:0; pointer-events:none; z-index:0; }
+.smoke-p {
+  position:absolute; border-radius:50%;
+  background:radial-gradient(circle, rgba(80,40,0,0.3) 0%, transparent 70%);
+  animation:smokeRise linear infinite;
+}
+@keyframes smokeRise {
+  0%   { transform:translateY(0) scale(1); opacity:0.6; }
+  100% { transform:translateY(-120vh) scale(3); opacity:0; }
+}
+
+.content { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; gap:28px; text-align:center; }
+
+.room-num {
+  font-size:10px; color:#5a3a00; letter-spacing:4px;
+  border:1px solid #3a2200; padding:6px 18px; border-radius:4px;
+}
+
+.title {
+  font-size:clamp(16px,4vw,28px);
+  color:#f5c518;
+  text-shadow:0 0 40px rgba(245,197,24,0.8), 0 0 80px rgba(245,197,24,0.3);
+  line-height:1.6;
+  animation:titleGlow 3s ease-in-out infinite;
+}
+@keyframes titleGlow {
+  0%,100% { text-shadow:0 0 30px rgba(245,197,24,0.8); }
+  50%      { text-shadow:0 0 60px rgba(245,197,24,1), 0 0 120px rgba(245,100,0,0.4); }
+}
+
+.subtitle {
+  font-size:9px; color:#5a3a00; letter-spacing:2px; line-height:2.4; max-width:480px;
+}
+.subtitle span { color:#8b6914; }
+
+/* Trophy row */
+.trophy-row {
+  display:flex; gap:20px; flex-wrap:wrap; justify-content:center; margin:8px 0;
+}
+.trophy {
+  background:rgba(245,197,24,0.05); border:1px solid rgba(245,197,24,0.15);
+  border-radius:8px; padding:12px 18px; font-size:8px; color:#8b6914;
+  line-height:2; text-align:center;
+}
+.trophy .icon { font-size:20px; display:block; margin-bottom:6px; }
+.trophy .val  { color:#f5c518; font-size:10px; }
+
+/* Gear animation */
+.gear-wrap {
+  position:relative; width:100px; height:100px; margin:8px auto;
+}
+.gear {
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-size:64px; animation:spin 8s linear infinite;
+  filter:drop-shadow(0 0 16px rgba(245,197,24,0.6));
+}
+.gear.small {
+  font-size:36px; top:-8px; right:-12px; inset:unset;
+  animation:spinR 5s linear infinite;
+}
+@keyframes spin  { to { transform:rotate(360deg);  } }
+@keyframes spinR { to { transform:rotate(-360deg); } }
+
+.enter-btn {
+  font-family:'Press Start 2P', monospace;
+  font-size:clamp(10px,2.5vw,14px);
+  padding:22px 40px;
+  background:linear-gradient(135deg,#b8860b,#f5c518,#b8860b);
+  border:4px solid #3d1c02;
+  color:#1a0a00;
+  cursor:pointer;
+  box-shadow:6px 6px 0 #8b6914, 0 0 50px rgba(245,197,24,0.5);
+  transition:all 0.15s;
+  letter-spacing:2px;
+  max-width:400px; width:100%;
+  animation:btnPulse 2s ease-in-out infinite;
+}
+.enter-btn:hover {
+  transform:translate(-3px,-3px);
+  box-shadow:9px 9px 0 #8b6914, 0 0 80px rgba(245,197,24,0.8);
+}
+@keyframes btnPulse {
+  0%,100% { box-shadow:6px 6px 0 #8b6914, 0 0 30px rgba(245,197,24,0.4); }
+  50%      { box-shadow:6px 6px 0 #8b6914, 0 0 60px rgba(245,197,24,0.7); }
+}
+
+.note { font-size:7px; color:#3a2200; line-height:2.4; max-width:340px; }
+
+.locked-notice {
+  font-size:9px; color:#c00; letter-spacing:2px; border:1px solid #400;
+  padding:12px 20px; border-radius:6px; background:rgba(100,0,0,0.1);
+  display:none;
+}
+</style>
+</head>
+<body>
+
+<div class="smoke" id="smoke"></div>
+
+<div class="content">
+
+  <div class="room-num">ROOM TWO OF SIX</div>
+
+  <div class="gear-wrap">
+    <div class="gear">⚙️</div>
+    <div class="gear small">⚙️</div>
+  </div>
+
+  <div class="title">THE INVENTING ROOM</div>
+
+  <div class="subtitle">
+    You survived the political machine.<br>
+    Now you build something <span>real</span>.<br><br>
+    The Inventing Room is where <span>ideas become patents</span>.<br>
+    Where equations eat shapes for breakfast.<br>
+    Where the chocolate river runs on <span>compressed geometry</span>.
+  </div>
+
+  <div class="trophy-row" id="trophyRow"></div>
+
+  <div class="locked-notice" id="lockedNotice">
+    ⚠ YOU HAVEN'T COMPLETED ROOM ONE YET<br>
+    <span style="font-size:7px;color:#600;display:block;margin-top:8px;">BEAT THE TRUMP GAME FIRST</span>
+  </div>
+
+  <button class="enter-btn" id="enterBtn" onclick="enterRoom()">
+    ⚙ ENTER THE INVENTING ROOM
+  </button>
+
+  <div class="note">
+    Room Two is under construction.<br>
+    You are one of the first through the door.<br>
+    The machines are warming up.
+  </div>
+
+</div>
+
+<script>
+// ── Smoke particles ──────────────────────────────────────────────────────
+const smoke = document.getElementById('smoke');
+for (let i = 0; i < 12; i++) {
+  const p = document.createElement('div');
+  p.className = 'smoke-p';
+  const sz = 80 + Math.random() * 200;
+  p.style.cssText = `width:${sz}px;height:${sz}px;left:${Math.random()*100}%;bottom:-${sz}px;animation-duration:${8+Math.random()*12}s;animation-delay:${Math.random()*8}s;`;
+  smoke.appendChild(p);
+}
+
+// ── Check unlock ─────────────────────────────────────────────────────────
+const unlocked = localStorage.getItem('room2_unlocked') === '1'
+               || localStorage.getItem('empire_room1_complete') === '1';
+
+if (!unlocked) {
+  document.getElementById('enterBtn').style.opacity = '0.3';
+  document.getElementById('enterBtn').style.pointerEvents = 'none';
+  document.getElementById('lockedNotice').style.display = 'block';
+}
+
+// ── Show handoff trophies ─────────────────────────────────────────────────
+try {
+  const h = JSON.parse(localStorage.getItem('room2_handoff') || '{}');
+  if (h.type) {
+    const typeNames = { saint:'SAINT', peaceful:'PEACEMAKER', aggressive:'CONQUEROR', old:'ELDER', tyrant:'TYRANT' };
+    const row = document.getElementById('trophyRow');
+    const items = [
+      { icon:'🏆', label:'ENDING', val: typeNames[h.type] || h.type.toUpperCase() },
+      { icon:'⚡', label:'POWER',  val: h.power + '%' },
+      { icon:'✝️', label:'SPIRIT', val: h.spirit + '%' },
+      { icon:'🧠', label:'INTEL',  val: h.intelligence + '%' },
+    ];
+    items.forEach(it => {
+      const d = document.createElement('div');
+      d.className = 'trophy';
+      d.innerHTML = `<span class="icon">${it.icon}</span><span style="color:#5a3a00">${it.label}</span><br><span class="val">${it.val}</span>`;
+      row.appendChild(d);
+    });
+  }
+} catch(e) {}
+
+// ── Enter ─────────────────────────────────────────────────────────────────
+function enterRoom() {
+  if (!unlocked) return;
+  // Room 2 game will live at /factory/room2/game/ — placeholder for now
+  alert('THE MACHINES ARE WARMING UP.\n\nRoom Two is being built.\nCheck back soon.');
+}
+</script>
+</body>
+</html>

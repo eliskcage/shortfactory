@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>▲ SHAPE DETECTIVE</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#000; min-height:100vh; overflow:hidden;
+  font-family:'Courier New',monospace; touch-action:none;
+}
+
+/* ── START SCREEN ── */
+#start-screen {
+  position:fixed; inset:0; background:#000;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:18px; z-index:100; padding:30px;
+}
+#start-title { font-size:10px; letter-spacing:0.45em; color:#FFC72C; }
+#start-sub { font-size:7px; letter-spacing:0.18em; color:rgba(255,199,44,0.35); text-align:center; line-height:2.2; max-width:280px; }
+#start-btn {
+  background:#FFC72C; color:#000; border:none;
+  font-family:'Courier New',monospace; font-size:12px; font-weight:bold;
+  letter-spacing:0.3em; padding:18px 44px; cursor:pointer;
+  clip-path:polygon(14px 0,100% 0,calc(100% - 14px) 100%,0 100%);
+  margin-top:8px;
+}
+
+/* ── CAMERA ── */
+#cam-layer { position:fixed; inset:0; z-index:1; display:none; }
+#cam-v { width:100%; height:100%; object-fit:cover; }
+#spider-canvas { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+
+/* ── PHASE 1 HUD ── */
+#hud { position:fixed; inset:0; z-index:2; pointer-events:none; display:none; }
+
+#hud-title {
+  position:absolute; top:14px; left:50%; transform:translateX(-50%);
+  font-size:7px; letter-spacing:0.35em; color:rgba(255,199,44,0.45);
+  background:rgba(0,0,0,0.5); padding:4px 12px;
+}
+#read-status {
+  position:absolute; top:38px; left:50%; transform:translateX(-50%);
+  font-size:9px; letter-spacing:0.25em; color:#FFC72C;
+  background:rgba(0,0,0,0.6); padding:3px 12px;
+  text-shadow:0 0 8px #FFC72C;
+}
+
+/* Confidence arc */
+#conf-wrap {
+  position:absolute; bottom:130px; left:50%; transform:translateX(-50%);
+  display:flex; flex-direction:column; align-items:center; gap:6px;
+}
+#conf-svg { display:block; }
+#conf-pct { font-size:18px; letter-spacing:0.1em; color:#FFC72C; text-align:center; }
+#conf-label { font-size:7px; letter-spacing:0.3em; color:rgba(255,199,44,0.4); }
+
+/* Best-guess shape (bottom left) */
+#guess-wrap {
+  position:absolute; bottom:20px; left:16px;
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+}
+#guess-canvas { border:1px solid rgba(255,199,44,0.2); }
+#guess-label { font-size:5px; letter-spacing:0.15em; color:rgba(255,199,44,0.3); }
+
+/* Voice panel (bottom right) */
+#voice-panel {
+  position:absolute; bottom:16px; right:14px;
+  font-size:7px; letter-spacing:0.14em;
+  line-height:1.9; text-align:right; max-width:130px;
+}
+#voice-transcript {
+  color:rgba(255,199,44,0.45); font-style:italic;
+  min-height:13px; margin-bottom:6px;
+  word-break:break-word;
+}
+.hint-row { color:rgba(255,199,44,0.25); }
+.hint-row.locked { color:#FFC72C; }
+
+/* ── PHASE 2: CONFIRM ── */
+#confirm-screen {
+  position:fixed; inset:0; background:#000;
+  display:none; flex-direction:column; align-items:center; justify-content:center;
+  gap:14px; z-index:10; padding:20px;
+}
+/* Shape-fill: live camera clipped to detected shape (Dan's shape-filling tool) */
+#shape-fill-wrap {
+  position:relative; width:220px; height:220px;
+}
+#shape-fill-video {
+  position:absolute; inset:0; width:100%; height:100%;
+  object-fit:cover; transform:scaleX(-1);
+}
+#shape-fill-overlay {
+  position:absolute; inset:0; pointer-events:none;
+}
+.sfill-tri  { clip-path:polygon(50% 5%,2% 95%,98% 95%); }
+.sfill-circ { clip-path:ellipse(48% 48% at 50% 50%); }
+.sfill-sq   { clip-path:polygon(5% 5%,95% 5%,95% 95%,5% 95%); }
+.sfill-comp { clip-path:polygon(50% 5%,2% 95%,98% 95%); }
+/* Gold border ring around fill */
+#shape-fill-ring {
+  position:absolute; inset:0; pointer-events:none;
+  border:2px solid rgba(255,199,44,0.35);
+  box-shadow:0 0 20px rgba(255,199,44,0.15), inset 0 0 20px rgba(255,199,44,0.05);
+}
+#confirm-screen.show { display:flex; }
+#confirm-title { font-size:9px; letter-spacing:0.4em; color:#FFC72C; text-shadow:0 0 12px #FFC72C; }
+#confirm-instr { font-size:7px; letter-spacing:0.18em; color:rgba(255,199,44,0.35); text-align:center; line-height:2; }
+#confirm-yes {
+  background:#FFC72C; color:#000; border:none;
+  font-family:'Courier New',monospace; font-size:11px; font-weight:bold;
+  letter-spacing:0.3em; padding:16px 38px; cursor:pointer;
+  clip-path:polygon(12px 0,100% 0,calc(100% - 12px) 100%,0 100%);
+  pointer-events:all;
+}
+#confirm-no {
+  background:transparent; border:1px solid rgba(255,199,44,0.2);
+  color:rgba(255,199,44,0.35); font-family:'Courier New',monospace;
+  font-size:7px; letter-spacing:0.2em; padding:8px 24px; cursor:pointer; pointer-events:all;
+}
+
+/* ── AGREED ── */
+#agreed {
+  position:fixed; inset:0; background:#000;
+  display:none; flex-direction:column; align-items:center; justify-content:center;
+  gap:14px; z-index:20;
+}
+#agreed.show { display:flex; }
+#paired1 {
+  position:fixed; inset:0; background:#000;
+  display:none; flex-direction:column; align-items:center; justify-content:center;
+  gap:12px; z-index:20;
+}
+#paired1.show { display:flex; }
+#p1-title { font-size:10px; letter-spacing:0.4em; color:#FFC72C; text-shadow:0 0 20px #FFC72C; }
+#p1-token { font-size:14px; letter-spacing:0.3em; color:#FFC72C; }
+#p1-sub { font-size:6px; letter-spacing:0.18em; color:rgba(255,199,44,0.35); text-align:center; line-height:2; }
+#agreed-title { font-size:10px; letter-spacing:0.4em; color:#FFC72C; text-shadow:0 0 20px #FFC72C; }
+#agreed-token { font-size:17px; letter-spacing:0.3em; color:#FFC72C; }
+#agreed-sub { font-size:6px; letter-spacing:0.18em; color:rgba(255,255,255,0.2); text-align:center; line-height:2; }
+.abtn { background:transparent; border:1px solid rgba(255,199,44,0.3); color:rgba(255,199,44,0.6); font-family:'Courier New',monospace; font-size:8px; letter-spacing:0.2em; padding:10px 22px; cursor:pointer; margin:2px; }
+
+/* Debug bar */
+#dbg {
+  position:fixed; bottom:0; left:0; right:0; z-index:50;
+  background:rgba(0,0,0,0.75); padding:3px 8px;
+  font-size:8px; letter-spacing:0.1em; color:rgba(255,199,44,0.4);
+  display:none; gap:10px; justify-content:center; flex-wrap:wrap;
+  pointer-events:none;
+}
+#dbg.on { display:flex; }
+#dbg span { color:rgba(255,199,44,0.75); }
+</style>
+</head>
+<body>
+
+<!-- START -->
+<div id="start-screen">
+  <div id="start-title">▲ SHAPE DETECTIVE</div>
+  <div id="start-sub">
+    POINT CAMERA AT LAPTOP SCREEN<br>
+    SPIDERS WILL FIND THE SHAPE<br>
+    YOUR VOICE GUIDES THEM
+  </div>
+  <button id="start-btn" onclick="openEyesAndEars()">▲ OPEN EYES + EARS</button>
+</div>
+
+<!-- CAMERA + SPIDERS -->
+<div id="cam-layer">
+  <video id="cam-v" autoplay playsinline muted></video>
+  <canvas id="spider-canvas"></canvas>
+</div>
+
+<!-- PHASE 1 HUD -->
+<div id="hud">
+  <div id="hud-title">▲ SPIDERS SEARCHING</div>
+  <div id="read-status">SCANNING</div>
+  <!-- Centre aim box — keep the laptop shape in here -->
+  <div id="aim-box" style="
+    position:absolute; top:50%; left:50%;
+    transform:translate(-50%,-50%);
+    width:60vmin; height:60vmin;
+    border:1px solid rgba(255,199,44,0.25);
+    pointer-events:none;
+    box-shadow:inset 0 0 20px rgba(255,199,44,0.04);
+  ">
+    <div style="position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:6px;letter-spacing:0.2em;color:rgba(255,199,44,0.25);">AIM HERE</div>
+  </div>
+
+  <div id="conf-wrap">
+    <svg id="conf-svg" width="100" height="56" viewBox="0 0 100 56">
+      <path d="M10,50 A40,40 0 0,1 90,50" fill="none" stroke="rgba(255,199,44,0.1)" stroke-width="4"/>
+      <path id="conf-arc" d="M10,50 A40,40 0 0,1 90,50" fill="none" stroke="#FFC72C" stroke-width="4"
+        stroke-dasharray="125.7" stroke-dashoffset="125.7"
+        style="filter:drop-shadow(0 0 4px #FFC72C);transition:stroke-dashoffset 0.4s;"/>
+    </svg>
+    <div id="conf-pct">0%</div>
+    <div id="conf-label">CONFIDENCE</div>
+  </div>
+
+  <div id="guess-wrap">
+    <canvas id="guess-canvas" width="80" height="80"></canvas>
+    <div id="guess-label">BEST GUESS</div>
+  </div>
+
+  <!-- Genome bar — shape success scores -->
+  <div id="genome-bar" style="position:absolute;top:70px;left:14px;display:flex;flex-direction:column;gap:3px;"></div>
+  <!-- Punishment flash -->
+  <div id="punish-flash" style="position:fixed;inset:0;background:#ff0000;opacity:0;pointer-events:none;z-index:60;transition:opacity 0.1s;"></div>
+  <div id="punish-label" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:14px;letter-spacing:0.3em;color:#ff4444;text-shadow:0 0 20px #ff4444;opacity:0;pointer-events:none;z-index:61;transition:opacity 0.2s;"></div>
+
+  <div id="voice-panel">
+    <div id="voice-transcript"></div>
+    <div class="hint-row" id="hr-type">TYPE: <span id="h-type">?</span></div>
+    <div class="hint-row" id="hr-color">COLOR: <span id="h-color">?</span></div>
+    <div class="hint-row" id="hr-size">SIZE: <span id="h-size">?</span></div>
+  </div>
+</div>
+
+<!-- DEBUG -->
+<div id="dbg" class="on">
+  EDGES:<span id="dEdge">0</span>
+  TYPE:<span id="dType">?</span>
+  CONF:<span id="dConf">0</span>%
+  MIC:<span id="dMic">OFF</span>
+</div>
+
+<!-- PHASE 2: CONFIRM -->
+<div id="confirm-screen">
+  <div id="confirm-title">▲ SHAPE SOLVED</div>
+  <!-- Shape-fill: camera feed clipped to detected shape outline -->
+  <div id="shape-fill-wrap">
+    <video id="shape-fill-video" autoplay playsinline muted></video>
+    <div id="shape-fill-ring"></div>
+    <canvas id="shape-fill-overlay" width="220" height="220"></canvas>
+  </div>
+  <canvas id="confirm-canvas" width="260" height="260" style="display:none"></canvas>
+  <div id="confirm-instr">POINT AT LAPTOP — DOES THE SHAPE FIT?<br>SAY "YES" OR TAP TO CONFIRM</div>
+  <button id="confirm-yes" onclick="confirmShape()">▲ YES — GENOME CONFIRMED</button>
+  <button id="confirm-no" onclick="punishAndAdvance()">NO — WRONG</button>
+</div>
+
+<!-- AGREED -->
+<div id="agreed">
+  <div id="agreed-title">▲ GENOME LOCKED</div>
+  <canvas id="agreed-canvas" width="180" height="180"></canvas>
+  <div id="agreed-token">—</div>
+  <div id="agreed-sub">SCREENSHOT AS PROOF<br>IT NEVER HAPPENED. ALMOST.</div>
+  <button class="abtn" onclick="location.href='/soul/'">SOUL PAGE</button>
+  <button class="abtn" onclick="location.reload()">NEW HANDSHAKE</button>
+</div>
+
+<!-- SHAPE 1 PAIRED — offer upgrade -->
+<div id="paired1">
+  <div id="p1-title">▲ PAIRED</div>
+  <canvas id="p1-canvas" width="120" height="120"></canvas>
+  <div id="p1-token">—</div>
+  <div id="p1-sub">SHAPE 1 LOCKED TO SERVER<br>SCAN A SECOND SHAPE TO UPGRADE</div>
+  <button class="abtn" onclick="startShape2()">▲ SCAN SHAPE 2</button>
+  <button class="abtn" onclick="location.reload()">DONE — NEW HANDSHAKE</button>
+</div>
+
+<script>
+'use strict';
+
+// ── Utils ──
+function djb2(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h)^s.charCodeAt(i);return(h>>>0).toString(16).toUpperCase().padStart(8,'0');}
+
+function speak(t,r=0.9){
+  if(!window.speechSynthesis)return; speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(t); u.rate=r; u.pitch=1.05; u.volume=1;
+  const v=speechSynthesis.getVoices();
+  const pick=v.find(x=>/samantha|karen|victoria|fiona|female|zira|hazel/i.test(x.name))||v[0];
+  if(pick)u.voice=pick; speechSynthesis.speak(u);
+}
+if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices();}
+
+// ── Phone code (mine) ──
+let myCode=localStorage.getItem('sf_phone_shape');
+if(!myCode){myCode=djb2(Date.now()+navigator.userAgent+Math.random()).slice(0,3);localStorage.setItem('sf_phone_shape',myCode);}
+fetch('/soul/visual.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:myCode,ts:Date.now()})}).catch(()=>{});
+
+// ── Shape ──
+const COLORS=['#FFC72C','#ffffff','#50C8FF','#FF6464'];
+const TYPE_NAMES=['TRIANGLE','CIRCLE','SQUARE','COMPOUND'];
+const COLOR_NAMES=['GOLD','WHITE','BLUE','RED'];
+
+function shapeToCode(type,sizeIdx,rotIdx,colorIdx,variant){
+  const bits=[
+    ...type.toString(2).padStart(2,'0'),
+    ...sizeIdx.toString(2).padStart(2,'0'),
+    ...rotIdx.toString(2).padStart(3,'0'),
+    ...colorIdx.toString(2).padStart(2,'0'),
+    ...variant.toString(2).padStart(3,'0'),
+  ].map(Number);
+  return parseInt(bits.join(''),2).toString(16).toUpperCase().padStart(3,'0');
+}
+
+function drawShape(ctx,shape,S,glow){
+  const col=COLORS[shape.colorIdx],cx=S/2,cy=S/2,r=S*shape.size*0.45;
+  ctx.clearRect(0,0,S,S); ctx.save();
+  ctx.translate(cx,cy); ctx.rotate(shape.rotation*Math.PI/180);
+  ctx.strokeStyle=col; ctx.fillStyle=col;
+  ctx.shadowColor=col; ctx.shadowBlur=glow?22:5;
+  ctx.lineWidth=glow?3:1.5; ctx.globalAlpha=glow?1:0.3;
+  if(shape.type===0){
+    ctx.beginPath();ctx.moveTo(0,-r);ctx.lineTo(-r*.866,r*.5);ctx.lineTo(r*.866,r*.5);ctx.closePath();
+    ctx.globalAlpha=0.12;ctx.fill();ctx.globalAlpha=glow?1:0.3;ctx.stroke();
+    for(let i=1;i<3;i++){const sc=1-i*.28;ctx.globalAlpha=(glow?1:0.3)*(1-i*.32);ctx.shadowBlur=0;ctx.beginPath();ctx.moveTo(0,-r*sc);ctx.lineTo(-r*.866*sc,r*.5*sc);ctx.lineTo(r*.866*sc,r*.5*sc);ctx.closePath();ctx.stroke();}
+  }else if(shape.type===1){
+    ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);
+    ctx.globalAlpha=0.1;ctx.fill();ctx.globalAlpha=glow?1:0.3;ctx.stroke();
+    ctx.globalAlpha*=0.5;ctx.beginPath();ctx.arc(0,0,r*.62,0,Math.PI*2);ctx.stroke();
+  }else if(shape.type===2){
+    ctx.globalAlpha=0.1;ctx.fillRect(-r*.75,-r*.75,r*1.5,r*1.5);ctx.globalAlpha=glow?1:0.3;
+    ctx.strokeRect(-r*.75,-r*.75,r*1.5,r*1.5);
+    ctx.globalAlpha*=0.5;ctx.strokeRect(-r*.45,-r*.45,r*.9,r*.9);
+  }else{
+    ctx.beginPath();ctx.arc(0,0,r*.42,0,Math.PI*2);ctx.stroke();
+    ctx.globalAlpha*=0.8;ctx.beginPath();ctx.moveTo(0,-r);ctx.lineTo(-r*.866,r*.5);ctx.lineTo(r*.866,r*.5);ctx.closePath();ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// ── Shape genome (persists across sessions) ──
+// scores[type]: 0=blind, 10=neutral, 20=max. Punishment deducts, confirm rewards.
+function loadGenome(){
+  return JSON.parse(localStorage.getItem('sf_shape_genome')||'null')
+    || {scores:[10,10,10,10], confirmed:[0,0,0,0], punished:[0,0,0,0]};
+}
+function saveGenome(g){ localStorage.setItem('sf_shape_genome',JSON.stringify(g)); }
+function punishType(type){
+  const g=loadGenome();
+  g.scores[type]=Math.max(0,g.scores[type]-2);
+  g.punished[type]++;
+  saveGenome(g); renderGenomeBar(g); return g;
+}
+function rewardType(type){
+  const g=loadGenome();
+  g.scores[type]=Math.min(20,g.scores[type]+3);
+  g.confirmed[type]++;
+  saveGenome(g); renderGenomeBar(g);
+}
+function getMyShape(){
+  // The type this user has confirmed most historically
+  const g=loadGenome();
+  return g.confirmed.indexOf(Math.max(...g.confirmed));
+}
+function renderGenomeBar(g){
+  const el=document.getElementById('genome-bar');
+  if(!el)return;
+  el.innerHTML=TYPE_NAMES.map((n,i)=>{
+    const s=g.scores[i],blind=s<=0;
+    const pct=s/20*100;
+    return `<div style="display:flex;align-items:center;gap:4px;opacity:${blind?0.25:1}">
+      <div style="font-size:5px;letter-spacing:0.1em;color:rgba(255,199,44,${blind?0.2:0.5});width:16px">${n[0]}</div>
+      <div style="width:40px;height:3px;background:rgba(255,199,44,0.1)">
+        <div style="width:${pct}%;height:100%;background:${blind?'#ff4444':'#FFC72C'}"></div>
+      </div>
+      <div style="font-size:5px;color:rgba(255,199,44,0.3)">${s}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Detection state ──
+const hints={type:null,colorIdx:null,size:null};
+let detectedShape=null, confidence=0, solved=false;
+let confHistory=[], typeHistory=[];
+let detectionStage='NORMAL'; // NORMAL → ASKME → COMPOUND
+let hintHistory=[]; // track what types the user has hinted at
+let blockedType=-1;
+let shape1Code=null;
+let pairSent=false;
+
+// ── Genome memory — last confirmed shape used as detection prior ──
+// "pair their shape to the shape genetics they think they found"
+const genomeCodes=JSON.parse(localStorage.getItem('sf_genome_history')||'[]'); // last 5 confirmed shape codes
+function loadGenomeMemory(){
+  const raw=localStorage.getItem('sf_genome_code');
+  if(!raw) return null;
+  const n=parseInt(raw,16); if(isNaN(n)) return null;
+  const bits=n.toString(2).padStart(12,'0');
+  return{
+    code:raw,
+    type:parseInt(bits.slice(0,2),2),
+    colorIdx:parseInt(bits.slice(7,9),2),
+    size:0.3+parseInt(bits.slice(2,4),2)*0.18
+  };
+}
+const genomePrior=loadGenomeMemory(); // null if no prior knowledge
+
+// ── Edge detection canvas (centre crop only) ──
+const EW=80,EH=80;
+const edgeCvs=document.createElement('canvas'); edgeCvs.width=EW; edgeCvs.height=EH;
+const edgeCtx=edgeCvs.getContext('2d',{willReadFrequently:true});
+let edgeData=null;
+let prevGray=null; // previous frame for motion detection
+
+function getEdges(vid){
+  if(!vid||!vid.videoWidth) return null;
+  const vw=vid.videoWidth, vh=vid.videoHeight;
+  const cropW=vw*0.6, cropH=vh*0.6;
+  const cropX=(vw-cropW)/2, cropY=(vh-cropH)/2;
+  edgeCtx.drawImage(vid,cropX,cropY,cropW,cropH,0,0,EW,EH);
+  const px=edgeCtx.getImageData(0,0,EW,EH).data;
+  const gray=new Float32Array(EW*EH);
+  for(let i=0;i<EW*EH;i++) gray[i]=0.299*px[i*4]+0.587*px[i*4+1]+0.114*px[i*4+2];
+
+  // Motion map: frame difference — pixels that MOVED since last frame
+  const motion=new Float32Array(EW*EH);
+  if(prevGray){
+    let maxM=1;
+    for(let i=0;i<EW*EH;i++){
+      motion[i]=Math.abs(gray[i]-prevGray[i]);
+      if(motion[i]>maxM)maxM=motion[i];
+    }
+    for(let i=0;i<motion.length;i++) motion[i]=motion[i]/maxM*255;
+  }
+  prevGray=gray.slice(); // store for next frame
+
+  const edges=new Float32Array(EW*EH);
+  let maxE=1;
+  for(let y=1;y<EH-1;y++){
+    for(let x=1;x<EW-1;x++){
+      const i=y*EW+x;
+      const gx=-gray[i-1-EW]+gray[i+1-EW]-2*gray[i-1]+2*gray[i+1]-gray[i-1+EW]+gray[i+1+EW];
+      const gy=-gray[i-EW-1]-2*gray[i-EW]-gray[i-EW+1]+gray[i+EW-1]+2*gray[i+EW]+gray[i+EW+1];
+      edges[i]=Math.sqrt(gx*gx+gy*gy);
+      if(edges[i]>maxE)maxE=edges[i];
+    }
+  }
+  for(let i=0;i<edges.length;i++) edges[i]=edges[i]/maxE*255;
+  return {edges,gray,motion,raw:px};
+}
+
+function analyzeShape(ed){
+  if(!ed) return null;
+  const {edges,gray,raw}=ed;
+  let totalEdge=0,edgePx=[];
+  for(let i=0;i<EW*EH;i++){if(edges[i]>55){totalEdge++;edgePx.push(i);}}
+  document.getElementById('dEdge').textContent=totalEdge;
+  if(totalEdge<15) return null;
+
+  // Bounding box
+  let mnX=EW,mxX=0,mnY=EH,mxY=0;
+  for(const i of edgePx){const x=i%EW,y=Math.floor(i/EW);mnX=Math.min(mnX,x);mxX=Math.max(mxX,x);mnY=Math.min(mnY,y);mxY=Math.max(mxY,y);}
+  const bw=mxX-mnX,bh=mxY-mnY;
+  if(bw<4||bh<4) return null;
+  const cx=Math.round((mnX+mxX)/2),cy2=Math.round((mnY+mxY)/2);
+
+  // Color of brightest region
+  let rS=0,gS=0,bS=0,n=0;
+  for(let y=mnY;y<=mxY;y++) for(let x=mnX;x<=mxX;x++){
+    const i=(y*EW+x)*4;
+    if(raw[i]+raw[i+1]+raw[i+2]>180){rS+=raw[i];gS+=raw[i+1];bS+=raw[i+2];n++;}
+  }
+  let colorIdx=hints.colorIdx!==null?hints.colorIdx:0;
+  if(n>5&&hints.colorIdx===null){
+    const r=rS/n,g=gS/n,b=bS/n;
+    if(r>160&&g>110&&b<90) colorIdx=0;
+    else if(r>190&&g>190&&b>190) colorIdx=1;
+    else if(b>r*1.3&&b>g) colorIdx=2;
+    else if(r>g*1.5&&r>b*1.5) colorIdx=3;
+  }
+
+  const area=(bw/EW)*(bh/EH);
+  const sizeIdx=hints.size!==null?hints.size:Math.min(3,Math.floor(area*9));
+
+  // ── ABSENCE FIELD (the real data — what the shape is NOT) ──
+  // Adaptive threshold: find brightness split between shape interior and background.
+  // Edge pixels ARE the shape boundary — average their brightness to set the threshold.
+  // Anything below 35% of that average = confirmed absence (background void).
+  // This survives varying screen brightness and camera exposure.
+  let edgeBrightSum=0, edgeBrightN=0;
+  for(const i of edgePx){ edgeBrightSum+=gray[i]; edgeBrightN++; }
+  const edgeBrightAvg=edgeBrightN>0?edgeBrightSum/edgeBrightN:120;
+  const absenceThresh=edgeBrightAvg*0.35; // below this = confirmed void
+
+  let presentPx=0, absentPx=0, bbTotal=0;
+  for(let y=mnY;y<=mxY;y++){
+    for(let x=mnX;x<=mxX;x++){
+      bbTotal++;
+      const g=gray[y*EW+x];
+      if(g>absenceThresh) presentPx++;
+      else                absentPx++;
+    }
+  }
+  const absenceRatio=bbTotal>0?absentPx/bbTotal:0.5;
+  // Genome fill ratios (solid shape on black screen):
+  //   Square   ≈ 0.95  → absenceRatio ≈ 0.05
+  //   Circle   ≈ 0.785 → absenceRatio ≈ 0.215
+  //   Triangle ≈ 0.50  → absenceRatio ≈ 0.50
+  function absenceToType(ar){
+    if(ar<0.15)  return 2; // square
+    if(ar<0.36)  return 1; // circle
+    return 0;              // triangle
+  }
+  const absenceType=absenceToType(absenceRatio);
+
+  // ── MULTI-EYE SPOKE ANALYSIS (swarm of 3 eyes, majority vote) ──
+  // Inspired by multi-eye-transform-engine spider/swarm approach:
+  // Each eye samples the edge field from a different vantage; votes are aggregated.
+  // Triangle=3 gaps, Square=4 gaps, Circle=0 gaps (all hit)
+  const SPOKES=16;
+  const maxR=Math.max(bw,bh)*0.7;
+  const EYES=[
+    {ox:0,oy:0},                        // Eye 0: dead centre
+    {ox:Math.round(-bw*0.15),oy:Math.round(-bh*0.15)}, // Eye 1: top-left offset
+    {ox:Math.round(+bw*0.15),oy:Math.round(+bh*0.15)}, // Eye 2: bottom-right offset
+  ];
+  function spokeRead(ex,ey){
+    const h=new Array(SPOKES).fill(0);
+    for(let a=0;a<SPOKES;a++){
+      const ang=a*Math.PI*2/SPOKES;
+      for(let d=3;d<maxR;d++){
+        const sx=Math.round(ex+Math.cos(ang)*d);
+        const sy=Math.round(ey+Math.sin(ang)*d);
+        if(sx<0||sx>=EW||sy<0||sy>=EH) break;
+        if(edges[sy*EW+sx]>55){h[a]=1;break;}
+      }
+    }
+    const hits=h.reduce((a,b)=>a+b,0);
+    let g=0,inG=h[SPOKES-1]===0;
+    for(let i=0;i<SPOKES;i++){if(!h[i]&&!inG){g++;inG=true;}else if(h[i])inG=false;}
+    return{hits,gaps:g,hitRatio:hits/SPOKES};
+  }
+  const eyeVotes=EYES.map(e=>spokeRead(cx+e.ox,cy2+e.oy));
+  // Each eye casts a type vote
+  function gapToType(r){
+    if(r.hitRatio>0.80)return 1; // circle
+    if(r.gaps===4)return 2;       // square
+    if(r.gaps===3)return 0;       // triangle
+    if(r.gaps<=2&&r.hitRatio>0.6)return 1;
+    return 0;
+  }
+  const eyeTypes=eyeVotes.map(gapToType);
+  // Fuse: absence field + egg cluster count as additional votes
+  const eggClusters=countEggClusters(); // 3=tri, 4=sq, 0-1=circ, -1=not enough eggs
+  function clusterToType(c){ if(c===3)return 0; if(c===4)return 2; if(c>=0&&c<=1)return 1; return -1; }
+  const eggType=clusterToType(eggClusters);
+
+  const voteCounts=[0,0,0,0];
+  eyeTypes.forEach(t=>voteCounts[t]++);
+  voteCounts[absenceType]+=1.5; // absence = real data, extra weight
+  if(eggType>=0) voteCounts[eggType]+=2.0; // egg clusters = highest weight (motion-proven)
+  const swarmType=voteCounts.indexOf(Math.max(...voteCounts));
+  const swarmAgree=eyeTypes.filter(t=>t===swarmType).length
+    + (absenceType===swarmType?1:0)
+    + (eggType===swarmType?2:0);
+  // Use centre eye for raw stats (for fallback display)
+  const {hits:totalHits,gaps,hitRatio}=eyeVotes[0];
+
+  const genome=loadGenome();
+
+  let type=0,conf=25;
+  if(hints.type!==null){
+    type=hints.type; conf=65;
+  } else if(detectionStage==='ASKME'){
+    // Stage 2: bias toward user's historically confirmed shape
+    type=getMyShape(); conf=55;
+  } else if(detectionStage==='COMPOUND'){
+    // Stage 3: check for nested shapes (two edge rings at different radii)
+    let innerHits=0;
+    const innerR=maxR*0.38;
+    for(let a=0;a<SPOKES;a++){
+      const ang=a*Math.PI*2/SPOKES;
+      for(let d=3;d<innerR;d++){
+        const sx=Math.round(cx+Math.cos(ang)*d);
+        const sy=Math.round(cy2+Math.sin(ang)*d);
+        if(sx<0||sx>=EW||sy<0||sy>=EH)break;
+        if(edges[sy*EW+sx]>55){innerHits++;break;}
+      }
+    }
+    type=3; conf=innerHits>SPOKES*0.3?62:35;
+  } else {
+    // Use swarm majority type; base conf from centre eye stats
+    type=swarmType;
+    if(hitRatio>0.80)  conf=Math.min(88,hitRatio*70+18);
+    else if(gaps===4)  conf=62;
+    else if(gaps===3)  conf=58;
+    else if(gaps<=2&&hitRatio>0.6) conf=38;
+    else               conf=25;
+    if(gaps===3||gaps===4) conf+=12;
+    // Swarm agreement bonus: +0 if lone wolf, +12 if 2/3 agree, +22 if all 3 agree
+    conf=Math.min(99, conf + (swarmAgree===3?22:swarmAgree===2?12:0));
+    // ABSENCE VETO: if absence field flatly disagrees with spoke swarm, slam confidence
+    // This kills circle-in-triangle — triangle has ~50% absence, circle has ~21%
+    // If they point at different types, nothing is certain enough to solve
+    if(absenceType!==swarmType) conf=Math.min(conf, 30);
+  }
+  if(hints.colorIdx!==null) conf=Math.min(99,conf+8);
+  if(hints.size!==null) conf=Math.min(99,conf+5);
+
+  // ── GENOME RECOGNITION ──
+  // Spiders compare current detection to the shape genetics they already confirmed.
+  // Similar shapes know they are true — genome match compounds confidence.
+  // Disagreement with known genome subtracts — false proof decays.
+  if(genomePrior&&hints.type===null){
+    if(type===genomePrior.type) conf=Math.min(99,conf+20); // "I know this shape"
+    else conf=Math.max(5,conf-12); // "this doesn't match what I know"
+  }
+
+  // Genome weight: blind types (score=0) are suppressed
+  const weight=genome.scores[type]/10; // 0=blind, 1=neutral, 2=boosted
+  if(weight<=0&&hints.type===null){ type=(type+1)%3; conf=20; } // skip blind type
+  else conf=Math.min(99,Math.floor(conf*Math.min(weight,1.5)));
+
+  document.getElementById('dType').textContent=TYPE_NAMES[type]+' ab:'+Math.round(absenceRatio*100)+'% g:'+gaps+' eg:'+eggs.length+'c:'+eggClusters+' sw:'+swarmAgree;
+  return{type,sizeIdx,rotIdx:0,colorIdx,variant:0,confidence:Math.floor(conf)};
+}
+
+// ── Egg system ──
+// Spiders lay eggs on MOVING edges. Eggs that keep moving (real shape) gain confidence.
+// Eggs that stop moving (background noise / false proof) decay and die.
+// High-confidence eggs near each other form lines. Corner clusters reveal shape type.
+const MAX_EGGS=120;
+const eggs=[]; // {x,y, ex,ey (edge coords), conf, age}
+
+function eggMotionAt(ex,ey){
+  if(!edgeData||!edgeData.motion) return 0;
+  // Average motion in a 3×3 neighbourhood
+  let m=0,n=0;
+  for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){
+    const nx=Math.max(0,Math.min(EW-1,ex+dx));
+    const ny=Math.max(0,Math.min(EH-1,ey+dy));
+    m+=edgeData.motion[ny*EW+nx]; n++;
+  }
+  return m/n;
+}
+
+function eggEdgeAt(ex,ey){
+  if(!edgeData) return 0;
+  return edgeData.edges[Math.max(0,Math.min(EH-1,ey))*EW+Math.max(0,Math.min(EW-1,ex))];
+}
+
+function spawnEgg(sx,sy,W,H){
+  if(eggs.length>=MAX_EGGS) return;
+  const ex=Math.floor(sx/W*EW), ey=Math.floor(sy/H*EH);
+  // Don't stack eggs — merge with any nearby egg instead
+  for(const e of eggs){
+    const dx=e.x-sx,dy=e.y-sy;
+    if(dx*dx+dy*dy<100){e.conf=Math.min(1,e.conf+0.08);return;}
+  }
+  eggs.push({x:sx,y:sy,ex,ey,conf:0.15,age:0});
+}
+
+function updateEggs(W,H){
+  for(let i=eggs.length-1;i>=0;i--){
+    const e=eggs[i];
+    e.age++;
+    const motion=eggMotionAt(e.ex,e.ey);
+    const onEdge=eggEdgeAt(e.ex,e.ey)>50;
+    if(motion>18&&onEdge){
+      // Moving edge — egg is on real object — gain confidence (true proof compounds)
+      e.conf=Math.min(1,e.conf+0.055);
+    } else {
+      // Stationary or off-edge — false proof decays fast
+      const decayRate=motion<8?0.045:0.018; // totally still = fast death
+      e.conf-=decayRate;
+    }
+    if(e.conf<=0) eggs.splice(i,1);
+  }
+}
+
+function countEggClusters(){
+  // DBSCAN-lite: cluster high-confidence eggs, count distinct clusters
+  const alive=eggs.filter(e=>e.conf>0.45);
+  if(alive.length<3) return -1;
+  const visited=new Set();
+  let clusters=0;
+  const R2=400; // cluster radius squared (in screen px)
+  for(let i=0;i<alive.length;i++){
+    if(visited.has(i)) continue;
+    visited.add(i);
+    let hasNeighbour=false;
+    for(let j=0;j<alive.length;j++){
+      if(i===j||visited.has(j)) continue;
+      const dx=alive[i].x-alive[j].x, dy=alive[i].y-alive[j].y;
+      if(dx*dx+dy*dy<R2){hasNeighbour=true;visited.add(j);}
+    }
+    if(hasNeighbour) clusters++;
+  }
+  return clusters; // 3=triangle, 4=square, 0-1=circle
+}
+
+// ── Spider system ──
+// Two castes:
+//   TRACER (gold)  — locks onto edges, walks ALONG the boundary (tangent to gradient)
+//                    lays eggs on moving edges — the shape outline emerges from egg trails
+//   VOID   (blue)  — settles in confirmed dark regions, pulses and stays
+//                    builds the absence field — the negative space of the shape
+const SC=50; // 35 tracers + 15 void scouts
+const spiders=Array.from({length:SC},(_,i)=>({
+  x:0,y:0,vx:0,vy:0,
+  caste:i<35?'tracer':'void', // tracer or void
+  locked:false,               // tracer: true = currently on edge, crawling along it
+  side:Math.random()>0.5?1:-1,// which direction to walk along edge
+  life:0,age:0
+}));
+let spiderCanvas,spiderCtx;
+// Persistent heatmaps — accumulate over time, the shape genome builds up
+let presenceMap=null, absenceMap=null; // Float32Arrays [W*H]
+let heatW=0,heatH=0;
+
+function initSpiders(W,H){
+  heatW=W; heatH=H;
+  presenceMap=new Float32Array(W*H);
+  absenceMap=new Float32Array(W*H);
+  spiders.forEach(s=>spawnSpider(s,W,H));
+}
+
+function spawnSpider(s,W,H){
+  s.x=Math.random()*W; s.y=Math.random()*H;
+  s.vx=(Math.random()-.5)*3; s.vy=(Math.random()-.5)*3;
+  s.locked=false;
+  s.side=Math.random()>0.5?1:-1;
+  s.life=120+Math.random()*180;
+  s.age=0;
+}
+
+function resizeSpiderCanvas(){
+  spiderCanvas.width=window.innerWidth;
+  spiderCanvas.height=window.innerHeight;
+  // Reset heatmaps on resize
+  heatW=spiderCanvas.width; heatH=spiderCanvas.height;
+  presenceMap=new Float32Array(heatW*heatH);
+  absenceMap=new Float32Array(heatW*heatH);
+}
+
+function sampleEdge(sx,sy,W,H){
+  // Sample the edge field at a screen position, returning {e, gx, gy}
+  if(!edgeData) return {e:0,gx:0,gy:0,gray:0};
+  const ex=Math.floor(sx/W*EW), ey=Math.floor(sy/H*EH);
+  const clampX=x=>Math.max(0,Math.min(EW-1,x));
+  const clampY=y=>Math.max(0,Math.min(EH-1,y));
+  const ei=clampY(ey)*EW+clampX(ex);
+  const e=edgeData.edges[ei];
+  const gray=edgeData.gray[ei];
+  // Local Sobel gradient at this point (tells us which direction the edge runs)
+  let gx=0,gy=0;
+  for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){
+    const ne=edgeData.edges[clampY(ey+dy)*EW+clampX(ex+dx)];
+    gx+=dx*ne; gy+=dy*ne;
+  }
+  const gl=Math.sqrt(gx*gx+gy*gy)||1;
+  return{e,gx:gx/gl,gy:gy/gl,gray};
+}
+
+function updateSpiders(W,H){
+  spiders.forEach(s=>{
+    s.age++;
+    const {e,gx,gy,gray}=sampleEdge(s.x,s.y,W,H);
+    const onEdge=e>60;
+    const inVoid=gray<40&&!onEdge;
+
+    if(s.caste==='tracer'){
+      if(onEdge&&!s.locked){
+        s.locked=true;
+        s.side=Math.random()>0.5?1:-1;
+      }
+      if(s.locked&&onEdge){
+        // Walk ALONG the edge: tangent = perpendicular to gradient (-gy, gx)
+        const tx=-gy*s.side, ty=gx*s.side;
+        s.vx=s.vx*0.4+tx*3.5;
+        s.vy=s.vy*0.4+ty*3.5;
+        const pi=Math.round(s.y)*W+Math.round(s.x);
+        if(pi>=0&&pi<presenceMap.length) presenceMap[pi]=Math.min(1,presenceMap[pi]+0.06);
+        // LAY EGG if this edge is MOVING — real shape feature, not background
+        const motion=edgeData&&edgeData.motion?edgeData.motion[ey*EW+ex]:0;
+        if(motion>15&&Math.random()<0.18) spawnEgg(s.x,s.y,W,H);
+      } else if(s.locked&&!onEdge){
+        // Fell off edge — search for it again
+        s.locked=false;
+        s.vx+=(Math.random()-.5)*2;
+        s.vy+=(Math.random()-.5)*2;
+      } else {
+        // Wandering, drift toward edge gradient
+        s.vx=s.vx*0.85+gx*1.2+(Math.random()-.5)*0.8;
+        s.vy=s.vy*0.85+gy*1.2+(Math.random()-.5)*0.8;
+      }
+    } else {
+      // VOID caste: seek dark regions, settle and pulse
+      if(inVoid){
+        // Slow to a crawl and deposit absence
+        s.vx*=0.7; s.vy*=0.7;
+        const ai=Math.round(s.y)*W+Math.round(s.x);
+        if(ai>=0&&ai<absenceMap.length) absenceMap[ai]=Math.min(1,absenceMap[ai]+0.04);
+      } else if(onEdge){
+        // Bounce off edges — void scouts don't cross the boundary
+        s.vx=-s.vx*0.8+(Math.random()-.5)*1.5;
+        s.vy=-s.vy*0.8+(Math.random()-.5)*1.5;
+      } else {
+        // Wander toward darkness (anti-gradient)
+        s.vx=s.vx*0.88-gx*0.6+(Math.random()-.5)*0.9;
+        s.vy=s.vy*0.88-gy*0.6+(Math.random()-.5)*0.9;
+      }
+    }
+
+    const spd=Math.sqrt(s.vx*s.vx+s.vy*s.vy);
+    const maxSpd=s.caste==='tracer'&&s.locked?4:2.5;
+    if(spd>maxSpd){s.vx=s.vx/spd*maxSpd;s.vy=s.vy/spd*maxSpd;}
+    s.x=Math.max(1,Math.min(W-2,s.x+s.vx));
+    s.y=Math.max(1,Math.min(H-2,s.y+s.vy));
+
+    s.life--;
+    if(s.life<=0) spawnSpider(s,W,H);
+  });
+
+  // Heatmaps decay slowly — old info fades, fresh signal stays
+  for(let i=0;i<presenceMap.length;i++) presenceMap[i]*=0.992;
+  for(let i=0;i<absenceMap.length;i++) absenceMap[i]*=0.993;
+}
+
+function drawSpiders(W,H){
+  // 1. Draw heatmaps — the accumulated genome fields
+  const imgData=spiderCtx.createImageData(W,H);
+  const d=imgData.data;
+  for(let i=0;i<W*H;i++){
+    const p=presenceMap[i], a=absenceMap[i];
+    const idx=i*4;
+    if(p>0.02){
+      // Gold presence — the boundary being written
+      d[idx]  =Math.min(255,Math.round(255*p));
+      d[idx+1]=Math.min(255,Math.round(199*p));
+      d[idx+2]=Math.min(255,Math.round(44*p));
+      d[idx+3]=Math.min(220,Math.round(220*p));
+    } else if(a>0.02){
+      // Blue absence — the void being mapped
+      d[idx]  =Math.min(255,Math.round(40*a));
+      d[idx+1]=Math.min(255,Math.round(100*a));
+      d[idx+2]=Math.min(255,Math.round(255*a));
+      d[idx+3]=Math.min(160,Math.round(160*a));
+    }
+  }
+  spiderCtx.putImageData(imgData,0,0);
+
+  // 2. Draw live spiders on top — the active scouts
+  const t=Date.now()/1000;
+  spiders.forEach(s=>{
+    const {e,gray}=sampleEdge(s.x,s.y,W,H);
+    const onEdge=e>60;
+    const inVoid=gray<40&&!onEdge;
+    if(s.caste==='tracer'){
+      // Gold dot, brighter when locked on edge
+      const r=s.locked&&onEdge?3:1.5;
+      const alpha=s.locked&&onEdge?1:0.4;
+      spiderCtx.beginPath();
+      spiderCtx.arc(s.x,s.y,r,0,Math.PI*2);
+      spiderCtx.fillStyle=`rgba(255,199,44,${alpha})`;
+      spiderCtx.fill();
+      if(s.locked&&onEdge){
+        // Glow ring when crawling edge
+        spiderCtx.beginPath();
+        spiderCtx.arc(s.x,s.y,6,0,Math.PI*2);
+        spiderCtx.strokeStyle='rgba(255,199,44,0.15)';
+        spiderCtx.lineWidth=1;
+        spiderCtx.stroke();
+      }
+    } else {
+      // Blue void scout — pulses when settled in absence zone
+      const pulse=inVoid?0.5+0.5*Math.sin(t*4+s.x):0.3;
+      spiderCtx.beginPath();
+      spiderCtx.arc(s.x,s.y,inVoid?2.5:1,0,Math.PI*2);
+      spiderCtx.fillStyle=`rgba(60,140,255,${pulse})`;
+      spiderCtx.fill();
+    }
+  });
+}
+
+function drawEggs(W,H){
+  const t=Date.now()/1000;
+  // Draw lines between nearby high-confidence eggs first (underneath dots)
+  const strong=eggs.filter(e=>e.conf>0.35);
+  for(let i=0;i<strong.length;i++){
+    for(let j=i+1;j<strong.length;j++){
+      const dx=strong[i].x-strong[j].x, dy=strong[i].y-strong[j].y;
+      const d2=dx*dx+dy*dy;
+      if(d2<2200&&d2>25){ // connect eggs within ~47px
+        const combined=(strong[i].conf+strong[j].conf)*0.5;
+        const alpha=Math.min(0.85,combined*combined*1.2);
+        spiderCtx.beginPath();
+        spiderCtx.moveTo(strong[i].x,strong[i].y);
+        spiderCtx.lineTo(strong[j].x,strong[j].y);
+        spiderCtx.strokeStyle=`rgba(255,199,44,${alpha})`;
+        spiderCtx.lineWidth=Math.max(0.5,combined*2.5);
+        spiderCtx.stroke();
+      }
+    }
+  }
+  // Draw eggs — pulse with motion, size/brightness = confidence
+  for(const e of eggs){
+    const pulse=0.7+0.3*Math.sin(t*5+e.x*0.1);
+    const r=1.5+e.conf*4;
+    const alpha=e.conf*pulse;
+    spiderCtx.beginPath();
+    spiderCtx.arc(e.x,e.y,r,0,Math.PI*2);
+    spiderCtx.fillStyle=`rgba(255,220,80,${alpha})`;
+    spiderCtx.fill();
+    if(e.conf>0.6){
+      // Glow ring on strong eggs
+      spiderCtx.beginPath();
+      spiderCtx.arc(e.x,e.y,r+3,0,Math.PI*2);
+      spiderCtx.strokeStyle=`rgba(255,199,44,${alpha*0.3})`;
+      spiderCtx.lineWidth=1;
+      spiderCtx.stroke();
+    }
+  }
+}
+
+function spiderLoop(){
+  if(!spiderCtx)return;
+  const W=spiderCanvas.width,H=spiderCanvas.height;
+  spiderCtx.clearRect(0,0,W,H);
+  updateSpiders(W,H);
+  updateEggs(W,H);
+  drawSpiders(W,H);
+  drawEggs(W,H);
+  if(!solved) requestAnimationFrame(spiderLoop);
+}
+
+// ── Voice ──
+let voiceActive=false;
+function startVoice(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){document.getElementById('dMic').textContent='NO API';return;}
+  const r=new SR(); r.continuous=true; r.interimResults=true; r.lang='en-GB';
+  r.onstart=()=>{voiceActive=true;document.getElementById('dMic').textContent='ON';};
+  r.onerror=()=>{document.getElementById('dMic').textContent='ERR';};
+  r.onend=()=>{if(!solved&&voiceActive)r.start();};
+  r.onresult=e=>{
+    const txt=Array.from(e.results).map(x=>x[0].transcript).join(' ').toLowerCase().trim();
+    document.getElementById('voice-transcript').textContent='"'+txt.slice(-28)+'"';
+    applyHint(txt);
+  };
+  r.start();
+}
+
+function applyHint(txt){
+  const neg = /\b(not|no|isn.t|dont|wrong|never)\b/.test(txt);
+
+  // Shape hints — check negative first to avoid "not a circle" locking circle
+  if(!neg && /triangle|tri|pointed|arrow/.test(txt)) lockHint('type',0,'TRIANGLE','hr-type','h-type');
+  if(!neg && /circle|round|oval|sphere|ring/.test(txt))  lockHint('type',1,'CIRCLE','hr-type','h-type');
+  if(!neg && /square|box|rect/.test(txt))               lockHint('type',2,'SQUARE','hr-type','h-type');
+  // Negatives: "not a circle" → try triangle; "not a triangle" → try circle
+  if(neg && /circle|round/.test(txt))   lockHint('type',0,'TRIANGLE','hr-type','h-type');
+  if(neg && /triangle|tri/.test(txt))   lockHint('type',1,'CIRCLE','hr-type','h-type');
+  if(neg && /square|box/.test(txt))     lockHint('type',0,'TRIANGLE','hr-type','h-type');
+
+  // Color hints
+  if(!neg && /gold|yellow|amber/.test(txt))  lockHint('colorIdx',0,'GOLD','hr-color','h-color');
+  if(!neg && /white|bright/.test(txt))       lockHint('colorIdx',1,'WHITE','hr-color','h-color');
+  if(!neg && /blue|cyan/.test(txt))          lockHint('colorIdx',2,'BLUE','hr-color','h-color');
+  if(!neg && /red|pink/.test(txt))           lockHint('colorIdx',3,'RED','hr-color','h-color');
+
+  if(/bigger|large/.test(txt)){const v=Math.min(3,(hints.size||1)+1);lockHint('size',v,v,'hr-size','h-size');}
+  if(/smaller|small/.test(txt)){const v=Math.max(0,(hints.size||1)-1);lockHint('size',v,v,'hr-size','h-size');}
+  if(/clear|reset|forget/.test(txt)){
+    hints.type=null;hints.colorIdx=null;hints.size=null;
+    typeHistory=[];confHistory=[];hintHistory=[];
+    ['hr-type','hr-color','hr-size'].forEach(id=>document.getElementById(id).classList.remove('locked'));
+  }
+  if(/yes|correct|confirm|match|that.s it/.test(txt)&&detectedShape&&confidence>30) confirmShape();
+  if(/(retry|again|start over)/.test(txt)) retryDetect();
+}
+
+function lockHint(key,val,label,rowId,spanId){
+  hints[key]=val;
+  document.getElementById(spanId).textContent=label;
+  document.getElementById(rowId).classList.add('locked');
+  confHistory=[];
+  if(key==='type'){
+    typeHistory=[]; for(let i=0;i<10;i++) typeHistory.push(val);
+    // Track type hint history for oscillation detection
+    hintHistory.push(val);
+    if(hintHistory.length>6) hintHistory.shift();
+    checkOscillation();
+  }
+}
+
+function checkOscillation(){
+  if(hintHistory.length<4) return;
+  // Get unique types mentioned recently
+  const unique=[...new Set(hintHistory)];
+  if(unique.length>=2){
+    // Check if user is going back and forth (oscillating)
+    const last4=hintHistory.slice(-4);
+    const isOscillating=last4[0]!==last4[1]&&last4[1]!==last4[2]&&last4[2]!==last4[3];
+    if(isOscillating||unique.length>=3){
+      // Synthesize: if triangle(0) and circle(1) are both in history → compound(3)
+      const hasTriangle=unique.includes(0), hasCircle=unique.includes(1), hasSquare=unique.includes(2);
+      let synthesized=3; // default compound
+      if(hasTriangle&&hasSquare) synthesized=3;
+      if(hasTriangle&&hasCircle) synthesized=3;
+      hintHistory=[];
+      hints.type=synthesized;
+      const el=document.getElementById('h-type');
+      el.textContent='COMPOUND ⚡';
+      document.getElementById('hr-type').classList.add('locked');
+      typeHistory=[]; for(let i=0;i<10;i++) typeHistory.push(synthesized);
+      confHistory=[];
+      speak("Synthesizing. Triangle plus circle. Compound shape.",0.95);
+      document.getElementById('read-status').textContent='▲ SYNTHESISED: COMPOUND';
+      const shape={type:3,size:0.6,rotation:0,colorIdx:hints.colorIdx||0,variant:0};
+      detectedShape=shape;
+      drawShape(document.getElementById('guess-canvas').getContext('2d'),shape,80,true);
+      // Lock immediately — synthesis is a decision, not a detection
+      solved=true;
+      if(detectInterval){clearInterval(detectInterval);detectInterval=null;}
+      setTimeout(()=>showConfirmPhase(shape),800);
+    }
+  }
+}
+
+// ── Detect loop ──
+let detectInterval=null;
+function startDetectLoop(){
+  detectInterval=setInterval(()=>{
+    if(solved)return;
+    const vid=document.getElementById('cam-v');
+    edgeData=getEdges(vid);
+    const result=analyzeShape(edgeData);
+    if(!result) return;
+
+    confHistory.push(result.confidence);
+    if(confHistory.length>12) confHistory.shift();
+    confidence=Math.round(confHistory.reduce((a,b)=>a+b,0)/confHistory.length);
+
+    // Track type history — require consistent type before accepting
+    typeHistory.push(result.type);
+    if(typeHistory.length>10) typeHistory.shift();
+    const typeCounts=[0,0,0,0];
+    typeHistory.forEach(t=>typeCounts[t]++);
+    const dominantType=typeCounts.indexOf(Math.max(...typeCounts));
+    const typeConsistency=typeHistory.length>=4?typeCounts[dominantType]/typeHistory.length:0;
+
+    // Use dominant type for display
+    const displayType=typeHistory.length>=4?dominantType:result.type;
+
+    document.getElementById('conf-arc').style.strokeDashoffset=(125.7*(1-confidence/100));
+    document.getElementById('conf-pct').textContent=confidence+'%';
+    document.getElementById('dConf').textContent=confidence;
+
+    const shape={type:displayType,size:0.3+result.sizeIdx*0.18,rotation:0,colorIdx:result.colorIdx,variant:0};
+    detectedShape=shape;
+    drawShape(document.getElementById('guess-canvas').getContext('2d'),shape,80,true);
+
+    const st=document.getElementById('read-status');
+    const consistPct=Math.round(typeConsistency*100);
+    if(confidence<30) st.textContent='SEARCHING · '+confidence+'%';
+    else if(typeConsistency<0.6) st.textContent='UNSTABLE · '+TYPE_NAMES[displayType]+' · '+consistPct+'%';
+    else if(confidence<75) st.textContent='SENSING '+TYPE_NAMES[displayType]+' · '+confidence+'%';
+    else if(typeConsistency<0.8) st.textContent='LOCKING · '+TYPE_NAMES[displayType]+' · '+consistPct+'% stable';
+    else st.textContent='▲ CONFIDENT · '+TYPE_NAMES[displayType]+' · '+confidence+'%';
+
+    // Only solve when: high confidence + type stable in 85%+ of last 10 frames
+    // Also: can't solve a type that was just punished (blockedType)
+    if(confidence>=82&&typeConsistency>=0.85&&typeHistory.length>=10&&!solved&&displayType!==blockedType){
+      solved=true;
+      clearInterval(detectInterval);
+      speak(TYPE_NAMES[displayType].toLowerCase()+" identified. Does this match the laptop?",0.9);
+      showConfirmPhase(shape);
+    }
+  },150);
+}
+
+// ── Open eyes + ears ──
+async function openEyesAndEars(){
+  document.getElementById('start-screen').style.display='none';
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}},
+      audio:false
+    });
+    const vid=document.getElementById('cam-v');
+    vid.srcObject=stream; await vid.play();
+    const tr=stream.getVideoTracks()[0].getSettings();
+    vid.style.transform=tr.facingMode==='user'?'scaleX(-1)':'none';
+
+    spiderCanvas=document.getElementById('spider-canvas');
+    spiderCtx=spiderCanvas.getContext('2d');
+    resizeSpiderCanvas();
+    window.addEventListener('resize',resizeSpiderCanvas);
+    initSpiders(spiderCanvas.width,spiderCanvas.height);
+
+    document.getElementById('cam-layer').style.display='block';
+    document.getElementById('hud').style.display='block';
+
+    requestAnimationFrame(spiderLoop);
+    startDetectLoop();
+    startVoice();
+    renderGenomeBar(loadGenome());
+    speak("Eyes open. Point at the laptop screen. Tell me what you see.",0.9);
+  }catch(e){
+    document.getElementById('start-screen').style.display='flex';
+    alert('Camera error: '+e.message);
+  }
+}
+
+// ── Phase 2 ──
+function showConfirmPhase(shape){
+  document.getElementById('cam-layer').style.display='none';
+  document.getElementById('hud').style.display='none';
+  document.getElementById('dbg').classList.remove('on');
+
+  // Shape-fill: pipe existing video stream into the fill element, clip to shape
+  const srcVid=document.getElementById('cam-v');
+  const fillVid=document.getElementById('shape-fill-video');
+  if(srcVid.srcObject) fillVid.srcObject=srcVid.srcObject;
+
+  // Apply clip class based on shape type (Dan's shape-filling tool)
+  const fillWrap=document.getElementById('shape-fill-wrap');
+  fillVid.classList.remove('sfill-tri','sfill-circ','sfill-sq','sfill-comp');
+  const cls=['sfill-tri','sfill-circ','sfill-sq','sfill-comp'][shape.type]||'sfill-tri';
+  fillVid.classList.add(cls);
+
+  // Draw shape outline on the overlay canvas for reference
+  const ovCtx=document.getElementById('shape-fill-overlay').getContext('2d');
+  ovCtx.clearRect(0,0,220,220);
+  ovCtx.save();
+  ovCtx.globalAlpha=0.35;
+  drawShape(ovCtx,shape,220,true);
+  ovCtx.restore();
+
+  document.getElementById('confirm-screen').classList.add('show');
+}
+
+function confirmShape(){
+  if(!detectedShape) return;
+  document.getElementById('confirm-screen').classList.remove('show');
+  const s=detectedShape;
+  const sizeIdx=Math.min(3,Math.max(0,Math.round((s.size-0.3)/0.18)));
+  const solvedCode=shapeToCode(s.type,sizeIdx,0,s.colorIdx,s.variant);
+  rewardType(s.type);
+
+  // ── Lock immediately on first shape — write to server now ──
+  const token1=djb2(myCode+solvedCode);
+  // Store genome — used as detection prior next session + sent to beacon via server
+  localStorage.setItem('sf_genome_code', solvedCode);
+  if(!pairSent){
+    pairSent=true;
+    fetch('/soul/pair.php',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({th:token1,lid:'shape_'+myCode,did:djb2(navigator.userAgent),vis:myCode,sc:solvedCode})})
+    .then(r=>r.json()).then(d=>{if(!d.ok)console.warn('pair rejected:',d.reason);}).catch(()=>{});
+  }
+  localStorage.setItem('sf_soul_token',token1);
+
+  if(!shape1Code){
+    // ── First shape — pair done, offer second shape to upgrade token ──
+    shape1Code=solvedCode;
+    detectionStage='NORMAL'; blockedType=-1;
+    solved=false; confidence=0; confHistory=[]; typeHistory=[]; detectedShape=null;
+    hints.type=null; hints.colorIdx=null; hints.size=null; hintHistory=[];
+    ['hr-type','hr-color','hr-size'].forEach(id=>document.getElementById(id).classList.remove('locked'));
+    document.getElementById('cam-layer').style.display='block';
+    document.getElementById('hud').style.display='block';
+    document.getElementById('dbg').classList.add('on');
+    document.getElementById('conf-arc').style.strokeDashoffset='125.7';
+    document.getElementById('conf-pct').textContent='0%';
+    if(navigator.vibrate)navigator.vibrate([30,15,30]);
+    speak("Paired. Show me a second shape to upgrade the genome.",0.9);
+    // Show paired1 screen — user chooses to scan shape 2 or stop
+    drawShape(document.getElementById('p1-canvas').getContext('2d'),s,120,true);
+    document.getElementById('p1-token').textContent=token1;
+    document.getElementById('paired1').classList.add('show');
+  } else {
+    // ── Second shape — upgrade token with combined genome ──
+    const combined=djb2(myCode+shape1Code+solvedCode);
+    localStorage.setItem('sf_soul_token',combined);
+    drawShape(document.getElementById('agreed-canvas').getContext('2d'),s,180,true);
+    document.getElementById('agreed-token').textContent=combined;
+    document.getElementById('agreed').classList.add('show');
+    detectionStage='NORMAL'; shape1Code=null; pairSent=false;
+    if(navigator.vibrate)navigator.vibrate([30,15,30,15,30,15,100]);
+    speak("Genome upgraded. It never happened.",0.85);
+    // Send upgrade pair
+    fetch('/soul/pair.php',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({th:combined,lid:'shape2_'+myCode,did:djb2(navigator.userAgent),vis:myCode})})
+    .then(r=>r.json()).then(d=>{if(!d.ok)console.warn('pair rejected:',d.reason);}).catch(()=>{});
+  }
+}
+
+function startShape2(){
+  document.getElementById('paired1').classList.remove('show');
+  solved=false; confidence=0; confHistory=[]; typeHistory=[]; detectedShape=null;
+  hints.type=null; hints.colorIdx=null; hints.size=null; hintHistory=[];
+  blockedType=-1;
+  ['hr-type','hr-color','hr-size'].forEach(id=>document.getElementById(id).classList.remove('locked'));
+  document.getElementById('cam-layer').style.display='block';
+  document.getElementById('hud').style.display='block';
+  document.getElementById('dbg').classList.add('on');
+  document.getElementById('conf-arc').style.strokeDashoffset='125.7';
+  document.getElementById('conf-pct').textContent='0%';
+  document.getElementById('read-status').textContent='▲ SCAN SHAPE 2';
+  requestAnimationFrame(spiderLoop);
+  startDetectLoop();
+  speak("Show me the second shape.",0.9);
+}
+
+function punishAndAdvance(){
+  if(!detectedShape) return;
+  const wrongType=detectedShape.type;
+  const g=punishType(wrongType);
+  const blind=g.scores[wrongType]<=0;
+
+  // Punishment flash
+  const pf=document.getElementById('punish-flash');
+  const pl=document.getElementById('punish-label');
+  pl.textContent=(blind?'▲ BLIND SPOT: ':'▲ PUNISHED: ')+TYPE_NAMES[wrongType]+' '+(blind?'ELIMINATED':'-2pts');
+  pf.style.opacity='0.12'; pl.style.opacity='1';
+  setTimeout(()=>{pf.style.opacity='0';pl.style.opacity='0';},600);
+
+  // Advance detection stage
+  let nextStage=detectionStage, msg='';
+  if(detectionStage==='NORMAL'){
+    nextStage='ASKME';
+    msg="Wrong. Let me check what shapes you usually see.";
+  } else if(detectionStage==='ASKME'){
+    nextStage='COMPOUND';
+    msg="Not yours either. Checking for compound shape.";
+  } else {
+    nextStage='NORMAL';
+    msg="Resetting. All bets off.";
+  }
+  detectionStage=nextStage;
+  document.getElementById('read-status').textContent='STAGE: '+nextStage;
+  speak(msg,1.0);
+
+  // Block this type from re-solving immediately — forces a genuinely different read
+  blockedType=wrongType;
+  setTimeout(()=>{blockedType=-1;},4000);
+
+  // Kick hint if type was hinted and was wrong
+  if(hints.type===wrongType){ hints.type=null; document.getElementById('hr-type').classList.remove('locked'); }
+
+  retryDetect(false); // false = don't speak
+}
+
+function retryDetect(doSpeak=true){
+  document.getElementById('confirm-screen').classList.remove('show');
+  document.getElementById('cam-layer').style.display='block';
+  document.getElementById('hud').style.display='block';
+  document.getElementById('dbg').classList.add('on');
+  solved=false; confidence=0; confHistory=[]; typeHistory=[]; detectedShape=null;
+  document.getElementById('conf-arc').style.strokeDashoffset='125.7';
+  document.getElementById('conf-pct').textContent='0%';
+  document.getElementById('read-status').textContent='SCANNING';
+  requestAnimationFrame(spiderLoop);
+  startDetectLoop();
+  if(doSpeak) speak("Retry. Point at the laptop.",1.0);
+}
+</script>
+</body>
+</html>

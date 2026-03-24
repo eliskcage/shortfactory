@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ADVERTAINMENT PIPELINE — ShortFactory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #03040a;
+    --panel: #0a0c14;
+    --edge: #1a1f2e;
+    --gold: #ffd60a;
+    --cyan: #00e5ff;
+    --pink: #ff3cac;
+    --lime: #c8ff00;
+    --green: #00ff88;
+    --red: #ff3c3c;
+    --orange: #ff7c1a;
+    --purple: #8b5cf6;
+    --text: #e0e4f0;
+    --muted: #4a5068;
+    --muted2: #6b7490;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* ─── NEURAL CANVAS ─── */
+  #neural-bg {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    opacity: 0.08;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ─── CONFETTI ─── */
+  .confetti-wrap {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+    overflow: hidden;
+    display: none;
+  }
+  .confetti-wrap.active { display: block; }
+  .confetti-piece {
+    position: absolute;
+    top: -20px;
+    width: 10px;
+    height: 10px;
+    opacity: 0;
+    animation: confetti-fall 3s ease-in forwards;
+  }
+  @keyframes confetti-fall {
+    0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* ─── LAYOUT ─── */
+  .page-wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 100vw;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    padding: 40px 40px 30px;
+    border-bottom: 1px solid var(--edge);
+    background: linear-gradient(180deg, rgba(10,12,20,0.98) 0%, rgba(3,4,10,0.95) 100%);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+  }
+  .header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .header-titles h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(36px, 6vw, 72px);
+    letter-spacing: 4px;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--pink) 50%, var(--cyan) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .header-titles p {
+    font-size: 11px;
+    color: var(--muted2);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .header-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .stats-row {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .stat-pill {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted2);
+    background: var(--panel);
+    border: 1px solid var(--edge);
+    padding: 6px 12px;
+    border-radius: 4px;
+  }
+  .stat-pill span {
+    color: var(--gold);
+    font-weight: 500;
+  }
+  .btn-reset {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid var(--muted);
+    padding: 8px 14px;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.2s;
+  }
+  .btn-reset:hover { border-color: var(--red); color: var(--red); }
+
+  /* progress bar */
+  .progress-track {
+    width: 100%;
+    height: 4px;
+    background: var(--edge);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--pink), var(--cyan));
+    border-radius: 2px;
+    transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* ─── SCROLL HINT ─── */
+  .scroll-hint {
+    display: none;
+    text-align: center;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    padding: 10px;
+    animation: pulse-hint 2s ease-in-out infinite;
+  }
+  @keyframes pulse-hint {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+  @media (max-width: 900px) {
+    .scroll-hint { display: block; }
+  }
+
+  /* ─── PIPELINE SECTION ─── */
+  .pipeline-section {
+    padding: 40px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--edge) transparent;
+  }
+  .pipeline-section::-webkit-scrollbar { height: 6px; }
+  .pipeline-section::-webkit-scrollbar-track { background: transparent; }
+  .pipeline-section::-webkit-scrollbar-thumb { background: var(--edge); border-radius: 3px; }
+
+  /* ─── BELT TRACK ─── */
+  .belt-track {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    min-width: max-content;
+    padding-bottom: 20px;
+  }
+
+  /* ─── STATION WRAPPER ─── */
+  .station-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+
+  /* ─── STATION CARD ─── */
+  .station {
+    width: 190px;
+    background: var(--panel);
+    border: 1px solid var(--edge);
+    border-radius: 8px;
+    padding: 16px;
+    position: relative;
+    transition: opacity 0.6s ease, filter 0.6s ease, transform 0.3s ease;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow: hidden;
+  }
+  .station::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--station-color, var(--gold));
+    border-radius: 8px 8px 0 0;
+  }
+  .station::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.02) 0%, transparent 60%);
+    pointer-events: none;
+    border-radius: 8px;
+  }
+  .station:hover:not(.solved) {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px var(--station-color, var(--gold));
+  }
+  .station.solved {
+    opacity: 0.42;
+    filter: grayscale(0.8);
+  }
+  .station.active:not(.solved) {
+    box-shadow: 0 0 20px rgba(255,214,10,0.15);
+  }
+
+  /* station header row */
+  .station-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+  .station-num {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--station-color, var(--gold));
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+  .station-status {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted2);
+  }
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--muted);
+  }
+  .status-dot.active {
+    background: var(--station-color, var(--gold));
+    animation: dot-pulse 1.4s ease-in-out infinite;
+  }
+  .status-dot.solved {
+    background: var(--green);
+  }
+  @keyframes dot-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 currentColor; }
+    50% { opacity: 0.6; transform: scale(1.3); }
+  }
+
+  .station-icon {
+    font-size: 28px;
+    line-height: 1;
+    display: block;
+  }
+  .station-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 2px;
+    color: #fff;
+    line-height: 1.1;
+  }
+  .station-desc {
+    font-size: 9.5px;
+    color: var(--muted2);
+    line-height: 1.5;
+    letter-spacing: 0.3px;
+  }
+
+  .station-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: auto;
+  }
+  .btn-tool {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--station-color, var(--gold));
+    background: transparent;
+    border: 1px solid var(--station-color, var(--gold));
+    padding: 5px 10px;
+    text-decoration: none;
+    display: inline-block;
+    border-radius: 3px;
+    transition: all 0.2s;
+    text-align: center;
+    opacity: 0.7;
+  }
+  .btn-tool:hover { opacity: 1; background: rgba(255,255,255,0.04); }
+  .btn-tool.coming-soon {
+    color: var(--muted);
+    border-color: var(--muted);
+    cursor: default;
+    pointer-events: none;
+  }
+
+  .btn-solve {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--bg);
+    background: var(--station-color, var(--gold));
+    border: none;
+    padding: 9px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.2s;
+  }
+  .btn-solve:hover { filter: brightness(1.15); transform: scale(1.01); }
+  .btn-solve:active { transform: scale(0.98); }
+  .btn-solve.solved-label {
+    background: var(--edge);
+    color: var(--green);
+    cursor: default;
+    letter-spacing: 2px;
+  }
+
+  /* ─── BELT SEGMENT ─── */
+  .belt-segment {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 0 4px;
+    min-width: 70px;
+    flex-shrink: 0;
+    align-self: center;
+    position: relative;
+  }
+  .belt-track-line {
+    width: 100%;
+    height: 12px;
+    background: repeating-linear-gradient(
+      90deg,
+      #1a1f2e 0px, #1a1f2e 10px,
+      #ffd60a 10px, #ffd60a 12px
+    );
+    background-size: 22px 100%;
+    animation: belt-move 0.8s linear infinite;
+    border-radius: 2px;
+    position: relative;
+  }
+  .belt-track-line.solved-belt {
+    animation: belt-move-fast 0.3s linear infinite;
+    background: repeating-linear-gradient(
+      90deg,
+      #1a1f2e 0px, #1a1f2e 8px,
+      #00ff88 8px, #00ff88 10px
+    );
+    background-size: 18px 100%;
+  }
+  @keyframes belt-move {
+    from { background-position: 0 0; }
+    to { background-position: 22px 0; }
+  }
+  @keyframes belt-move-fast {
+    from { background-position: 0 0; }
+    to { background-position: 18px 0; }
+  }
+  .belt-package {
+    font-size: 14px;
+    position: absolute;
+    top: -20px;
+    left: 10%;
+    transition: left 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    filter: drop-shadow(0 0 4px var(--gold));
+  }
+  .belt-package.moved {
+    left: 80%;
+    filter: drop-shadow(0 0 6px var(--green));
+  }
+
+  /* ─── BUILDER ZONE ─── */
+  .builder-zone-wrap {
+    padding: 0 40px 60px;
+  }
+  .builder-zone {
+    background: var(--panel);
+    border: 2px solid transparent;
+    border-radius: 12px;
+    padding: 40px;
+    position: relative;
+    overflow: hidden;
+    background-clip: padding-box;
+  }
+  .builder-zone::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--pink), var(--gold), var(--cyan), var(--pink));
+    background-size: 300% 300%;
+    animation: gradient-rotate 4s ease infinite;
+    z-index: -1;
+  }
+  .builder-zone::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 10px;
+    background: var(--panel);
+    z-index: -1;
+  }
+  @keyframes gradient-rotate {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  .builder-zone-inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: start;
+  }
+  .builder-left {}
+  .builder-right {}
+  .bz-icon { font-size: 48px; margin-bottom: 12px; display: block; }
+  .bz-badge {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--pink);
+    margin-bottom: 8px;
+  }
+  .bz-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    letter-spacing: 4px;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--pink), var(--gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 12px;
+  }
+  .bz-count {
+    font-size: 13px;
+    color: var(--muted2);
+    letter-spacing: 1px;
+    margin-bottom: 24px;
+  }
+  .bz-count strong { color: var(--gold); font-size: 20px; }
+
+  .stages-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .stages-list li {
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--edge);
+    transition: all 0.4s ease;
+  }
+  .stages-list li.done {
+    color: var(--green);
+    border-color: rgba(0,255,136,0.2);
+    background: rgba(0,255,136,0.04);
+  }
+  .stages-list li .check { font-size: 12px; }
+
+  .btn-launch {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 4px;
+    color: var(--bg);
+    background: linear-gradient(90deg, var(--muted), #333);
+    border: none;
+    padding: 18px 40px;
+    border-radius: 6px;
+    cursor: not-allowed;
+    width: 100%;
+    transition: all 0.4s ease;
+    margin-top: 24px;
+    opacity: 0.4;
+  }
+  .btn-launch.ready {
+    background: linear-gradient(90deg, var(--pink), var(--gold), var(--cyan), var(--pink));
+    background-size: 300% 100%;
+    animation: rainbow-btn 2s ease infinite;
+    cursor: pointer;
+    opacity: 1;
+    color: #000;
+    box-shadow: 0 0 40px rgba(255,60,172,0.4), 0 0 80px rgba(255,214,10,0.2);
+  }
+  @keyframes rainbow-btn {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  .btn-launch.ready:hover {
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 0 60px rgba(255,60,172,0.6), 0 0 100px rgba(255,214,10,0.3);
+  }
+
+  /* pulsing glow on builder zone when not complete */
+  .builder-zone.pulsing {
+    animation: zone-pulse 3s ease-in-out infinite;
+  }
+  @keyframes zone-pulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(255,60,172,0.1); }
+    50% { box-shadow: 0 0 40px rgba(255,60,172,0.25); }
+  }
+  .builder-zone.complete {
+    animation: zone-complete 2s ease-in-out infinite;
+  }
+  @keyframes zone-complete {
+    0%, 100% { box-shadow: 0 0 40px rgba(255,60,172,0.3), 0 0 80px rgba(255,214,10,0.15); }
+    50% { box-shadow: 0 0 80px rgba(255,60,172,0.5), 0 0 160px rgba(255,214,10,0.3); }
+  }
+
+  /* ─── MOBILE ─── */
+  @media (max-width: 900px) {
+    header { padding: 20px; }
+    .pipeline-section { padding: 20px 0 20px 20px; }
+    .builder-zone-wrap { padding: 0 20px 40px; }
+    .builder-zone-inner { grid-template-columns: 1fr; gap: 24px; }
+    .station { width: 160px; }
+    .bz-title { font-size: 36px; }
+  }
+  @media (max-width: 600px) {
+    .station { width: 148px; padding: 12px; }
+    .belt-segment { min-width: 50px; }
+    header { padding: 16px; }
+  }
+
+  /* ─── SCAN LINES OVERLAY ─── */
+  .scanlines {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.03) 2px,
+      rgba(0,0,0,0.03) 4px
+    );
+  }
+
+  /* ─── TOOLTIP ─── */
+  .station[data-coming-soon="true"] .btn-solve::after {
+    content: 'COMING SOON';
+  }
+
+  /* solved checkmark overlay */
+  .solved-overlay {
+    position: absolute;
+    top: 12px; right: 12px;
+    font-size: 18px;
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .station.solved .solved-overlay {
+    opacity: 1;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="neural-bg"></canvas>
+<div class="scanlines"></div>
+<div class="confetti-wrap" id="confetti-wrap"></div>
+
+<div class="page-wrap">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-top">
+      <div class="header-titles">
+        <h1>ADVERTAINMENT PIPELINE</h1>
+        <p>ShortFactory Production Line — From Brief to Viral</p>
+      </div>
+      <div class="header-controls">
+        <div class="stats-row">
+          <div class="stat-pill">Stages Done: <span id="stat-done">0</span></div>
+          <div class="stat-pill">Pending: <span id="stat-pending">9</span></div>
+        </div>
+        <button class="btn-reset" onclick="resetAll()">↺ RESET ALL</button>
+      </div>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+  </header>
+
+  <div class="scroll-hint">← SCROLL TO SEE FULL PIPELINE →</div>
+
+  <!-- BELT -->
+  <div class="pipeline-section">
+    <div class="belt-track" id="belt-track">
+      <!-- Stations injected by JS -->
+    </div>
+  </div>
+
+  <!-- BUILDER ZONE -->
+  <div class="builder-zone-wrap">
+    <div class="builder-zone pulsing" id="builder-zone">
+      <div class="builder-zone-inner">
+        <div class="builder-left">
+          <span class="bz-icon">🏭</span>
+          <div class="bz-badge">← FINAL DESTINATION</div>
+          <div class="bz-title">BUILDER<br>ZONE</div>
+          <div class="bz-count"><strong id="bz-count">0</strong>/9 STAGES COMPLETE</div>
+          <button class="btn-launch" id="btn-launch" onclick="launchAdvertainment()">
+            LAUNCH ADVERTAINMENT →
+          </button>
+        </div>
+        <div class="builder-right">
+          <ul class="stages-list" id="stages-list"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─── STATIONS DATA ───────────────────────────────────────────────────────────
+const STATIONS = [
+  {
+    id: 'campaign_setup',
+    num: '01',
+    icon: '💰',
+    title: 'CAMPAIGN SETUP',
+    color: '#ffd60a',
+    desc: 'Brand brief in.\nAdvertiser funds the pot.',
+    link: 'https://www.shortfactory.shop/trump/campaigns.html',
+    comingSoon: false
+  },
+  {
+    id: 'squid_challenge',
+    num: '02',
+    icon: '🦑',
+    title: 'SQUID CHALLENGE',
+    color: '#ff3cac',
+    desc: 'Player makes ShortFactory\nSquid Game ad (tutorial).',
+    link: 'https://www.shortfactory.shop/trump/squid-challenge.html',
+    comingSoon: false
+  },
+  {
+    id: 'imaginator',
+    num: '03',
+    icon: '🎬',
+    title: 'IMAGINATOR',
+    color: '#00e5ff',
+    desc: 'Stills → animated YouTube\nShort with AI magic.',
+    link: 'https://www.shortfactory.shop/trump/grok-simulator.html',
+    comingSoon: false
+  },
+  {
+    id: 'sound_studio',
+    num: '04',
+    icon: '🎵',
+    title: 'SOUND STUDIO',
+    color: '#8b5cf6',
+    desc: 'Add AI music.\nSonauto stems & layers.',
+    link: 'https://www.shortfactory.shop/alive/soundlab/',
+    comingSoon: false
+  },
+  {
+    id: 'kinetic_type',
+    num: '05',
+    icon: '✍️',
+    title: 'KINETIC TYPE',
+    color: '#c8ff00',
+    desc: 'Animated text overlay.\nCaptions that pop.',
+    link: '#',
+    comingSoon: true
+  },
+  {
+    id: 'valuator',
+    num: '06',
+    icon: '⚡',
+    title: 'VALUATOR',
+    color: '#ff7c1a',
+    desc: 'Viral DNA radar score.\nEarn credits per view.',
+    link: '#',
+    comingSoon: true
+  },
+  {
+    id: 'player_profile',
+    num: '07',
+    icon: '👤',
+    title: 'PLAYER PROFILE',
+    color: '#00e5ff',
+    desc: 'Get URL, QR code.\nRank badge unlocked.',
+    link: '#',
+    comingSoon: true
+  },
+  {
+    id: 'merch_drop',
+    num: '08',
+    icon: '👕',
+    title: 'MERCH DROP',
+    color: '#ffd60a',
+    desc: 'Twitter scrape →\nT-shirt generation.',
+    link: 'https://www.shortfactory.shop/shorts/',
+    comingSoon: false
+  },
+  {
+    id: 'credits_mint',
+    num: '09',
+    icon: '🪙',
+    title: 'CREDITS MINT',
+    color: '#00ff88',
+    desc: 'Views → SFT tokens\nminted on-chain.',
+    link: 'https://www.shortfactory.shop/dares4dosh/',
+    comingSoon: false
+  }
+];
+
+// ─── STATE ──────────────────────────────────────────────────────────────────
+function loadState() {
+  try { return JSON.parse(localStorage.getItem('sf_pipeline') || '{}'); }
+  catch(e) { return {}; }
+}
+function saveState(s) {
+  localStorage.setItem('sf_pipeline', JSON.stringify(s));
+}
+let state = loadState();
+
+// ─── BUILD BELT ──────────────────────────────────────────────────────────────
+function buildBelt() {
+  const track = document.getElementById('belt-track');
+  track.innerHTML = '';
+
+  STATIONS.forEach((st, i) => {
+    const isSolved = !!state[st.id];
+
+    // Station wrap (station + belt segment)
+    const wrap = document.createElement('div');
+    wrap.className = 'station-wrap';
+
+    // Station card
+    const card = document.createElement('div');
+    card.className = 'station' + (isSolved ? ' solved' : '');
+    card.id = 'station-' + st.id;
+    card.style.setProperty('--station-color', st.color);
+
+    const statusLabel = isSolved ? 'SOLVED' : 'ACTIVE';
+    const dotClass = isSolved ? 'solved' : 'active';
+    const solveLabel = isSolved ? '✓ COMPLETED' : 'MARK SOLVED ✓';
+    const toolClass = st.comingSoon ? 'btn-tool coming-soon' : 'btn-tool';
+    const toolTarget = st.comingSoon ? '' : 'target="_blank" rel="noopener"';
+    const toolLabel = st.comingSoon ? '⏳ COMING SOON' : '→ OPEN TOOL';
+
+    card.innerHTML = `
+      <div class="solved-overlay">✅</div>
+      <div class="station-header">
+        <div class="station-num">${st.num}</div>
+        <div class="station-status">
+          <div class="status-dot ${dotClass}"></div>
+          ${statusLabel}
+        </div>
+      </div>
+      <span class="station-icon">${st.icon}</span>
+      <div class="station-title">${st.title}</div>
+      <div class="station-desc">${st.desc.replace('\n','<br>')}</div>
+      <div class="station-footer">
+        <a href="${st.link}" ${toolTarget} class="${toolClass}">${toolLabel}</a>
+        <button class="btn-solve ${isSolved ? 'solved-label' : ''}"
+                id="btn-${st.id}"
+                onclick="solveStation('${st.id}')"
+                ${isSolved ? 'disabled' : ''}>
+          ${isSolved ? '✓ COMPLETED' : 'MARK SOLVED ✓'}
+        </button>
+      </div>
+    `;
+
+    wrap.appendChild(card);
+
+    // Belt segment after station (not after last)
+    if (i < STATIONS.length - 1) {
+      const seg = document.createElement('div');
+      seg.className = 'belt-segment';
+      seg.id = 'belt-' + i;
+
+      const nextIsSolved = !!state[STATIONS[i+1].id];
+      const beltMoved = isSolved;
+
+      seg.innerHTML = `
+        <div class="belt-track-line ${isSolved ? 'solved-belt' : ''}"></div>
+        <div class="belt-package ${beltMoved ? 'moved' : ''}" id="pkg-${i}">📦</div>
+      `;
+
+      wrap.appendChild(seg);
+    }
+
+    track.appendChild(wrap);
+  });
+}
+
+// ─── SOLVE STATION ───────────────────────────────────────────────────────────
+function solveStation(id) {
+  if (state[id]) return;
+  state[id] = true;
+  saveState(state);
+
+  // Animate card
+  const card = document.getElementById('station-' + id);
+  if (card) {
+    card.classList.add('solved');
+    const btn = document.getElementById('btn-' + id);
+    if (btn) {
+      btn.textContent = '✓ COMPLETED';
+      btn.classList.add('solved-label');
+      btn.disabled = true;
+    }
+    const dot = card.querySelector('.status-dot');
+    if (dot) { dot.className = 'status-dot solved'; }
+    const statusTxt = card.querySelector('.station-status');
+    if (statusTxt) statusTxt.lastChild.textContent = ' SOLVED';
+  }
+
+  // Move package on belt segment
+  const stIdx = STATIONS.findIndex(s => s.id === id);
+  if (stIdx >= 0 && stIdx < STATIONS.length - 1) {
+    const pkg = document.getElementById('pkg-' + stIdx);
+    const belt = document.querySelector('#belt-' + stIdx + ' .belt-track-line');
+    if (pkg) {
+      setTimeout(() => { pkg.classList.add('moved'); }, 50);
+    }
+    if (belt) {
+      belt.classList.add('solved-belt');
+    }
+  }
+
+  updateProgress();
+}
+
+// ─── RESET ───────────────────────────────────────────────────────────────────
+function resetAll() {
+  if (!confirm('Reset all pipeline stages?')) return;
+  state = {};
+  saveState(state);
+  buildBelt();
+  updateProgress();
+}
+
+// ─── PROGRESS ────────────────────────────────────────────────────────────────
+function updateProgress() {
+  const done = Object.values(state).filter(Boolean).length;
+  const total = STATIONS.length;
+  const pct = Math.round((done / total) * 100);
+
+  document.getElementById('stat-done').textContent = done;
+  document.getElementById('stat-pending').textContent = (total - done);
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('bz-count').textContent = done;
+
+  // Stages list
+  const list = document.getElementById('stages-list');
+  list.innerHTML = STATIONS.map(st => {
+    const done = !!state[st.id];
+    return `<li class="${done ? 'done' : ''}">
+      <span class="check">${done ? '✅' : '○'}</span>
+      <span>${st.num} — ${st.title}</span>
+    </li>`;
+  }).join('');
+
+  // Launch button
+  const btn = document.getElementById('btn-launch');
+  const zone = document.getElementById('builder-zone');
+  if (done >= total) {
+    btn.classList.add('ready');
+    zone.classList.remove('pulsing');
+    zone.classList.add('complete');
+    triggerConfetti();
+  } else {
+    btn.classList.remove('ready');
+    zone.classList.add('pulsing');
+    zone.classList.remove('complete');
+  }
+}
+
+function launchAdvertainment() {
+  const done = Object.values(state).filter(Boolean).length;
+  if (done < STATIONS.length) return;
+  alert('🚀 ADVERTAINMENT PIPELINE COMPLETE!\n\nAll 9 stages solved. Your advertainment short is ready to launch!');
+}
+
+// ─── CONFETTI ────────────────────────────────────────────────────────────────
+let confettiFired = false;
+function triggerConfetti() {
+  if (confettiFired) return;
+  confettiFired = true;
+  const wrap = document.getElementById('confetti-wrap');
+  wrap.classList.add('active');
+  wrap.innerHTML = '';
+
+  const colors = ['#ffd60a','#ff3cac','#00e5ff','#c8ff00','#00ff88','#ff7c1a','#8b5cf6'];
+  const shapes = ['■','●','▲','★','◆'];
+
+  for (let i = 0; i < 80; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    const shape = shapes[Math.floor(Math.random() * shapes.length)];
+    const left = Math.random() * 100;
+    const delay = Math.random() * 2;
+    const size = 8 + Math.random() * 10;
+    const dur = 2.5 + Math.random() * 2;
+    p.textContent = shape;
+    p.style.cssText = `
+      left: ${left}%;
+      font-size: ${size}px;
+      color: ${color};
+      animation-delay: ${delay}s;
+      animation-duration: ${dur}s;
+    `;
+    wrap.appendChild(p);
+  }
+
+  setTimeout(() => {
+    wrap.classList.remove('active');
+    wrap.innerHTML = '';
+    confettiFired = false;
+  }, 5000);
+}
+
+// ─── NEURAL CANVAS ───────────────────────────────────────────────────────────
+(function() {
+  const canvas = document.getElementById('neural-bg');
+  const ctx = canvas.getContext('2d');
+  let W, H, nodes = [], RAF;
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+
+  function initNodes() {
+    nodes = [];
+    const count = Math.floor((W * H) / 14000);
+    for (let i = 0; i < count; i++) {
+      nodes.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
+        r: 1.5 + Math.random() * 1.5
+      });
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    const MAX_DIST = 120;
+
+    for (let i = 0; i < nodes.length; i++) {
+      const a = nodes[i];
+      a.x += a.vx;
+      a.y += a.vy;
+      if (a.x < 0 || a.x > W) a.vx *= -1;
+      if (a.y < 0 || a.y > H) a.vy *= -1;
+
+      ctx.beginPath();
+      ctx.arc(a.x, a.y, a.r, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffd60a';
+      ctx.fill();
+
+      for (let j = i + 1; j < nodes.length; j++) {
+        const b = nodes[j];
+        const dx = a.x - b.x, dy = a.y - b.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < MAX_DIST) {
+          const alpha = 1 - dist / MAX_DIST;
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.strokeStyle = `rgba(0,229,255,${alpha * 0.4})`;
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+      }
+    }
+    RAF = requestAnimationFrame(draw);
+  }
+
+  resize();
+  initNodes();
+  draw();
+  window.addEventListener('resize', () => {
+    cancelAnimationFrame(RAF);
+    resize();
+    initNodes();
+    draw();
+  });
+})();
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+buildBelt();
+updateProgress();
+</script>
+</body>
+</html>

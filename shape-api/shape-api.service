@@ -1,0 +1,16 @@
+[Unit]
+Description=ShortFactory Shape API (DuckDB)
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/vhosts/shortfactory.shop/httpdocs/shape-api
+ExecStart=/usr/bin/python3 shape_api.py
+Restart=always
+RestartSec=5
+Environment=SHAPE_PORT=8644
+Environment=SHAPE_ADMIN_KEY=change-this-in-production
+
+[Install]
+WantedBy=multi-user.target

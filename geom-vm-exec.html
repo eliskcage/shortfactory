@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>GPO: Execution = Measurement</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#000; overflow:hidden; font-family:'Courier New',monospace; }
+canvas { display:block; }
+#phase-label {
+  position:fixed; top:32px; left:0; right:0; text-align:center;
+  color:rgba(180,180,180,0.8); font-size:12px; letter-spacing:3px;
+  text-transform:uppercase; pointer-events:none;
+}
+#formula {
+  position:fixed; bottom:48px; left:0; right:0; text-align:center;
+  color:rgba(255,255,255,0.7); font-size:16px; letter-spacing:1px;
+  pointer-events:none; transition:opacity 0.5s;
+}
+#restart {
+  position:fixed; bottom:16px; right:24px;
+  background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2);
+  color:rgba(255,255,255,0.5); padding:6px 14px; cursor:pointer;
+  font-family:'Courier New',monospace; font-size:11px; letter-spacing:2px;
+}
+#restart:hover { background:rgba(255,255,255,0.15); color:#fff; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="phase-label"></div>
+<div id="formula"></div>
+<button id="restart">RESTART</button>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let W, H;
+function resize() { W = canvas.width = innerWidth; H = canvas.height = innerHeight; }
+resize();
+window.addEventListener('resize', resize);
+
+// ── 4D hypercube geometry ──────────────────────────────────────────────────
+function hcVerts4() {
+  const v = [];
+  for (let i = 0; i < 16; i++)
+    v.push([(i&1)?1:-1, (i&2)?1:-1, (i&4)?1:-1, (i&8)?1:-1]);
+  return v;
+}
+function hcEdges4() {
+  const e = [];
+  for (let i = 0; i < 16; i++)
+    for (let j = i+1; j < 16; j++) {
+      let d = 0;
+      for (let k = 0; k < 4; k++) if (((i>>k)&1) !== ((j>>k)&1)) d++;
+      if (d === 1) e.push([i, j]);
+    }
+  return e;
+}
+const VERTS = hcVerts4();
+const EDGES = hcEdges4();
+
+// ── math helpers ───────────────────────────────────────────────────────────
+const dot = (a, b) => a.reduce((s,x,i) => s + x*b[i], 0);
+const norm = v => { const m = Math.sqrt(dot(v,v)); return v.map(x=>x/m); };
+function gramSchmidt(b1, b2) {
+  const p = dot(b2, b1);
+  return norm(b2.map((x,i) => x - p*b1[i]));
+}
+function project(verts, b1, b2, b3) {
+  return verts.map(v => ({
+    x: dot(v, b1),
+    y: dot(v, b2),
+    d: b3 ? dot(v, b3) : dot(v, [0,0,1,0])
+  }));
+}
+
+// ── fixed "overview" basis – the genome never moves ───────────────────────
+const OB1 = norm([1,  0.4, -0.5,  0.3]);
+const OB2 = gramSchmidt(OB1, norm([0, 0.9,  0.4, -0.2]));
+const OB3 = norm([0.1,-0.3, 0.8,  0.5]);
+const OVERVIEW = project(VERTS, OB1, OB2, OB3);
+
+// ── animation state ────────────────────────────────────────────────────────
+let t = 0;
+let paused = false;
+
+// Phase thresholds (seconds)
+const P = [0, 3, 7, 12, 999];
+const PHASE_TEXT = [
+  'THE GENOME  —  a 4D hypercube: 16 vertices, 32 edges',
+  'THE BASIS PLANE  —  two vectors choose how to measure it',
+  'EXECUTION  =  MEASUREMENT  —  project the genome onto the plane',
+  'ROTATE THE PLANE  —  same genome,  different execution'
+];
+const FORMULA_TEXT = [
+  '',
+  'b₁ and b₂ span the measurement plane',
+  'x = v·b₁     y = v·b₂     for every vertex v',
+  'rotate b₁, b₂  →  different program output'
+];
+
+function getPhase(t) {
+  for (let i = P.length-2; i >= 0; i--) if (t >= P[i]) return i;
+  return 0;
+}
+function pct(t, start, dur) { return Math.max(0, Math.min(1, (t-start)/dur)); }
+function easeIn(x) { return x*x; }
+function easeOut(x) { return 1-(1-x)*(1-x); }
+
+// ── drawing helpers ────────────────────────────────────────────────────────
+function arrowHead(x1,y1,x2,y2,color,size=10) {
+  const a = Math.atan2(y2-y1, x2-x1);
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2-size*Math.cos(a-0.45), y2-size*Math.sin(a-0.45));
+  ctx.lineTo(x2-size*Math.cos(a+0.45), y2-size*Math.sin(a+0.45));
+  ctx.closePath(); ctx.fill();
+}
+
+function drawGlowNode(x, y, r, colorRgb, alpha) {
+  const g = ctx.createRadialGradient(x,y,0, x,y, r);
+  g.addColorStop(0,   `rgba(${colorRgb},${alpha})`);
+  g.addColorStop(0.35,`rgba(${colorRgb},${alpha*0.55})`);
+  g.addColorStop(1,   `rgba(${colorRgb},0)`);
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+}
+
+// ── main render loop ───────────────────────────────────────────────────────
+function draw() {
+  if (!paused) t += 1/60;
+  requestAnimationFrame(draw);
+
+  const phase = getPhase(t);
+  document.getElementById('phase-label').textContent = PHASE_TEXT[phase];
+  document.getElementById('formula').textContent   = FORMULA_TEXT[phase];
+
+  // Fade trail
+  ctx.fillStyle = 'rgba(0,0,0,0.18)';
+  ctx.fillRect(0,0,W,H);
+
+  const cx = W/2, cy = H/2;
+  const sc = Math.min(W,H) * 0.21;
+
+  // ── [1] GENOME (always visible, never rotates) ────────────────────────
+  const gAlpha = easeOut(pct(t, 0, 1.2));
+  const sortedG = OVERVIEW.map((p,i)=>({...p,i})).sort((a,b)=>a.d-b.d);
+
+  // edges
+  for (const [a,b] of EDGES) {
+    const pa=OVERVIEW[a], pb=OVERVIEW[b];
+    const depth = (pa.d+pb.d)/2;
+    const al = gAlpha * (0.12 + 0.28*(depth+1.5)/3);
+    ctx.save();
+    ctx.globalAlpha = al;
+    ctx.strokeStyle = '#6699ff';
+    ctx.lineWidth = 0.9;
+    ctx.beginPath();
+    ctx.moveTo(cx+pa.x*sc, cy-pa.y*sc);
+    ctx.lineTo(cx+pb.x*sc, cy-pb.y*sc);
+    ctx.stroke();
+    ctx.restore();
+  }
+  // nodes
+  for (const sv of sortedG) {
+    const depth01 = (sv.d+1.5)/3;
+    const r = (5+depth01*10)*sc/200;
+    const al = gAlpha*(0.5+0.5*depth01);
+    drawGlowNode(cx+sv.x*sc, cy-sv.y*sc, r*28, '100,160,255', al);
+  }
+
+  // Label in phase 0
+  if (phase === 0) {
+    const lal = easeOut(pct(t,0.5,1.0));
+    ctx.save(); ctx.globalAlpha=lal*0.6;
+    ctx.fillStyle='#6699ff'; ctx.textAlign='center'; ctx.font='11px monospace';
+    ctx.fillText('4D HYPERCUBE  (the genome — fixed in place)', cx, cy+sc*1.55);
+    ctx.restore();
+  }
+
+  // ── [2] BASIS VECTORS (phase >= 1) ────────────────────────────────────
+  if (phase >= 1) {
+    const basisIn = easeOut(pct(t, P[1], 1.5));
+
+    // In phase 3, basis rotates
+    let bAngle = 0;
+    if (phase >= 3) bAngle = (t-P[3]) * 0.5;
+
+    const b1 = norm([Math.cos(bAngle), 0.5+0.2*Math.sin(bAngle*0.7), Math.sin(bAngle)*0.4, Math.sin(bAngle)]);
+    const b2raw = norm([0.1, Math.cos(bAngle*0.6+1.0), Math.sin(bAngle*0.6+1.0)*0.6, 0.4]);
+    const b2 = gramSchmidt(b1, b2raw);
+
+    // Project using current basis
+    const measuredPts = project(VERTS, b1, b2, OB3);
+
+    const vLen = sc * 0.85;
+    const b1sx = cx + b1[0]*vLen, b1sy = cy - b1[1]*vLen;
+    const b2sx = cx + b2[0]*vLen, b2sy = cy - b2[1]*vLen;
+
+    // Basis plane parallelogram
+    ctx.save();
+    ctx.globalAlpha = basisIn * 0.12;
+    ctx.fillStyle = 'rgba(255,215,0,1)';
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(b1sx, b1sy);
+    ctx.lineTo(b1sx+b2sx-cx, b1sy+b2sy-cy);
+    ctx.lineTo(b2sx, b2sy);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.globalAlpha = basisIn * 0.35;
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([5,5]);
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(b1sx, b1sy);
+    ctx.lineTo(b1sx+b2sx-cx, b1sy+b2sy-cy);
+    ctx.lineTo(b2sx, b2sy);
+    ctx.closePath(); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    // b1 arrow
+    ctx.save(); ctx.globalAlpha = basisIn;
+    ctx.strokeStyle='#ffd700'; ctx.lineWidth=2.5;
+    ctx.shadowColor='#ffd700'; ctx.shadowBlur=8;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(b1sx,b1sy); ctx.stroke();
+    arrowHead(cx,cy,b1sx,b1sy,'#ffd700');
+    ctx.font='bold 15px monospace'; ctx.fillStyle='#ffd700';
+    ctx.fillText('b₁', b1sx+12, b1sy+4);
+    ctx.restore();
+
+    // b2 arrow
+    ctx.save(); ctx.globalAlpha = basisIn;
+    ctx.strokeStyle='#00ffcc'; ctx.lineWidth=2.5;
+    ctx.shadowColor='#00ffcc'; ctx.shadowBlur=8;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(b2sx,b2sy); ctx.stroke();
+    arrowHead(cx,cy,b2sx,b2sy,'#00ffcc');
+    ctx.font='bold 15px monospace'; ctx.fillStyle='#00ffcc';
+    ctx.fillText('b₂', b2sx+12, b2sy+4);
+    ctx.restore();
+
+    // ── [3] PROJECTION (phase >= 2) ─────────────────────────────────────
+    if (phase >= 2) {
+      const projIn = easeOut(pct(t, P[2], 2.0));
+
+      // Output panel position
+      const ox = cx + sc * 1.55, oy = cy;
+      const ops = sc * 0.75;
+
+      // Panel background
+      ctx.save();
+      ctx.globalAlpha = projIn * 0.9;
+      ctx.fillStyle = '#000d1a';
+      ctx.strokeStyle = 'rgba(255,215,0,0.25)';
+      ctx.lineWidth = 1;
+      ctx.fillRect(ox-ops, oy-ops, ops*2, ops*2);
+      ctx.strokeRect(ox-ops, oy-ops, ops*2, ops*2);
+      ctx.fillStyle = 'rgba(255,215,0,0.4)';
+      ctx.font = '10px monospace'; ctx.textAlign='center';
+      ctx.fillText('EXECUTION  OUTPUT', ox, oy-ops-10);
+      ctx.restore();
+
+      // Projection lines (dashed, very faint)
+      ctx.save();
+      ctx.globalAlpha = projIn * 0.08;
+      ctx.strokeStyle='#ffffff'; ctx.lineWidth=0.6;
+      ctx.setLineDash([3,8]);
+      for (let i=0; i<VERTS.length; i++) {
+        const src = OVERVIEW[i];
+        const dst = measuredPts[i];
+        const sx=cx+src.x*sc, sy=cy-src.y*sc;
+        const dx=ox+dst.x*ops, dy=oy-dst.y*ops;
+        ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(dx,dy); ctx.stroke();
+      }
+      ctx.setLineDash([]);
+      ctx.restore();
+
+      // Projected edges
+      ctx.save(); ctx.globalAlpha=projIn*0.45;
+      for (const [a,b] of EDGES) {
+        const pa=measuredPts[a], pb=measuredPts[b];
+        ctx.strokeStyle='rgba(255,200,0,0.35)'; ctx.lineWidth=0.9;
+        ctx.beginPath();
+        ctx.moveTo(ox+pa.x*ops, oy-pa.y*ops);
+        ctx.lineTo(ox+pb.x*ops, oy-pb.y*ops);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      // Projected nodes (gold)
+      const sortedP = measuredPts.map((p,i)=>({...p,i})).sort((a,b)=>a.d-b.d);
+      for (const sp of sortedP) {
+        const depth01=(sp.d+1.5)/3;
+        const r = (4+depth01*9)*sc/200;
+        const al = projIn*(0.5+0.5*depth01);
+        drawGlowNode(ox+sp.x*ops, oy-sp.y*ops, r*28, '255,210,0', al);
+      }
+
+      // Pulse ring on output panel edge when rotating (phase 3)
+      if (phase >= 3) {
+        const pulse = 0.5 + 0.5*Math.sin(t*3);
+        ctx.save();
+        ctx.globalAlpha = 0.3*pulse;
+        ctx.strokeStyle='#ffd700'; ctx.lineWidth=2;
+        ctx.strokeRect(ox-ops, oy-ops, ops*2, ops*2);
+        ctx.restore();
+      }
+
+      // "same genome" label in phase 3
+      if (phase >= 3) {
+        const la3=easeOut(pct(t,P[3],1.5));
+        ctx.save(); ctx.globalAlpha=la3*0.7;
+        ctx.fillStyle='rgba(100,160,255,0.8)'; ctx.textAlign='center';
+        ctx.font='11px monospace';
+        ctx.fillText('GENOME  (fixed)', cx, cy+sc*1.6);
+        ctx.fillStyle='rgba(255,215,0,0.8)';
+        ctx.fillText('MEASUREMENT  (rotating)', ox, oy+ops+22);
+        ctx.restore();
+      }
+    }
+  }
+
+  // ── Title watermark ──────────────────────────────────────────────────────
+  ctx.save();
+  ctx.globalAlpha=0.12; ctx.fillStyle='#ffffff';
+  ctx.font=`${Math.min(W,H)*0.022}px monospace`; ctx.textAlign='right';
+  ctx.fillText('shortfactory.shop / GPO', W-20, H-20);
+  ctx.restore();
+}
+
+document.getElementById('restart').addEventListener('click', ()=>{ t=0; });
+draw();
+</script>
+</body>
+</html>

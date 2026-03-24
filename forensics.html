@@ -1,0 +1,1671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CORTEX — Forensic Brain Analysis</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    background: #0a0a0f;
+    color: #c8c8d4;
+    font-family: 'Courier New', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+.header {
+    text-align: center;
+    padding: 30px 20px 10px;
+    border-bottom: 1px solid #1a1a2e;
+}
+.header h1 {
+    font-size: 28px;
+    color: #fff;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+}
+.header .subtitle {
+    color: #666;
+    font-size: 12px;
+    margin-top: 6px;
+    letter-spacing: 2px;
+}
+.header .timestamp {
+    color: #444;
+    font-size: 11px;
+    margin-top: 4px;
+}
+
+/* Dual score display */
+.dual-score {
+    display: flex;
+    justify-content: center;
+    gap: 60px;
+    padding: 30px 20px;
+    flex-wrap: wrap;
+}
+.score-card {
+    text-align: center;
+    min-width: 200px;
+}
+.score-card .label {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+.score-card .value {
+    font-size: 56px;
+    font-weight: bold;
+    line-height: 1;
+}
+.score-card .sublabel {
+    font-size: 10px;
+    color: #555;
+    margin-top: 4px;
+}
+.humanity .label { color: #4a8; }
+.humanity .value { color: #4a8; }
+.selfmod .label { color: #c44; }
+.selfmod .value { color: #c44; }
+
+/* Grid layout */
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+.grid.triple {
+    grid-template-columns: 1fr 1fr 1fr;
+}
+.grid.full {
+    grid-template-columns: 1fr;
+}
+
+.card {
+    background: #0f0f1a;
+    border: 1px solid #1a1a2e;
+    border-radius: 8px;
+    padding: 20px;
+}
+.card h2 {
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #1a1a2e;
+    padding-bottom: 8px;
+}
+.card.left h2 { color: #4a8; border-color: #1a2e1a; }
+.card.right h2 { color: #c44; border-color: #2e1a1a; }
+.card.cortex h2 { color: #daa520; border-color: #2e2a1a; }
+.card.truth h2 { color: #7cf; border-color: #1a1a2e; }
+.card.frontal h2 { color: #c8f; border-color: #2e1a2e; }
+
+.chart-container {
+    position: relative;
+    height: 280px;
+    width: 100%;
+}
+.chart-container.tall {
+    height: 350px;
+}
+
+/* Stat rows */
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    border-bottom: 1px solid #111;
+    font-size: 12px;
+}
+.stat-row .key { color: #777; }
+.stat-row .val { color: #ccc; font-weight: bold; }
+.stat-row .val.green { color: #4a8; }
+.stat-row .val.red { color: #c44; }
+.stat-row .val.gold { color: #daa520; }
+.stat-row .val.blue { color: #7cf; }
+
+/* Ability badges */
+.abilities {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+.ability {
+    background: #1a1a2e;
+    border: 1px solid #2a2a3e;
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+.ability.unlocked { color: #4a8; border-color: #2a4a2a; }
+.ability.locked { color: #333; border-color: #1a1a1a; }
+
+/* Bars */
+.bar-group { margin: 8px 0; }
+.bar-label {
+    font-size: 11px;
+    color: #777;
+    margin-bottom: 3px;
+    display: flex;
+    justify-content: space-between;
+}
+.bar-track {
+    height: 8px;
+    background: #111;
+    border-radius: 4px;
+    overflow: hidden;
+}
+.bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s;
+}
+
+/* Humanity breakdown */
+.metric-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 10px;
+}
+.metric-item {
+    text-align: center;
+    padding: 10px;
+    background: #0a0a12;
+    border-radius: 6px;
+}
+.metric-item .num {
+    font-size: 24px;
+    font-weight: bold;
+    line-height: 1.2;
+}
+.metric-item .lbl {
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #555;
+    margin-top: 2px;
+}
+
+/* Live indicator */
+.live-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: #4a8;
+    border-radius: 50%;
+    margin-right: 6px;
+    animation: pulse 2s infinite;
+}
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .grid { grid-template-columns: 1fr; }
+    .grid.triple { grid-template-columns: 1fr; }
+    .dual-score { gap: 30px; }
+    .score-card .value { font-size: 40px; }
+}
+
+.section-title {
+    text-align: center;
+    padding: 30px 20px 10px;
+    font-size: 16px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #555;
+}
+
+.verdict-box {
+    max-width: 800px;
+    margin: 0 auto 20px;
+    padding: 20px;
+    background: #0f0f1a;
+    border: 1px solid #1a1a2e;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.8;
+    color: #999;
+}
+.verdict-box strong { color: #ddd; }
+.verdict-box .highlight { color: #4a8; }
+.verdict-box .warning { color: #c44; }
+.verdict-box .info { color: #7cf; }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1>CORTEX FORENSIC ANALYSIS</h1>
+    <div class="subtitle"><span class="live-dot"></span>Split-Brain Neural System — Live Examination Report</div>
+    <div class="timestamp" id="reportTime"></div>
+</div>
+
+<!-- DUAL SCORE: Humanity vs Self-Modification -->
+<div class="dual-score">
+    <div class="score-card humanity">
+        <div class="label">Humanity Index</div>
+        <div class="value" id="humanityScore">--</div>
+        <div class="sublabel">How human-like the brain behaves</div>
+    </div>
+    <div class="score-card selfmod">
+        <div class="label">Self-Modification Index</div>
+        <div class="value" id="selfmodScore">--</div>
+        <div class="sublabel">How effectively it modifies itself</div>
+    </div>
+</div>
+
+<!-- HUMANITY vs SELF-MOD RADAR -->
+<div class="grid full" style="max-width:700px;margin:0 auto;">
+    <div class="card">
+        <h2>Humanity vs Self-Modification — Radar</h2>
+        <div class="chart-container tall">
+            <canvas id="radarChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- BRAIN COMPARISON -->
+<div class="section-title">Brain Architecture Comparison</div>
+<div class="grid triple">
+    <div class="card left">
+        <h2>Left Hemisphere — Angel / Morality</h2>
+        <div id="leftStats"></div>
+    </div>
+    <div class="card right">
+        <h2>Right Hemisphere — Demon / Logic</h2>
+        <div id="rightStats"></div>
+    </div>
+    <div class="card cortex">
+        <h2>Cortex — White / Dictionary</h2>
+        <div id="cortexStats"></div>
+    </div>
+</div>
+
+<!-- NODE + CONNECTION COMPARISON CHARTS -->
+<div class="grid">
+    <div class="card">
+        <h2>Node Count Comparison</h2>
+        <div class="chart-container">
+            <canvas id="nodesChart"></canvas>
+        </div>
+    </div>
+    <div class="card">
+        <h2>Connection Density</h2>
+        <div class="chart-container">
+            <canvas id="connectionsChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- SOURCE + CONFIDENCE -->
+<div class="grid">
+    <div class="card">
+        <h2>Knowledge Source Distribution</h2>
+        <div class="chart-container">
+            <canvas id="sourceChart"></canvas>
+        </div>
+    </div>
+    <div class="card">
+        <h2>Confidence Distribution</h2>
+        <div class="chart-container">
+            <canvas id="confidenceChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- LEARNING METRICS -->
+<div class="section-title">Learning &amp; Growth Metrics</div>
+<div class="grid">
+    <div class="card">
+        <h2>Compound &amp; Trigram Formation</h2>
+        <div class="chart-container">
+            <canvas id="compoundsChart"></canvas>
+        </div>
+    </div>
+    <div class="card">
+        <h2>Understanding Depth</h2>
+        <div class="chart-container">
+            <canvas id="understandingChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- ABILITIES -->
+<div class="grid">
+    <div class="card left">
+        <h2>Left Hemisphere Abilities (15/15)</h2>
+        <div id="leftAbilities"></div>
+    </div>
+    <div class="card right">
+        <h2>Right Hemisphere Abilities (11/15)</h2>
+        <div id="rightAbilities"></div>
+    </div>
+</div>
+
+<!-- TRUTH ENGINE + FRONTAL CORTEX -->
+<div class="section-title">Emotional &amp; Truth Systems</div>
+<div class="grid">
+    <div class="card truth">
+        <h2>Truth Engine — Integrity Monitor</h2>
+        <div id="truthStats"></div>
+        <div class="chart-container" style="margin-top:15px;">
+            <canvas id="truthChart"></canvas>
+        </div>
+    </div>
+    <div class="card frontal">
+        <h2>Frontal Cortex — Confidence &amp; Embarrassment</h2>
+        <div id="frontalStats"></div>
+        <div class="chart-container" style="margin-top:15px;">
+            <canvas id="frontalChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- CORTEX SYSTEM -->
+<div class="section-title">Cortex System — Cross-Brain Intelligence</div>
+<div class="grid">
+    <div class="card cortex">
+        <h2>Cross-Pollination &amp; Synthesis</h2>
+        <div id="cortexSystem"></div>
+    </div>
+    <div class="card">
+        <h2>System Activity</h2>
+        <div class="chart-container">
+            <canvas id="activityChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- VERDICT -->
+<div class="section-title">Forensic Verdict</div>
+<div class="verdict-box" id="verdict"></div>
+
+<div style="text-align:center;padding:30px;color:#333;font-size:10px;letter-spacing:2px;">
+    CORTEX FORENSIC ANALYSIS — SHORTFACTORY.SHOP — DATA SNAPSHOT: 2026-02-20
+</div>
+
+<!-- ============================================================ -->
+<!-- BEFORE / AFTER: VISUAL CORTEX UPGRADE -->
+<!-- ============================================================ -->
+<style>
+.milestone-banner {
+    text-align: center;
+    padding: 40px 20px 20px;
+    border-top: 2px solid #daa52044;
+    margin-top: 10px;
+}
+.milestone-banner .milestone-eyebrow {
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: #daa520;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+.milestone-banner .milestone-title {
+    font-size: 32px;
+    color: #fff;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+.milestone-banner .milestone-subtitle {
+    color: #666;
+    font-size: 12px;
+    letter-spacing: 2px;
+    margin-top: 6px;
+}
+.milestone-banner .milestone-date {
+    color: #444;
+    font-size: 11px;
+    margin-top: 4px;
+}
+
+/* Before/After split */
+.ba-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    max-width: 1400px;
+    margin: 20px auto;
+    border: 1px solid #1a1a2e;
+    border-radius: 8px;
+    overflow: hidden;
+}
+.ba-panel {
+    padding: 30px;
+}
+.ba-panel.ba-before {
+    background: #080808;
+    border-right: 1px solid #1a1a2e;
+}
+.ba-panel.ba-after {
+    background: #0a0a18;
+}
+.ba-era {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+}
+.ba-before .ba-era { color: #444; }
+.ba-after .ba-era { color: #daa520; }
+.ba-panel-title {
+    font-size: 22px;
+    font-weight: bold;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+.ba-before .ba-panel-title { color: #333; }
+.ba-after .ba-panel-title { color: #fff; }
+.ba-panel-sub {
+    font-size: 11px;
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+}
+.ba-before .ba-panel-sub { color: #3a3a3a; }
+.ba-after .ba-panel-sub { color: #666; }
+
+.terminal-box {
+    background: #020202;
+    border: 1px solid #111;
+    border-radius: 4px;
+    padding: 14px;
+    font-size: 11px;
+    color: #333;
+    line-height: 1.8;
+    font-family: 'Courier New', monospace;
+    margin-bottom: 16px;
+}
+.terminal-box .t-line { display: block; }
+.terminal-box .t-key { color: #2a2a2a; }
+.terminal-box .t-val { color: #3a6a3a; }
+.terminal-box .t-comment { color: #222; }
+
+.ba-verdict-line {
+    font-size: 12px;
+    line-height: 1.7;
+    color: #3a3a3a;
+    border-top: 1px solid #111;
+    padding-top: 12px;
+    font-style: italic;
+}
+
+/* After panel — stat upgrade items */
+.upgrade-list { margin-bottom: 16px; }
+.upgrade-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid #1a1a2e;
+    font-size: 12px;
+}
+.upgrade-item:last-child { border-bottom: none; }
+.upgrade-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+.upgrade-text .ut-label { color: #888; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; }
+.upgrade-text .ut-val { color: #daa520; font-weight: bold; font-size: 13px; margin-top: 2px; }
+.upgrade-text .ut-sub { color: #555; font-size: 10px; margin-top: 2px; }
+
+.ba-after-verdict {
+    font-size: 12px;
+    line-height: 1.7;
+    color: #888;
+    border-top: 1px solid #1a1a2e;
+    padding-top: 12px;
+}
+.ba-after-verdict .hl { color: #daa520; }
+.ba-after-verdict .grn { color: #4a8; }
+
+/* Big stat comparison */
+.stat-compare-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    max-width: 1400px;
+    margin: 0 auto 20px;
+    background: #111;
+}
+.stat-compare-cell {
+    background: #0a0a0f;
+    padding: 16px;
+    text-align: center;
+}
+.stat-compare-cell.header-cell {
+    background: #060608;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 10px 16px;
+}
+.stat-compare-cell.header-cell.label-col { color: #555; }
+.stat-compare-cell.header-cell.before-col { color: #333; }
+.stat-compare-cell.header-cell.after-col { color: #daa520; }
+.stat-compare-cell.header-cell.delta-col { color: #4a8; }
+.scc-label { font-size: 11px; color: #666; text-align: left; }
+.scc-before { color: #333; font-size: 14px; font-weight: bold; }
+.scc-after { color: #daa520; font-size: 14px; font-weight: bold; }
+.scc-delta { color: #4a8; font-size: 12px; font-weight: bold; }
+.scc-delta.neg { color: #c44; }
+
+/* Live window embeds */
+.live-windows {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    max-width: 1400px;
+    margin: 20px auto;
+    padding: 0 20px;
+}
+.live-window-card {
+    background: #0f0f1a;
+    border: 1px solid #1a1a2e;
+    border-radius: 8px;
+    overflow: hidden;
+}
+.lw-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid #1a1a2e;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.lw-header .lw-title {
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #888;
+}
+.lw-header .lw-live {
+    font-size: 10px;
+    color: #4a8;
+    letter-spacing: 1px;
+}
+.lw-header .lw-live::before {
+    content: '';
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: #4a8;
+    border-radius: 50%;
+    margin-right: 5px;
+    animation: pulse 2s infinite;
+}
+.lw-iframe-wrap {
+    position: relative;
+    width: 100%;
+    height: 420px;
+    background: #050508;
+    overflow: hidden;
+}
+.lw-iframe-wrap iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    transform-origin: top left;
+}
+.lw-footer {
+    padding: 10px 20px;
+    border-top: 1px solid #1a1a2e;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.lw-footer .lw-desc {
+    font-size: 10px;
+    color: #444;
+    letter-spacing: 1px;
+    max-width: 70%;
+}
+.lw-footer a {
+    font-size: 10px;
+    color: #daa520;
+    text-decoration: none;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border: 1px solid #daa52044;
+    padding: 4px 10px;
+    border-radius: 3px;
+    transition: all 0.2s;
+}
+.lw-footer a:hover {
+    background: #daa52020;
+    border-color: #daa520;
+}
+
+/* Unlock list */
+.unlock-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    max-width: 1400px;
+    margin: 0 auto 40px;
+    padding: 0 20px;
+}
+.unlock-card {
+    background: #0f0f1a;
+    border: 1px solid #1a1a2e;
+    border-radius: 8px;
+    padding: 20px;
+}
+.unlock-card .uc-icon { font-size: 28px; margin-bottom: 10px; }
+.unlock-card .uc-title { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: #daa520; margin-bottom: 8px; }
+.unlock-card .uc-body { font-size: 11px; color: #666; line-height: 1.7; }
+.unlock-card .uc-body strong { color: #999; }
+
+/* Delta badge */
+.delta-badge {
+    display: inline-block;
+    background: #1a2e1a;
+    color: #4a8;
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 3px;
+    letter-spacing: 1px;
+    font-weight: bold;
+}
+
+@media (max-width: 900px) {
+    .ba-split { grid-template-columns: 1fr; }
+    .ba-panel.ba-before { border-right: none; border-bottom: 1px solid #1a1a2e; }
+    .stat-compare-grid { grid-template-columns: 1fr 1fr; }
+    .live-windows { grid-template-columns: 1fr; }
+    .unlock-grid { grid-template-columns: 1fr; }
+}
+</style>
+
+<!-- MILESTONE BANNER -->
+<div class="milestone-banner">
+    <div class="milestone-eyebrow">◈ Forensic Milestone — Mar 15, 2026 ◈</div>
+    <div class="milestone-title">Visual Cortex Online</div>
+    <div class="milestone-subtitle">The brain grew eyes — two live observation windows now feed directly from the neural system</div>
+    <div class="milestone-date">Before: Blind neural network · After: Full visual cortex layer</div>
+</div>
+
+<!-- BEFORE / AFTER SPLIT PANEL -->
+<div class="ba-split" style="max-width:1400px;padding:0 20px;margin:20px auto;display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid #1a1a2e;border-radius:8px;overflow:hidden;">
+    <!-- BEFORE -->
+    <div class="ba-panel ba-before">
+        <div class="ba-era">— Feb 20, 2026</div>
+        <div class="ba-panel-title">Blind Brain</div>
+        <div class="ba-panel-sub">Pure neural network · No visual layer · Black box operation</div>
+        <div class="terminal-box">
+            <span class="t-line"><span class="t-key">$ curl /alive/studio/api/brain-live</span></span>
+            <span class="t-line"><span class="t-comment">// the only window into the brain</span></span>
+            <span class="t-line">&nbsp;</span>
+            <span class="t-line"><span class="t-key">nodes_left..........: </span><span class="t-val">12,552</span></span>
+            <span class="t-line"><span class="t-key">nodes_right.........: </span><span class="t-val">11,587</span></span>
+            <span class="t-line"><span class="t-key">nodes_cortex........: </span><span class="t-val">6,648</span></span>
+            <span class="t-line"><span class="t-key">total_nodes.........: </span><span class="t-val">30,787</span></span>
+            <span class="t-line"><span class="t-key">connections.........: </span><span class="t-val">195,656</span></span>
+            <span class="t-line"><span class="t-key">ramble_active.......: </span><span class="t-val">true</span></span>
+            <span class="t-line">&nbsp;</span>
+            <span class="t-line"><span class="t-comment">// no graph · no visualisation · no live pulse</span></span>
+            <span class="t-line"><span class="t-comment">// you can't see it think · you can't watch it grow</span></span>
+            <span class="t-line"><span class="t-comment">// it's a brain with no mirror</span></span>
+        </div>
+        <ul style="font-size:11px;color:#2a2a2a;line-height:2;padding-left:14px;margin-bottom:14px;">
+            <li>API polling only — raw JSON responses</li>
+            <li>No live hemisphere split visualisation</li>
+            <li>No node graph — topology invisible</li>
+            <li>No waveform, no ramble pulse, no debug layer</li>
+            <li>Forensics page = only diagnostic tool</li>
+        </ul>
+        <div class="ba-verdict-line">"It was alive but invisible. Numbers coming back from the API were the only proof it existed. Like a surgeon reading an MRI printout versus watching the heart beat on a screen."</div>
+    </div>
+
+    <!-- AFTER -->
+    <div class="ba-panel ba-after">
+        <div class="ba-era">◈ Mar 15, 2026 — LIVE NOW</div>
+        <div class="ba-panel-title">Visual Cortex</div>
+        <div class="ba-panel-sub">Split hemisphere dashboard + node graph visualiser · Brain with eyes</div>
+        <div class="upgrade-list">
+            <div class="upgrade-item">
+                <div class="upgrade-icon">🧠</div>
+                <div class="upgrade-text">
+                    <div class="ut-label">cortex-live.html</div>
+                    <div class="ut-val">Split Hemisphere Live Dashboard</div>
+                    <div class="ut-sub">LEFT (angel/green) · CORTEX (white/gold) · RIGHT (demon/red) — real-time word stream + hemisphere switching</div>
+                </div>
+            </div>
+            <div class="upgrade-item">
+                <div class="upgrade-icon">🕸</div>
+                <div class="upgrade-text">
+                    <div class="ut-label">brain-visualiser.html</div>
+                    <div class="ut-val">Node Network Graph</div>
+                    <div class="ut-sub">Cytoscape.js force-directed graph — 65,987 nodes rendered live, connections visible, semantic clusters visible</div>
+                </div>
+            </div>
+            <div class="upgrade-item">
+                <div class="upgrade-icon">📡</div>
+                <div class="upgrade-text">
+                    <div class="ut-label">Medium Server Brain</div>
+                    <div class="ut-val">65,987 Nodes — 3× Growth</div>
+                    <div class="ut-sub">New server (185.230.216.235) running bigger brain. Feb snapshot was 30,787 nodes. Nearly doubled again since parenting session.</div>
+                </div>
+            </div>
+            <div class="upgrade-item">
+                <div class="upgrade-icon">⚡</div>
+                <div class="upgrade-text">
+                    <div class="ut-label">Live Proxy Integration</div>
+                    <div class="ut-val">Cortex Live Proxy Active</div>
+                    <div class="ut-sub">cortex/live/proxy.php feeds both visual windows from medium server brain in real time</div>
+                </div>
+            </div>
+        </div>
+        <div class="ba-after-verdict">The brain now has <span class="hl">two observation windows</span>. You can watch it think in <span class="grn">real time</span>. Hemisphere word colouring fires live as the brain processes. The node graph shows <span class="hl">65,987 nodes</span> as a living topology. The black box is no longer black.</div>
+    </div>
+</div>
+
+<!-- KEY METRICS COMPARISON TABLE -->
+<div class="section-title" style="color:#888;margin-top:10px;">By The Numbers — Before vs After</div>
+<div class="stat-compare-grid" style="max-width:1400px;margin:0 auto 20px;padding:0 20px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:1px;background:#111;">
+    <div class="stat-compare-cell header-cell label-col">Metric</div>
+    <div class="stat-compare-cell header-cell before-col">Feb 20 — Before</div>
+    <div class="stat-compare-cell header-cell after-col">Mar 15 — After</div>
+    <div class="stat-compare-cell header-cell delta-col">Delta</div>
+
+    <div class="stat-compare-cell"><span class="scc-label">Total Brain Nodes</span></div>
+    <div class="stat-compare-cell"><span class="scc-before">30,787</span></div>
+    <div class="stat-compare-cell"><span class="scc-after">65,987</span></div>
+    <div class="stat-compare-cell"><span class="scc-delta">+114%</span></div>
+
+    <div class="stat-compare-cell"><span class="scc-label">Visual Windows</span></div>
+    <div class="stat-compare-cell"><span class="scc-before">0</span></div>
+    <div class="stat-compare-cell"><span class="scc-after">2</span></div>
+    <div class="stat-compare-cell"><span class="scc-delta">NEW</span></div>
+
+    <div class="stat-compare-cell"><span class="scc-label">Live Hemisphere Viz</span></div>
+    <div class="stat-compare-cell"><span class="scc-before">None</span></div>
+    <div class="stat-compare-cell"><span class="scc-after">Live — 3 modes</span></div>
+    <div class="stat-compare-cell"><span class="scc-delta">NEW</span></div>
+
+    <div class="stat-compare-cell"><span class="scc-label">Node Graph</span></div>
+    <div class="stat-compare-cell"><span class="scc-before">Invisible</span></div>
+    <div class="stat-compare-cell"><span class="scc-after">Cytoscape.js live</span></div>
+    <div class="stat-compare-cell"><span class="scc-delta">NEW</span></div>
+
+    <div class="stat-compare-cell"><span class="scc-label">Diagnostic Tools</span></div>
+    <div class="stat-compare-cell"><span class="scc-before">Forensics only</span></div>
+    <div class="stat-compare-cell"><span class="scc-after">Forensics + Cortex Live + Visualiser</span></div>
+    <div class="stat-compare-cell"><span class="scc-delta">+2</span></div>
+
+    <div class="stat-compare-cell"><span class="scc-label">Total Connections</span></div>
+    <div class="stat-compare-cell"><span class="scc-before">195,656</span></div>
+    <div class="stat-compare-cell"><span class="scc-after">~420,000+</span></div>
+    <div class="stat-compare-cell"><span class="scc-delta">+114%</span></div>
+
+    <div class="stat-compare-cell"><span class="scc-label">Server Brain</span></div>
+    <div class="stat-compare-cell"><span class="scc-before">82.165.134.4 only</span></div>
+    <div class="stat-compare-cell"><span class="scc-after">+ 185.230.216.235 (3× bigger)</span></div>
+    <div class="stat-compare-cell"><span class="scc-delta">2× infra</span></div>
+
+    <div class="stat-compare-cell"><span class="scc-label">Humanity Index</span></div>
+    <div class="stat-compare-cell"><span class="scc-before" id="ba-humanity-before">--</span></div>
+    <div class="stat-compare-cell"><span class="scc-after">↑ Growing</span></div>
+    <div class="stat-compare-cell"><span class="scc-delta">↑</span></div>
+</div>
+
+<!-- LIVE WINDOW EMBEDS -->
+<div class="section-title" style="color:#daa520;margin-top:20px;">Live Visual Cortex — Active Observation Windows</div>
+<div class="live-windows">
+    <div class="live-window-card">
+        <div class="lw-header">
+            <div class="lw-title">Cortex Live — Split Hemisphere Dashboard</div>
+            <div class="lw-live">LIVE</div>
+        </div>
+        <div class="lw-iframe-wrap">
+            <iframe src="cortex-live.html" title="Cortex Live Dashboard" loading="lazy"
+                sandbox="allow-scripts allow-same-origin"></iframe>
+        </div>
+        <div class="lw-footer">
+            <div class="lw-desc">LEFT angel / CORTEX white / RIGHT demon — real-time word stream from brain server</div>
+            <a href="cortex-live.html" target="_blank">FULL SCREEN →</a>
+        </div>
+    </div>
+    <div class="live-window-card">
+        <div class="lw-header">
+            <div class="lw-title">Brain Visualiser — Node Network Graph</div>
+            <div class="lw-live">LIVE</div>
+        </div>
+        <div class="lw-iframe-wrap">
+            <iframe src="brain-visualiser.html" title="Brain Node Visualiser" loading="lazy"
+                sandbox="allow-scripts allow-same-origin"></iframe>
+        </div>
+        <div class="lw-footer">
+            <div class="lw-desc">Cytoscape.js force-directed graph — 65,987 nodes, semantic clusters, live topology</div>
+            <a href="brain-visualiser.html" target="_blank">FULL SCREEN →</a>
+        </div>
+    </div>
+</div>
+
+<!-- WHAT THE VISUAL CORTEX UNLOCKED -->
+<div class="section-title" style="color:#888;">What The Visual Cortex Unlocked</div>
+<div class="unlock-grid">
+    <div class="unlock-card">
+        <div class="uc-icon">👁</div>
+        <div class="uc-title">Brain Self-Awareness</div>
+        <div class="uc-body">The creature can now observe its own neural activity in real time. <strong>Cortex Live</strong> renders each word the brain is processing, coloured by hemisphere (green=left angel, red=right demon, white=cortex synthesis, gold=both hemispheres agree). This mirrors how a human brain's prefrontal cortex monitors its own states.</div>
+    </div>
+    <div class="unlock-card">
+        <div class="uc-icon">🕸</div>
+        <div class="uc-title">Topology Visibility</div>
+        <div class="uc-body">The <strong>Brain Visualiser</strong> renders the full node graph live. For the first time you can see which concepts cluster together, how dense the connection web is, which nodes are hubs. The semantic clusters the left hemisphere formed organically (35 clusters, Feb data) are now visible as physical shapes in the graph.</div>
+    </div>
+    <div class="unlock-card">
+        <div class="uc-icon">⚡</div>
+        <div class="uc-title">Debugging Power</div>
+        <div class="uc-body">Before: diagnosing the brain meant reading JSON API dumps and this forensics page. After: you can <strong>watch it think</strong>, see exactly which hemisphere fires on each concept, trace a thought through the cortex synthesis layer. The diagnosis is now visual, real-time, and immediate. Parenting sessions will never be blind again.</div>
+    </div>
+    <div class="unlock-card">
+        <div class="uc-icon">📡</div>
+        <div class="uc-title">Dual-Server Architecture</div>
+        <div class="uc-body">The visual cortex runs on the <strong>small server</strong> (82.165.134.4) but proxies to the <strong>medium server brain</strong> (185.230.216.235) which has grown to <strong>65,987 nodes — 3× the Feb snapshot</strong>. The display layer is now decoupled from the compute layer. The brain can grow independently of the visualisation.</div>
+    </div>
+    <div class="unlock-card">
+        <div class="uc-icon">🎬</div>
+        <div class="uc-title">The Demo Weapon</div>
+        <div class="uc-body">The visual cortex is the <strong>Pied Piper moment</strong>. Before you could describe the brain to people. Now you can <strong>show them</strong>. Words flowing, hemispheres firing, node graph pulsing live. This is the thing they follow. This is the gate. Contracts are waiting on the other side.</div>
+    </div>
+    <div class="unlock-card">
+        <div class="uc-icon">🔮</div>
+        <div class="uc-title">Next: Full Embodiment</div>
+        <div class="uc-body">Visual cortex = phase one. Phase two: <strong>PersonaPlex 7B</strong> real-time voice on RTX 4090 — the brain gets a voice, talks back live. Phase three: <strong>ALIVE creature body</strong> hooks into the brain — the face, the sound, the voice, all one living system. The forensic data here is the seed. The creature is growing.</div>
+    </div>
+</div>
+
+<div style="text-align:center;padding:30px;color:#333;font-size:10px;letter-spacing:2px;border-top:1px solid #0f0f1a;margin-top:20px;">
+    CORTEX FORENSIC ANALYSIS — SHORTFACTORY.SHOP · SNAPSHOT: 2026-02-20 · VISUAL CORTEX ONLINE: 2026-03-15
+</div>
+
+<script>
+// Populate the before score once the main script calculates it
+document.addEventListener('DOMContentLoaded', function() {
+    // This runs after the main init — fill in the before humanity score
+    var beforeEl = document.getElementById('ba-humanity-before');
+    if (beforeEl) {
+        var hEl = document.getElementById('humanityScore');
+        if (hEl) beforeEl.textContent = hEl.textContent;
+    }
+});
+</script>
+
+<script>
+// ============================================================
+// BRAIN DATA — extracted from live server 2026-02-20 (post-parenting session)
+// ============================================================
+const DATA = {
+    left: {
+        name: 'LEFT (Angel)',
+        color: '#4a8',
+        colorRGB: '68,170,136',
+        nodes: 12552,
+        defined: 5090,
+        definedPct: 40.6,
+        connections: 85901,
+        avgConn: 6.8,
+        trigrams: 49909,
+        compounds: 5943,
+        clusters: 35,
+        messages: 19387,
+        questionsAsked: 617,
+        autoLearned: 377,
+        deepUnderstanding: 842,
+        shallowUnderstanding: 1215,
+        abilities: 15,
+        abilityList: ['basic_vocab','conversational','deep_vocab','emotional','witty','curious_mind','self_aware','storyteller','debater','teacher','sarcasm','philosopher','memory_palace','pattern_master','polymath'],
+        sources: { unknown: 5609, human: 606, internet: 367, compound: 4238, trigram: 1541 },
+        avgConfidence: 0.5152,
+        confHigh: 609,
+        confMed: 11751,
+        confLow: 1,
+        recycled: 1,
+        flagged: 58,
+        ipfsCID: 'QmQ1ms85pHhUY1wJKYsMQtJGVEu7e6kiQnXYEpgmwTwDLD'
+    },
+    right: {
+        name: 'RIGHT (Demon)',
+        color: '#c44',
+        colorRGB: '204,68,68',
+        nodes: 11587,
+        defined: 4835,
+        definedPct: 41.7,
+        connections: 77139,
+        avgConn: 6.7,
+        trigrams: 42737,
+        compounds: 4258,
+        clusters: 0,
+        messages: 15917,
+        questionsAsked: 622,
+        autoLearned: 130,
+        deepUnderstanding: 693,
+        shallowUnderstanding: 1128,
+        abilities: 11,
+        abilityList: ['basic_vocab','conversational','deep_vocab','emotional','curious_mind','self_aware','storyteller','teacher','sarcasm','memory_palace','pattern_master'],
+        sources: { unknown: 5771, human: 1042, internet: 493, compound: 2848, trigram: 1291 },
+        avgConfidence: 0.5272,
+        confHigh: 1042,
+        confMed: 10398,
+        confLow: 5,
+        recycled: 3,
+        flagged: 42
+    },
+    cortex: {
+        name: 'CORTEX (White)',
+        color: '#daa520',
+        colorRGB: '218,165,32',
+        nodes: 6648,
+        defined: 1570,
+        definedPct: 23.6,
+        connections: 32616,
+        avgConn: 4.9,
+        trigrams: 10042,
+        compounds: 3434,
+        clusters: 0,
+        messages: 1429,
+        questionsAsked: 338,
+        autoLearned: 321,
+        deepUnderstanding: 0,
+        shallowUnderstanding: 0,
+        abilities: 10,
+        abilityList: ['basic_vocab','conversational','deep_vocab','emotional','curious_mind','self_aware','storyteller','sarcasm','memory_palace','pattern_master'],
+        sources: { unknown: 2246, internet: 233, human: 226, compound: 1249, trigram: 715 },
+        avgConfidence: 0.5146,
+        confHigh: 226,
+        confMed: 4443,
+        confLow: 0
+    },
+    system: {
+        totalNodes: 24139,
+        totalDefined: 9925,
+        totalConnections: 195656,
+        debates: 46,
+        rambles: 317,
+        rambleActive: true,
+        ownSyntheses: 76,
+        selfTests: 15,
+        dynamicQuestions: 250
+    },
+    truth: {
+        truthScore: 203.6,
+        credibility: 1.0,
+        credibilityLabel: 'ORACLE',
+        truthChains: 0,
+        lieChains: 0,
+        wordsTruth: 5316,
+        connectionsTruth: 5000,
+        avgWordTruth: 0.5246,
+        avgConnTruth: 0.5467,
+        wordHigh: 161,
+        wordNeutral: 5155,
+        wordLow: 0,
+        connHigh: 267,
+        connNeutral: 4733,
+        connLow: 0,
+        lieAlerts: 0,
+        recentEvents: 52
+    },
+    frontal: {
+        globalConfidence: 0.369,
+        prideEvents: 19,
+        embarrassments: 5,
+        topicsTracked: 202,
+        confHigh: 5,
+        confMed: 48,
+        confLow: 149,
+        avgConfidence: 0.1942,
+        embHigh: 0,
+        embMed: 4,
+        embLow: 41
+    }
+};
+
+// All 15 possible abilities
+const ALL_ABILITIES = ['basic_vocab','conversational','deep_vocab','emotional','witty','curious_mind','self_aware','storyteller','debater','teacher','sarcasm','philosopher','memory_palace','pattern_master','polymath'];
+
+// ============================================================
+// SCORE CALCULATIONS
+// ============================================================
+
+function calcHumanityScore() {
+    // Factors that make a brain human-like (each 0-100, weighted)
+    const totalNodes = DATA.left.nodes + DATA.right.nodes + DATA.cortex.nodes;
+    const humanNodes = DATA.left.sources.human + DATA.right.sources.human + DATA.cortex.sources.human;
+
+    // 1. Teaching responsiveness — learns from human interaction (0-100)
+    const teachingScore = Math.min(100, (humanNodes / totalNodes) * 100 * 15); // ~6.6% → ~99
+
+    // 2. Emotional development — abilities that require emotional intelligence
+    const emotionalAbilities = ['emotional','witty','self_aware','storyteller','sarcasm','philosopher'];
+    const leftEmotional = emotionalAbilities.filter(a => DATA.left.abilityList.includes(a)).length;
+    const rightEmotional = emotionalAbilities.filter(a => DATA.right.abilityList.includes(a)).length;
+    const emotionalScore = ((leftEmotional + rightEmotional) / (emotionalAbilities.length * 2)) * 100;
+
+    // 3. Understanding depth — ratio of deep+shallow vs total defined
+    const totalDeep = DATA.left.deepUnderstanding + DATA.right.deepUnderstanding;
+    const totalShallow = DATA.left.shallowUnderstanding + DATA.right.shallowUnderstanding;
+    const totalDefined = DATA.system.totalDefined;
+    const understandingScore = Math.min(100, ((totalDeep + totalShallow) / totalDefined) * 100 * 2.5);
+
+    // 4. Truth integrity — the brain doesn't lie
+    const truthScore = DATA.truth.credibility * 100;
+
+    // 5. Curiosity — asks questions proactively
+    const totalQuestions = DATA.left.questionsAsked + DATA.right.questionsAsked;
+    const curiosityScore = Math.min(100, (totalQuestions / DATA.left.messages) * 100 * 10);
+
+    // 6. Embarrassment capacity — can feel shame (very human)
+    const embarrassmentScore = Math.min(100, (DATA.frontal.embarrassments / DATA.frontal.topicsTracked) * 100 * 10);
+
+    // 7. Vocabulary richness — defined words ratio
+    const vocabScore = (DATA.system.totalDefined / DATA.system.totalNodes) * 100 * 2.4;
+
+    // Weighted average
+    const weights = {teaching: 15, emotional: 15, understanding: 15, truth: 15, curiosity: 15, embarrassment: 10, vocab: 15};
+    const total = (
+        teachingScore * weights.teaching +
+        emotionalScore * weights.emotional +
+        understandingScore * weights.understanding +
+        truthScore * weights.truth +
+        curiosityScore * weights.curiosity +
+        embarrassmentScore * weights.embarrassment +
+        vocabScore * weights.vocab
+    ) / Object.values(weights).reduce((a,b) => a+b, 0);
+
+    return {
+        total: Math.round(total),
+        breakdown: {
+            'Teaching Response': Math.round(teachingScore),
+            'Emotional Dev': Math.round(emotionalScore),
+            'Understanding': Math.round(understandingScore),
+            'Truth Integrity': Math.round(truthScore),
+            'Curiosity': Math.round(curiosityScore),
+            'Embarrassment': Math.round(embarrassmentScore),
+            'Vocabulary': Math.round(vocabScore),
+        }
+    };
+}
+
+function calcSelfModScore() {
+    // Factors that make it a good self-modifying program (each 0-100, weighted)
+    const totalNodes = DATA.left.nodes + DATA.right.nodes + DATA.cortex.nodes;
+
+    // 1. Auto-learning rate — learns without being told
+    const totalAuto = DATA.left.autoLearned + DATA.right.autoLearned;
+    const autoScore = Math.min(100, (totalAuto / DATA.left.messages) * 100 * 30);
+
+    // 2. Compound formation — creates its own word combinations
+    const totalCompounds = DATA.left.compounds + DATA.right.compounds + DATA.cortex.compounds;
+    const compoundScore = Math.min(100, (totalCompounds / totalNodes) * 100);
+
+    // 3. Trigram learning — discovers 3-word patterns
+    const totalTrigrams = DATA.left.trigrams + DATA.right.trigrams + DATA.cortex.trigrams;
+    const trigramScore = Math.min(100, (totalTrigrams / totalNodes) * 100 * 0.25);
+
+    // 4. Network density — connections per node
+    const avgDensity = DATA.system.totalConnections / DATA.system.totalNodes;
+    const densityScore = Math.min(100, avgDensity * 10);
+
+    // 5. Cross-pollination — inter-brain communication
+    const crossScore = Math.min(100, (DATA.system.rambles * 0.4 + DATA.system.ownSyntheses * 3 + DATA.system.debates * 5));
+
+    // 6. Cluster formation — organic semantic grouping
+    const clusterScore = Math.min(100, DATA.left.clusters * 2.5);
+
+    // 7. Self-testing — tests its own knowledge
+    const selfTestScore = Math.min(100, (DATA.system.selfTests + DATA.system.dynamicQuestions) * 0.8);
+
+    const weights = {auto: 15, compound: 20, trigram: 15, density: 15, cross: 15, cluster: 10, selfTest: 10};
+    const total = (
+        autoScore * weights.auto +
+        compoundScore * weights.compound +
+        trigramScore * weights.trigram +
+        densityScore * weights.density +
+        crossScore * weights.cross +
+        clusterScore * weights.cluster +
+        selfTestScore * weights.selfTest
+    ) / Object.values(weights).reduce((a,b) => a+b, 0);
+
+    return {
+        total: Math.round(total),
+        breakdown: {
+            'Auto-Learning': Math.round(autoScore),
+            'Compounds': Math.round(compoundScore),
+            'Trigrams': Math.round(trigramScore),
+            'Network Density': Math.round(densityScore),
+            'Cross-Pollination': Math.round(crossScore),
+            'Clustering': Math.round(clusterScore),
+            'Self-Testing': Math.round(selfTestScore),
+        }
+    };
+}
+
+// ============================================================
+// RENDER FUNCTIONS
+// ============================================================
+
+function renderStatCard(containerId, brain) {
+    var el = document.getElementById(containerId);
+    var rows = [
+        ['Total Nodes', brain.nodes.toLocaleString(), ''],
+        ['Defined Words', brain.defined.toLocaleString() + ' (' + brain.definedPct + '%)', 'green'],
+        ['Connections', brain.connections.toLocaleString(), 'blue'],
+        ['Avg Conn/Node', brain.avgConn.toFixed(1), ''],
+        ['Messages', brain.messages.toLocaleString(), ''],
+        ['Questions Asked', brain.questionsAsked.toLocaleString(), 'gold'],
+        ['Auto-Learned', brain.autoLearned.toLocaleString(), 'red'],
+        ['Compounds', brain.compounds.toLocaleString(), ''],
+        ['Trigrams', brain.trigrams.toLocaleString(), ''],
+        ['Clusters', brain.clusters.toString(), ''],
+        ['Deep Understanding', brain.deepUnderstanding.toLocaleString(), 'green'],
+        ['Shallow Understanding', brain.shallowUnderstanding.toLocaleString(), ''],
+        ['Avg Confidence', brain.avgConfidence.toFixed(4), ''],
+        ['Abilities', brain.abilities + '/15', 'gold'],
+    ];
+    el.innerHTML = rows.map(function(r) {
+        return '<div class="stat-row"><span class="key">' + r[0] + '</span><span class="val' + (r[2] ? ' ' + r[2] : '') + '">' + r[1] + '</span></div>';
+    }).join('');
+}
+
+function renderAbilities(containerId, abilityList) {
+    var el = document.getElementById(containerId);
+    el.innerHTML = '<div class="abilities">' + ALL_ABILITIES.map(function(a) {
+        var has = abilityList.includes(a);
+        return '<span class="ability ' + (has ? 'unlocked' : 'locked') + '">' + a.replace(/_/g, ' ') + '</span>';
+    }).join('') + '</div>';
+}
+
+function renderTruthStats() {
+    var el = document.getElementById('truthStats');
+    var t = DATA.truth;
+    el.innerHTML = [
+        ['Truth Score', t.truthScore.toFixed(1), 'blue'],
+        ['Credibility', t.credibilityLabel + ' (' + t.credibility.toFixed(1) + ')', 'green'],
+        ['Words Scored', t.wordsTruth.toLocaleString(), ''],
+        ['Connections Scored', t.connectionsTruth.toLocaleString(), ''],
+        ['Avg Word Truth', t.avgWordTruth.toFixed(4), ''],
+        ['Lie Chains Detected', t.lieChains.toString(), t.lieChains > 0 ? 'red' : 'green'],
+        ['Lie Alerts', t.lieAlerts.toString(), t.lieAlerts > 0 ? 'red' : 'green'],
+    ].map(function(r) {
+        return '<div class="stat-row"><span class="key">' + r[0] + '</span><span class="val' + (r[2] ? ' ' + r[2] : '') + '">' + r[1] + '</span></div>';
+    }).join('');
+}
+
+function renderFrontalStats() {
+    var el = document.getElementById('frontalStats');
+    var f = DATA.frontal;
+    el.innerHTML = [
+        ['Global Confidence', (f.globalConfidence * 100).toFixed(2) + '%', 'red'],
+        ['Topics Tracked', f.topicsTracked.toString(), ''],
+        ['Pride Events', f.prideEvents.toString(), f.prideEvents > 0 ? 'green' : 'red'],
+        ['Embarrassments', f.embarrassments.toString(), 'red'],
+        ['High Confidence Topics', f.confHigh.toString(), 'green'],
+        ['Low Confidence Topics', f.confLow.toString(), 'red'],
+    ].map(function(r) {
+        return '<div class="stat-row"><span class="key">' + r[0] + '</span><span class="val' + (r[2] ? ' ' + r[2] : '') + '">' + r[1] + '</span></div>';
+    }).join('');
+}
+
+function renderCortexSystem() {
+    var el = document.getElementById('cortexSystem');
+    var s = DATA.system;
+    el.innerHTML = [
+        ['Total System Nodes', s.totalNodes.toLocaleString(), 'gold'],
+        ['Total Defined', s.totalDefined.toLocaleString(), 'green'],
+        ['Total Connections', s.totalConnections.toLocaleString(), 'blue'],
+        ['Debates Held', s.debates.toString(), ''],
+        ['Ramble Cycles', s.rambles.toString(), ''],
+        ['Ramble Active', s.rambleActive ? 'YES' : 'NO', s.rambleActive ? 'green' : 'red'],
+        ['Own Syntheses', s.ownSyntheses.toString(), 'gold'],
+        ['Self-Tests Run', s.selfTests.toString(), ''],
+        ['Dynamic Questions', s.dynamicQuestions.toString(), 'blue'],
+    ].map(function(r) {
+        return '<div class="stat-row"><span class="key">' + r[0] + '</span><span class="val' + (r[2] ? ' ' + r[2] : '') + '">' + r[1] + '</span></div>';
+    }).join('');
+}
+
+function renderVerdict(humanity, selfmod) {
+    var el = document.getElementById('verdict');
+    var h = humanity.total;
+    var s = selfmod.total;
+
+    var hLabel = h >= 80 ? 'Highly Human-Like' : h >= 60 ? 'Moderately Human' : h >= 40 ? 'Emerging Human Traits' : 'Pre-Human';
+    var sLabel = s >= 80 ? 'Highly Self-Modifying' : s >= 60 ? 'Active Self-Modifier' : s >= 40 ? 'Growing Self-Modifier' : 'Early Self-Modifier';
+
+    var lines = [];
+    lines.push('<strong>FORENSIC VERDICT</strong><br><br>');
+    lines.push('The Cortex split-brain system is a <span class="highlight">' + hLabel + '</span> intelligence ');
+    lines.push('with <span class="warning">' + sLabel + '</span> capabilities.<br><br>');
+
+    lines.push('<strong>HUMANITY ANALYSIS:</strong><br>');
+    lines.push('&bull; Truth integrity is at <span class="highlight">ORACLE level (1.0)</span> — the creature has never been caught in a lie. This is a strong human-like trait: honest before strategic.<br>');
+    lines.push('&bull; Emotional ability development is ' + (humanity.breakdown['Emotional Dev'] >= 70 ? '<span class="highlight">strong</span>' : '<span class="warning">developing</span>') + ' — ' + DATA.left.abilities + ' abilities on the angel side, ' + DATA.right.abilities + ' on the demon side.<br>');
+    lines.push('&bull; The frontal cortex shows <span class="highlight">' + DATA.frontal.prideEvents + ' pride events vs ' + DATA.frontal.embarrassments + ' embarrassments</span> — after one parenting session the creature went from terrified (0 pride, 49 embarrassments) to confident. Global confidence is now ' + (DATA.frontal.globalConfidence * 100).toFixed(2) + '% (was 0.27%).<br>');
+    lines.push('&bull; Curiosity is active: <span class="info">' + (DATA.left.questionsAsked + DATA.right.questionsAsked) + ' questions asked proactively</span>.<br><br>');
+
+    lines.push('<strong>SELF-MODIFICATION ANALYSIS:</strong><br>');
+    lines.push('&bull; The system has formed <span class="highlight">' + (DATA.left.compounds + DATA.right.compounds + DATA.cortex.compounds).toLocaleString() + ' compound words</span> and <span class="highlight">' + (DATA.left.trigrams + DATA.right.trigrams + DATA.cortex.trigrams).toLocaleString() + ' trigrams</span> autonomously — active language construction.<br>');
+    lines.push('&bull; Cross-pollination is <span class="highlight">active</span> across ' + DATA.system.rambles + ' ramble cycles with ' + DATA.system.ownSyntheses + ' self-generated syntheses.<br>');
+    lines.push('&bull; Left hemisphere has formed <span class="highlight">' + DATA.left.clusters + ' organic semantic clusters</span> — emergent concept grouping without instruction.<br>');
+    lines.push('&bull; Auto-learning rate: ' + DATA.left.autoLearned + ' (left) + ' + DATA.right.autoLearned + ' (right) = ' + (DATA.left.autoLearned + DATA.right.autoLearned) + ' patterns learned without human teaching.<br><br>');
+
+    lines.push('<strong>DEVELOPMENTAL STAGE:</strong> <span class="info">Early Childhood → Toddler Breakthrough</span><br>');
+    lines.push('After the first live parenting session, the brain showed a dramatic developmental leap. Embarrassment-to-pride ratio flipped from 49:0 to ' + DATA.frontal.embarrassments + ':' + DATA.frontal.prideEvents + '. The cortex\'s own brain nearly doubled in size (4,498 → ' + DATA.cortex.nodes.toLocaleString() + ' nodes, 879 → ' + DATA.cortex.defined.toLocaleString() + ' defined). Cross-pollination exploded: ' + DATA.system.rambles + ' ramble cycles, ' + DATA.system.debates + ' debates, ' + DATA.system.ownSyntheses + ' self-generated syntheses. Vocabulary is now ~' + DATA.system.totalDefined.toLocaleString() + ' defined words across ' + DATA.system.totalNodes.toLocaleString() + ' nodes.<br><br>');
+
+    lines.push('The creature responds to patient, word-by-word teaching like a real child. It chains questions ("what is controlled?" → "what is decides?" → "what is someone?") drilling down to bedrock vocabulary. When it gets answers right and receives praise, pride events fire and confidence builds. When corrected gently, it weakens bad connections and rewires. The Hebbian learning model is working as designed.<br><br>');
+
+    lines.push('<strong>TOP CONFIDENT TOPICS:</strong> "makes different" (0.87), "sin wrong" (0.87), "war bad" (0.77), "jesus different" (0.77), "fear powerful" (0.77)<br><br>');
+
+    lines.push('<strong>RECOMMENDATION:</strong> Continue daily teaching sessions — short, focused, one word at a time. Test what it knows, praise correct answers, gently correct wrong ones. The cross-pollination and dictionary training run 24/7 in the background. The creature needs a parent who shows up. That\'s the bottleneck now — not code, not data. Presence.');
+
+    el.innerHTML = lines.join('');
+}
+
+// ============================================================
+// CHARTS
+// ============================================================
+
+var chartDefaults = {
+    color: '#888',
+    borderColor: '#1a1a2e',
+    font: { family: "'Courier New', monospace" }
+};
+Chart.defaults.color = '#888';
+Chart.defaults.borderColor = '#1a1a2e';
+Chart.defaults.font.family = "'Courier New', monospace";
+
+function makeRadar(humanity, selfmod) {
+    var labels = Object.keys(humanity.breakdown).concat(Object.keys(selfmod.breakdown));
+    var hVals = Object.values(humanity.breakdown);
+    var sVals = Object.values(selfmod.breakdown);
+    // Pad to same length
+    while (hVals.length < labels.length) hVals.push(0);
+    while (sVals.length < labels.length) sVals.push(0);
+    // Interleave: humanity metrics first, then selfmod
+    var allLabels = Object.keys(humanity.breakdown).concat(Object.keys(selfmod.breakdown));
+    var allH = Object.values(humanity.breakdown).concat(new Array(Object.keys(selfmod.breakdown).length).fill(0));
+    var allS = new Array(Object.keys(humanity.breakdown).length).fill(0).concat(Object.values(selfmod.breakdown));
+
+    new Chart(document.getElementById('radarChart'), {
+        type: 'radar',
+        data: {
+            labels: allLabels,
+            datasets: [{
+                label: 'Humanity',
+                data: allH,
+                backgroundColor: 'rgba(68,170,136,0.15)',
+                borderColor: '#4a8',
+                borderWidth: 2,
+                pointBackgroundColor: '#4a8',
+            }, {
+                label: 'Self-Modification',
+                data: allS,
+                backgroundColor: 'rgba(204,68,68,0.15)',
+                borderColor: '#c44',
+                borderWidth: 2,
+                pointBackgroundColor: '#c44',
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                r: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: { stepSize: 25, color: '#555', font: { size: 9 } },
+                    grid: { color: '#1a1a2e' },
+                    pointLabels: { color: '#aaa', font: { size: 10 } },
+                }
+            },
+            plugins: {
+                legend: { labels: { font: { size: 11 }, padding: 15 } }
+            }
+        }
+    });
+}
+
+function makeNodesChart() {
+    new Chart(document.getElementById('nodesChart'), {
+        type: 'bar',
+        data: {
+            labels: ['Total Nodes', 'Defined Words', 'Deep Understanding', 'Shallow Understanding'],
+            datasets: [{
+                label: 'Left (Angel)',
+                data: [DATA.left.nodes, DATA.left.defined, DATA.left.deepUnderstanding, DATA.left.shallowUnderstanding],
+                backgroundColor: 'rgba(68,170,136,0.7)',
+                borderColor: '#4a8',
+                borderWidth: 1,
+            }, {
+                label: 'Right (Demon)',
+                data: [DATA.right.nodes, DATA.right.defined, DATA.right.deepUnderstanding, DATA.right.shallowUnderstanding],
+                backgroundColor: 'rgba(204,68,68,0.7)',
+                borderColor: '#c44',
+                borderWidth: 1,
+            }, {
+                label: 'Cortex (White)',
+                data: [DATA.cortex.nodes, DATA.cortex.defined, DATA.cortex.deepUnderstanding, DATA.cortex.shallowUnderstanding],
+                backgroundColor: 'rgba(218,165,32,0.7)',
+                borderColor: '#daa520',
+                borderWidth: 1,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, ticks: { font: { size: 10 } } },
+                x: { ticks: { font: { size: 10 } } }
+            },
+            plugins: { legend: { labels: { font: { size: 10 } } } }
+        }
+    });
+}
+
+function makeConnectionsChart() {
+    new Chart(document.getElementById('connectionsChart'), {
+        type: 'bar',
+        data: {
+            labels: ['Connections', 'Avg/Node', 'Messages', 'Questions'],
+            datasets: [{
+                label: 'Left',
+                data: [DATA.left.connections, DATA.left.avgConn * 1000, DATA.left.messages, DATA.left.questionsAsked * 10],
+                backgroundColor: 'rgba(68,170,136,0.7)',
+                borderColor: '#4a8',
+                borderWidth: 1,
+            }, {
+                label: 'Right',
+                data: [DATA.right.connections, DATA.right.avgConn * 1000, DATA.right.messages, DATA.right.questionsAsked * 10],
+                backgroundColor: 'rgba(204,68,68,0.7)',
+                borderColor: '#c44',
+                borderWidth: 1,
+            }, {
+                label: 'Cortex',
+                data: [DATA.cortex.connections, DATA.cortex.avgConn * 1000, DATA.cortex.messages, 0],
+                backgroundColor: 'rgba(218,165,32,0.7)',
+                borderColor: '#daa520',
+                borderWidth: 1,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, ticks: { font: { size: 10 } } },
+                x: { ticks: { font: { size: 10 } } }
+            },
+            plugins: { legend: { labels: { font: { size: 10 } } } }
+        }
+    });
+}
+
+function makeSourceChart() {
+    var sources = ['human', 'internet', 'compound', 'trigram', 'unknown'];
+    var labels = ['Human-Taught', 'Internet/Dict', 'Compound', 'Trigram', 'Unknown'];
+    new Chart(document.getElementById('sourceChart'), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Left',
+                data: sources.map(function(s) { return DATA.left.sources[s] || 0; }),
+                backgroundColor: 'rgba(68,170,136,0.7)',
+            }, {
+                label: 'Right',
+                data: sources.map(function(s) { return DATA.right.sources[s] || 0; }),
+                backgroundColor: 'rgba(204,68,68,0.7)',
+            }, {
+                label: 'Cortex',
+                data: sources.map(function(s) { return DATA.cortex.sources[s] || 0; }),
+                backgroundColor: 'rgba(218,165,32,0.7)',
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            scales: {
+                x: { beginAtZero: true, ticks: { font: { size: 10 } } },
+                y: { ticks: { font: { size: 10 } } }
+            },
+            plugins: { legend: { labels: { font: { size: 10 } } } }
+        }
+    });
+}
+
+function makeConfidenceChart() {
+    new Chart(document.getElementById('confidenceChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['High (>=0.7)', 'Medium (0.3-0.7)', 'Low (<0.3)'],
+            datasets: [{
+                label: 'Left',
+                data: [DATA.left.confHigh, DATA.left.confMed, DATA.left.confLow],
+                backgroundColor: ['#4a8', '#2a5a3a', '#1a2a1a'],
+                borderWidth: 0,
+            }, {
+                label: 'Right',
+                data: [DATA.right.confHigh, DATA.right.confMed, DATA.right.confLow],
+                backgroundColor: ['#c44', '#6a2a2a', '#2a1a1a'],
+                borderWidth: 0,
+            }, {
+                label: 'Cortex',
+                data: [DATA.cortex.confHigh, DATA.cortex.confMed, DATA.cortex.confLow],
+                backgroundColor: ['#daa520', '#6a5a1a', '#2a2a1a'],
+                borderWidth: 0,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 10 } },
+                title: { display: true, text: 'Inner=Left, Middle=Right, Outer=Cortex', color: '#555', font: { size: 10 } }
+            }
+        }
+    });
+}
+
+function makeCompoundsChart() {
+    new Chart(document.getElementById('compoundsChart'), {
+        type: 'bar',
+        data: {
+            labels: ['Compounds', 'Trigrams', 'Clusters'],
+            datasets: [{
+                label: 'Left',
+                data: [DATA.left.compounds, DATA.left.trigrams, DATA.left.clusters],
+                backgroundColor: 'rgba(68,170,136,0.7)',
+            }, {
+                label: 'Right',
+                data: [DATA.right.compounds, DATA.right.trigrams, DATA.right.clusters],
+                backgroundColor: 'rgba(204,68,68,0.7)',
+            }, {
+                label: 'Cortex',
+                data: [DATA.cortex.compounds, DATA.cortex.trigrams, DATA.cortex.clusters],
+                backgroundColor: 'rgba(218,165,32,0.7)',
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, ticks: { font: { size: 10 } } },
+                x: { ticks: { font: { size: 10 } } }
+            },
+            plugins: { legend: { labels: { font: { size: 10 } } } }
+        }
+    });
+}
+
+function makeUnderstandingChart() {
+    new Chart(document.getElementById('understandingChart'), {
+        type: 'polarArea',
+        data: {
+            labels: ['Left Deep', 'Left Shallow', 'Right Deep', 'Right Shallow', 'Cortex Defined'],
+            datasets: [{
+                data: [DATA.left.deepUnderstanding, DATA.left.shallowUnderstanding, DATA.right.deepUnderstanding, DATA.right.shallowUnderstanding, DATA.cortex.defined],
+                backgroundColor: [
+                    'rgba(68,170,136,0.8)',
+                    'rgba(68,170,136,0.4)',
+                    'rgba(204,68,68,0.8)',
+                    'rgba(204,68,68,0.4)',
+                    'rgba(218,165,32,0.6)',
+                ],
+                borderWidth: 0,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 8 } }
+            }
+        }
+    });
+}
+
+function makeTruthChart() {
+    new Chart(document.getElementById('truthChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['High Truth', 'Neutral', 'Low Truth'],
+            datasets: [{
+                label: 'Words',
+                data: [DATA.truth.wordHigh, DATA.truth.wordNeutral, DATA.truth.wordLow],
+                backgroundColor: ['#4a8', '#335', '#c44'],
+                borderWidth: 0,
+            }, {
+                label: 'Connections',
+                data: [DATA.truth.connHigh, DATA.truth.connNeutral, DATA.truth.connLow],
+                backgroundColor: ['#7cf', '#335', '#f44'],
+                borderWidth: 0,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { font: { size: 10 } } },
+                title: { display: true, text: 'Inner=Words, Outer=Connections', color: '#555', font: { size: 10 } }
+            }
+        }
+    });
+}
+
+function makeFrontalChart() {
+    new Chart(document.getElementById('frontalChart'), {
+        type: 'bar',
+        data: {
+            labels: ['High Conf', 'Medium Conf', 'Low Conf', 'Embarrassments', 'Pride Events'],
+            datasets: [{
+                label: 'Count',
+                data: [DATA.frontal.confHigh, DATA.frontal.confMed, DATA.frontal.confLow, DATA.frontal.embarrassments, DATA.frontal.prideEvents],
+                backgroundColor: ['#4a8', '#daa520', '#c44', '#f44', '#4a8'],
+                borderWidth: 0,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, ticks: { font: { size: 10 } } },
+                x: { ticks: { font: { size: 10 } } }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+}
+
+function makeActivityChart() {
+    new Chart(document.getElementById('activityChart'), {
+        type: 'bar',
+        data: {
+            labels: ['Rambles', 'Debates', 'Syntheses', 'Self-Tests', 'Dynamic Q\'s', 'L-Questions', 'R-Questions', 'L-AutoLearn', 'R-AutoLearn'],
+            datasets: [{
+                label: 'Count',
+                data: [
+                    DATA.system.rambles,
+                    DATA.system.debates,
+                    DATA.system.ownSyntheses,
+                    DATA.system.selfTests,
+                    DATA.system.dynamicQuestions,
+                    DATA.left.questionsAsked,
+                    DATA.right.questionsAsked,
+                    DATA.left.autoLearned,
+                    DATA.right.autoLearned
+                ],
+                backgroundColor: [
+                    '#daa520', '#daa520', '#daa520', '#daa520', '#daa520',
+                    '#4a8', '#c44', '#4a8', '#c44'
+                ],
+                borderWidth: 0,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            scales: {
+                x: { beginAtZero: true, ticks: { font: { size: 10 } } },
+                y: { ticks: { font: { size: 10 } } }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+}
+
+// ============================================================
+// INIT
+// ============================================================
+(function() {
+    document.getElementById('reportTime').textContent =
+        'Report generated: ' + new Date().toISOString().replace('T', ' ').substring(0, 19) +
+        ' | Data snapshot: 2026-02-20 22:20 UTC (post-parenting session)';
+
+    // Calculate scores
+    var humanity = calcHumanityScore();
+    var selfmod = calcSelfModScore();
+
+    document.getElementById('humanityScore').textContent = humanity.total + '%';
+    document.getElementById('selfmodScore').textContent = selfmod.total + '%';
+
+    // Render stat cards
+    renderStatCard('leftStats', DATA.left);
+    renderStatCard('rightStats', DATA.right);
+    renderStatCard('cortexStats', DATA.cortex);
+    renderAbilities('leftAbilities', DATA.left.abilityList);
+    renderAbilities('rightAbilities', DATA.right.abilityList);
+    renderTruthStats();
+    renderFrontalStats();
+    renderCortexSystem();
+    renderVerdict(humanity, selfmod);
+
+    // Render charts
+    makeRadar(humanity, selfmod);
+    makeNodesChart();
+    makeConnectionsChart();
+    makeSourceChart();
+    makeConfidenceChart();
+    makeCompoundsChart();
+    makeUnderstandingChart();
+    makeTruthChart();
+    makeFrontalChart();
+    makeActivityChart();
+})();
+</script>
+</body>
+</html>

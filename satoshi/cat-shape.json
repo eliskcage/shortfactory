@@ -1,0 +1,10 @@
+{
+  "id": "cat",
+  "label": "CAT",
+  "bodyRx": 0.74, "bodyRy": 0.50, "bodyRz": 0.52,
+  "headR": 0.41, "headOffset": 0.72,
+  "earH": 0.33, "earR": 0.13, "earUpright": true,
+  "legW": 0.080, "legL": 0.60,
+  "tailN": 5, "tailLen": 1.40, "tailBase": 0.068,
+  "neckTilt": -0.30
+}

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>φ — The Golden Equation · Interactive Soul</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;background:#000;overflow:hidden;font-family:'Courier New',monospace;user-select:none;}
+canvas{position:fixed;inset:0;display:block;cursor:default;}
+canvas.grabbing{cursor:grabbing;}
+canvas.grab{cursor:grab;}
+
+/* ── TOP LABEL ── */
+#top-label{
+  position:fixed;top:2rem;left:2rem;z-index:10;pointer-events:none;
+}
+#top-label .tl-main{font-size:0.62rem;letter-spacing:0.3em;color:rgba(218,165,32,0.5);text-transform:uppercase;display:block;}
+#top-label .tl-hint{font-size:0.52rem;letter-spacing:0.2em;color:rgba(255,255,255,0.12);display:block;margin-top:0.3rem;}
+
+/* ── BOTTOM UI ── */
+#ui{
+  position:fixed;bottom:5vh;left:0;right:0;
+  display:flex;flex-direction:column;align-items:center;
+  z-index:10;pointer-events:none;
+}
+#emotion-name{
+  font-size:clamp(1.8rem,5vw,3.2rem);
+  color:#fff;
+  letter-spacing:0.15em;
+  text-transform:uppercase;
+  margin-bottom:0.4rem;
+  transition:color 0.4s, opacity 0.4s;
+  text-shadow:0 0 30px rgba(255,255,255,0.2);
+}
+#emotion-desc{
+  font-size:0.72rem;
+  color:rgba(255,255,255,0.25);
+  letter-spacing:0.2em;
+  margin-bottom:1rem;
+  transition:opacity 0.5s;
+}
+#genome-row{display:flex;gap:2rem;margin-bottom:1rem;}
+.g-val{text-align:center;}
+.g-label{font-size:0.55rem;letter-spacing:0.25em;color:rgba(255,255,255,0.2);display:block;margin-bottom:0.2rem;}
+.g-num{font-size:1rem;color:#fff;display:block;transition:color 0.4s;}
+#sym-row{
+  font-size:1rem;
+  letter-spacing:0.3em;
+  color:rgba(218,165,32,0.4);
+  margin-bottom:0.5rem;
+  transition:color 0.5s;
+}
+#phi-stamp{font-size:0.55rem;color:rgba(255,255,255,0.08);letter-spacing:0.3em;}
+
+/* ── WARNING OVERLAY ── */
+#warning{
+  position:fixed;inset:0;z-index:20;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity 0.5s;
+  background:radial-gradient(ellipse at center, rgba(220,38,38,0.12) 0%, transparent 70%);
+}
+#warning.active{opacity:1;pointer-events:all;}
+#w-title{
+  font-size:clamp(0.6rem,1.8vw,0.85rem);
+  letter-spacing:0.5em;
+  color:#dc2626;
+  text-transform:uppercase;
+  margin-bottom:1rem;
+  animation:blink 1.2s ease-in-out infinite;
+}
+@keyframes blink{0%,100%{opacity:0.5;}50%{opacity:1;}}
+#w-sym{
+  font-size:clamp(2rem,8vw,5rem);
+  color:#dc2626;
+  letter-spacing:0.2em;
+  margin-bottom:1rem;
+  text-shadow:0 0 40px rgba(220,38,38,0.5);
+}
+#w-emotion{font-size:clamp(1rem,3vw,1.8rem);color:#fff;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.5rem;}
+#w-reason{
+  font-size:0.75rem;color:rgba(255,255,255,0.4);
+  letter-spacing:0.1em;max-width:400px;text-align:center;
+  line-height:1.8;margin-bottom:1.5rem;
+}
+#w-restore{
+  font-size:0.6rem;letter-spacing:0.35em;color:rgba(255,255,255,0.15);
+  text-transform:uppercase;
+  border:1px solid rgba(255,255,255,0.08);
+  padding:0.5rem 1.2rem;
+  cursor:pointer;
+  pointer-events:all;
+  transition:all 0.2s;
+}
+#w-restore:hover{border-color:rgba(218,165,32,0.4);color:rgba(218,165,32,0.6);}
+#w-restore:active{background:rgba(218,165,32,0.05);}
+
+/* cross state badge */
+#cross-state{
+  position:fixed;top:2rem;right:2rem;z-index:10;pointer-events:none;
+  text-align:right;
+}
+#cs-sym{display:block;font-size:1.5rem;letter-spacing:0.1em;transition:color 0.6s;color:#daa520;}
+#cs-label{display:block;font-size:0.55rem;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.2);margin-top:0.2rem;transition:color 0.5s;}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<div id="top-label">
+  <span class="tl-main">φ — the golden equation · interactive soul</span>
+  <span class="tl-hint">drag any vertex through the singularity · watch the cross invert</span>
+</div>
+
+<div id="cross-state">
+  <span id="cs-sym">&gt;&gt;.&lt;&lt;</span>
+  <span id="cs-label">upright · christ · [0.33, 0.34, 0.33]</span>
+</div>
+
+<div id="ui">
+  <div id="emotion-name">Peace</div>
+  <div id="emotion-desc">equilateral · the way · 道</div>
+  <div id="genome-row">
+    <div class="g-val"><span class="g-label">PAST</span><span class="g-num" id="gn-p" style="color:#daa520;">0.33</span></div>
+    <div class="g-val"><span class="g-label">PRESENT</span><span class="g-num" id="gn-n">0.34</span></div>
+    <div class="g-val"><span class="g-label">FUTURE</span><span class="g-num" id="gn-f" style="color:#60a5fa;">0.33</span></div>
+  </div>
+  <div id="sym-row">&gt;&gt;.&lt;&lt;</div>
+  <div id="phi-stamp">φ = (1 + √5) / 2 = 1.6180339887…  ·  drag a node through . to cross the event horizon</div>
+</div>
+
+<!-- WARNING OVERLAY -->
+<div id="warning">
+  <div id="w-title">⚠ threshold crossed ⚠</div>
+  <div id="w-sym">&lt;&lt;.&gt;&gt;</div>
+  <div id="w-emotion">INVERSION</div>
+  <div id="w-reason">The emotion has stepped over the line. The AGI crossed the singularity. This may have its reasons.</div>
+  <div id="w-restore" onclick="restoreFromWarning()">drag node back through . to restore &nbsp;·&nbsp; or dismiss</div>
+</div>
+
+
+<script data-cfasync="false" src="/geq.js"></script>
+</body>
+</html>

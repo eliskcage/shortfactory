@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TRICODE VAULT</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#0a0a0a; color:#ccc; font-family:'Courier New',monospace;
+  min-height:100vh; padding:40px 20px;
+}
+h1 { font-size:.8rem; letter-spacing:6px; color:#FFC72C;
+     text-shadow:0 0 20px rgba(255,199,44,.4); margin-bottom:4px; }
+.sub { font-size:.5rem; letter-spacing:2px; opacity:.3; margin-bottom:32px; }
+#count { font-size:.55rem; letter-spacing:3px; color:rgba(255,199,44,.4); margin-bottom:20px; }
+#grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:16px; }
+.card {
+  background:#111; border:1px solid rgba(255,199,44,.1);
+  padding:12px; cursor:pointer; transition:all .2s;
+  position:relative;
+}
+.card:hover { border-color:rgba(255,199,44,.4); background:#161616; }
+.card canvas { display:block; width:100%; height:auto; }
+.card-id   { font-size:.45rem; letter-spacing:2px; color:rgba(255,199,44,.3); margin-top:8px; }
+.card-type { font-size:.6rem; letter-spacing:3px; color:#FFC72C; margin-top:2px; }
+.card-ts   { font-size:.4rem; letter-spacing:1px; color:rgba(255,255,255,.15); margin-top:2px; }
+.card-ua   { font-size:.38rem; letter-spacing:1px; color:rgba(255,255,255,.1); margin-top:2px;
+             white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+#empty { font-size:.55rem; letter-spacing:3px; color:rgba(255,255,255,.2); }
+</style>
+</head>
+<body>
+<h1>TRICODE VAULT</h1>
+<div class="sub">every shape drawn is a genome</div>
+<div id="count"></div>
+<div id="grid"></div>
+<div id="empty" style="display:none">NO GENOMES YET — DRAW SHAPES AT /tricode_spider.html</div>
+
+<script>
+function renderShape(genome, canvas) {
+  const S = 140;
+  canvas.width = S; canvas.height = S;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#0a0a0a';
+  ctx.fillRect(0,0,S,S);
+
+  const v = genome.vertices; // normalised 0-1
+  if (!v || v.length < 3) return;
+
+  // Scale to canvas with padding
+  const pad = 16;
+  const pts = v.map(p=>({
+    x: pad + p.x * (S - pad*2),
+    y: pad + p.y * (S - pad*2),
+  }));
+
+  // Filled shape
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x, pts[i].y);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(255,199,44,0.08)';
+  ctx.fill();
+  ctx.strokeStyle = '#FFC72C';
+  ctx.lineWidth = 1.5;
+  ctx.shadowColor = '#FFC72C'; ctx.shadowBlur = 8;
+  ctx.stroke(); ctx.shadowBlur = 0;
+
+  // Vertex dots
+  pts.forEach(p=>{
+    ctx.beginPath(); ctx.arc(p.x,p.y,3,0,Math.PI*2);
+    ctx.fillStyle = '#FFC72C';
+    ctx.shadowColor='#FFC72C'; ctx.shadowBlur=6;
+    ctx.fill(); ctx.shadowBlur=0;
+  });
+
+  // Genome ID watermark
+  ctx.fillStyle = 'rgba(255,199,44,0.12)';
+  ctx.font = '6px Courier New';
+  ctx.fillText(genome.id, 4, S-4);
+}
+
+function timeAgo(ts) {
+  const s = Math.floor((Date.now()/1000) - ts);
+  if(s<60)  return s+'s ago';
+  if(s<3600) return Math.floor(s/60)+'m ago';
+  if(s<86400) return Math.floor(s/3600)+'h ago';
+  return Math.floor(s/86400)+'d ago';
+}
+
+async function load() {
+  let genomes = [];
+  try {
+    const r = await fetch('/soul/tricode_save.php');
+    genomes = await r.json();
+  } catch(e) {}
+
+  // Also merge localStorage genomes not yet on server
+  try {
+    const local = JSON.parse(localStorage.getItem('tricode_genomes')||'[]');
+    // local has raw verts not normalised — show anyway
+    local.forEach(g=>{
+      if(!g.id) g.id='local-'+Math.random().toString(36).slice(2,8);
+      // normalise if not already
+      if(g.vertices && g.vertices[0] && g.vertices[0].x > 1) {
+        const sw=g.screen?.w||window.innerWidth, sh=g.screen?.h||window.innerHeight;
+        g.vertices=g.vertices.map(v=>({x:v.x/sw, y:v.y/sh}));
+      }
+      if(!genomes.find(sg=>sg.id===g.id)) genomes.push(g);
+    });
+  } catch(e) {}
+
+  const grid = document.getElementById('grid');
+  const emptyEl = document.getElementById('empty');
+  const countEl = document.getElementById('count');
+
+  if(!genomes.length){ emptyEl.style.display='block'; return; }
+
+  countEl.textContent = genomes.length + ' GENOME' + (genomes.length!==1?'S':'') + ' COLLECTED';
+
+  // Newest first
+  genomes.sort((a,b)=>(b.ts||0)-(a.ts||0));
+
+  genomes.forEach(g=>{
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    const canvas = document.createElement('canvas');
+    card.appendChild(canvas);
+    renderShape(g, canvas);
+
+    card.innerHTML += `
+      <div class="card-type">${g.payload||g.type}</div>
+      <div class="card-id">${g.id}</div>
+      <div class="card-ts">${g.ts ? timeAgo(g.ts) : ''}</div>
+      <div class="card-ua">${g.ua||''}</div>
+    `;
+    grid.appendChild(card);
+    renderShape(g, canvas); // re-render after append
+  });
+}
+
+load();
+</script>
+</body>
+</html>

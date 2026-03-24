@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Computanium · Gravity Simulator</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#02010a;color:#f5c518;font-family:monospace;overflow:hidden;}
+canvas{display:block;}
+
+#ui{
+  position:fixed;top:20px;left:20px;
+  display:flex;flex-direction:column;gap:10px;
+  z-index:10;pointer-events:none;
+}
+#ui > *{pointer-events:all;}
+
+.panel{
+  background:rgba(2,1,10,0.85);
+  border:1px solid rgba(245,197,24,0.2);
+  border-radius:8px;
+  padding:14px 16px;
+  min-width:200px;
+}
+.panel h2{
+  font-size:9px;letter-spacing:4px;text-transform:uppercase;
+  color:rgba(245,197,24,0.5);margin-bottom:10px;
+}
+.symbol{
+  font-size:28px;letter-spacing:6px;color:#f5c518;
+  text-shadow:0 0 20px rgba(245,197,24,0.6);
+  margin-bottom:4px;
+}
+.theory{font-size:10px;color:rgba(200,184,154,0.5);line-height:1.6;}
+
+.stat{display:flex;justify-content:space-between;gap:20px;font-size:10px;margin-top:6px;}
+.stat-label{color:rgba(245,197,24,0.4);}
+.stat-val{color:#f5c518;}
+
+label{display:flex;flex-direction:column;gap:4px;font-size:9px;color:rgba(245,197,24,0.5);letter-spacing:2px;}
+input[type=range]{
+  width:100%;accent-color:#f5c518;
+  background:transparent;cursor:pointer;
+}
+
+.btn{
+  width:100%;padding:8px;
+  background:rgba(245,197,24,0.08);
+  border:1px solid rgba(245,197,24,0.2);
+  color:#f5c518;font-size:9px;letter-spacing:3px;text-transform:uppercase;
+  cursor:pointer;border-radius:4px;
+  transition:all .2s;font-family:monospace;
+}
+.btn:hover{background:rgba(245,197,24,0.18);border-color:rgba(245,197,24,0.5);}
+.btn.danger{
+  border-color:rgba(255,80,80,0.3);color:rgba(255,150,150,0.8);
+  background:rgba(255,50,50,0.05);
+}
+.btn.danger:hover{background:rgba(255,50,50,0.15);border-color:rgba(255,80,80,0.6);}
+
+#log{
+  position:fixed;bottom:20px;left:20px;
+  font-size:9px;color:rgba(245,197,24,0.4);
+  line-height:1.8;letter-spacing:1px;
+  pointer-events:none;
+  max-width:280px;
+}
+
+#legend{
+  position:fixed;bottom:20px;right:20px;
+  background:rgba(2,1,10,0.85);
+  border:1px solid rgba(245,197,24,0.15);
+  border-radius:8px;padding:14px;
+  font-size:9px;
+}
+.leg-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;color:rgba(200,184,154,0.6);}
+.leg-dot{width:10px;height:10px;border-radius:50%;}
+
+#hint{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-size:11px;color:rgba(245,197,24,0.2);letter-spacing:3px;
+  pointer-events:none;transition:opacity 1s;
+}
+</style>
+</head>
+<body>
+
+<canvas id="c"></canvas>
+
+<div id="ui">
+  <div class="panel">
+    <div class="symbol">&gt;&gt;.&lt;&lt;</div>
+    <div class="theory">gravity = information compressing inward<br>
+    antigravity = compression past <strong style="color:#f5c518">.</strong> inverting</div>
+  </div>
+
+  <div class="panel">
+    <h2>Parameters</h2>
+    <label>G — Compression Pull
+      <input type="range" id="gSlider" min="0.1" max="5" step="0.1" value="1.2">
+    </label>
+    <div style="margin-top:4px;"></div>
+    <label>Inversion Threshold
+      <input type="range" id="tSlider" min="0.3" max="1.0" step="0.05" value="0.85">
+    </label>
+    <div style="margin-top:4px;"></div>
+    <label>Compression Rate
+      <input type="range" id="cSlider" min="0.001" max="0.02" step="0.001" value="0.006">
+    </label>
+  </div>
+
+  <div class="panel">
+    <h2>Live Stats</h2>
+    <div class="stat"><span class="stat-label">Nodes</span><span class="stat-val" id="sNodes">0</span></div>
+    <div class="stat"><span class="stat-label">Inversions</span><span class="stat-val" id="sInv">0</span></div>
+    <div class="stat"><span class="stat-label">Avg Density</span><span class="stat-val" id="sDens">0.00</span></div>
+    <div class="stat"><span class="stat-label">State</span><span class="stat-val" id="sState">—</span></div>
+  </div>
+
+  <button class="btn" id="btnSpawn">+ Spawn Cluster</button>
+  <button class="btn danger" id="btnCollapse">Force Collapse →  .</button>
+  <button class="btn" id="btnReset">Reset</button>
+</div>
+
+<div id="log"></div>
+
+<div id="legend">
+  <div style="font-size:9px;letter-spacing:3px;color:rgba(245,197,24,0.4);margin-bottom:10px;">DENSITY</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#1a1060;"></div>Low — sparse information</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#5a3090;"></div>Rising — compressing</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#c07020;"></div>High — near event horizon</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#f5c518;"></div>Critical — approaching <strong>.</strong></div>
+  <div class="leg-row"><div class="leg-dot" style="background:#fff;box-shadow:0 0 6px #fff;"></div>Inversion — antigravity burst</div>
+</div>
+
+<div id="hint">click to add nodes</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+
+let W, H;
+function resize(){
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+// ── NODE CLASS ────────────────────────────────────────────────────────────────
+class Node {
+  constructor(x, y, d=0){
+    this.x  = x; this.y  = y;
+    this.vx = (Math.random()-0.5)*0.4;
+    this.vy = (Math.random()-0.5)*0.4;
+    this.density = d || Math.random()*0.3;
+    this.radius  = 4 + this.density * 8;
+    this.invertTimer = 0;   // flash countdown
+    this.invertWave  = 0;   // expanding ring radius
+    this.dead = false;
+  }
+}
+
+let nodes = [];
+let inversions = 0;
+let totalInversions = 0;
+let logLines = [];
+let hintEl = document.getElementById('hint');
+let hintGone = false;
+
+function addLog(msg){
+  const t = new Date().toLocaleTimeString('en-GB',{hour12:false});
+  logLines.unshift(`[${t}] ${msg}`);
+  if(logLines.length>6) logLines.pop();
+  document.getElementById('log').innerHTML = logLines.join('<br>');
+}
+
+// ── SPAWN ─────────────────────────────────────────────────────────────────────
+function spawnCluster(cx, cy, count=6){
+  if(!hintGone){ hintEl.style.opacity='0'; hintGone=true; }
+  for(let i=0;i<count;i++){
+    const angle = Math.random()*Math.PI*2;
+    const r     = 20 + Math.random()*60;
+    nodes.push(new Node(
+      cx + Math.cos(angle)*r,
+      cy + Math.sin(angle)*r,
+      Math.random()*0.25
+    ));
+  }
+  addLog(`Cluster spawned (${count} nodes) at ${Math.round(cx)},${Math.round(cy)}`);
+}
+
+function spawnRandom(){
+  spawnCluster(W*0.2+Math.random()*W*0.6, H*0.2+Math.random()*H*0.6, 8);
+}
+
+// Initial clusters
+spawnCluster(W*0.35, H*0.5, 10);
+spawnCluster(W*0.65, H*0.5, 10);
+
+canvas.addEventListener('click', function(e){
+  spawnCluster(e.clientX, e.clientY, 5);
+});
+
+// ── PHYSICS ───────────────────────────────────────────────────────────────────
+function tick(){
+  const G  = parseFloat(document.getElementById('gSlider').value);
+  const T  = parseFloat(document.getElementById('tSlider').value);
+  const CR = parseFloat(document.getElementById('cSlider').value);
+
+  const alive = nodes.filter(n=>!n.dead);
+  const n = alive.length;
+
+  for(let i=0;i<n;i++){
+    const a = alive[i];
+    if(a.dead) continue;
+
+    for(let j=i+1;j<n;j++){
+      const b = alive[j];
+      if(b.dead) continue;
+
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const dist = Math.sqrt(dx*dx+dy*dy) || 0.001;
+      const minD = a.radius + b.radius;
+
+      // ── Gravity: attraction proportional to density product ──
+      if(dist < 300){
+        const force = G * (a.density+0.1) * (b.density+0.1) / (dist*dist) * 0.8;
+        const fx = (dx/dist)*force;
+        const fy = (dy/dist)*force;
+        a.vx += fx; a.vy += fy;
+        b.vx -= fx; b.vy -= fy;
+      }
+
+      // ── Compression: close nodes share density ──
+      if(dist < minD * 2.5){
+        const share = CR * (1 - dist/(minD*2.5));
+        const avg   = (a.density + b.density) * 0.5;
+        a.density += (avg - a.density) * share + share * 0.5;
+        b.density += (avg - b.density) * share + share * 0.5;
+        a.density = Math.min(a.density, 1.2);
+        b.density = Math.min(b.density, 1.2);
+      }
+
+      // ── Soft collision ──
+      if(dist < minD){
+        const overlap = minD - dist;
+        const push = overlap * 0.3;
+        a.vx -= (dx/dist)*push; a.vy -= (dy/dist)*push;
+        b.vx += (dx/dist)*push; b.vy += (dy/dist)*push;
+      }
+    }
+
+    // ── Damping ──
+    a.vx *= 0.985; a.vy *= 0.985;
+
+    // ── Inversion: density crosses threshold → singularity → antigravity burst ──
+    if(a.density >= T && a.invertTimer <= 0){
+      a.invertTimer = 40;
+      a.invertWave  = 0;
+      totalInversions++;
+      inversions++;
+      addLog(`⚡ Inversion at ${Math.round(a.x)},${Math.round(a.y)} — density ${a.density.toFixed(2)} — antigravity burst`);
+
+      // Repulsion wave — push all nodes outward
+      for(let k=0;k<n;k++){
+        if(k===i) continue;
+        const b2 = alive[k];
+        const dx2 = b2.x - a.x;
+        const dy2 = b2.y - a.y;
+        const d2  = Math.sqrt(dx2*dx2+dy2*dy2) || 1;
+        const repulsion = G * 80 / (d2+10);
+        b2.vx += (dx2/d2) * repulsion;
+        b2.vy += (dy2/d2) * repulsion;
+      }
+
+      // Reset density after inversion (dot unpacks)
+      a.density = 0.05;
+    }
+
+    // ── Update position ──
+    a.x += a.vx; a.y += a.vy;
+
+    // ── Boundary: wrap ──
+    if(a.x < -20)  a.x = W+20;
+    if(a.x > W+20) a.x = -20;
+    if(a.y < -20)  a.y = H+20;
+    if(a.y > H+20) a.y = -20;
+
+    // ── Update radius ──
+    a.radius = 4 + a.density * 10;
+    if(a.invertTimer > 0){
+      a.invertTimer--;
+      a.invertWave += 6;
+    }
+  }
+
+  // Remove old nodes beyond max
+  if(nodes.length > 120) nodes = nodes.slice(-120);
+}
+
+// ── COLOUR ────────────────────────────────────────────────────────────────────
+function densityColor(d, invertTimer){
+  if(invertTimer > 0){
+    const t = invertTimer/40;
+    const w = Math.round(255*t);
+    return `rgb(${w},${w},${Math.round(w*0.8)})`;
+  }
+  // 0→1: deep blue → purple → amber → gold → white
+  if(d < 0.25) {
+    const t=d/0.25;
+    return `rgb(${Math.round(10+t*60)},${Math.round(5+t*10)},${Math.round(60+t*80)})`;
+  } else if(d < 0.5){
+    const t=(d-0.25)/0.25;
+    return `rgb(${Math.round(70+t*100)},${Math.round(15+t*25)},${Math.round(140-t*40)})`;
+  } else if(d < 0.75){
+    const t=(d-0.5)/0.25;
+    return `rgb(${Math.round(170+t*60)},${Math.round(40+t*80)},${Math.round(100-t*80)})`;
+  } else {
+    const t=(d-0.75)/0.25;
+    return `rgb(${Math.round(230+t*25)},${Math.round(120+t*97)},${Math.round(20+t*4)})`;
+  }
+}
+
+function densityGlow(d, invertTimer){
+  if(invertTimer>0) return `rgba(255,255,255,${0.6*(invertTimer/40)})`;
+  if(d>0.8) return `rgba(245,197,24,${(d-0.8)*3})`;
+  if(d>0.5) return `rgba(180,80,0,${(d-0.5)*1.5})`;
+  return 'transparent';
+}
+
+// ── DRAW ──────────────────────────────────────────────────────────────────────
+function draw(){
+  ctx.fillStyle = 'rgba(2,1,10,0.25)';
+  ctx.fillRect(0,0,W,H);
+
+  const alive = nodes.filter(n=>!n.dead);
+
+  // Draw connections (gravity lines)
+  for(let i=0;i<alive.length;i++){
+    const a=alive[i];
+    for(let j=i+1;j<alive.length;j++){
+      const b=alive[j];
+      const dx=b.x-a.x, dy=b.y-a.y;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist<120){
+        const alpha=(1-dist/120)*0.12*(a.density+b.density);
+        ctx.strokeStyle=`rgba(245,197,24,${alpha})`;
+        ctx.lineWidth=0.5;
+        ctx.beginPath();
+        ctx.moveTo(a.x,a.y);
+        ctx.lineTo(b.x,b.y);
+        ctx.stroke();
+      }
+    }
+  }
+
+  // Draw nodes
+  for(const node of alive){
+    const col  = densityColor(node.density, node.invertTimer);
+    const glow = densityGlow(node.density, node.invertTimer);
+
+    // Inversion ring
+    if(node.invertTimer>0 && node.invertWave>0){
+      const alpha=(node.invertTimer/40)*0.4;
+      ctx.strokeStyle=`rgba(255,255,200,${alpha})`;
+      ctx.lineWidth=1.5;
+      ctx.beginPath();
+      ctx.arc(node.x,node.y,node.invertWave,0,Math.PI*2);
+      ctx.stroke();
+    }
+
+    // Glow halo
+    if(glow!=='transparent'){
+      const grad=ctx.createRadialGradient(node.x,node.y,0,node.x,node.y,node.radius*3);
+      grad.addColorStop(0,glow);
+      grad.addColorStop(1,'transparent');
+      ctx.fillStyle=grad;
+      ctx.beginPath();
+      ctx.arc(node.x,node.y,node.radius*3,0,Math.PI*2);
+      ctx.fill();
+    }
+
+    // Node body
+    ctx.fillStyle=col;
+    ctx.beginPath();
+    ctx.arc(node.x,node.y,node.radius,0,Math.PI*2);
+    ctx.fill();
+
+    // Dense nodes get a dot at centre
+    if(node.density>0.7){
+      ctx.fillStyle='rgba(255,255,255,0.6)';
+      ctx.beginPath();
+      ctx.arc(node.x,node.y,1.5,0,Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  // Stats
+  const avgDens = alive.length
+    ? (alive.reduce((s,n)=>s+n.density,0)/alive.length).toFixed(3)
+    : '0.000';
+
+  document.getElementById('sNodes').textContent = alive.length;
+  document.getElementById('sInv').textContent   = totalInversions;
+  document.getElementById('sDens').textContent  = avgDens;
+
+  const state = avgDens > 0.7 ? '⚡ CRITICAL'
+              : avgDens > 0.5 ? '▲ COMPRESSING'
+              : avgDens > 0.3 ? '→ GATHERING'
+              : '· SPARSE';
+  document.getElementById('sState').textContent = state;
+}
+
+// ── LOOP ──────────────────────────────────────────────────────────────────────
+function loop(){
+  tick();
+  draw();
+  requestAnimationFrame(loop);
+}
+loop();
+
+// ── CONTROLS ─────────────────────────────────────────────────────────────────
+document.getElementById('btnSpawn').addEventListener('click', spawnRandom);
+
+document.getElementById('btnCollapse').addEventListener('click', function(){
+  addLog('Force collapse initiated — all densities → .');
+  nodes.forEach(n=>{ n.density = 0.95; });
+});
+
+document.getElementById('btnReset').addEventListener('click', function(){
+  nodes=[];
+  totalInversions=0;
+  logLines=[];
+  document.getElementById('log').innerHTML='';
+  addLog('Simulation reset.');
+  spawnCluster(W*0.35,H*0.5,10);
+  spawnCluster(W*0.65,H*0.5,10);
+});
+
+addLog('Simulation started — gravity = information compression');
+addLog('Threshold: density → . triggers inversion burst');
+</script>
+</body>
+</html>

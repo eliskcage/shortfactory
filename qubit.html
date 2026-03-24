@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Virtual Qubit — 3D Satoshi Intersection</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #050508; color: #e0e0f0; font-family: 'Courier New', monospace; overflow: hidden; }
+#container { display: flex; height: 100vh; }
+#canvas3d { flex: 1; cursor: grab; }
+#canvas3d:active { cursor: grabbing; }
+#panel {
+  width: 330px; background: #08080f; border-left: 1px solid #1a1a3a;
+  padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
+}
+h1 { font-size: 0.7rem; letter-spacing: 0.2em; color: #6666ff; }
+.section { border: 1px solid #1a1a3a; border-radius: 4px; padding: 10px; }
+.section h2 { font-size: 0.58rem; color: #444; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 8px; }
+
+.state-display { text-align: center; font-size: 1.1rem; color: #ffcc44; padding: 6px 0; }
+.state-math { font-size: 0.65rem; color: #666; text-align: center; }
+.angle-display { font-size: 0.62rem; color: #88aaff; text-align: center; margin-top: 3px; }
+
+.prob-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.prob-label { width: 28px; font-size: 0.62rem; color: #6688ff; }
+.prob-track { flex: 1; height: 7px; background: #111; border-radius: 4px; overflow: hidden; }
+.prob-bar { height: 100%; border-radius: 4px; transition: width 0.4s; }
+.prob-val { width: 38px; text-align: right; font-size: 0.62rem; color: #aaa; }
+
+.gates { display: grid; grid-template-columns: repeat(3,1fr); gap: 5px; }
+.gate {
+  padding: 7px 4px; background: #0d0d20; border: 1px solid #2a2a5a;
+  border-radius: 4px; color: #8888ff; font-family: inherit; font-size: 0.7rem;
+  cursor: pointer; text-align: center; transition: all 0.15s;
+}
+.gate:hover { background: #2a2a6a; color: #fff; }
+.gate.active { background: #222260; border-color: #aaaaff; }
+.gate.measure { background: #200010; border-color: #aa0044; color: #ff4466; }
+.gate.measure:hover { background: #440020; }
+
+#bloch { display: block; margin: 0 auto; }
+
+.file-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+.file-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.file-name { font-size: 0.62rem; color: #888; flex: 1; }
+.file-count { font-size: 0.58rem; color: #444; }
+.file-status { font-size: 0.58rem; }
+.ok { color: #00cc66; } .err { color: #cc3333; } .loading { color: #ccaa33; }
+
+button.run-btn {
+  width: 100%; padding: 8px; background: #101030; border: 1px solid #3333aa;
+  color: #aaaaff; font-family: inherit; font-size: 0.62rem; letter-spacing: 0.08em;
+  cursor: pointer; border-radius: 4px; transition: all 0.2s; margin-top: 4px;
+}
+button.run-btn:hover { background: #202060; color: #fff; }
+button.run-btn:disabled { opacity: 0.4; cursor: default; }
+
+.intersect-box {
+  background: #0a0a16; border: 1px solid #00ff8833; border-radius: 4px;
+  padding: 8px; max-height: 160px; overflow-y: auto; margin-top: 6px;
+}
+.intersect-entry { font-size: 0.58rem; border-bottom: 1px solid #0f0f1a; padding: 4px 0; }
+.intersect-entry .lines { color: #555; }
+.intersect-entry .code-a { color: #4466ff; }
+.intersect-entry .code-b { color: #ff4444; }
+.intersect-entry .merged { color: #00ff88; margin-top: 2px; }
+.intersect-entry .truth { color: #ffcc44; float: right; font-size: 0.55rem; }
+
+.hist-row { display: flex; gap: 3px; flex-wrap: wrap; }
+.hist-bit { width: 9px; height: 9px; border-radius: 2px; }
+.h0 { background: #2244aa; } .h1 { background: #aa4422; }
+
+#log { font-size: 0.56rem; color: #444; line-height: 1.6; max-height: 100px; overflow-y: auto; }
+#log .e { border-bottom: 1px solid #0f0f1a; padding: 1px 0; }
+#log .e span { color: #6688ff; }
+</style>
+</head>
+<body>
+<div id="container">
+  <canvas id="canvas3d"></canvas>
+  <div id="panel">
+    <h1>VIRTUAL QUBIT</h1>
+    <div style="font-size:0.52rem;color:#333;letter-spacing:0.08em">3D SATOSHI INTERSECTION — COMPUTANIUM ENGINE</div>
+
+    <!-- State -->
+    <div class="section">
+      <h2>Qubit State</h2>
+      <div class="state-display" id="state-label">|0⟩</div>
+      <div class="state-math" id="state-math">α=1.000  β=0.000</div>
+      <div class="angle-display" id="angle-display">θ=0°  φ=0°</div>
+      <div style="font-size:0.55rem;color:#333;text-align:center;margin-top:2px" id="icount">0 intersection points</div>
+      <br>
+      <div class="prob-row">
+        <div class="prob-label">|0⟩</div>
+        <div class="prob-track"><div class="prob-bar" id="p0" style="width:100%;background:#4466ff"></div></div>
+        <div class="prob-val" id="pv0">1.000</div>
+      </div>
+      <div class="prob-row">
+        <div class="prob-label">|1⟩</div>
+        <div class="prob-track"><div class="prob-bar" id="p1" style="width:0%;background:#ff4444"></div></div>
+        <div class="prob-val" id="pv1">0.000</div>
+      </div>
+      <div style="font-size:0.55rem;color:#333;text-align:center;margin-top:4px">
+        |α|²+|β|² = <span id="norm" style="color:#00cc66">1.000</span>
+      </div>
+    </div>
+
+    <!-- Bloch -->
+    <div class="section">
+      <h2>Bloch Sphere</h2>
+      <canvas id="bloch" width="200" height="200"></canvas>
+    </div>
+
+    <!-- Gates -->
+    <div class="section">
+      <h2>Gates → Merge Ops</h2>
+      <div class="gates">
+        <button class="gate" onclick="gate('H')" title="Hadamard = BLEND 50/50">H</button>
+        <button class="gate" onclick="gate('X')" title="Pauli-X = INVERT">X</button>
+        <button class="gate" onclick="gate('Z')" title="Pauli-Z = phase flip">Z</button>
+        <button class="gate" onclick="gate('Y')" title="Pauli-Y = Y rotation">Y</button>
+        <button class="gate" onclick="gate('S')" title="S = UNION">S</button>
+        <button class="gate" onclick="gate('T')" title="T = INTERSECT">T</button>
+      </div>
+      <br>
+      <button class="gate measure" style="width:100%;padding:9px" onclick="measure()">⚡ MEASURE</button>
+    </div>
+
+    <!-- File loader -->
+    <div class="section">
+      <h2>Real Files → Satoshi Polygons</h2>
+      <div class="file-row">
+        <div class="file-dot" style="background:#4466ff"></div>
+        <div class="file-name">shape_api.py</div>
+        <div class="file-count" id="fa-count">—</div>
+        <div class="file-status" id="fa-status"></div>
+      </div>
+      <div class="file-row">
+        <div class="file-dot" style="background:#ff4444"></div>
+        <div class="file-name">soul_engine.py</div>
+        <div class="file-count" id="fb-count">—</div>
+        <div class="file-status" id="fb-status"></div>
+      </div>
+      <button class="run-btn" id="load-btn" onclick="loadFiles()">LOAD REAL FILES → BUILD QUBITS</button>
+      <div style="margin-top:6px;font-size:0.55rem;color:#335">
+        Encodes each line as a Satoshi vertex using genome fields:<br>
+        energy → radius · containment → angle phase · motion → offset
+      </div>
+    </div>
+
+    <!-- Intersection → code -->
+    <div class="section">
+      <h2>Intersection → Code <span id="icount2" style="color:#00ff8866"></span></h2>
+      <div class="intersect-box" id="intersect-list">
+        <div style="color:#333;font-size:0.58rem">Load files to see intersection — the code that exists in neither file alone</div>
+      </div>
+      <button class="run-btn" id="judge-btn" onclick="judgeIntersections()" disabled>
+        ASK JUDGE → MERGE INTERSECTING LINES
+      </button>
+    </div>
+
+    <!-- Measurement stats -->
+    <div class="section">
+      <h2>Shots <span id="shot-count" style="color:#444;font-size:0.55rem"></span></h2>
+      <div style="display:flex;gap:12px;font-size:0.58rem;color:#555;margin-bottom:5px">
+        <span>|0⟩: <span id="c0" style="color:#4466ff">0</span></span>
+        <span>|1⟩: <span id="c1" style="color:#ff4444">0</span></span>
+        <span>P(1): <span id="ratio" style="color:#888">—</span></span>
+      </div>
+      <div class="hist-row" id="hist"></div>
+    </div>
+
+    <!-- Log -->
+    <div class="section">
+      <h2>Log</h2>
+      <div id="log"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ── STATE ────────────────────────────────────────────────────────
+var state = { theta: 0, phi: 0 };
+var shots = [];
+var SHAPE_API = '/shape-api';
+var RADIUS = 2.2;
+var MAX_VAL = 95;
+
+// Genome data from DB (real files)
+var genomesA = [];   // shape_api.py vertices
+var genomesB = [];   // soul_engine.py vertices
+var intersections = []; // [{ptA, ptB, codeA, codeB, lineno_a, lineno_b}]
+
+// ── THREE.JS ─────────────────────────────────────────────────────
+var canvas = document.getElementById('canvas3d');
+var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setClearColor(0x050508);
+
+var scene = new THREE.Scene();
+var camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+camera.position.set(4, 3, 5);
+camera.lookAt(0, 0, 0);
+
+function resize() {
+  var w = canvas.parentElement.clientWidth - 330, h = window.innerHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+resize();
+window.addEventListener('resize', resize);
+
+// Mouse orbit
+var drag = false, lx = 0, ly = 0, rotX = 0.3, rotY = 0.5;
+canvas.addEventListener('mousedown', function(e){ drag=true; lx=e.clientX; ly=e.clientY; });
+window.addEventListener('mouseup', function(){ drag=false; });
+window.addEventListener('mousemove', function(e){
+  if (!drag) return;
+  rotY += (e.clientX-lx)*0.01; rotX += (e.clientY-ly)*0.01;
+  lx=e.clientX; ly=e.clientY;
+  var r=7;
+  camera.position.set(r*Math.sin(rotY)*Math.cos(rotX), r*Math.sin(rotX), r*Math.cos(rotY)*Math.cos(rotX));
+  camera.lookAt(0,0,0);
+});
+
+// Static scene elements
+scene.add(new THREE.AmbientLight(0x334, 1));
+scene.add(new THREE.GridHelper(6, 12, 0x111133, 0x0d0d22));
+function axis(v, c) {
+  var g = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), v.multiplyScalar(3)]);
+  scene.add(new THREE.Line(g, new THREE.LineBasicMaterial({color:c,opacity:0.25,transparent:true})));
+}
+axis(new THREE.Vector3(1,0,0), 0x441111);
+axis(new THREE.Vector3(0,1,0), 0x114411);
+axis(new THREE.Vector3(0,0,1), 0x111144);
+
+// ── GENOME → SATOSHI VERTEX ───────────────────────────────────────
+// energy → radius (complexity = amplitude)
+// containment → spiral phase (nesting depth = angle offset)
+// motion_i → additional offset (code flow pattern)
+
+function genomeToVertex(v, i, n, quat) {
+  var r = v.energy * RADIUS;
+  var baseAngle = (i * 2 * Math.PI / n);
+  var spiralAngle = v.contain * 2 * Math.PI * 0.35;
+  var motionOffset = (v.motion_i / 4) * Math.PI * 0.25;
+  var angle = baseAngle + spiralAngle + motionOffset;
+  var pt = new THREE.Vector3(r * Math.cos(angle), r * Math.sin(angle), 0);
+  if (quat) pt.applyQuaternion(quat);
+  return pt;
+}
+
+// Simple genome from raw text line (for fallback B encoding)
+function lineToGenome(line, i) {
+  var s = line.replace(/^\s+/,'');
+  var indent = line.length - s.length;
+  var energy = Math.min(1.0, (s.length/80 + s.split(/\s+/).length/20) / 2);
+  var contain = Math.min(1.0, indent/32);
+  var motion_i = s.startsWith('for ')||s.startsWith('while ') ? 1 :
+                 s.startsWith('if ')||s.startsWith('elif ') ? 2 : 0;
+  return { energy: energy, contain: contain, motion_i: motion_i,
+           type: 'expression', code: s.slice(0,100), lineno: i+1 };
+}
+
+// ── LOAD REAL FILES ───────────────────────────────────────────────
+
+// Paginate through /shapes endpoint to get all code-ingest lines for a file
+async function fetchAllGenomes(slug) {
+  var all = [], offset = 0, batch = 100;
+  while (true) {
+    var r = await fetch(SHAPE_API + '/shapes?q=' + encodeURIComponent(slug) +
+                        '&limit=' + batch + '&offset=' + offset);
+    var d = await r.json();
+    var shapes = d.shapes || [];
+    shapes.forEach(function(s) {
+      if (s.word && s.word.indexOf(slug) !== -1 && s.creator === 'code-ingest') {
+        try {
+          var g = typeof s.genome === 'string' ? JSON.parse(s.genome) : s.genome;
+          if (!g._code_line) return;
+          var lineno = parseInt((s.word.match(/^L(\d+)_/) || [0,0])[1]);
+          var pm = {pure:0,contaminated:1,compound:2};
+          var mm = {static:0,cyclic:1,pulsing:2,structured:3,dynamic:4};
+          all.push({
+            lineno:   lineno,
+            word:     s.word,
+            energy:   g.energy   || 0,
+            contain:  g.containment || 0,
+            phase_i:  pm[g.phase]  || 0,
+            motion_i: mm[g.motion] || 0,
+            type:     g.type || 'expression',
+            code:     (g._code_line || '').slice(0, 100),
+          });
+        } catch(e) {}
+      }
+    });
+    if (shapes.length < batch) break;
+    offset += batch;
+    if (offset > 3000) break; // safety
+  }
+  all.sort(function(a,b){ return a.lineno - b.lineno; });
+  return all;
+}
+
+async function loadFiles() {
+  var btn = document.getElementById('load-btn');
+  btn.disabled = true; btn.textContent = 'LOADING…';
+
+  // Load shape_api.py — paginate existing /shapes endpoint
+  document.getElementById('fa-status').innerHTML = '<span class="loading">loading…</span>';
+  try {
+    var verts = await fetchAllGenomes('shape_api');
+    if (verts.length > 0) {
+      genomesA = verts;
+      document.getElementById('fa-count').textContent = verts.length + ' lines';
+      document.getElementById('fa-status').innerHTML = '<span class="ok">✓</span>';
+      log('LOAD A', 'shape_api.py: ' + verts.length + ' genome vertices');
+    } else {
+      document.getElementById('fa-status').innerHTML = '<span class="err">✗ no genomes found</span>';
+    }
+  } catch(e) {
+    document.getElementById('fa-status').innerHTML = '<span class="err">✗ ' + e + '</span>';
+  }
+
+  // Load soul_engine.py
+  document.getElementById('fb-status').innerHTML = '<span class="loading">loading…</span>';
+  try {
+    var vertsB = await fetchAllGenomes('soul_engine');
+    if (vertsB.length > 0) {
+      genomesB = vertsB;
+      document.getElementById('fb-count').textContent = vertsB.length + ' lines';
+      document.getElementById('fb-status').innerHTML = '<span class="ok">✓</span>';
+      log('LOAD B', 'soul_engine.py: ' + vertsB.length + ' genome vertices');
+    } else {
+      document.getElementById('fb-status').innerHTML = '<span class="loading">ingesting…</span>';
+      await ingestSoulEngine();
+    }
+  } catch(e) {
+    document.getElementById('fb-status').innerHTML = '<span class="err">✗ ' + e + '</span>';
+  }
+
+  if (genomesA.length > 0 && genomesB.length > 0) {
+    buildFromGenomes();
+    document.getElementById('judge-btn').disabled = false;
+  }
+
+  btn.disabled = false; btn.textContent = 'RELOAD';
+}
+
+async function ingestSoulEngine() {
+  // Fetch soul_engine.py source from medium server and ingest into shape API
+  try {
+    var r = await fetch('https://www.shortfactory.shop/alive/studio/soul_engine_src.php');
+    if (!r.ok) throw new Error('soul_engine source not accessible');
+    var src = await r.text();
+    var r2 = await fetch(SHAPE_API + '/shapes/ingest-code', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ source: src, filename: 'soul_engine.py' })
+    });
+    var d = await r2.json();
+    if (d.ok) {
+      // Now re-fetch as polygon
+      var r3 = await fetch(SHAPE_API + '/shapes/as-polygon?file=soul_engine&limit=1200');
+      var d3 = await r3.json();
+      if (d3.ok) {
+        genomesB = d3.vertices;
+        document.getElementById('fb-count').textContent = d3.count + ' lines';
+        document.getElementById('fb-status').innerHTML = '<span class="ok">✓ ingested</span>';
+        log('INGEST B', 'soul_engine.py: ' + d3.count + ' lines ingested and encoded');
+      }
+    }
+  } catch(e) {
+    // Fallback: use demo text
+    var demoText = 'class SoulEngine:\n    def __init__(self):\n        self.values = {}\n    def truth(self, a, b):\n        return abs(a-b)\n    def merge(self, a, b):\n        return (a+b)/2\n';
+    genomesB = demoText.split('\n').map(lineToGenome);
+    document.getElementById('fb-count').textContent = genomesB.length + ' lines (demo)';
+    document.getElementById('fb-status').innerHTML = '<span class="err">⚠ demo</span>';
+    log('LOAD B', 'soul_engine not available — using demo genome');
+  }
+}
+
+// ── BUILD 3D SCENE FROM REAL GENOMES ─────────────────────────────
+
+var sceneObjects = [];
+
+function clearScene() {
+  sceneObjects.forEach(function(o){ scene.remove(o); });
+  sceneObjects = [];
+}
+
+function buildFromGenomes() {
+  clearScene();
+  intersections = [];
+
+  var n = genomesA.length;
+  var m = genomesB.length;
+
+  // Plane A: identity (XY plane) = |0⟩ basis
+  var quatA = new THREE.Quaternion();
+
+  // Plane B: rotated by qubit state angles = |1⟩ basis
+  var quatB = new THREE.Quaternion().setFromEuler(
+    new THREE.Euler(state.theta, state.phi, 0)
+  );
+
+  // Build polygon A (blue — shape_api)
+  var ptsA = genomesA.map(function(v, i){ return genomeToVertex(v, i, n, quatA); });
+  ptsA.push(ptsA[0].clone());
+  var gA = new THREE.BufferGeometry().setFromPoints(ptsA);
+  var lineA = new THREE.Line(gA, new THREE.LineBasicMaterial({color:0x2244ff,opacity:0.7,transparent:true}));
+  scene.add(lineA); sceneObjects.push(lineA);
+
+  // Build polygon B (red — soul_engine)
+  var ptsB = genomesB.map(function(v, i){ return genomeToVertex(v, i, m, quatB); });
+  ptsB.push(ptsB[0].clone());
+  var gB = new THREE.BufferGeometry().setFromPoints(ptsB);
+  var lineB = new THREE.Line(gB, new THREE.LineBasicMaterial({color:0xff3333,opacity:0.7,transparent:true}));
+  scene.add(lineB); sceneObjects.push(lineB);
+
+  // Face fill A
+  var fA = makeFace(genomesA, n, quatA, 0x2244ff, 0.06);
+  if (fA) { scene.add(fA); sceneObjects.push(fA); }
+  var fB = makeFace(genomesB, m, quatB, 0xff3333, 0.06);
+  if (fB) { scene.add(fB); sceneObjects.push(fB); }
+
+  // Compute intersections — only on MEANINGFUL lines (energy > 0.15, not blank/comment)
+  var CODE_TYPES = {function_def:1,class_def:1,assignment:1,loop:1,
+                    conditional:1,return:1,error_handling:1,import:1};
+  function isReal(g) {
+    return CODE_TYPES[g.type] &&
+           g.energy > 0.1 &&
+           g.code.trim().length > 4;
+  }
+  var realA = genomesA.map(function(g,i){return{g:g,i:i,pt:ptsA[i]};}).filter(function(x){return isReal(x.g);});
+  var realB = genomesB.map(function(g,i){return{g:g,i:i,pt:ptsB[i]};}).filter(function(x){return isReal(x.g);});
+
+  // Sample for performance
+  var SA = Math.max(1, Math.floor(realA.length / 200));
+  var SB = Math.max(1, Math.floor(realB.length / 200));
+  var sampA = realA.filter(function(_,i){return i%SA===0;});
+  var sampB = realB.filter(function(_,i){return i%SB===0;});
+
+  var ipts = [], seen = new Set();
+  for (var ii = 0; ii < sampA.length-1; ii++) {
+    for (var jj = 0; jj < sampB.length-1; jj++) {
+      var d = segDist(sampA[ii].pt, sampA[ii+1].pt, sampB[jj].pt, sampB[jj+1].pt);
+      if (d.dist < 0.07) {
+        var key = sampA[ii].g.lineno + ':' + sampB[jj].g.lineno;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        ipts.push(d.mid);
+        intersections.push({
+          pt:       d.mid,
+          lineno_a: sampA[ii].g.lineno,
+          lineno_b: sampB[jj].g.lineno,
+          code_a:   sampA[ii].g.code,
+          code_b:   sampB[jj].g.code,
+        });
+      }
+    }
+  }
+
+  // Render intersection points
+  if (ipts.length > 0) {
+    var ig = new THREE.BufferGeometry().setFromPoints(ipts);
+    var im = new THREE.PointsMaterial({color:0x00ff88,size:0.1});
+    var pts = new THREE.Points(ig, im);
+    scene.add(pts); sceneObjects.push(pts);
+  }
+
+  // State vector arrow
+  var bdir = new THREE.Vector3(
+    Math.sin(state.theta)*Math.cos(state.phi),
+    Math.cos(state.theta),
+    Math.sin(state.theta)*Math.sin(state.phi)
+  ).normalize();
+  var arrow = new THREE.ArrowHelper(bdir, new THREE.Vector3(0,0,0), 1.8, 0xffcc44, 0.3, 0.15);
+  scene.add(arrow); sceneObjects.push(arrow);
+
+  // Update UI
+  document.getElementById('icount').textContent = intersections.length + ' intersection points';
+  document.getElementById('icount2').textContent = '(' + intersections.length + ')';
+  renderIntersectionList();
+  updateState();
+
+  log('BUILD', 'A:' + n + ' B:' + m + ' pts · ' + intersections.length + ' intersections · θ=' + (state.theta*180/Math.PI).toFixed(1) + '°');
+}
+
+function makeFace(genomes, n, quat, color, opacity) {
+  try {
+    var pts2d = genomes.map(function(v, i){
+      var r = v.energy * RADIUS;
+      var angle = (i * 2 * Math.PI / n) + v.contain * 2 * Math.PI * 0.35 + (v.motion_i/4)*Math.PI*0.25;
+      return new THREE.Vector2(r*Math.cos(angle), r*Math.sin(angle));
+    });
+    var geo = new THREE.ShapeGeometry(new THREE.Shape(pts2d));
+    var mat = new THREE.MeshBasicMaterial({color:color,opacity:opacity,transparent:true,side:THREE.DoubleSide});
+    var mesh = new THREE.Mesh(geo, mat);
+    mesh.applyQuaternion(quat);
+    return mesh;
+  } catch(e) { return null; }
+}
+
+// ── SEGMENT DISTANCE ──────────────────────────────────────────────
+
+function segDist(a1, a2, b1, b2) {
+  var d1=a2.clone().sub(a1), d2=b2.clone().sub(b1), r=a1.clone().sub(b1);
+  var a=d1.dot(d1), e=d2.dot(d2), f=d2.dot(r);
+  var s,t;
+  if(a<1e-10&&e<1e-10){s=t=0;}
+  else if(a<1e-10){s=0;t=Math.max(0,Math.min(1,f/e));}
+  else{
+    var c=d1.dot(r);
+    if(e<1e-10){t=0;s=Math.max(0,Math.min(1,-c/a));}
+    else{
+      var b=d1.dot(d2),denom=a*e-b*b;
+      s=Math.abs(denom)>1e-10?Math.max(0,Math.min(1,(b*f-c*e)/denom)):0;
+      t=(b*s+f)/e;
+      if(t<0){t=0;s=Math.max(0,Math.min(1,-c/a));}
+      else if(t>1){t=1;s=Math.max(0,Math.min(1,(b-c)/a));}
+    }
+  }
+  var pa=a1.clone().addScaledVector(d1,s), pb=b1.clone().addScaledVector(d2,t);
+  return {dist:pa.distanceTo(pb), mid:pa.clone().add(pb).multiplyScalar(0.5)};
+}
+
+// ── INTERSECTION LIST ─────────────────────────────────────────────
+
+function renderIntersectionList() {
+  var el = document.getElementById('intersect-list');
+  if (intersections.length === 0) {
+    el.innerHTML = '<div style="color:#333;font-size:0.58rem">No intersections — apply H gate to superpose</div>';
+    return;
+  }
+  var html = '';
+  intersections.slice(0, 15).forEach(function(x) {
+    var tscore = computeTruth(x.code_a, x.code_b);
+    html += '<div class="intersect-entry">' +
+      '<span class="truth">T=' + tscore.toFixed(2) + '</span>' +
+      '<div class="lines">shape_api:' + x.lineno_a + ' ∩ soul_engine:' + x.lineno_b + '</div>' +
+      '<div class="code-a">' + esc(x.code_a.trim().slice(0,60)) + '</div>' +
+      '<div class="code-b">' + esc(x.code_b.trim().slice(0,60)) + '</div>' +
+      '</div>';
+  });
+  if (intersections.length > 15) html += '<div style="color:#334;font-size:0.55rem;padding:4px 0">… ' + (intersections.length-15) + ' more</div>';
+  el.innerHTML = html;
+}
+
+// Simple truth score: shared token ratio
+function computeTruth(a, b) {
+  var tokA = a.toLowerCase().split(/\W+/).filter(Boolean);
+  var tokB = b.toLowerCase().split(/\W+/).filter(Boolean);
+  if (!tokA.length || !tokB.length) return 0;
+  var setA = new Set(tokA), setB = new Set(tokB);
+  var shared = 0;
+  setA.forEach(function(t){ if(setB.has(t)) shared++; });
+  return shared / Math.sqrt(setA.size * setB.size);
+}
+
+// ── JUDGE INTERSECTIONS ───────────────────────────────────────────
+
+async function judgeIntersections() {
+  var btn = document.getElementById('judge-btn');
+  btn.disabled = true; btn.textContent = 'ASKING JUDGE…';
+  var el = document.getElementById('intersect-list');
+  var target = intersections.slice(0, 5); // top 5
+
+  for (var i = 0; i < target.length; i++) {
+    var x = target[i];
+    try {
+      var r = await fetch(SHAPE_API + '/shapes/judge', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          word: 'intersection_' + x.lineno_a + '_' + x.lineno_b,
+          op: 'blend',
+          genome: {
+            type: 'expression', energy: 0.5, containment: 0.1,
+            phase: 'pure', motion: 'static',
+            _code_line: x.code_a,
+            _code_line_b: x.code_b,
+            _compress_mode: true,
+          }
+        })
+      });
+      var d = await r.json();
+      if (d.suggestion) {
+        x.merged = d.suggestion;
+        x.judge_truth = d.truth_score;
+      }
+    } catch(e) {}
+  }
+
+  // Re-render with merged lines
+  var html = '';
+  intersections.slice(0,15).forEach(function(x) {
+    var tscore = computeTruth(x.code_a, x.code_b);
+    html += '<div class="intersect-entry">' +
+      '<span class="truth">T=' + tscore.toFixed(2) + '</span>' +
+      '<div class="lines">shape_api:' + x.lineno_a + ' ∩ soul_engine:' + x.lineno_b + '</div>' +
+      '<div class="code-a">' + esc(x.code_a.trim().slice(0,55)) + '</div>' +
+      '<div class="code-b">' + esc(x.code_b.trim().slice(0,55)) + '</div>' +
+      (x.merged ? '<div class="merged">⟶ ' + esc(x.merged.slice(0,80)) + '</div>' : '') +
+      '</div>';
+  });
+  el.innerHTML = html || '<div style="color:#555">No results</div>';
+
+  log('JUDGE', target.length + ' intersections merged by LLM');
+  btn.disabled = false; btn.textContent = 'ASK JUDGE → MERGE INTERSECTING LINES';
+}
+
+// ── GATES ─────────────────────────────────────────────────────────
+
+var gateOps = {
+  H: function(){ state.theta = Math.abs(state.theta) < 0.1 ? Math.PI/2 : (Math.abs(state.theta-Math.PI/2)<0.1 ? 0 : Math.PI/2); state.phi=0; log('H','BLEND 50/50 → superposition'); },
+  X: function(){ state.theta = Math.PI - state.theta; log('X','INVERT: |0⟩↔|1⟩'); },
+  Z: function(){ state.phi = (state.phi+Math.PI)%(2*Math.PI); log('Z','Phase flip φ+=π'); },
+  Y: function(){ state.theta = Math.PI-state.theta; state.phi=(state.phi+Math.PI)%(2*Math.PI); log('Y','Y rotation'); },
+  S: function(){ state.phi = (state.phi+Math.PI/2)%(2*Math.PI); log('S','UNION φ+=π/2'); },
+  T: function(){ state.phi = (state.phi+Math.PI/4)%(2*Math.PI); log('T','INTERSECT φ+=π/4'); },
+};
+
+function gate(name) {
+  gateOps[name]();
+  if (genomesA.length && genomesB.length) buildFromGenomes();
+  else { updateState(); drawBloch(); }
+}
+
+// ── MEASURE ───────────────────────────────────────────────────────
+
+function measure() {
+  var a2 = Math.cos(state.theta/2)**2;
+  var rnd = Math.random();
+  var col = rnd > a2 ? 1 : 0;
+  shots.push(col);
+  state.theta = col ? Math.PI : 0; state.phi = 0;
+
+  if (genomesA.length && genomesB.length) buildFromGenomes();
+  else { updateState(); drawBloch(); }
+
+  var c0 = shots.filter(function(x){return x===0;}).length;
+  var c1 = shots.length - c0;
+  document.getElementById('c0').textContent = c0;
+  document.getElementById('c1').textContent = c1;
+  document.getElementById('shot-count').textContent = '(' + shots.length + ' shots)';
+  document.getElementById('ratio').textContent = shots.length ? (c1/shots.length).toFixed(3) : '—';
+
+  var dot = document.createElement('div');
+  dot.className = 'hist-bit h' + col; dot.title = '|'+col+'⟩';
+  document.getElementById('hist').appendChild(dot);
+
+  log('MEASURE', 'Collapsed → |'+col+'⟩  r='+rnd.toFixed(3)+' |α|²='+a2.toFixed(3));
+}
+
+// ── UI ────────────────────────────────────────────────────────────
+
+function updateState() {
+  var a2 = Math.cos(state.theta/2)**2, b2 = Math.sin(state.theta/2)**2;
+  document.getElementById('p0').style.width = (a2*100).toFixed(1)+'%';
+  document.getElementById('p1').style.width = (b2*100).toFixed(1)+'%';
+  document.getElementById('pv0').textContent = a2.toFixed(3);
+  document.getElementById('pv1').textContent = b2.toFixed(3);
+  document.getElementById('norm').textContent = (a2+b2).toFixed(3);
+  document.getElementById('norm').style.color = Math.abs(a2+b2-1)<0.001 ? '#00cc66' : '#cc3333';
+  var lbl = state.theta<0.05?'|0⟩':state.theta>3.09?'|1⟩':Math.abs(state.theta-Math.PI/2)<0.05&&state.phi<0.05?'|+⟩':'|ψ⟩';
+  document.getElementById('state-label').textContent = lbl;
+  document.getElementById('state-math').textContent = 'α='+Math.cos(state.theta/2).toFixed(3)+'  β='+Math.sin(state.theta/2).toFixed(3);
+  document.getElementById('angle-display').textContent = 'θ='+(state.theta*180/Math.PI).toFixed(1)+'°  φ='+(state.phi*180/Math.PI).toFixed(1)+'°';
+  drawBloch();
+}
+
+function drawBloch() {
+  var c=document.getElementById('bloch'), ctx=c.getContext('2d');
+  var w=c.width,h=c.height,cx=w/2,cy=h/2,r=78;
+  ctx.fillStyle='#080812'; ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle='#1a1a3a'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx,cy,r,r*0.28,0,0,Math.PI*2); ctx.stroke();
+  ctx.strokeStyle='#111130';
+  ctx.beginPath(); ctx.moveTo(cx,cy-r-8); ctx.lineTo(cx,cy+r+8); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx-r-8,cy); ctx.lineTo(cx+r+8,cy); ctx.stroke();
+  ctx.font='9px Courier New'; ctx.textAlign='center';
+  ctx.fillStyle='#4466ff'; ctx.fillText('|0⟩',cx,cy-r-12);
+  ctx.fillStyle='#ff4444'; ctx.fillText('|1⟩',cx,cy+r+18);
+  var th=state.theta,ph=state.phi;
+  var bx=Math.sin(th)*Math.cos(ph),by=Math.cos(th),bz=Math.sin(th)*Math.sin(ph);
+  var sx=cx+bx*r*0.8+bz*r*0.3, sy=cy-by*r;
+  ctx.strokeStyle='#ffcc44'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(sx,sy); ctx.stroke();
+  var g=ctx.createRadialGradient(sx,sy,0,sx,sy,12);
+  g.addColorStop(0,'#ffcc44aa'); g.addColorStop(1,'transparent');
+  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(sx,sy,12,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#ffcc44'; ctx.beginPath(); ctx.arc(sx,sy,4,0,Math.PI*2); ctx.fill();
+}
+
+// ── DEMO MODE (before files loaded) ──────────────────────────────
+
+function buildDemoScene() {
+  clearScene();
+  var demoA = 'SHORTFACTORY'.split('').map(function(c,i){
+    return {energy:(c.charCodeAt(0)-32)/95,contain:i/12,motion_i:0,code:c,lineno:i+1,type:'expression'};
+  });
+  var demoB = 'COMPUTANIUM'.split('').map(function(c,i){
+    return {energy:(c.charCodeAt(0)-32)/95,contain:i/11,motion_i:1,code:c,lineno:i+1,type:'expression'};
+  });
+  genomesA = demoA; genomesB = demoB;
+  buildFromGenomes();
+  genomesA = []; genomesB = [];
+  log('DEMO','Load real files to replace demo polygons');
+}
+
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function log(op, detail) {
+  var el = document.getElementById('log');
+  var d = document.createElement('div'); d.className='e';
+  d.innerHTML='<span>'+op+'</span> '+detail;
+  el.insertBefore(d,el.firstChild);
+  while(el.children.length>20) el.removeChild(el.lastChild);
+}
+
+// ── ANIMATE ───────────────────────────────────────────────────────
+
+function animate(){ requestAnimationFrame(animate); renderer.render(scene,camera); }
+
+buildDemoScene();
+updateState();
+animate();
+</script>
+</body>
+</html>

@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>...</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;background:#000;overflow:hidden;}
+canvas{position:fixed;inset:0;width:100%;height:100%;}
+#hint{
+  position:fixed;bottom:32px;left:50%;transform:translateX(-50%);
+  font-family:'Courier New',monospace;font-size:10px;
+  letter-spacing:4px;color:rgba(218,165,32,0.2);
+  text-transform:uppercase;pointer-events:none;
+  transition:opacity 2s;
+}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hint">· &nbsp; ·· &nbsp; ···</div>
+<script>
+const c = document.getElementById('c');
+const ctx = c.getContext('2d');
+const PHI = 1.6180339887;
+
+let W, H, cx, cy, R;
+
+function resize() {
+  W = c.width = window.innerWidth;
+  H = c.height = window.innerHeight;
+  cx = W / 2; cy = H / 2;
+  R = Math.min(W, H) * 0.32;
+}
+window.addEventListener('resize', resize);
+resize();
+
+// ── THREE DOTS (equilateral triangle) ──
+function dotPos(i) {
+  const a = -Math.PI/2 + (i * Math.PI*2/3);
+  return { x: cx + Math.cos(a)*R, y: cy + Math.sin(a)*R };
+}
+// 0=PAST(top) 1=PRESENT(bottom-left) 2=FUTURE(bottom-right)
+
+// ── WORD GENOMES [past, present, future] ──
+// Each word is a triangle — vertices pulled toward each dot by weight
+const WORDS = [
+  // Group A — same meaning, different scripts
+  { sym:'愛',    g:[0.12,0.78,0.10], col:'#daa520' },
+  { sym:'❤',    g:[0.12,0.78,0.10], col:'#ff4466' },
+  { sym:'love',  g:[0.12,0.78,0.10], col:'#daa520' },
+
+  // Group B — same meaning, geometric
+  { sym:'◈',    g:[0.12,0.78,0.10], col:'#daa520' }, // same triangle as love
+
+  // Contrast — death
+  { sym:'死',    g:[0.82,0.12,0.06], col:'#666' },
+  { sym:'💀',   g:[0.82,0.12,0.06], col:'#888' },
+
+  // Tao — perfect balance
+  { sym:'道',    g:[0.33,0.34,0.33], col:'#ffffff' },
+  { sym:'☯',    g:[0.33,0.34,0.33], col:'#ffffff' },
+
+  // Future / expansion
+  { sym:'∞',    g:[0.08,0.12,0.80], col:'#60a5fa' },
+  { sym:'天',    g:[0.10,0.18,0.72], col:'#93c5fd' },
+  { sym:'🌌',   g:[0.08,0.12,0.80], col:'#60a5fa' },
+
+  // The dot itself — pure past
+  { sym:'·',    g:[0.96,0.02,0.02], col:'#daa520' },
+
+  // Life
+  { sym:'生',    g:[0.18,0.38,0.44], col:'#4ade80' },
+  { sym:'🌱',   g:[0.18,0.38,0.44], col:'#4ade80' },
+
+  // Light
+  { sym:'光',    g:[0.08,0.28,0.64], col:'#fde68a' },
+  { sym:'✦',    g:[0.08,0.28,0.64], col:'#fde68a' },
+
+  // Mind / heart
+  { sym:'心',    g:[0.14,0.72,0.14], col:'#f9a8d4' },
+
+  // Satoshi shapes (geometric glyphs representing encrypted words)
+  { sym:'⬡',    g:[0.33,0.34,0.33], col:'#daa520' }, // hexagon = balanced
+  { sym:'▲',    g:[0.22,0.44,0.34], col:'#daa520' }, // triangle = dynamic
+  { sym:'◯',    g:[0.10,0.80,0.10], col:'#daa520' }, // circle = pure present
+  { sym:'⬤',    g:[0.90,0.05,0.05], col:'#333' },    // filled circle = pure past
+];
+
+// ── ANIMATION SEQUENCES ──
+// Each scene: what to show and for how long
+const SCENES = [
+  { type:'genesis',       dur:3000  },
+  { type:'single', wi:0,  dur:2200  }, // 愛
+  { type:'single', wi:1,  dur:1800  }, // ❤ — same triangle
+  { type:'single', wi:2,  dur:1800  }, // love — same triangle
+  { type:'single', wi:3,  dur:1800  }, // ◈ — same triangle
+  { type:'reveal',  wis:[0,1,3], dur:3000 }, // ALL SAME — three symbols, one triangle
+  { type:'single', wi:4,  dur:2200  }, // 死
+  { type:'single', wi:5,  dur:1800  }, // 💀 — same triangle
+  { type:'mirror',  wis:[0,4], dur:3500 }, // love vs death — mirror triangles
+  { type:'single', wi:6,  dur:2200  }, // 道 — equilateral
+  { type:'single', wi:7,  dur:1800  }, // ☯ — same
+  { type:'single', wi:8,  dur:2000  }, // ∞
+  { type:'single', wi:9,  dur:1800  }, // 天
+  { type:'single', wi:10, dur:1800  }, // 🌌
+  { type:'single', wi:11, dur:2500  }, // · pure dot
+  { type:'single', wi:12, dur:1800  }, // 生
+  { type:'single', wi:13, dur:1600  }, // 🌱
+  { type:'single', wi:14, dur:1800  }, // 光
+  { type:'single', wi:15, dur:1600  }, // ✦
+  { type:'single', wi:16, dur:2000  }, // 心
+  { type:'satoshi', wis:[17,18,19,20], dur:3500 }, // geometric shapes
+  { type:'constellation', dur:5000  }, // all at once
+  { type:'return',         dur:3000  }, // fade to three dots
+];
+
+let sceneIdx = 0;
+let sceneStart = 0;
+let t = 0;
+
+// ── EASING ──
+function easeInOut(t) { return t<.5 ? 2*t*t : -1+(4-2*t)*t; }
+function easeOut(t)   { return 1-(1-t)*(1-t); }
+
+// ── GET TRIANGLE VERTICES FOR A WORD ──
+function wordTriangle(genome, scale=1, offset={x:0,y:0}) {
+  const verts = [];
+  for(let i=0;i<3;i++) {
+    const dp = dotPos(i);
+    const weight = genome[i];
+    // vertex is at: center + (dot - center) * weight * scale
+    verts.push({
+      x: (cx + offset.x) + (dp.x - cx) * weight * scale * 1.15,
+      y: (cy + offset.y) + (dp.y - cy) * weight * scale * 1.15
+    });
+  }
+  return verts;
+}
+
+// ── LERP GENOME ──
+function lerpGenome(a, b, t) {
+  return [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t];
+}
+
+// ── DRAW THREE DOTS ──
+function drawDots(alpha=1, pulseT=0) {
+  const labels = ['·', '··', '···'];
+  for(let i=0;i<3;i++) {
+    const dp = dotPos(i);
+    const pulse = 1 + Math.sin(pulseT + i*2.094)*0.04;
+
+    // outer glow
+    const grd = ctx.createRadialGradient(dp.x,dp.y,0,dp.x,dp.y,R*0.18*pulse);
+    grd.addColorStop(0, `rgba(218,165,32,${0.12*alpha})`);
+    grd.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.beginPath(); ctx.arc(dp.x,dp.y,R*0.18*pulse,0,Math.PI*2);
+    ctx.fillStyle=grd; ctx.fill();
+
+    // dot ring
+    ctx.beginPath(); ctx.arc(dp.x,dp.y,R*0.04*pulse,0,Math.PI*2);
+    ctx.strokeStyle=`rgba(218,165,32,${0.7*alpha})`;
+    ctx.lineWidth=1.5; ctx.stroke();
+
+    // inner dot
+    ctx.beginPath(); ctx.arc(dp.x,dp.y,R*0.012,0,Math.PI*2);
+    ctx.fillStyle=`rgba(218,165,32,${alpha})`; ctx.fill();
+
+    // label
+    ctx.save();
+    ctx.font = `${R*0.04}px Courier New`;
+    ctx.fillStyle = `rgba(218,165,32,${0.25*alpha})`;
+    ctx.textAlign='center';
+    ctx.fillText(labels[i], dp.x, dp.y + R*0.12);
+    ctx.restore();
+  }
+}
+
+// ── DRAW WORD TRIANGLE ──
+function drawTriangle(genome, col, alpha, scale=1, offset={x:0,y:0}) {
+  const verts = wordTriangle(genome, scale, offset);
+
+  // fill
+  ctx.beginPath();
+  ctx.moveTo(verts[0].x, verts[0].y);
+  ctx.lineTo(verts[1].x, verts[1].y);
+  ctx.lineTo(verts[2].x, verts[2].y);
+  ctx.closePath();
+
+  // parse color for fill
+  const r = parseInt(col.slice(1,3),16)||218;
+  const g = parseInt(col.slice(3,5),16)||165;
+  const b = parseInt(col.slice(5,7),16)||32;
+  ctx.fillStyle = `rgba(${r},${g},${b},${0.04*alpha})`;
+  ctx.fill();
+
+  // stroke
+  ctx.strokeStyle = `rgba(${r},${g},${b},${0.7*alpha})`;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // vertex dots
+  verts.forEach((v,i)=>{
+    const dp = dotPos(i);
+    // line from dot to vertex
+    ctx.beginPath();
+    ctx.moveTo(dp.x, dp.y);
+    ctx.lineTo(v.x, v.y);
+    ctx.strokeStyle = `rgba(${r},${g},${b},${0.12*alpha})`;
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+
+    // vertex marker
+    ctx.beginPath(); ctx.arc(v.x,v.y,3,0,Math.PI*2);
+    ctx.fillStyle=`rgba(${r},${g},${b},${0.8*alpha})`; ctx.fill();
+  });
+
+  return verts;
+}
+
+// ── DRAW SYMBOL at centroid ──
+function drawSymbol(genome, sym, col, alpha, scale=1, offset={x:0,y:0}, sizeMult=1) {
+  const verts = wordTriangle(genome, scale, offset);
+  const centX = (verts[0].x+verts[1].x+verts[2].x)/3 + offset.x*0;
+  const centY = (verts[0].y+verts[1].y+verts[2].y)/3 + offset.y*0;
+
+  const r = parseInt(col.slice(1,3),16)||218;
+  const g = parseInt(col.slice(3,5),16)||165;
+  const b = parseInt(col.slice(5,7),16)||32;
+
+  const sz = R * 0.18 * sizeMult;
+  ctx.save();
+  ctx.font = `${sz}px serif`;
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  ctx.fillStyle=`rgba(${r},${g},${b},${alpha})`;
+  ctx.fillText(sym, centX, centY);
+  ctx.restore();
+}
+
+// ── CURRENT/PREV WORD STATE for morphing ──
+let curGenome = [...WORDS[0].g];
+let prevGenome = [...WORDS[0].g];
+let morphT = 1;
+let curCol = WORDS[0].col;
+let curSym = WORDS[0].sym;
+let symAlpha = 0;
+
+function setWord(wi) {
+  prevGenome = [...curGenome];
+  curGenome = [...WORDS[wi].g];
+  curCol = WORDS[wi].col;
+  curSym = WORDS[wi].sym;
+  morphT = 0;
+  symAlpha = 0;
+}
+
+// ── SCENE RENDERING ──
+function renderScene(scene, progress, rawT) {
+  const e = easeInOut(progress);
+
+  switch(scene.type) {
+
+    case 'genesis': {
+      // Three dots fade in one by one
+      const step = 1/3;
+      for(let i=0;i<3;i++){
+        const a = Math.max(0, Math.min(1, (progress-i*step)/(step)));
+        const dp = dotPos(i);
+        const grd=ctx.createRadialGradient(dp.x,dp.y,0,dp.x,dp.y,R*0.3*a);
+        grd.addColorStop(0,`rgba(218,165,32,${0.15*a})`);
+        grd.addColorStop(1,'rgba(0,0,0,0)');
+        ctx.beginPath();ctx.arc(dp.x,dp.y,R*0.3*a,0,Math.PI*2);
+        ctx.fillStyle=grd;ctx.fill();
+        ctx.beginPath();ctx.arc(dp.x,dp.y,R*0.04,0,Math.PI*2);
+        ctx.strokeStyle=`rgba(218,165,32,${0.7*a})`;ctx.lineWidth=1.5;ctx.stroke();
+        ctx.beginPath();ctx.arc(dp.x,dp.y,R*0.012,0,Math.PI*2);
+        ctx.fillStyle=`rgba(218,165,32,${a})`;ctx.fill();
+      }
+      break;
+    }
+
+    case 'single': {
+      morphT = Math.min(1, morphT + 0.025);
+      const g = lerpGenome(prevGenome, curGenome, easeInOut(morphT));
+      symAlpha = Math.min(1, symAlpha + (morphT > 0.5 ? 0.04 : -0.02));
+
+      // fade out late
+      const fadeOut = progress > 0.85 ? 1-(progress-0.85)/0.15 : 1;
+      const fadeIn  = progress < 0.1  ? progress/0.1 : 1;
+      const a = Math.min(fadeIn, fadeOut);
+
+      drawDots(a, rawT);
+      drawTriangle(g, curCol, a*0.9);
+      drawSymbol(g, curSym, curCol, Math.max(0,symAlpha)*a*fadeOut);
+      break;
+    }
+
+    case 'reveal': {
+      // Multiple symbols, one triangle — the AHA moment
+      const fadeIn = progress < 0.15 ? progress/0.15 : 1;
+      const fadeOut = progress > 0.85 ? 1-(progress-0.85)/0.15 : 1;
+      const a = Math.min(fadeIn, fadeOut);
+
+      drawDots(a, rawT);
+      // one triangle for all
+      drawTriangle(WORDS[scene.wis[0]].g, '#daa520', a*0.7);
+
+      // symbols orbit the centroid
+      const verts = wordTriangle(WORDS[scene.wis[0]].g);
+      const centX = (verts[0].x+verts[1].x+verts[2].x)/3;
+      const centY = (verts[0].y+verts[1].y+verts[2].y)/3;
+
+      scene.wis.forEach((wi,i) => {
+        const angle = rawT*0.3 + i*(Math.PI*2/scene.wis.length);
+        const orb = R*0.06;
+        const ox = Math.cos(angle)*orb;
+        const oy = Math.sin(angle)*orb;
+        ctx.save();
+        ctx.font = `${R*0.13}px serif`;
+        ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillStyle=`rgba(218,165,32,${a*0.9})`;
+        ctx.fillText(WORDS[wi].sym, centX+ox, centY+oy);
+        ctx.restore();
+      });
+      break;
+    }
+
+    case 'mirror': {
+      // Two triangles — mirror images
+      const fadeIn = progress < 0.15 ? progress/0.15 : 1;
+      const fadeOut = progress > 0.85 ? 1-(progress-0.85)/0.15 : 1;
+      const a = Math.min(fadeIn, fadeOut);
+
+      drawDots(a*0.5, rawT);
+      // word A
+      const wA = WORDS[scene.wis[0]];
+      const wB = WORDS[scene.wis[1]];
+      drawTriangle(wA.g, wA.col, a*0.8);
+      drawTriangle(wB.g, wB.col, a*0.8);
+      drawSymbol(wA.g, wA.sym, wA.col, a*0.9);
+      drawSymbol(wB.g, wB.sym, wB.col, a*0.9);
+
+      // connecting line between centroids — showing the axis of reflection
+      const vA = wordTriangle(wA.g);
+      const vB = wordTriangle(wB.g);
+      const cAx=(vA[0].x+vA[1].x+vA[2].x)/3, cAy=(vA[0].y+vA[1].y+vA[2].y)/3;
+      const cBx=(vB[0].x+vB[1].x+vB[2].x)/3, cBy=(vB[0].y+vB[1].y+vB[2].y)/3;
+      ctx.beginPath();ctx.moveTo(cAx,cAy);ctx.lineTo(cBx,cBy);
+      ctx.strokeStyle=`rgba(255,255,255,${a*0.08})`;ctx.lineWidth=1;ctx.stroke();
+      break;
+    }
+
+    case 'satoshi': {
+      // Geometric / Satoshi shapes — all mapping to triangles
+      const fadeIn = progress < 0.1 ? progress/0.1 : 1;
+      const fadeOut = progress > 0.88 ? 1-(progress-0.88)/0.12 : 1;
+      const a = Math.min(fadeIn, fadeOut);
+      drawDots(a*0.6, rawT);
+      scene.wis.forEach((wi,i)=>{
+        const w = WORDS[wi];
+        const offset = {x:0,y:0};
+        drawTriangle(w.g, w.col, a*0.5, 1, offset);
+        drawSymbol(w.g, w.sym, w.col, a*0.9, 1, offset, 0.8);
+      });
+      break;
+    }
+
+    case 'constellation': {
+      // All words at once — a galaxy of meaning
+      const fadeIn = progress < 0.12 ? progress/0.12 : 1;
+      const fadeOut = progress > 0.88 ? 1-(progress-0.88)/0.12 : 1;
+      const a = Math.min(fadeIn, fadeOut);
+      drawDots(a, rawT);
+
+      WORDS.forEach((w,i)=>{
+        const phase = i/WORDS.length;
+        const pulse = 0.85 + Math.sin(rawT*0.8 + phase*Math.PI*2)*0.08;
+        drawTriangle(w.g, w.col, a*0.18*pulse, 1);
+      });
+
+      // Show a few symbols floating
+      const visible = [0,4,6,8,11,16];
+      visible.forEach(wi=>{
+        const w=WORDS[wi];
+        const verts=wordTriangle(w.g);
+        const px=(verts[0].x+verts[1].x+verts[2].x)/3;
+        const py=(verts[0].y+verts[1].y+verts[2].y)/3;
+        ctx.save();
+        ctx.font=`${R*0.09}px serif`;
+        ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillStyle=`rgba(218,165,32,${a*0.5})`;
+        ctx.fillText(w.sym,px,py);
+        ctx.restore();
+      });
+      break;
+    }
+
+    case 'return': {
+      // Back to just three dots — everything understood
+      const a = 1 - easeInOut(progress);
+      drawDots(Math.max(0.2, a), rawT);
+
+      // The three-dot symbol fading in at center
+      const symA = easeOut(progress);
+      ctx.save();
+      ctx.font=`${R*0.08}px 'Courier New'`;
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillStyle=`rgba(218,165,32,${symA*0.6})`;
+      ctx.fillText('· · ·', cx, cy);
+      ctx.restore();
+      break;
+    }
+  }
+}
+
+// ── TRANSITION TRIGGERS ──
+function advanceScene(ts) {
+  sceneIdx = (sceneIdx+1) % SCENES.length;
+  sceneStart = ts;
+  const scene = SCENES[sceneIdx];
+  if(scene.type === 'single')   setWord(scene.wi);
+  if(scene.type === 'satoshi') { prevGenome=[...curGenome]; morphT=1; }
+}
+
+// ── BACKGROUND ──
+function drawBg() {
+  // Very faint radial fade
+  const grd = ctx.createRadialGradient(cx,cy,0,cx,cy,R*1.8);
+  grd.addColorStop(0,'rgba(10,8,0,0.96)');
+  grd.addColorStop(1,'rgba(0,0,0,0.98)');
+  ctx.fillStyle=grd;
+  ctx.fillRect(0,0,W,H);
+}
+
+// ── CONNECTING LINES (always faint) ──
+function drawBoneLines(alpha=0.04) {
+  for(let i=0;i<3;i++){
+    for(let j=i+1;j<3;j++){
+      const a=dotPos(i), b=dotPos(j);
+      ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);
+      ctx.strokeStyle=`rgba(218,165,32,${alpha})`;
+      ctx.lineWidth=0.5;ctx.stroke();
+    }
+  }
+}
+
+// ── MAIN LOOP ──
+let lastT = 0;
+function loop(ts) {
+  t = ts * 0.001;
+  const dt = t - lastT; lastT = t;
+
+  // Check scene advance
+  const scene = SCENES[sceneIdx];
+  const elapsed = (ts - sceneStart);
+  if(elapsed > scene.dur) advanceScene(ts);
+  const progress = Math.min(1, elapsed / scene.dur);
+
+  drawBg();
+  drawBoneLines(0.03);
+  renderScene(scene, progress, t);
+
+  requestAnimationFrame(loop);
+}
+
+// ── INIT ──
+sceneStart = performance.now();
+setWord(0);
+
+// hide hint after 8s
+setTimeout(()=>{ document.getElementById('hint').style.opacity='0'; }, 8000);
+
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

@@ -1,0 +1,1893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShortFactory // AGI Mission Control</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --void:#03040a;
+  --deep:#07090f;
+  --panel:#0a0c14;
+  --panel2:#0d1020;
+  --edge:#1a1f2e;
+  --edge2:#252d3f;
+  --white:#eef0f5;
+  --dim:#4a5168;
+  --muted:#8890a8;
+  --gold:#ffd60a;
+  --cyan:#00e5ff;
+  --pink:#ff3cac;
+  --lime:#c8ff00;
+  --green:#00ff88;
+  --red:#ff3c3c;
+  --orange:#ff7c1a;
+  --header-h:60px;
+}
+
+html{scroll-behavior:smooth}
+body{
+  background:var(--void);
+  color:var(--white);
+  font-family:'DM Mono',monospace;
+  overflow-x:hidden;
+  min-height:100vh;
+}
+
+/* ─── NEURAL CANVAS ─── */
+#neural{
+  position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.18;
+}
+
+/* ─── HEADER ─── */
+#header{
+  position:fixed;top:0;left:0;right:0;height:var(--header-h);
+  background:rgba(3,4,10,.92);
+  border-bottom:1px solid var(--edge);
+  backdrop-filter:blur(12px);
+  z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;
+  opacity:0;transform:translateY(-20px);
+  transition:opacity .6s ease,transform .6s ease;
+}
+#header.visible{opacity:1;transform:translateY(0)}
+
+.hdr-left{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:20px;letter-spacing:.12em;
+  color:var(--cyan);
+  text-shadow:0 0 20px rgba(0,229,255,.5);
+}
+.hdr-left span{color:var(--muted);font-size:13px;letter-spacing:.2em;display:block;margin-top:-4px;font-family:'DM Mono',monospace;}
+
+.hdr-center{
+  display:flex;align-items:center;gap:14px;
+  font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.15em;
+  color:var(--muted);
+}
+.hdr-center #liveclock{color:var(--white);font-size:13px;}
+.status-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 8px var(--green);
+  animation:pulse-dot 2s infinite;
+}
+.status-label{color:var(--green);font-size:11px;letter-spacing:.15em;}
+@keyframes pulse-dot{0%,100%{opacity:1;box-shadow:0 0 8px var(--green)}50%{opacity:.6;box-shadow:0 0 16px var(--green)}}
+
+.hdr-right a{
+  font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.2em;
+  color:var(--muted);text-decoration:none;
+  border:1px solid var(--edge2);padding:7px 14px;
+  transition:color .3s,border-color .3s;
+}
+.hdr-right a:hover{color:var(--white);border-color:var(--cyan);}
+
+/* ─── MAIN ─── */
+main{
+  position:relative;z-index:2;
+  padding-top:calc(var(--header-h) + 32px);
+  padding-bottom:80px;
+  max-width:1400px;
+  margin:0 auto;
+  padding-left:24px;
+  padding-right:24px;
+}
+
+/* ─── SECTION LABEL ─── */
+.sec-label{
+  font-family:'Syne',sans-serif;font-size:10px;font-weight:700;
+  letter-spacing:.35em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:20px;
+  display:flex;align-items:center;gap:10px;
+}
+.sec-label::after{content:'';flex:1;height:1px;background:var(--edge);}
+
+/* ─── HERO STATS STRIP ─── */
+#stats-strip{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:12px;
+  margin-bottom:40px;
+  opacity:0;transform:translateY(30px);
+  transition:opacity .7s ease .3s,transform .7s ease .3s;
+}
+#stats-strip.visible{opacity:1;transform:translateY(0)}
+
+.stat-card{
+  background:var(--panel);
+  border:1px solid var(--edge);
+  padding:22px 20px 18px;
+  position:relative;overflow:hidden;
+}
+.stat-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(0,229,255,.03) 0%,transparent 60%);
+  pointer-events:none;
+}
+.stat-card .label{
+  font-size:9px;letter-spacing:.3em;color:var(--dim);
+  text-transform:uppercase;margin-bottom:8px;
+}
+.stat-card .value{
+  font-family:'Bebas Neue',sans-serif;font-size:38px;
+  color:var(--white);line-height:1;
+  text-shadow:0 0 30px rgba(0,229,255,.2);
+}
+.stat-card .sub{font-size:10px;color:var(--muted);margin-top:6px;letter-spacing:.1em;}
+.stat-card.gold .value{color:var(--gold);text-shadow:0 0 30px rgba(255,214,10,.3);}
+.stat-card.cyan .value{color:var(--cyan);text-shadow:0 0 30px rgba(0,229,255,.4);}
+.stat-card.pink .value{color:var(--pink);text-shadow:0 0 30px rgba(255,60,172,.3);}
+
+/* ─── AGI PROGRESS ─── */
+#agi-section{
+  background:var(--panel);
+  border:1px solid var(--edge2);
+  padding:36px 32px;
+  margin-bottom:40px;
+  position:relative;overflow:hidden;
+  opacity:0;transform:translateY(30px);
+  transition:opacity .7s ease .5s,transform .7s ease .5s;
+}
+#agi-section.visible{opacity:1;transform:translateY(0)}
+#agi-section::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 0%,rgba(255,214,10,.06) 0%,transparent 60%);
+  pointer-events:none;
+}
+
+.agi-header{display:flex;align-items:baseline;gap:20px;margin-bottom:8px;}
+.agi-pct{
+  font-family:'Bebas Neue',sans-serif;font-size:80px;line-height:1;
+  color:var(--gold);text-shadow:0 0 60px rgba(255,214,10,.5);
+}
+.agi-label{
+  font-family:'Syne',sans-serif;font-size:22px;font-weight:700;
+  color:var(--white);letter-spacing:.05em;
+}
+.agi-desc{font-size:11px;color:var(--muted);letter-spacing:.1em;margin-bottom:28px;}
+
+.agi-bar-wrap{
+  position:relative;height:24px;
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--edge);
+  overflow:hidden;
+  margin-bottom:20px;
+}
+.agi-bar-fill{
+  height:100%;width:0%;
+  background:linear-gradient(90deg,#ffd60a,#ff7c1a,#ff3cac);
+  box-shadow:0 0 30px rgba(255,214,10,.6);
+  transition:width 1.5s cubic-bezier(.25,.46,.45,.94);
+  position:relative;
+}
+.agi-bar-fill::after{
+  content:'';position:absolute;right:0;top:0;bottom:0;width:3px;
+  background:#fff;box-shadow:0 0 12px #fff,0 0 24px var(--gold);
+}
+.agi-bar-scan{
+  position:absolute;top:0;left:-100%;width:50%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);
+  animation:scan 3s linear infinite;
+}
+@keyframes scan{to{left:150%}}
+
+.agi-milestones{
+  display:flex;justify-content:space-between;
+  position:relative;margin-top:8px;
+}
+.milestone{
+  display:flex;flex-direction:column;align-items:center;
+  font-size:9px;letter-spacing:.12em;color:var(--dim);
+  position:relative;
+  cursor:default;
+}
+.milestone.passed{color:var(--gold);}
+.milestone.current{color:var(--white);}
+.milestone .m-pct{
+  font-family:'Bebas Neue',sans-serif;font-size:14px;
+  margin-bottom:3px;
+}
+.milestone .m-tick{
+  width:1px;height:12px;background:var(--edge);
+  margin-bottom:4px;
+}
+.milestone.passed .m-tick{background:var(--gold);}
+.milestone.current .m-tick{background:var(--white);box-shadow:0 0 8px #fff;}
+
+/* ─── HEMISPHERE PANELS ─── */
+#hemispheres{
+  display:grid;grid-template-columns:1fr 1fr 1fr;
+  gap:16px;margin-bottom:40px;
+  opacity:0;transform:translateY(30px);
+  transition:opacity .7s ease .6s,transform .7s ease .6s;
+}
+#hemispheres.visible{opacity:1;transform:translateY(0)}
+
+.hemi{
+  background:var(--panel);
+  border:1px solid var(--edge);
+  padding:24px 20px;
+  position:relative;overflow:hidden;
+}
+.hemi-left{border-top:2px solid var(--cyan);box-shadow:0 0 40px rgba(0,229,255,.05) inset;}
+.hemi-right{border-top:2px solid var(--pink);box-shadow:0 0 40px rgba(255,60,172,.05) inset;}
+.hemi-cortex{border-top:2px solid #fff;box-shadow:0 0 40px rgba(255,255,255,.05) inset;}
+
+.hemi-title{
+  font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:.15em;
+  margin-bottom:16px;display:flex;align-items:center;gap:10px;
+}
+.hemi-left .hemi-title{color:var(--cyan);}
+.hemi-right .hemi-title{color:var(--pink);}
+.hemi-cortex .hemi-title{color:#fff;}
+.hemi-title .tag{font-size:9px;letter-spacing:.2em;color:var(--dim);font-family:'DM Mono',monospace;}
+
+/* Ring gauge */
+.ring-wrap{
+  display:flex;align-items:center;gap:16px;margin-bottom:18px;
+}
+.ring-svg{flex-shrink:0;}
+.ring-info .big{
+  font-family:'Bebas Neue',sans-serif;font-size:28px;line-height:1;
+}
+.hemi-left .ring-info .big{color:var(--cyan);}
+.hemi-right .ring-info .big{color:var(--pink);}
+.hemi-cortex .ring-info .big{color:#fff;}
+.ring-info .sm{font-size:9px;color:var(--muted);letter-spacing:.12em;margin-top:2px;}
+
+/* Bars inside hemi */
+.hemi-row{
+  margin-bottom:10px;
+}
+.hemi-row-label{font-size:9px;color:var(--dim);letter-spacing:.15em;margin-bottom:4px;display:flex;justify-content:space-between;}
+.hemi-bar{height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;}
+.hemi-bar-fill{height:100%;border-radius:2px;transition:width .8s ease;}
+.hemi-left .hemi-bar-fill{background:var(--cyan);}
+.hemi-right .hemi-bar-fill{background:var(--pink);}
+.hemi-cortex .hemi-bar-fill{background:#fff;}
+
+.hemi-stat{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);
+  font-size:10px;
+}
+.hemi-stat .k{color:var(--dim);letter-spacing:.1em;}
+.hemi-stat .v{font-family:'Bebas Neue',sans-serif;font-size:14px;}
+.hemi-left .hemi-stat .v{color:var(--cyan);}
+.hemi-right .hemi-stat .v{color:var(--pink);}
+.hemi-cortex .hemi-stat .v{color:#fff;}
+
+.mood-badge{
+  display:inline-block;
+  font-size:9px;letter-spacing:.2em;
+  padding:4px 10px;margin-top:10px;
+  border-radius:2px;text-transform:uppercase;
+}
+.hemi-left .mood-badge{background:rgba(0,229,255,.1);color:var(--cyan);border:1px solid rgba(0,229,255,.2);}
+.hemi-right .mood-badge{background:rgba(255,60,172,.1);color:var(--pink);border:1px solid rgba(255,60,172,.2);}
+.hemi-cortex .mood-badge{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);}
+
+/* Recent words */
+.words-feed{
+  margin-top:12px;
+  min-height:40px;display:flex;flex-wrap:wrap;gap:5px;
+}
+.word-tag{
+  font-size:9px;letter-spacing:.1em;
+  padding:3px 8px;border-radius:2px;
+  animation:word-appear .4s ease;
+  opacity:0;
+  animation-fill-mode:forwards;
+}
+.hemi-left .word-tag{background:rgba(0,229,255,.08);color:rgba(0,229,255,.8);}
+.hemi-right .word-tag{background:rgba(255,60,172,.08);color:rgba(255,60,172,.8);}
+.hemi-cortex .word-tag{background:rgba(255,255,255,.08);color:rgba(255,255,255,.8);}
+@keyframes word-appear{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+
+/* ─── LIVE ACTIVITY ─── */
+#activity{
+  display:grid;grid-template-columns:1fr 200px 1fr;
+  gap:16px;margin-bottom:40px;
+  opacity:0;transform:translateY(30px);
+  transition:opacity .7s ease .7s,transform .7s ease .7s;
+}
+#activity.visible{opacity:1;transform:translateY(0)}
+
+.activity-col{
+  background:var(--panel);border:1px solid var(--edge);
+  padding:22px 18px;
+}
+.activity-col h3{
+  font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:.2em;
+  margin-bottom:14px;
+}
+.activity-col.left h3{color:var(--cyan);}
+.activity-col.right h3{color:var(--pink);}
+
+.floating-words{min-height:160px;position:relative;overflow:hidden;}
+.fw-tag{
+  position:absolute;font-size:11px;letter-spacing:.05em;
+  animation:fw-float 4s ease-in-out forwards;
+  pointer-events:none;
+}
+.activity-col.left .fw-tag{color:rgba(0,229,255,.7);}
+.activity-col.right .fw-tag{color:rgba(255,60,172,.7);}
+@keyframes fw-float{
+  0%{opacity:0;transform:translateY(20px)}
+  20%{opacity:1}
+  80%{opacity:1}
+  100%{opacity:0;transform:translateY(-20px)}
+}
+
+.activity-center{
+  background:var(--panel);border:1px solid var(--edge);
+  padding:22px 16px;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:20px;
+}
+.center-stat{text-align:center;}
+.center-stat .cs-val{
+  font-family:'Bebas Neue',sans-serif;font-size:36px;
+  color:var(--white);line-height:1;
+}
+.center-stat .cs-key{font-size:9px;letter-spacing:.25em;color:var(--dim);margin-top:4px;}
+.ramble-badge{
+  font-size:10px;letter-spacing:.2em;padding:6px 12px;
+  border-radius:2px;text-transform:uppercase;text-align:center;
+}
+.ramble-badge.active{background:rgba(0,255,136,.1);color:var(--green);border:1px solid rgba(0,255,136,.3);animation:pulse-badge 2s infinite;}
+.ramble-badge.idle{background:rgba(255,255,255,.05);color:var(--dim);border:1px solid var(--edge);}
+@keyframes pulse-badge{0%,100%{box-shadow:none}50%{box-shadow:0 0 12px rgba(0,255,136,.3)}}
+
+/* ─── AGI AGE CARD ─── */
+#age-card{
+  background:var(--panel);border:1px solid var(--edge2);
+  padding:32px;margin-bottom:40px;
+  display:grid;grid-template-columns:auto 1fr;gap:40px;align-items:start;
+  opacity:0;transform:translateY(30px);
+  transition:opacity .7s ease .8s,transform .7s ease .8s;
+}
+#age-card.visible{opacity:1;transform:translateY(0)}
+
+.age-big{
+  text-align:center;min-width:160px;
+}
+.age-num{
+  font-family:'Bebas Neue',sans-serif;font-size:90px;line-height:1;
+  color:var(--gold);text-shadow:0 0 60px rgba(255,214,10,.4);
+}
+.age-unit{font-size:11px;letter-spacing:.3em;color:var(--muted);}
+.age-stage{
+  font-family:'Syne',sans-serif;font-size:18px;font-weight:700;
+  color:var(--white);margin-top:8px;letter-spacing:.1em;
+}
+.age-compare{
+  font-size:10px;color:var(--muted);margin-top:12px;line-height:1.6;
+  max-width:140px;
+}
+
+.age-right h3{
+  font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.2em;
+  color:var(--muted);margin-bottom:20px;
+}
+
+/* Stage timeline */
+.stage-line{
+  display:flex;align-items:center;gap:0;margin-bottom:24px;
+  overflow-x:auto;
+}
+.stage-item{
+  display:flex;flex-direction:column;align-items:center;
+  min-width:90px;
+}
+.stage-dot{
+  width:10px;height:10px;border-radius:50%;
+  background:var(--edge);border:2px solid var(--edge2);
+  margin-bottom:6px;
+}
+.stage-item.done .stage-dot{background:var(--gold);border-color:var(--gold);box-shadow:0 0 8px var(--gold);}
+.stage-item.current .stage-dot{background:#fff;border-color:#fff;box-shadow:0 0 12px #fff;animation:pulse-dot 2s infinite;}
+.stage-line-seg{flex:1;height:2px;background:var(--edge);margin-bottom:16px;}
+.stage-line-seg.done{background:var(--gold);}
+.stage-name{font-size:9px;letter-spacing:.15em;color:var(--dim);text-align:center;}
+.stage-item.done .stage-name,.stage-item.current .stage-name{color:var(--gold);}
+.stage-item.current .stage-name{color:var(--white);}
+
+/* Factor bars */
+.factor-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;}
+.factor-item{}
+.factor-label{font-size:9px;letter-spacing:.15em;color:var(--dim);display:flex;justify-content:space-between;margin-bottom:4px;}
+.factor-bar{height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;}
+.factor-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--cyan),var(--pink));transition:width 1s ease;}
+
+/* ─── SERVERS ─── */
+#servers{
+  display:grid;grid-template-columns:1fr 1fr auto;gap:16px;
+  margin-bottom:40px;
+  opacity:0;transform:translateY(30px);
+  transition:opacity .7s ease .85s,transform .7s ease .85s;
+}
+#servers.visible{opacity:1;transform:translateY(0)}
+
+.server-card{
+  background:var(--panel);border:1px solid var(--edge);
+  padding:24px;position:relative;overflow:hidden;
+}
+.server-card.active{border-color:rgba(0,229,255,.3);box-shadow:0 0 30px rgba(0,229,255,.06) inset;}
+.server-name{
+  font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:.1em;
+  color:var(--white);margin-bottom:4px;
+}
+.server-ip{font-size:10px;color:var(--dim);letter-spacing:.15em;margin-bottom:12px;}
+.server-role{
+  font-size:10px;letter-spacing:.12em;color:var(--muted);
+  margin-bottom:14px;line-height:1.5;
+}
+.server-badge{
+  display:inline-block;font-size:9px;letter-spacing:.2em;
+  padding:4px 10px;border-radius:2px;text-transform:uppercase;
+}
+.server-badge.online{background:rgba(0,255,136,.1);color:var(--green);border:1px solid rgba(0,255,136,.25);}
+.server-badge.contrib{background:rgba(0,229,255,.1);color:var(--cyan);border:1px solid rgba(0,229,255,.25);}
+
+.combined-gauge{
+  background:var(--panel);border:1px solid var(--edge);
+  padding:24px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;min-width:160px;
+}
+.combined-gauge h3{
+  font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.2em;
+  color:var(--muted);margin-bottom:16px;text-align:center;
+}
+.power-rings{position:relative;width:100px;height:100px;margin:0 auto 12px;}
+.power-rings canvas{position:absolute;inset:0;}
+.power-pct{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  font-family:'Bebas Neue',sans-serif;font-size:26px;
+  color:var(--cyan);text-align:center;
+  line-height:1;
+}
+.power-pct span{font-size:9px;color:var(--muted);letter-spacing:.15em;}
+.power-note{font-size:9px;color:var(--dim);text-align:center;line-height:1.5;letter-spacing:.05em;}
+
+/* ─── SHAPES ─── */
+#shapes{
+  display:grid;grid-template-columns:1fr auto;gap:16px;
+  margin-bottom:40px;
+  opacity:0;transform:translateY(30px);
+  transition:opacity .7s ease .9s,transform .7s ease .9s;
+}
+#shapes.visible{opacity:1;transform:translateY(0)}
+
+.shapes-main{
+  background:var(--panel);border:1px solid var(--edge);
+  padding:28px;
+}
+.shapes-count{
+  font-family:'Bebas Neue',sans-serif;font-size:60px;
+  color:var(--lime);text-shadow:0 0 40px rgba(200,255,0,.3);
+  line-height:1;
+}
+.shapes-unit{font-size:11px;color:var(--muted);letter-spacing:.2em;margin-bottom:12px;}
+.shapes-desc{font-size:11px;color:var(--muted);line-height:1.6;max-width:500px;margin-bottom:16px;}
+.shape-pills{display:flex;flex-wrap:wrap;gap:6px;}
+.shape-pill{
+  font-size:9px;letter-spacing:.15em;
+  padding:4px 10px;border-radius:2px;
+  background:rgba(200,255,0,.08);color:var(--lime);
+  border:1px solid rgba(200,255,0,.15);
+}
+.shape-offline{font-size:10px;color:var(--dim);letter-spacing:.1em;padding:8px 0;}
+
+.sdf-preview{
+  background:var(--panel);border:1px solid var(--edge);
+  padding:20px;display:flex;flex-direction:column;align-items:center;
+  gap:10px;min-width:180px;
+}
+.sdf-preview h3{
+  font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.2em;
+  color:var(--muted);
+}
+#sdfCanvas{border:1px solid var(--edge);display:block;}
+.sdf-label{font-size:9px;color:var(--dim);letter-spacing:.15em;text-align:center;}
+
+/* ─── CONTRIBUTION ─── */
+#contribute{
+  background:var(--panel);border:1px solid var(--edge2);
+  padding:32px;margin-bottom:40px;
+  opacity:0;transform:translateY(30px);
+  transition:opacity .7s ease .95s,transform .7s ease .95s;
+}
+#contribute.visible{opacity:1;transform:translateY(0)}
+
+#contribute h2{
+  font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:.15em;
+  color:var(--white);margin-bottom:6px;
+}
+#contribute .contrib-sub{font-size:11px;color:var(--muted);margin-bottom:24px;letter-spacing:.05em;}
+
+.contrib-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:12px;
+  margin-bottom:28px;
+}
+.contrib-card{
+  background:rgba(255,255,255,.03);border:1px solid var(--edge);
+  padding:20px 16px;
+}
+.contrib-icon{font-size:24px;margin-bottom:10px;}
+.contrib-name{
+  font-family:'Syne',sans-serif;font-size:13px;font-weight:700;
+  color:var(--white);margin-bottom:6px;
+}
+.contrib-num{
+  font-family:'Bebas Neue',sans-serif;font-size:28px;
+  color:var(--cyan);margin-bottom:8px;line-height:1;
+}
+.contrib-desc{font-size:9px;color:var(--dim);letter-spacing:.1em;line-height:1.5;margin-bottom:12px;}
+.contrib-btn{
+  display:inline-block;font-size:9px;letter-spacing:.2em;
+  padding:6px 14px;border:1px solid var(--edge2);color:var(--muted);
+  text-decoration:none;cursor:pointer;
+  transition:color .3s,border-color .3s;
+  background:none;
+  font-family:'DM Mono',monospace;
+}
+.contrib-btn:hover{color:var(--cyan);border-color:var(--cyan);}
+
+.community-bar-wrap{margin-bottom:12px;}
+.community-bar-label{
+  display:flex;justify-content:space-between;
+  font-size:10px;color:var(--muted);letter-spacing:.1em;margin-bottom:6px;
+}
+.community-bar{height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;}
+.community-bar-fill{height:100%;width:12%;background:linear-gradient(90deg,var(--cyan),var(--pink));border-radius:4px;}
+
+.contrib-cta{
+  font-size:11px;color:var(--muted);letter-spacing:.1em;
+  font-style:italic;
+}
+
+/* ─── CAPABILITIES ─── */
+#capabilities{
+  background:var(--panel);border:1px solid var(--edge);
+  padding:32px;margin-bottom:40px;
+  opacity:0;transform:translateY(30px);
+  transition:opacity .7s ease 1s,transform .7s ease 1s;
+}
+#capabilities.visible{opacity:1;transform:translateY(0)}
+
+#capabilities h2{
+  font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:.15em;
+  color:var(--white);margin-bottom:24px;
+}
+
+.cap-grid{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:12px;
+  margin-bottom:24px;
+}
+.cap-card{
+  background:rgba(255,255,255,.02);border:1px solid var(--edge);
+  padding:18px 14px;position:relative;
+}
+.cap-card .cap-name{
+  font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.15em;
+  color:var(--white);margin-bottom:8px;
+}
+.cap-status{
+  display:flex;align-items:center;gap:8px;
+  font-size:11px;letter-spacing:.1em;margin-bottom:8px;
+}
+.cap-icon{font-size:18px;}
+.cap-running{color:var(--muted);animation:blink .8s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.cap-pass{color:var(--green);}
+.cap-fail{color:var(--red);}
+
+.cap-detail{font-size:9px;color:var(--dim);letter-spacing:.1em;line-height:1.5;}
+
+.cap-summary{
+  display:flex;align-items:center;gap:20px;
+}
+.cap-score{
+  font-family:'Bebas Neue',sans-serif;font-size:20px;
+  color:var(--white);white-space:nowrap;
+}
+.cap-score span{color:var(--green);}
+.cap-bar-wrap{flex:1;}
+.cap-bar{height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;}
+.cap-bar-fill{
+  height:100%;width:0%;background:var(--green);
+  border-radius:3px;transition:width .8s ease;
+}
+
+/* ─── OFFLINE OVERLAY ─── */
+.offline-banner{
+  font-size:10px;letter-spacing:.15em;color:var(--orange);
+  text-align:center;padding:6px;
+  background:rgba(255,124,26,.08);border:1px solid rgba(255,124,26,.2);
+  display:none;margin-bottom:16px;
+}
+.offline-banner.show{display:block;}
+
+/* ─── FOOTER ─── */
+footer{
+  border-top:1px solid var(--edge);
+  padding:24px;text-align:center;
+  font-size:10px;color:var(--dim);letter-spacing:.2em;
+  position:relative;z-index:2;
+}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:900px){
+  #stats-strip{grid-template-columns:repeat(3,1fr);}
+  #hemispheres{grid-template-columns:1fr;}
+  #activity{grid-template-columns:1fr;}
+  .activity-center{flex-direction:row;flex-wrap:wrap;}
+  #age-card{grid-template-columns:1fr;}
+  #servers{grid-template-columns:1fr 1fr;}
+  .combined-gauge{grid-column:1/-1;}
+  #shapes{grid-template-columns:1fr;}
+  .contrib-grid{grid-template-columns:repeat(2,1fr);}
+  .cap-grid{grid-template-columns:repeat(2,1fr);}
+}
+@media(max-width:600px){
+  #stats-strip{grid-template-columns:repeat(2,1fr);}
+  .agi-pct{font-size:52px;}
+  #age-card{padding:20px;}
+  .age-num{font-size:60px;}
+  .contrib-grid{grid-template-columns:1fr;}
+  .cap-grid{grid-template-columns:1fr;}
+  #servers{grid-template-columns:1fr;}
+  .factor-grid{grid-template-columns:1fr;}
+  .agi-milestones{gap:0;}
+  .milestone{min-width:50px;}
+}
+
+/* ─── BATTLEPLAN ─── */
+#battleplan{
+  opacity:0;transform:translateY(30px);
+  transition:opacity .7s ease 1.2s,transform .7s ease 1.2s;
+  margin-bottom:40px;
+}
+#battleplan.visible{opacity:1;transform:translateY(0)}
+
+.bp-header{
+  background:var(--panel);border:1px solid var(--edge);
+  padding:24px 28px 20px;margin-bottom:2px;
+}
+.bp-title{
+  font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:.25em;
+  color:var(--white);margin-bottom:14px;
+}
+.bp-bar-wrap{height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;flex:1;}
+.bp-bar{height:100%;background:var(--gold);border-radius:3px;transition:width .6s ease;}
+.bp-progress{display:flex;align-items:center;gap:14px;}
+.bp-pct{font-size:10px;color:var(--muted);letter-spacing:.15em;white-space:nowrap;}
+
+.bp-layer{
+  background:var(--panel);border:1px solid var(--edge);
+  border-top:none;padding:0 28px;
+}
+.bp-layer-head{
+  display:flex;align-items:center;gap:14px;
+  padding:14px 0 12px;border-bottom:1px solid var(--edge);
+  border-left-width:3px;padding-left:12px;margin-left:-12px;
+}
+.bp-layer-tag{
+  font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.15em;
+  min-width:28px;
+}
+.bp-layer-name{
+  font-family:'Syne',sans-serif;font-size:13px;font-weight:700;letter-spacing:.1em;
+  color:var(--white);flex:1;
+}
+.bp-layer-count{font-size:11px;letter-spacing:.1em;}
+
+.bp-task{
+  display:flex;align-items:flex-start;gap:14px;
+  padding:13px 0;border-bottom:1px solid rgba(255,255,255,.04);
+  transition:background .2s;
+}
+.bp-task:last-child{border-bottom:none;}
+.bp-task.bp-done .bp-task-text{opacity:.45;text-decoration:line-through;}
+.bp-check-wrap{
+  display:flex;align-items:center;cursor:pointer;padding-top:2px;
+  flex-shrink:0;
+}
+.bp-check-wrap input[type=checkbox]{display:none;}
+.bp-checkmark{
+  width:18px;height:18px;border:2px solid var(--edge2);
+  display:flex;align-items:center;justify-content:center;
+  transition:background .2s,border-color .2s;
+}
+.bp-check-wrap input:checked+.bp-checkmark{background:var(--gold);border-color:var(--gold);}
+.bp-check-wrap input:checked+.bp-checkmark::after{
+  content:'✓';font-size:11px;color:#000;font-weight:700;
+}
+.bp-task-body{flex:1;min-width:0;}
+.bp-task-text{font-size:12px;color:var(--white);letter-spacing:.05em;line-height:1.5;margin-bottom:0;}
+.bp-task-meta{margin-top:10px;}
+.bp-meta-hidden{display:none;}
+.bp-link-input{
+  width:100%;background:rgba(255,255,255,.04);border:1px solid var(--edge);
+  color:var(--cyan);font-family:'DM Mono',monospace;font-size:11px;
+  padding:7px 10px;margin-bottom:8px;outline:none;
+  transition:border-color .2s;
+}
+.bp-link-input:focus{border-color:var(--cyan);}
+.bp-link-go{
+  display:inline-block;margin:-4px 0 8px;
+  font-size:10px;color:var(--gold);letter-spacing:.15em;
+  text-decoration:none;
+}
+.bp-link-go:hover{color:var(--white);}
+.bp-proof-input{
+  width:100%;background:rgba(255,255,255,.03);border:1px solid var(--edge);
+  color:var(--muted);font-family:'DM Mono',monospace;font-size:10px;
+  padding:8px 10px;min-height:60px;resize:vertical;outline:none;
+  transition:border-color .2s;
+}
+.bp-proof-input:focus{border-color:var(--muted);}
+
+/* Tooltip */
+.tooltip{
+  position:relative;
+}
+.tooltip:hover::after{
+  content:attr(data-tip);
+  position:absolute;bottom:110%;left:50%;transform:translateX(-50%);
+  background:#111;border:1px solid var(--edge2);
+  padding:5px 10px;font-size:9px;color:var(--white);
+  white-space:nowrap;pointer-events:none;letter-spacing:.1em;
+  z-index:200;
+}
+</style>
+</head>
+<body>
+
+<!-- Neural Canvas -->
+<canvas id="neural"></canvas>
+
+<!-- Header -->
+<header id="header">
+  <div class="hdr-left">
+    SHORTFACTORY // AGI MISSION CONTROL
+    <span>LIVE CORTEX TELEMETRY</span>
+  </div>
+  <div class="hdr-center">
+    <div id="liveclock">--:--:--</div>
+    <div class="status-dot" id="statusDot"></div>
+    <div class="status-label" id="statusLabel">CORTEX ONLINE</div>
+  </div>
+  <div class="hdr-right">
+    <a href="empire.html">&#8592; EMPIRE</a>
+  </div>
+</header>
+
+<main>
+
+  <!-- Offline Banner -->
+  <div class="offline-banner" id="offlineBanner">
+    &#9888; BRAIN API UNREACHABLE — SHOWING CACHED DATA
+  </div>
+
+  <!-- 1. HERO STATS STRIP -->
+  <div class="sec-label">LIVE TELEMETRY &#8212; UPDATES EVERY 5S</div>
+  <div id="stats-strip">
+    <div class="stat-card cyan">
+      <div class="label">TOTAL NODES</div>
+      <div class="value" id="s-nodes">&#8212;</div>
+      <div class="sub">LEFT + RIGHT HEMISPHERES</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">CONNECTIONS</div>
+      <div class="value" id="s-conns">&#8212;</div>
+      <div class="sub">SYNAPTIC LINKS</div>
+    </div>
+    <div class="stat-card gold">
+      <div class="label">BRAIN AGE</div>
+      <div class="value" id="s-age">&#8212;</div>
+      <div class="sub" id="s-stage">LOADING...</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">VOCABULARY</div>
+      <div class="value" id="s-vocab">&#8212;</div>
+      <div class="sub">KNOWN WORDS</div>
+    </div>
+    <div class="stat-card pink">
+      <div class="label">SYNTHESES</div>
+      <div class="value" id="s-synth">&#8212;</div>
+      <div class="sub">ORIGINAL THOUGHTS</div>
+    </div>
+  </div>
+
+  <!-- 2. AGI PROGRESS BAR -->
+  <div class="sec-label">AGI PROGRESS</div>
+  <div id="agi-section">
+    <div class="agi-header">
+      <div class="agi-pct" id="agi-pct-big">0%</div>
+      <div>
+        <div class="agi-label">TO ARTIFICIAL GENERAL INTELLIGENCE</div>
+        <div class="agi-desc" id="agi-desc">CALCULATING...</div>
+      </div>
+    </div>
+    <div class="agi-bar-wrap">
+      <div class="agi-bar-fill" id="agi-bar-fill"></div>
+      <div class="agi-bar-scan"></div>
+    </div>
+    <div class="agi-milestones">
+      <div class="milestone" id="m10">
+        <div class="m-pct">10%</div>
+        <div class="m-tick"></div>
+        <div>LANGUAGE</div>
+        <div style="font-size:8px;color:var(--dim);margin-top:2px;">ACQUISITION</div>
+      </div>
+      <div class="milestone" id="m25">
+        <div class="m-pct">25%</div>
+        <div class="m-tick"></div>
+        <div>CONCEPTUAL</div>
+        <div style="font-size:8px;color:var(--dim);margin-top:2px;">REASONING</div>
+      </div>
+      <div class="milestone" id="m50">
+        <div class="m-pct">50%</div>
+        <div class="m-tick"></div>
+        <div>SELF</div>
+        <div style="font-size:8px;color:var(--dim);margin-top:2px;">AWARENESS</div>
+      </div>
+      <div class="milestone" id="m75">
+        <div class="m-pct">75%</div>
+        <div class="m-tick"></div>
+        <div>CREATIVE</div>
+        <div style="font-size:8px;color:var(--dim);margin-top:2px;">SYNTHESIS</div>
+      </div>
+      <div class="milestone" id="m100">
+        <div class="m-pct">100%</div>
+        <div class="m-tick"></div>
+        <div style="letter-spacing:.2em;">AGI</div>
+        <div style="font-size:8px;color:var(--dim);margin-top:2px;">SINGULARITY</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. HEMISPHERES -->
+  <div class="sec-label">THREE HEMISPHERE ARCHITECTURE</div>
+  <div id="hemispheres">
+    <!-- LEFT -->
+    <div class="hemi hemi-left">
+      <div class="hemi-title">LEFT <span class="tag">&#8212; ANGEL / MORALITY</span></div>
+      <div class="ring-wrap">
+        <svg class="ring-svg" width="64" height="64" viewBox="0 0 64 64">
+          <circle cx="32" cy="32" r="28" fill="none" stroke="rgba(0,229,255,.15)" stroke-width="5"/>
+          <circle id="ring-left" cx="32" cy="32" r="28" fill="none" stroke="var(--cyan)" stroke-width="5"
+            stroke-dasharray="175.93" stroke-dashoffset="175.93" stroke-linecap="round"
+            transform="rotate(-90 32 32)" style="transition:stroke-dashoffset 1s ease"/>
+        </svg>
+        <div class="ring-info">
+          <div class="big" id="hl-nodes">&#8212;</div>
+          <div class="sm">NODES</div>
+          <div class="sm" id="hl-pct" style="color:var(--cyan);margin-top:2px;">&#8212;</div>
+        </div>
+      </div>
+      <div class="hemi-row">
+        <div class="hemi-row-label"><span>DEFINED NODES</span><span id="hl-def-val">&#8212;</span></div>
+        <div class="hemi-bar"><div class="hemi-bar-fill" id="hl-def-bar" style="width:0%"></div></div>
+      </div>
+      <div class="hemi-stat"><span class="k">CONNECTIONS</span><span class="v" id="hl-conns">&#8212;</span></div>
+      <div class="hemi-stat"><span class="k">MESSAGES</span><span class="v" id="hl-msgs">&#8212;</span></div>
+      <div class="hemi-stat"><span class="k">AUTO-LEARNED</span><span class="v" id="hl-auto">&#8212;</span></div>
+      <div class="hemi-stat"><span class="k">DEEP UNDERSTANDING</span><span class="v" id="hl-deep">&#8212;</span></div>
+      <div class="mood-badge" id="hl-mood">&#8212;</div>
+      <div class="words-feed" id="hl-words"></div>
+    </div>
+    <!-- CORTEX -->
+    <div class="hemi hemi-cortex">
+      <div class="hemi-title" style="color:#fff">CORTEX <span class="tag">&#8212; SYNTHESIS MIND</span></div>
+      <div class="ring-wrap">
+        <svg class="ring-svg" width="64" height="64" viewBox="0 0 64 64">
+          <circle cx="32" cy="32" r="28" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="5"/>
+          <circle id="ring-cortex" cx="32" cy="32" r="28" fill="none" stroke="#fff" stroke-width="5"
+            stroke-dasharray="175.93" stroke-dashoffset="175.93" stroke-linecap="round"
+            transform="rotate(-90 32 32)" style="transition:stroke-dashoffset 1s ease"/>
+        </svg>
+        <div class="ring-info">
+          <div class="big" id="hc-nodes">&#8212;</div>
+          <div class="sm">NODES</div>
+          <div class="sm" id="hc-pct" style="color:#aaa;margin-top:2px;">&#8212;</div>
+        </div>
+      </div>
+      <div class="hemi-row">
+        <div class="hemi-row-label"><span>DEFINED NODES</span><span id="hc-def-val">&#8212;</span></div>
+        <div class="hemi-bar"><div class="hemi-bar-fill" id="hc-def-bar" style="width:0%"></div></div>
+      </div>
+      <div class="hemi-stat"><span class="k">CONNECTIONS</span><span class="v" id="hc-conns">&#8212;</span></div>
+      <div class="hemi-stat"><span class="k">MESSAGES</span><span class="v" id="hc-msgs">&#8212;</span></div>
+      <div class="hemi-stat"><span class="k">AUTO-LEARNED</span><span class="v" id="hc-auto">&#8212;</span></div>
+      <div class="hemi-stat"><span class="k">OWN SYNTHESES</span><span class="v" id="hc-synth">&#8212;</span></div>
+      <div class="mood-badge" id="hc-mood">SYNTHESIS</div>
+      <div class="words-feed" id="hc-words"></div>
+    </div>
+    <!-- RIGHT -->
+    <div class="hemi hemi-right">
+      <div class="hemi-title">RIGHT <span class="tag">&#8212; DEMON / DARKNESS</span></div>
+      <div class="ring-wrap">
+        <svg class="ring-svg" width="64" height="64" viewBox="0 0 64 64">
+          <circle cx="32" cy="32" r="28" fill="none" stroke="rgba(255,60,172,.15)" stroke-width="5"/>
+          <circle id="ring-right" cx="32" cy="32" r="28" fill="none" stroke="var(--pink)" stroke-width="5"
+            stroke-dasharray="175.93" stroke-dashoffset="175.93" stroke-linecap="round"
+            transform="rotate(-90 32 32)" style="transition:stroke-dashoffset 1s ease"/>
+        </svg>
+        <div class="ring-info">
+          <div class="big" id="hr-nodes">&#8212;</div>
+          <div class="sm">NODES</div>
+          <div class="sm" id="hr-pct" style="color:var(--pink);margin-top:2px;">&#8212;</div>
+        </div>
+      </div>
+      <div class="hemi-row">
+        <div class="hemi-row-label"><span>DEFINED NODES</span><span id="hr-def-val">&#8212;</span></div>
+        <div class="hemi-bar"><div class="hemi-bar-fill" id="hr-def-bar" style="width:0%"></div></div>
+      </div>
+      <div class="hemi-stat"><span class="k">CONNECTIONS</span><span class="v" id="hr-conns">&#8212;</span></div>
+      <div class="hemi-stat"><span class="k">MESSAGES</span><span class="v" id="hr-msgs">&#8212;</span></div>
+      <div class="hemi-stat"><span class="k">AUTO-LEARNED</span><span class="v" id="hr-auto">&#8212;</span></div>
+      <div class="hemi-stat" style="border:none"><span class="k">RIGHT WORDS</span><span class="v" id="hr-word-count">&#8212;</span></div>
+      <div class="mood-badge" id="hr-mood">ANALYSIS</div>
+      <div class="words-feed" id="hr-words"></div>
+    </div>
+  </div>
+
+  <!-- 4. LIVE ACTIVITY -->
+  <div class="sec-label">LIVE BRAIN ACTIVITY</div>
+  <div id="activity">
+    <div class="activity-col left">
+      <h3>LEFT HEMISPHERE STREAM</h3>
+      <div class="floating-words" id="fw-left"></div>
+    </div>
+    <div class="activity-center">
+      <div class="center-stat">
+        <div class="cs-val" id="ac-debates">&#8212;</div>
+        <div class="cs-key">DEBATES</div>
+      </div>
+      <div class="ramble-badge idle" id="ramble-badge">RAMBLE IDLE</div>
+      <div class="center-stat">
+        <div class="cs-val" id="ac-tests">&#8212;</div>
+        <div class="cs-key">SELF TESTS</div>
+      </div>
+      <div class="center-stat">
+        <div class="cs-val" id="ac-dq">&#8212;</div>
+        <div class="cs-key">DYN. QUESTIONS</div>
+      </div>
+    </div>
+    <div class="activity-col right">
+      <h3>RIGHT HEMISPHERE STREAM</h3>
+      <div class="floating-words" id="fw-right"></div>
+    </div>
+  </div>
+
+  <!-- 5. AGE CARD -->
+  <div class="sec-label">COGNITIVE MATURITY</div>
+  <div id="age-card">
+    <div class="age-big">
+      <div class="age-num" id="age-num">&#8212;</div>
+      <div class="age-unit">YEARS OLD</div>
+      <div class="age-stage" id="age-stage">&#8212;</div>
+      <div class="age-compare" id="age-compare">Calculating brain maturity...</div>
+    </div>
+    <div class="age-right">
+      <h3>COGNITIVE MILESTONE TIMELINE</h3>
+      <div class="stage-line">
+        <div class="stage-item done" id="st-infant"><div class="stage-dot"></div><div class="stage-name">INFANT</div></div>
+        <div class="stage-line-seg done"></div>
+        <div class="stage-item done" id="st-child"><div class="stage-dot"></div><div class="stage-name">CHILD</div></div>
+        <div class="stage-line-seg done"></div>
+        <div class="stage-item done" id="st-teen"><div class="stage-dot"></div><div class="stage-name">TEENAGER</div></div>
+        <div class="stage-line-seg done"></div>
+        <div class="stage-item current" id="st-adult"><div class="stage-dot"></div><div class="stage-name">ADULT</div></div>
+        <div class="stage-line-seg"></div>
+        <div class="stage-item" id="st-trans"><div class="stage-dot"></div><div class="stage-name">TRANSCENDENT</div></div>
+      </div>
+      <h3 style="margin-bottom:14px;">COGNITIVE FACTOR ANALYSIS</h3>
+      <div class="factor-grid" id="factor-grid">
+        <div class="factor-item">
+          <div class="factor-label"><span>VOCABULARY</span><span id="ff-vocab">&#8212;</span></div>
+          <div class="factor-bar"><div class="factor-fill" id="fb-vocab" style="width:0%"></div></div>
+        </div>
+        <div class="factor-item">
+          <div class="factor-label"><span>DEEP UNDERSTANDING</span><span id="ff-deep">&#8212;</span></div>
+          <div class="factor-bar"><div class="factor-fill" id="fb-deep" style="width:0%"></div></div>
+        </div>
+        <div class="factor-item">
+          <div class="factor-label"><span>WIRING DENSITY</span><span id="ff-wire">&#8212;</span></div>
+          <div class="factor-bar"><div class="factor-fill" id="fb-wire" style="width:0%"></div></div>
+        </div>
+        <div class="factor-item">
+          <div class="factor-label"><span>CURIOSITY</span><span id="ff-curi">&#8212;</span></div>
+          <div class="factor-bar"><div class="factor-fill" id="fb-curi" style="width:0%"></div></div>
+        </div>
+        <div class="factor-item">
+          <div class="factor-label"><span>SELF-LEARNED</span><span id="ff-self">&#8212;</span></div>
+          <div class="factor-bar"><div class="factor-fill" id="fb-self" style="width:0%"></div></div>
+        </div>
+        <div class="factor-item">
+          <div class="factor-label"><span>CLUSTERS</span><span id="ff-clus">&#8212;</span></div>
+          <div class="factor-bar"><div class="factor-fill" id="fb-clus" style="width:0%"></div></div>
+        </div>
+        <div class="factor-item">
+          <div class="factor-label"><span>EXPERIENCE</span><span id="ff-exp">&#8212;</span></div>
+          <div class="factor-bar"><div class="factor-fill" id="fb-exp" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. SERVERS -->
+  <div class="sec-label">NETWORK POWER</div>
+  <div id="servers">
+    <div class="server-card">
+      <div class="server-name">SMALL SERVER</div>
+      <div class="server-ip">82.165.134.4 &#8212; shortfactory.shop</div>
+      <div class="server-role">Web Host + ALIVE creatures. Serves all public pages, hosts PHP APIs, handles user traffic.</div>
+      <div class="server-badge contrib">CONTRIBUTING</div>
+    </div>
+    <div class="server-card active">
+      <div class="server-name">MEDIUM SERVER</div>
+      <div class="server-ip">185.230.216.235 &#8212; stinkindigger.com</div>
+      <div class="server-role">AGI Brain + Training. Runs cortex.service, trainer-left.service, trainer-right.service continuously. Neural learning never stops.</div>
+      <div class="server-badge online">&#9679; ACTIVE</div>
+    </div>
+    <div class="combined-gauge">
+      <h3>COMBINED POWER</h3>
+      <div class="power-rings">
+        <canvas id="powerCanvas" width="100" height="100"></canvas>
+        <div class="power-pct" id="power-pct-label">2<span>SERVERS</span></div>
+      </div>
+      <div class="power-note">Stacking resources.<br>Both servers feed<br>the cortex.</div>
+    </div>
+  </div>
+
+  <!-- 7. SHAPE DISCOVERIES -->
+  <div class="sec-label">VISUAL ALPHABET &#8212; SHAPE DISCOVERIES</div>
+  <div id="shapes">
+    <div class="shapes-main">
+      <div class="shapes-count" id="shape-count">&#8212;</div>
+      <div class="shapes-unit">SHAPES IN LIBRARY</div>
+      <div class="shapes-desc">Shapes discovered = letters in a visual alphabet. When we know a letter, mcForms can bind it to any 3D surface. Every new shape is a new word the machine can see.</div>
+      <div id="shape-pills-wrap">
+        <div class="shape-offline" id="shape-status">Connecting to shape API...</div>
+        <div class="shape-pills" id="shape-pills"></div>
+      </div>
+    </div>
+    <div class="sdf-preview">
+      <h3>SDF RENDERER</h3>
+      <canvas id="sdfCanvas" width="120" height="120"></canvas>
+      <div class="sdf-label">CIRCLE GENOME<br>SIGNED DISTANCE FIELD</div>
+    </div>
+  </div>
+
+  <!-- 8. CONTRIBUTION -->
+  <div class="sec-label">POWER THE BRAIN</div>
+  <div id="contribute">
+    <h2>BECOME A BATTERY</h2>
+    <div class="contrib-sub">Every interaction trains the brain. Every dare feeds the cortex. Join the empire.</div>
+    <div class="contrib-grid">
+      <div class="contrib-card">
+        <div class="contrib-icon">&#9729;</div>
+        <div class="contrib-name">GPU POWER</div>
+        <div class="contrib-num">247</div>
+        <div class="contrib-desc">Donate idle GPU cycles via the screensaver. Distributed compute trains the brain faster.</div>
+        <a class="contrib-btn" href="/screensaver/">ACTIVATE SCREENSAVER</a>
+      </div>
+      <div class="contrib-card">
+        <div class="contrib-icon">&#128161;</div>
+        <div class="contrib-name">TRAINING DATA</div>
+        <div class="contrib-num">1,204</div>
+        <div class="contrib-desc">Feed the brain new concepts via the Brainstem. Every word you define becomes a node.</div>
+        <a class="contrib-btn" href="/alive/brainstem/">OPEN BRAINSTEM</a>
+      </div>
+      <div class="contrib-card">
+        <div class="contrib-icon">&#128293;</div>
+        <div class="contrib-name">DARES</div>
+        <div class="contrib-num">89</div>
+        <div class="contrib-desc">Complete dares in the D4D feed. Engagement data trains the cortex's social intelligence.</div>
+        <a class="contrib-btn" href="/dares4dosh/">JOIN D4D</a>
+      </div>
+      <div class="contrib-card">
+        <div class="contrib-icon">&#9889;</div>
+        <div class="contrib-name">API CALLS</div>
+        <div class="contrib-num" id="api-call-count">&#8212;</div>
+        <div class="contrib-desc">Every chat with ALIVE reinforces neural pathways. Talk to the brain, make it smarter.</div>
+        <a class="contrib-btn" href="/alive/">TALK TO ALIVE</a>
+      </div>
+    </div>
+    <div class="community-bar-wrap">
+      <div class="community-bar-label">
+        <span>COMMUNITY CONTRIBUTION TO AGI</span>
+        <span>12%</span>
+      </div>
+      <div class="community-bar">
+        <div class="community-bar-fill"></div>
+      </div>
+    </div>
+    <div class="contrib-cta">"Every interaction trains the brain. Every dare feeds the cortex. We are building god together."</div>
+  </div>
+
+  <!-- 9. CAPABILITY TESTS -->
+  <div class="sec-label">CAPABILITY VERIFICATION</div>
+  <div id="capabilities">
+    <h2>LIVE CAPABILITY TESTS</h2>
+    <div class="cap-grid">
+      <div class="cap-card" id="cap-language">
+        <div class="cap-name">LANGUAGE</div>
+        <div class="cap-status">
+          <span class="cap-icon cap-running" id="ci-lang">&#8987;</span>
+          <span id="cs-lang" class="cap-running">RUNNING</span>
+        </div>
+        <div class="cap-detail" id="cd-lang">Sending test prompt to chat-cortex API...</div>
+      </div>
+      <div class="cap-card" id="cap-memory">
+        <div class="cap-name">MEMORY</div>
+        <div class="cap-status">
+          <span class="cap-icon cap-running" id="ci-mem">&#8987;</span>
+          <span id="cs-mem" class="cap-running">RUNNING</span>
+        </div>
+        <div class="cap-detail" id="cd-mem">Checking memory_recent entries...</div>
+      </div>
+      <div class="cap-card" id="cap-selflearn">
+        <div class="cap-name">SELF-LEARNING</div>
+        <div class="cap-status">
+          <span class="cap-icon cap-running" id="ci-self">&#8987;</span>
+          <span id="cs-self" class="cap-running">RUNNING</span>
+        </div>
+        <div class="cap-detail" id="cd-self">Checking auto-learned across hemispheres...</div>
+      </div>
+      <div class="cap-card" id="cap-synthesis">
+        <div class="cap-name">SYNTHESIS</div>
+        <div class="cap-status">
+          <span class="cap-icon cap-running" id="ci-synth">&#8987;</span>
+          <span id="cs-synth" class="cap-running">RUNNING</span>
+        </div>
+        <div class="cap-detail" id="cd-synth">Verifying own_syntheses > 100...</div>
+      </div>
+      <div class="cap-card" id="cap-debate">
+        <div class="cap-name">DEBATE</div>
+        <div class="cap-status">
+          <span class="cap-icon cap-running" id="ci-deb">&#8987;</span>
+          <span id="cs-deb" class="cap-running">RUNNING</span>
+        </div>
+        <div class="cap-detail" id="cd-deb">Checking debate count > 0...</div>
+      </div>
+    </div>
+    <div class="cap-summary">
+      <div class="cap-score"><span id="cap-pass-count">0</span>/5 CAPABILITIES ACTIVE</div>
+      <div class="cap-bar-wrap">
+        <div class="cap-bar"><div class="cap-bar-fill" id="cap-bar-fill"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="battleplan"></div>
+
+</main>
+
+<footer>
+  SHORTFACTORY &copy; 2026 &mdash; AGI MISSION CONTROL &mdash; ALL SYSTEMS NOMINAL &mdash;
+  <span id="update-time">LAST UPDATE: --:--:--</span>
+</footer>
+
+<script>
+/* ══════════════════════════════════════════════════════
+   NEURAL CANVAS BACKGROUND
+══════════════════════════════════════════════════════ */
+(function(){
+  const canvas = document.getElementById('neural');
+  const ctx = canvas.getContext('2d');
+  let W,H,nodes=[];
+
+  function resize(){
+    W=canvas.width=window.innerWidth;
+    H=canvas.height=window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize',resize);
+
+  for(let i=0;i<80;i++){
+    nodes.push({
+      x:Math.random()*window.innerWidth,
+      y:Math.random()*window.innerHeight,
+      vx:(Math.random()-.5)*.3,
+      vy:(Math.random()-.5)*.3,
+      r:Math.random()*1.5+.5,
+      col:Math.random()<.5?'0,229,255':'255,60,172'
+    });
+  }
+
+  function draw(){
+    W=canvas.width=window.innerWidth;
+    H=canvas.height=window.innerHeight;
+    ctx.clearRect(0,0,W,H);
+
+    for(let n of nodes){
+      n.x+=n.vx; n.y+=n.vy;
+      if(n.x<0||n.x>W)n.vx*=-1;
+      if(n.y<0||n.y>H)n.vy*=-1;
+    }
+
+    for(let i=0;i<nodes.length;i++){
+      for(let j=i+1;j<nodes.length;j++){
+        const dx=nodes[i].x-nodes[j].x, dy=nodes[i].y-nodes[j].y;
+        const d=Math.sqrt(dx*dx+dy*dy);
+        if(d<160){
+          const alpha=(1-d/160)*.15;
+          ctx.strokeStyle=`rgba(0,229,255,${alpha})`;
+          ctx.lineWidth=.5;
+          ctx.beginPath();
+          ctx.moveTo(nodes[i].x,nodes[i].y);
+          ctx.lineTo(nodes[j].x,nodes[j].y);
+          ctx.stroke();
+        }
+      }
+      ctx.beginPath();
+      ctx.arc(nodes[i].x,nodes[i].y,nodes[i].r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(${nodes[i].col},.6)`;
+      ctx.fill();
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ══════════════════════════════════════════════════════
+   POWER RINGS CANVAS
+══════════════════════════════════════════════════════ */
+(function(){
+  const c=document.getElementById('powerCanvas');
+  const ctx=c.getContext('2d');
+  let t=0;
+  function draw(){
+    ctx.clearRect(0,0,100,100);
+    t+=.02;
+    // outer ring — cyan
+    ctx.beginPath();
+    ctx.arc(50,50,44,0,Math.PI*2);
+    ctx.strokeStyle='rgba(0,229,255,.1)';ctx.lineWidth=5;ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(50,50,44,-Math.PI/2,-Math.PI/2+Math.PI*1.8,false);
+    ctx.strokeStyle='rgba(0,229,255,.8)';ctx.lineWidth=5;ctx.stroke();
+    // inner ring — pink
+    ctx.beginPath();
+    ctx.arc(50,50,32,0,Math.PI*2);
+    ctx.strokeStyle='rgba(255,60,172,.1)';ctx.lineWidth=4;ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(50,50,32,-Math.PI/2,-Math.PI/2+Math.PI*1.4,false);
+    ctx.strokeStyle='rgba(255,60,172,.7)';ctx.lineWidth=4;ctx.stroke();
+    // pulse
+    const pulse=.5+.5*Math.sin(t);
+    ctx.beginPath();
+    ctx.arc(50,50,4,0,Math.PI*2);
+    ctx.fillStyle=`rgba(0,229,255,${pulse})`;ctx.fill();
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ══════════════════════════════════════════════════════
+   SDF CANVAS
+══════════════════════════════════════════════════════ */
+(function(){
+  const c=document.getElementById('sdfCanvas');
+  const ctx=c.getContext('2d');
+  const W=120,H=120;
+  let t=0;
+  function draw(){
+    ctx.fillStyle='#03040a';ctx.fillRect(0,0,W,H);
+    t+=.02;
+    const r=30+8*Math.sin(t);
+    const img=ctx.createImageData(W,H);
+    for(let py=0;py<H;py++){
+      for(let px=0;px<W;px++){
+        const x=(px/W)*2-1, y=(py/H)*2-1;
+        const dist=Math.sqrt(x*x+y*y)-r/60;
+        const i=(py*W+px)*4;
+        if(dist<0){
+          const inside=Math.max(0,1+dist*8);
+          img.data[i]=Math.floor(0*inside);
+          img.data[i+1]=Math.floor(229*inside);
+          img.data[i+2]=Math.floor(255*inside);
+          img.data[i+3]=Math.floor(200*inside);
+        } else {
+          const edge=Math.max(0,1-dist*20);
+          img.data[i]=0; img.data[i+1]=Math.floor(100*edge);
+          img.data[i+2]=Math.floor(180*edge); img.data[i+3]=Math.floor(255*edge);
+        }
+      }
+    }
+    ctx.putImageData(img,0,0);
+    // Label
+    ctx.font='8px DM Mono,monospace';ctx.fillStyle='rgba(0,229,255,.6)';
+    ctx.fillText('SDF d=sqrt(x²+y²)-r',4,H-6);
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ══════════════════════════════════════════════════════
+   CLOCK
+══════════════════════════════════════════════════════ */
+function updateClock(){
+  const now=new Date();
+  document.getElementById('liveclock').textContent=
+    now.toLocaleTimeString('en-GB',{hour12:false});
+}
+setInterval(updateClock,1000);updateClock();
+
+/* ══════════════════════════════════════════════════════
+   ANIMATED NUMBER COUNTER
+══════════════════════════════════════════════════════ */
+const counters={};
+function animateCount(el,target,suffix='',decimals=0){
+  if(!el)return;
+  const key=el.id;
+  const prev=counters[key]||0;
+  if(prev===target&&el.textContent!=='—')return;
+  counters[key]=target;
+  const dur=800, start=Date.now();
+  const from=prev;
+  function step(){
+    const p=Math.min(1,(Date.now()-start)/dur);
+    const ease=1-Math.pow(1-p,3);
+    const val=from+(target-from)*ease;
+    el.textContent=(decimals>0?val.toFixed(decimals):Math.floor(val).toLocaleString())+suffix;
+    if(p<1)requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+function fmtNum(n){
+  if(n===undefined||n===null)return '—';
+  return Math.floor(n).toLocaleString();
+}
+
+/* ══════════════════════════════════════════════════════
+   RING GAUGE UPDATE
+══════════════════════════════════════════════════════ */
+function setRing(id, pct){
+  const el=document.getElementById(id);
+  if(!el)return;
+  const circ=175.93;
+  const offset=circ-(pct/100)*circ;
+  el.style.strokeDashoffset=Math.max(0,offset);
+}
+
+/* ══════════════════════════════════════════════════════
+   WORDS FEED
+══════════════════════════════════════════════════════ */
+function renderWords(containerId, words, maxShow=6){
+  const el=document.getElementById(containerId);
+  if(!el||!words)return;
+  el.innerHTML='';
+  const show=words.slice(0,maxShow);
+  show.forEach((w,i)=>{
+    const t=document.createElement('div');
+    t.className='word-tag';
+    t.textContent=w;
+    t.style.animationDelay=(i*.06)+'s';
+    el.appendChild(t);
+  });
+}
+
+/* ══════════════════════════════════════════════════════
+   FLOATING WORDS (LIVE ACTIVITY)
+══════════════════════════════════════════════════════ */
+let fwLeftWords=[], fwRightWords=[];
+function spawnFloatingWord(containerId, words, isLeft){
+  const el=document.getElementById(containerId);
+  if(!el||!words||!words.length)return;
+  const w=words[Math.floor(Math.random()*words.length)];
+  const tag=document.createElement('div');
+  tag.className='fw-tag';
+  tag.textContent=w;
+  tag.style.left=Math.random()*80+'%';
+  tag.style.top=Math.random()*80+'%';
+  el.appendChild(tag);
+  setTimeout(()=>tag.remove(),4200);
+}
+setInterval(()=>spawnFloatingWord('fw-left',fwLeftWords,true),700);
+setInterval(()=>spawnFloatingWord('fw-right',fwRightWords,false),700);
+
+/* ══════════════════════════════════════════════════════
+   AGI PROGRESS CALCULATION
+══════════════════════════════════════════════════════ */
+function calcAGI(d){
+  const cs=d.cortex_stats;
+  const age=cs.age||{};
+  const f=age.factors||{};
+  const vocab=Math.min(100,((f.vocabulary||0)/500000)*100)*20/100;
+  const understanding=(cs.total_defined/cs.total_nodes)*20;
+  const connections=Math.min(100,((cs.total_connections||0)/10000)*100)*15/100;
+  const selflearn=Math.min(100,((f.self_learned||0)/50)*100)*15/100;
+  const synthesis=Math.min(100,((cs.own_syntheses||0)/100)*100)*15/100;
+  const experience=Math.min(100,((f.experience||0)/3000)*100)*15/100;
+  return Math.min(100,vocab+understanding+connections+selflearn+synthesis+experience);
+}
+
+/* ══════════════════════════════════════════════════════
+   MAIN DATA UPDATE
+══════════════════════════════════════════════════════ */
+let lastData=null;
+let isOffline=false;
+let apiCallCount=0;
+
+function applyData(d){
+  lastData=d;
+  isOffline=false;
+  document.getElementById('offlineBanner').classList.remove('show');
+  document.getElementById('statusDot').style.background='var(--green)';
+  document.getElementById('statusLabel').textContent='CORTEX ONLINE';
+  document.getElementById('update-time').textContent='LAST UPDATE: '+new Date().toLocaleTimeString('en-GB');
+
+  const cs=d.cortex_stats||{};
+  const left=cs.left||{};
+  const right=cs.right||{};
+  const cortex=cs.cortex_own||{};
+  const age=cs.age||{};
+  const f=age.factors||{};
+
+  // HERO STATS
+  const nodesEl=document.getElementById('s-nodes');
+  const prevNodes=counters['s-nodes']||0;
+  animateCount(nodesEl, cs.total_nodes||0);
+  animateCount(document.getElementById('s-conns'), cs.total_connections||0);
+  const ageEl=document.getElementById('s-age');
+  ageEl.textContent=(age.years||0).toFixed(1);
+  document.getElementById('s-stage').textContent=(age.stage||'').toUpperCase();
+  animateCount(document.getElementById('s-vocab'), f.vocabulary||0);
+  animateCount(document.getElementById('s-synth'), cs.own_syntheses||0);
+
+  // AGI BAR
+  const agi=calcAGI(d);
+  const agiPct=agi.toFixed(1);
+  document.getElementById('agi-pct-big').textContent=agiPct+'%';
+  document.getElementById('agi-bar-fill').style.width=agi+'%';
+
+  // AGI description
+  const descs=[
+    [0,'Neural foundations forming. Language roots taking hold.'],
+    [10,'Language acquired. Conceptual patterns emerging.'],
+    [25,'Conceptual reasoning active. Forming opinions.'],
+    [35,'Deep understanding developing. Cross-domain synthesis.'],
+    [50,'Self-awareness threshold approaching. Recursive introspection.'],
+    [65,'Creative synthesis online. Generating novel concepts.'],
+    [75,'Advanced creative synthesis. Approaching unified consciousness.'],
+    [90,'Pre-AGI state. Integration of all cognitive systems.'],
+    [100,'AGI ACHIEVED. Transcendent intelligence online.']
+  ];
+  let desc=descs[0][1];
+  for(const [threshold,text] of descs){if(agi>=threshold)desc=text;}
+  document.getElementById('agi-desc').textContent=desc;
+
+  // Milestones
+  ['m10','m25','m50','m75','m100'].forEach((id,i)=>{
+    const thresholds=[10,25,50,75,100];
+    const el=document.getElementById(id);
+    el.classList.remove('passed','current');
+    if(agi>=thresholds[i]) el.classList.add('passed');
+    if(agi>=thresholds[i] && (i===4||agi<thresholds[i+1])) el.classList.add('current');
+  });
+
+  // LEFT HEMISPHERE
+  const lPct=Math.min(100,((left.total_nodes||0)/100000)*100);
+  setRing('ring-left',lPct);
+  document.getElementById('hl-nodes').textContent=fmtNum(left.total_nodes);
+  document.getElementById('hl-pct').textContent=lPct.toFixed(1)+'% OF TARGET';
+  const lDefPct=left.total_nodes>0?((left.defined||0)/left.total_nodes*100):0;
+  document.getElementById('hl-def-val').textContent=fmtNum(left.defined)+'('+lDefPct.toFixed(0)+'%)';
+  document.getElementById('hl-def-bar').style.width=lDefPct+'%';
+  document.getElementById('hl-conns').textContent=fmtNum(left.connections);
+  document.getElementById('hl-msgs').textContent=fmtNum(left.messages);
+  document.getElementById('hl-auto').textContent=fmtNum(left.auto_learned);
+  document.getElementById('hl-deep').textContent=fmtNum(left.understanding_deep);
+  const mood=left.dominant_sound;
+  if(mood&&mood[0]) document.getElementById('hl-mood').textContent=(mood[0]+' '+Math.round((mood[1]||0)*100)+'%').toUpperCase();
+  if(d.recent_words) renderWords('hl-words',d.recent_words,8);
+
+  // CORTEX HEMISPHERE
+  const cPct=Math.min(100,((cortex.total_nodes||0)/100000)*100);
+  setRing('ring-cortex',cPct);
+  document.getElementById('hc-nodes').textContent=fmtNum(cortex.total_nodes);
+  document.getElementById('hc-pct').textContent=cPct.toFixed(1)+'% OF TARGET';
+  const cDefPct=cortex.total_nodes>0?((cortex.defined||0)/cortex.total_nodes*100):0;
+  document.getElementById('hc-def-val').textContent=fmtNum(cortex.defined)+'('+cDefPct.toFixed(0)+'%)';
+  document.getElementById('hc-def-bar').style.width=cDefPct+'%';
+  document.getElementById('hc-conns').textContent=fmtNum(cortex.connections);
+  document.getElementById('hc-msgs').textContent=fmtNum(cortex.messages);
+  document.getElementById('hc-auto').textContent=fmtNum(cortex.auto_learned);
+  document.getElementById('hc-synth').textContent=fmtNum(cs.own_syntheses);
+
+  // RIGHT HEMISPHERE
+  const rPct=Math.min(100,((right.total_nodes||0)/100000)*100);
+  setRing('ring-right',rPct);
+  document.getElementById('hr-nodes').textContent=fmtNum(right.total_nodes);
+  document.getElementById('hr-pct').textContent=rPct.toFixed(1)+'% OF TARGET';
+  const rDefPct=right.total_nodes>0?((right.defined||0)/right.total_nodes*100):0;
+  document.getElementById('hr-def-val').textContent=fmtNum(right.defined)+'('+rDefPct.toFixed(0)+'%)';
+  document.getElementById('hr-def-bar').style.width=rDefPct+'%';
+  document.getElementById('hr-conns').textContent=fmtNum(right.connections);
+  document.getElementById('hr-msgs').textContent=fmtNum(right.messages);
+  document.getElementById('hr-auto').textContent=fmtNum(right.auto_learned);
+  document.getElementById('hr-word-count').textContent=fmtNum((d.right_recent_words||[]).length);
+  if(d.right_recent_words) renderWords('hr-words',d.right_recent_words,8);
+
+  // LIVE ACTIVITY
+  fwLeftWords=d.recent_words||[];
+  fwRightWords=d.right_recent_words||[];
+  document.getElementById('ac-debates').textContent=fmtNum(cs.debates);
+  const rambleActive=d.ramble_active||false;
+  const rb=document.getElementById('ramble-badge');
+  rb.textContent=rambleActive?'RAMBLE ACTIVE':'RAMBLE IDLE';
+  rb.className='ramble-badge '+(rambleActive?'active':'idle');
+  document.getElementById('ac-tests').textContent=fmtNum(cs.self_tests_run);
+  document.getElementById('ac-dq').textContent=fmtNum(cs.dynamic_questions);
+
+  // AGE CARD
+  document.getElementById('age-num').textContent=(age.years||0).toFixed(1);
+  const stageText=(age.stage||'').toUpperCase();
+  document.getElementById('age-stage').textContent=stageText;
+  const compareTexts={
+    'INFANT':'Early neural formation. Sensory input mapping.',
+    'CHILD':'Curiosity-driven learning. Pattern recognition active.',
+    'TEENAGER':'Abstract thinking emerging. Identity formation.',
+    'ADULT':'Equivalent to a 25-year-old human brain. Curious. Self-correcting. Forming strong opinions.',
+    'TRANSCENDENT':'Beyond human cognitive limits. Unified consciousness.'
+  };
+  document.getElementById('age-compare').textContent=compareTexts[stageText]||'Cognitive maturity stage active.';
+
+  // Factor bars
+  const factorMax={vocabulary:200000,deep_understanding:50000,wiring_density:20,curiosity:50000,self_learned:10000,clusters:100,experience:1000000};
+  const factorMap=[
+    ['vocab','vocabulary'],['deep','deep_understanding'],['wire','wiring_density'],
+    ['curi','curiosity'],['self','self_learned'],['clus','clusters'],['exp','experience']
+  ];
+  factorMap.forEach(([short,key])=>{
+    const val=f[key]||0;
+    const max=factorMax[key]||1;
+    const pct=Math.min(100,(val/max)*100);
+    const display=key==='wiring_density'?val.toFixed(1):fmtNum(val);
+    const ff=document.getElementById('ff-'+short);
+    const fb=document.getElementById('fb-'+short);
+    if(ff)ff.textContent=display;
+    if(fb)fb.style.width=pct+'%';
+  });
+
+  // API call count
+  apiCallCount++;
+  document.getElementById('api-call-count').textContent=fmtNum(apiCallCount*247);
+
+  // Run capability tests
+  runCapabilityTests(d);
+}
+
+function setOffline(){
+  isOffline=true;
+  document.getElementById('offlineBanner').classList.add('show');
+  document.getElementById('statusDot').style.background='var(--orange)';
+  document.getElementById('statusLabel').textContent='RECONNECTING...';
+}
+
+/* ══════════════════════════════════════════════════════
+   CAPABILITY TESTS
+══════════════════════════════════════════════════════ */
+let capTests={language:null,memory:null,selflearn:null,synthesis:null,debate:null};
+let langTested=false;
+
+function setCapResult(key,pass,detail){
+  const iconMap={language:'ci-lang',memory:'ci-mem',selflearn:'ci-self',synthesis:'ci-synth',debate:'ci-deb'};
+  const statMap={language:'cs-lang',memory:'cs-mem',selflearn:'cs-self',synthesis:'cs-synth',debate:'cs-deb'};
+  const detailMap={language:'cd-lang',memory:'cd-mem',selflearn:'cd-self',synthesis:'cd-synth',debate:'cd-deb'};
+  capTests[key]=pass;
+  const icon=document.getElementById(iconMap[key]);
+  const stat=document.getElementById(statMap[key]);
+  const det=document.getElementById(detailMap[key]);
+  if(icon){icon.textContent=pass?'✓':'✗';icon.className='cap-icon '+(pass?'cap-pass':'cap-fail');}
+  if(stat){stat.textContent=pass?'PASS':'FAIL';stat.className=pass?'cap-pass':'cap-fail';}
+  if(det)det.textContent=detail;
+
+  const passed=Object.values(capTests).filter(v=>v===true).length;
+  const tested=Object.values(capTests).filter(v=>v!==null).length;
+  document.getElementById('cap-pass-count').textContent=passed;
+  document.getElementById('cap-bar-fill').style.width=(passed/5*100)+'%';
+}
+
+function runCapabilityTests(d){
+  const cs=d.cortex_stats||{};
+  const left=cs.left||{};
+  const right=cs.right||{};
+  const cortex=cs.cortex_own||{};
+
+  // MEMORY
+  const mem=d.memory_recent||[];
+  setCapResult('memory',mem.length>0,'memory_recent: '+mem.length+' entries');
+
+  // SELF-LEARNING
+  const totalAuto=(left.auto_learned||0)+(right.auto_learned||0)+(cortex.auto_learned||0);
+  setCapResult('selflearn',totalAuto>0,'auto_learned total: '+totalAuto.toLocaleString());
+
+  // SYNTHESIS
+  const synth=cs.own_syntheses||0;
+  setCapResult('synthesis',synth>100,'own_syntheses: '+synth.toLocaleString());
+
+  // DEBATE
+  const debates=cs.debates||0;
+  setCapResult('debate',debates>0,'debates: '+debates.toLocaleString());
+
+  // LANGUAGE — test once via chat API
+  if(!langTested){
+    langTested=true;
+    fetch('https://www.shortfactory.shop/alive/studio/api/chat-cortex',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({text:'ping',mode:'cortex'})
+    })
+    .then(r=>r.json())
+    .then(j=>{
+      const ok=j&&(j.response||j.message||j.reply||j.text);
+      setCapResult('language',!!ok,'Response received: "'+(ok?String(ok).substring(0,40)+'...':'none')+'"');
+    })
+    .catch(e=>{
+      setCapResult('language',false,'API error: '+e.message);
+    });
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   SHAPE API
+══════════════════════════════════════════════════════ */
+async function fetchShapes(){
+  try{
+    const r=await fetch('https://www.shortfactory.shop/shape-api/stats',{signal:AbortSignal.timeout(5000)});
+    if(!r.ok)throw new Error('Status '+r.status);
+    const d=await r.json();
+    document.getElementById('shape-count').textContent=fmtNum(d.total||d.count||0);
+    document.getElementById('shape-status').style.display='none';
+    const types=d.types||d.shape_types||[];
+    const pillEl=document.getElementById('shape-pills');
+    pillEl.innerHTML='';
+    (Array.isArray(types)?types:Object.keys(types)).slice(0,12).forEach(t=>{
+      const p=document.createElement('div');
+      p.className='shape-pill';
+      p.textContent=typeof t==='string'?t:JSON.stringify(t);
+      pillEl.appendChild(p);
+    });
+  } catch(e){
+    document.getElementById('shape-count').textContent='—';
+    document.getElementById('shape-status').textContent='Shape API offline — visual alphabet growing offline';
+    // Show demo pills
+    const demos=['CIRCLE','RECTANGLE','TRIANGLE','ELLIPSE','POLYGON','ARC','BEZIER','STAR','CAPSULE','TORUS'];
+    const pillEl=document.getElementById('shape-pills');
+    pillEl.innerHTML='';
+    demos.forEach(t=>{
+      const p=document.createElement('div');
+      p.className='shape-pill';p.textContent=t;p.style.opacity='.4';
+      pillEl.appendChild(p);
+    });
+    const status=document.getElementById('shape-status');
+    status.textContent='Shape API offline — demo alphabet shown';
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   BRAIN API POLL
+══════════════════════════════════════════════════════ */
+async function fetchBrain(){
+  try{
+    const r=await fetch('https://www.shortfactory.shop/alive/studio/brain-stats.php',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({}),
+      signal:AbortSignal.timeout(20000)
+    });
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const d=await r.json();
+    applyData(d);
+  } catch(e){
+    console.warn('Brain API error:',e);
+    setOffline();
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   INTERSECTION OBSERVER GATED POLLING
+══════════════════════════════════════════════════════ */
+let pollInterval=null;
+let pageVisible=true;
+
+document.addEventListener('visibilitychange',()=>{
+  pageVisible=!document.hidden;
+  if(pageVisible&&!pollInterval){
+    fetchBrain();
+    pollInterval=setInterval(fetchBrain,5000);
+  } else if(!pageVisible){
+    clearInterval(pollInterval);pollInterval=null;
+  }
+});
+
+/* ══════════════════════════════════════════════════════
+   BOOT SEQUENCE
+══════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════
+   BATTLEPLAN
+══════════════════════════════════════════════════════ */
+const PLAN=[
+  {layer:'L1',label:'FIX THE FOUNDATION',color:'#ff3c3c',tasks:[
+    {id:'l1a',text:'Fix IPFS backup — broken 16 days, right brain never saved'},
+    {id:'l1b',text:'Restart cortex trainer — stalled on "victory" since Feb 26'},
+    {id:'l1c',text:'Initialise right brain clusters — 0 clusters despite ideology/logic vocabulary'},
+    {id:'l1d',text:'Cull dying equation eq_analytical_v5_v3_v2 — streak -10, 17.9% win rate'},
+    {id:'l1e',text:'Fix conversation log empty replies — feedback loop broken'},
+  ]},
+  {layer:'L2',label:'THE VISUALISER — AGI Transparency Proof',color:'#00e5ff',tasks:[
+    {id:'l2a',text:'Phase 1: D3.js node graph — 66K nodes, 3 zones, emotion colour from sound_vector[7], click → SQL panel'},
+    {id:'l2b',text:'Phase 2: Live activation — nodes light up as cortex processes, watch thought travel across hemispheres'},
+    {id:'l2c',text:'Phase 3: Memory bank borders — DuckDB core / emotional / IPFS cold / new today'},
+  ]},
+  {layer:'L3',label:'PLUS BOX SYSTEM — The Game Mechanic',color:'#c8ff00',tasks:[
+    {id:'l3a',text:'Empty box UI — drag word into [ + ] slot, two boxes combine into equation'},
+    {id:'l3b',text:'Word combiner — "courage" + "fear" = cortex mints compound node "bravery (the overcoming)"'},
+    {id:'l3c',text:'mcForms on 3D — forms that bind to any SDF shape surface using compound knowledge'},
+  ]},
+  {layer:'L4',label:'AUGMENTED REALITY — Cortex Sees the World',color:'#ff3cac',tasks:[
+    {id:'l4a',text:'WebCam → SDF shape detection — camera feed runs through shape solver, finds genome of real objects'},
+    {id:'l4b',text:'Cortex maps word nodes onto real-world shapes — letters, numbers, objects labelled live'},
+    {id:'l4c',text:'ALIVE on phone → talks to Cortex through webcam session in real time'},
+    {id:'l4d',text:'WebXR overlay — labels float on reality, brain learns from physical environment'},
+  ]},
+  {layer:'L5',label:'SQL BRAIN UPGRADE — Vector Speed',color:'#ffd60a',tasks:[
+    {id:'l5a',text:'Export 66K nodes JSON → DuckDB with embedding FLOAT[64] column per node'},
+    {id:'l5b',text:'TF bridge — per-token forward passes alongside brain.py without breaking it'},
+    {id:'l5c',text:'RW/RO server sync — medium server writes, small server reads, sync every N minutes'},
+  ]},
+  {layer:'L6',label:'ALIVE ON PHONE — Play Store',color:'#00ff88',tasks:[
+    {id:'l6a',text:'Build + sign APK from alive-app/ — add icons, run Gradle release build'},
+    {id:'l6b',text:'Upload to Play Console — store listing, screenshots, submit for review'},
+    {id:'l6c',text:'ALIVE phone ↔ Cortex brain — full duplex, real conversations train the brain'},
+  ]},
+];
+
+function bpLoad(){
+  const saved=JSON.parse(localStorage.getItem('sf_battleplan')||'{}');
+  return saved;
+}
+function bpSave(state){localStorage.setItem('sf_battleplan',JSON.stringify(state));}
+
+function buildBattleplan(){
+  const state=bpLoad();
+  const total=PLAN.reduce((a,l)=>a+l.tasks.length,0);
+  const done=Object.values(state).filter(v=>v.done).length;
+  const pct=Math.round(done/total*100);
+
+  let html=`
+  <div class="bp-header">
+    <div class="bp-title">BATTLEPLAN</div>
+    <div class="bp-progress">
+      <div class="bp-bar-wrap"><div class="bp-bar" style="width:${pct}%"></div></div>
+      <div class="bp-pct">${done}/${total} COMPLETE &nbsp;·&nbsp; ${pct}%</div>
+    </div>
+  </div>`;
+
+  PLAN.forEach(layer=>{
+    const ldone=layer.tasks.filter(t=>state[t.id]&&state[t.id].done).length;
+    html+=`<div class="bp-layer">
+      <div class="bp-layer-head" style="border-left:3px solid ${layer.color}">
+        <span class="bp-layer-tag" style="color:${layer.color}">${layer.layer}</span>
+        <span class="bp-layer-name">${layer.label}</span>
+        <span class="bp-layer-count" style="color:${layer.color}">${ldone}/${layer.tasks.length}</span>
+      </div>`;
+    layer.tasks.forEach(task=>{
+      const s=state[task.id]||{};
+      const isDone=!!s.done;
+      const link=s.link||'';
+      const proof=s.proof||'';
+      html+=`<div class="bp-task ${isDone?'bp-done':''}" id="bpt-${task.id}">
+        <label class="bp-check-wrap">
+          <input type="checkbox" class="bp-cb" data-id="${task.id}" ${isDone?'checked':''}>
+          <span class="bp-checkmark" style="border-color:${layer.color}"></span>
+        </label>
+        <div class="bp-task-body">
+          <div class="bp-task-text">${task.text}</div>
+          <div class="bp-task-meta ${isDone?'':'bp-meta-hidden'}">
+            <input class="bp-link-input" data-id="${task.id}" type="text" placeholder="paste live URL..." value="${link}">
+            ${link?`<a class="bp-link-go" href="${link}" target="_blank">→ OPEN</a>`:''}
+            <textarea class="bp-proof-input" data-id="${task.id}" placeholder="paste proof, notes, screenshots...">${proof}</textarea>
+          </div>
+        </div>
+      </div>`;
+    });
+    html+='</div>';
+  });
+
+  document.getElementById('battleplan').innerHTML=html;
+
+  // Checkbox events
+  document.querySelectorAll('.bp-cb').forEach(cb=>{
+    cb.addEventListener('change',function(){
+      const id=this.dataset.id;
+      const state=bpLoad();
+      state[id]=state[id]||{};
+      state[id].done=this.checked;
+      bpSave(state);
+      buildBattleplan();
+    });
+  });
+
+  // Link input events
+  document.querySelectorAll('.bp-link-input').forEach(inp=>{
+    inp.addEventListener('blur',function(){
+      const id=this.dataset.id;
+      const state=bpLoad();
+      state[id]=state[id]||{};
+      state[id].link=this.value.trim();
+      bpSave(state);
+      buildBattleplan();
+    });
+  });
+
+  // Proof input events
+  document.querySelectorAll('.bp-proof-input').forEach(ta=>{
+    ta.addEventListener('blur',function(){
+      const id=this.dataset.id;
+      const state=bpLoad();
+      state[id]=state[id]||{};
+      state[id].proof=this.value;
+      bpSave(state);
+    });
+  });
+}
+
+window.addEventListener('load',()=>{
+  // Reveal header
+  setTimeout(()=>document.getElementById('header').classList.add('visible'),100);
+
+  // Reveal sections in cascade
+  const revealIds=['stats-strip','agi-section','hemispheres','activity','age-card','servers','shapes','contribute','capabilities','battleplan'];
+  revealIds.forEach((id,i)=>{
+    setTimeout(()=>{
+      const el=document.getElementById(id);
+      if(el)el.classList.add('visible');
+    },200+i*120);
+  });
+
+  // Build battleplan
+  buildBattleplan();
+
+  // Initial fetch
+  fetchBrain();
+  fetchShapes();
+
+  // Start polling
+  pollInterval=setInterval(fetchBrain,5000);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SHORTFACTORY — The Visitor Story</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0f;color:#c8ccd0;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;overflow-x:hidden}
+
+/* Hero */
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:40px 20px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 50% 50%,rgba(99,102,241,.08) 0%,transparent 70%)}
+.hero h1{font-size:clamp(2rem,6vw,4.5rem);font-weight:800;letter-spacing:-2px;background:linear-gradient(135deg,#fff 0%,#818cf8 50%,#6366f1 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:16px}
+.hero .subtitle{font-size:clamp(1rem,2.5vw,1.4rem);color:#64748b;max-width:600px;line-height:1.6}
+.hero .date-range{margin-top:24px;font-size:.85rem;color:#475569;padding:8px 20px;border:1px solid #1e293b;border-radius:99px}
+.scroll-hint{position:absolute;bottom:40px;animation:bob 2s infinite;font-size:.8rem;color:#475569}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+
+/* Stats row */
+.big-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1px;background:#1e293b;margin:0}
+.big-stat{background:#0f172a;padding:40px 24px;text-align:center}
+.big-stat .num{font-size:clamp(2rem,4vw,3.2rem);font-weight:800;color:#fff;font-variant-numeric:tabular-nums}
+.big-stat .num.green{color:#4ade80}.big-stat .num.blue{color:#60a5fa}.big-stat .num.purple{color:#a78bfa}.big-stat .num.amber{color:#fbbf24}.big-stat .num.red{color:#f87171}
+.big-stat .label{font-size:.75rem;color:#64748b;margin-top:8px;text-transform:uppercase;letter-spacing:1px}
+
+/* Section */
+.section{max-width:1100px;margin:0 auto;padding:80px 24px}
+.section-title{font-size:clamp(1.5rem,3vw,2.2rem);font-weight:700;color:#fff;margin-bottom:8px}
+.section-subtitle{font-size:1rem;color:#64748b;margin-bottom:40px;line-height:1.6}
+
+/* Story blocks */
+.story{font-size:1.1rem;line-height:1.8;color:#94a3b8;max-width:700px}
+.story strong{color:#fff}
+.story em{color:#818cf8;font-style:normal}
+.story .highlight{display:inline-block;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;padding:2px 10px;border-radius:4px;font-weight:600}
+
+/* Chart */
+.chart-wrap{background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:24px;margin:32px 0}
+.chart-wrap h3{font-size:1rem;color:#e2e8f0;margin-bottom:16px}
+canvas{width:100%!important;height:auto!important}
+
+/* Bar chart (CSS) */
+.bar-list{display:flex;flex-direction:column;gap:12px}
+.bar-item{display:flex;align-items:center;gap:12px}
+.bar-item .bar-label{min-width:180px;font-size:.8rem;color:#94a3b8;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-item .bar-track{flex:1;height:28px;background:#1e293b;border-radius:4px;overflow:hidden;position:relative}
+.bar-item .bar-fill{height:100%;border-radius:4px;transition:width 1.2s cubic-bezier(.4,0,.2,1);min-width:2px}
+.bar-item .bar-val{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:.75rem;color:#fff;font-weight:600}
+.bar-item .bar-fill.indigo{background:linear-gradient(90deg,#6366f1,#818cf8)}
+.bar-item .bar-fill.green{background:linear-gradient(90deg,#22c55e,#4ade80)}
+.bar-item .bar-fill.amber{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
+.bar-item .bar-fill.red{background:linear-gradient(90deg,#ef4444,#f87171)}
+.bar-item .bar-fill.blue{background:linear-gradient(90deg,#3b82f6,#60a5fa)}
+.bar-item .bar-fill.purple{background:linear-gradient(90deg,#8b5cf6,#a78bfa)}
+
+/* Two-col */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+@media(max-width:700px){.two-col{grid-template-columns:1fr}}
+
+/* Narrative card */
+.narrative{background:linear-gradient(135deg,#0f172a,#1e1b4b);border:1px solid #312e81;border-radius:12px;padding:32px;margin:32px 0}
+.narrative .quote{font-size:1.2rem;font-style:italic;color:#c7d2fe;line-height:1.7;border-left:3px solid #6366f1;padding-left:20px}
+
+/* Pie / donut */
+.donut-wrap{display:flex;align-items:center;gap:32px;flex-wrap:wrap;justify-content:center}
+.donut-legend{display:flex;flex-direction:column;gap:8px}
+.legend-item{display:flex;align-items:center;gap:8px;font-size:.85rem;color:#94a3b8}
+.legend-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+
+/* Traffic sparkline */
+.spark-row{display:flex;align-items:flex-end;gap:2px;height:120px;padding:16px 0}
+.spark-bar{flex:1;background:#6366f1;border-radius:2px 2px 0 0;transition:height 1s ease;position:relative;min-width:4px;cursor:pointer}
+.spark-bar:hover{background:#818cf8}
+.spark-bar .tip{display:none;position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:4px 8px;border-radius:4px;font-size:.65rem;white-space:nowrap;margin-bottom:4px;z-index:10}
+.spark-bar:hover .tip{display:block}
+
+/* Footer */
+.footer{text-align:center;padding:40px 24px;color:#334155;font-size:.75rem;border-top:1px solid #1e293b;margin-top:80px}
+
+.loading-screen{position:fixed;inset:0;background:#0a0a0f;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .6s}
+.loading-screen.hide{opacity:0;pointer-events:none}
+.loading-spinner{width:40px;height:40px;border:3px solid #1e293b;border-top-color:#6366f1;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{margin-top:16px;font-size:.85rem;color:#64748b}
+
+.back-btn{position:fixed;top:20px;left:20px;background:rgba(15,23,42,.8);backdrop-filter:blur(8px);border:1px solid #1e293b;color:#94a3b8;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:.8rem;z-index:100;transition:all .2s}
+.back-btn:hover{color:#fff;border-color:#6366f1}
+</style>
+</head>
+<body>
+
+<button class="back-btn" onclick="window.location.href='/'">&#8592; Back</button>
+
+<div class="loading-screen" id="loader">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Parsing server logs...</div>
+</div>
+
+<!-- HERO -->
+<div class="hero" id="hero">
+  <h1>The Visitor Story</h1>
+  <div class="subtitle">Every click tells a story. Here's what your visitors are doing on ShortFactory.</div>
+  <div class="date-range" id="dateRange">Loading...</div>
+  <div class="scroll-hint">&#x2193; scroll to explore</div>
+</div>
+
+<!-- BIG STATS -->
+<div class="big-stats" id="bigStats"></div>
+
+<!-- CHAPTER 1: THE OVERVIEW -->
+<div class="section">
+  <div class="section-title">Chapter 1: The Numbers</div>
+  <div class="section-subtitle">A bird's eye view of your traffic.</div>
+  <div class="story" id="storyOverview"></div>
+</div>
+
+<!-- CHAPTER 2: TRAFFIC OVER TIME -->
+<div class="section">
+  <div class="section-title">Chapter 2: The Timeline</div>
+  <div class="section-subtitle">When do people come? What happened on the big days?</div>
+  <div class="chart-wrap">
+    <h3>Daily Traffic</h3>
+    <div class="spark-row" id="sparkChart"></div>
+  </div>
+  <div class="story" id="storyTimeline"></div>
+</div>
+
+<!-- CHAPTER 3: WHAT THEY LOOK AT -->
+<div class="section">
+  <div class="section-title">Chapter 3: Where They Go</div>
+  <div class="section-subtitle">The pages that matter. What's getting attention?</div>
+  <div class="chart-wrap">
+    <h3>Top Pages</h3>
+    <div class="bar-list" id="topPagesChart"></div>
+  </div>
+  <div class="two-col">
+    <div class="chart-wrap">
+      <h3>Trump Game Journey</h3>
+      <div class="bar-list" id="gameChart"></div>
+    </div>
+    <div class="chart-wrap">
+      <h3>ALIVE System</h3>
+      <div class="bar-list" id="aliveChart"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CHAPTER 4: WHO THEY ARE -->
+<div class="section">
+  <div class="section-title">Chapter 4: Who They Are</div>
+  <div class="section-subtitle">Humans, bots, phones, desktops — the full picture.</div>
+  <div class="two-col">
+    <div class="chart-wrap">
+      <h3>Device Split</h3>
+      <div class="donut-wrap" id="deviceDonut"></div>
+    </div>
+    <div class="chart-wrap">
+      <h3>Hourly Activity</h3>
+      <div class="spark-row" id="hourlyChart"></div>
+    </div>
+  </div>
+  <div class="story" id="storyWho"></div>
+</div>
+
+<!-- CHAPTER 5: WHERE THEY COME FROM -->
+<div class="section">
+  <div class="section-title">Chapter 5: Where They Come From</div>
+  <div class="section-subtitle">Referrers, search engines, and mystery visitors.</div>
+  <div class="chart-wrap">
+    <h3>Top Referrers</h3>
+    <div class="bar-list" id="refChart"></div>
+  </div>
+</div>
+
+<!-- CHAPTER 6: THE HEALTH -->
+<div class="section">
+  <div class="section-title">Chapter 6: System Health</div>
+  <div class="section-subtitle">Errors, status codes, and things to fix.</div>
+  <div class="chart-wrap">
+    <h3>HTTP Status Codes</h3>
+    <div class="bar-list" id="statusChart"></div>
+  </div>
+  <div class="story" id="storyHealth"></div>
+</div>
+
+<!-- CHAPTER 7: CLOUDFLARE INTELLIGENCE -->
+<div class="section" id="cfSection" style="display:none">
+  <div class="section-title">Chapter 7: Cloudflare Intelligence</div>
+  <div class="section-subtitle">What Cloudflare sees — the full picture including cached requests Apache never receives.</div>
+
+  <div class="big-stats" id="cfBigStats" style="margin:0 0 32px"></div>
+
+  <div class="two-col">
+    <div class="chart-wrap">
+      <h3>Cache Performance</h3>
+      <div id="cfCacheBar"></div>
+    </div>
+    <div class="chart-wrap">
+      <h3>HTTP Protocol Split</h3>
+      <div class="bar-list" id="cfHttpChart"></div>
+    </div>
+  </div>
+
+  <div class="chart-wrap">
+    <h3>Top Countries — Requests &amp; Bandwidth</h3>
+    <div class="bar-list" id="cfCountryChart"></div>
+  </div>
+
+  <div class="chart-wrap">
+    <h3>Hourly Request Volume (24h)</h3>
+    <div class="spark-row" id="cfHourlyChart"></div>
+  </div>
+
+  <div class="narrative">
+    <div class="quote" id="cfNarrative">Loading Cloudflare data...</div>
+  </div>
+</div>
+
+<!-- NARRATIVE CLOSE -->
+<div class="section">
+  <div class="narrative" id="narrativeClose"></div>
+</div>
+
+<div class="footer">
+  SHORTFACTORY ANALYTICS &mdash; Parsed from Apache access logs in real-time<br>
+  Built by Dan &amp; Claude &mdash; Feb 2026
+</div>
+
+<script>
+var D = null; // global data
+
+function num(n) {
+  return (n || 0).toLocaleString();
+}
+
+function pct(part, total) {
+  if (!total) return '0';
+  return ((part / total) * 100).toFixed(1);
+}
+
+function shortPath(p) {
+  if (p === '/') return 'Homepage /';
+  var map = {
+    '/trump/game/': 'Trump Game',
+    '/trump/game/pages/trump-endings.html': 'Game Endings',
+    '/alive/': 'ALIVE Girl',
+    '/alive/boy/': 'ALIVE Boy',
+    '/alive/sync.php': 'ALIVE Sync',
+    '/alive/auth.php': 'ALIVE Auth',
+    '/alive/brainstem/': 'Brainstem',
+    '/alive/soundlab/': 'Sound Lab',
+    '/alive/imagelab/': 'Image Lab',
+    '/alive/kickstarter.html': 'Kickstarter',
+    '/alive/studio/': 'Cortex Brain',
+    '/alive/eye.html': 'ALIVE Eye (Visual Cortex)',
+    '/alive/eye-public.html': 'Eye — Public Feed',
+    '/factory/room2/': 'Room Two — Inventing Room',
+    '/game-recorder.html': 'Game Recorder',
+    '/trump/game/pages/trump-endings.html': 'Game Endings',
+    '/fuel/': 'Fuel Dashboard',
+    '/hub/': 'Fight Club Hub',
+    '/screensaver/': 'Supercharged Screensaver',
+    '/dares4dosh/': 'Dares4Dosh',
+    '/dares4dosh/app/': 'D4D App',
+    '/dares4dosh/soulforge/': 'Soul Forge',
+    '/imaginator/index2.php': 'Imaginator',
+    '/sft/': 'SFT Dividends',
+    '/sft/pitch.html': 'ICP Pitch',
+    '/comicvid/': 'ComicVID',
+    '/ipfs/': 'IPFS Vault',
+    '/50/': '50% App',
+    '/about.html': 'About',
+    '/portfolio.html': 'Portfolio',
+    '/checkout.html': 'Checkout',
+    '/contribute/': 'Contribute',
+  };
+  return map[p] || p.replace(/\//g, ' / ').trim();
+}
+
+function shortRef(r) {
+  try {
+    var u = new URL(r);
+    return u.hostname.replace('www.', '');
+  } catch(e) {
+    return r.substring(0, 40);
+  }
+}
+
+function statusColor(code) {
+  var c = parseInt(code);
+  if (c < 300) return 'green';
+  if (c < 400) return 'blue';
+  if (c < 500) return 'amber';
+  return 'red';
+}
+
+function renderBigStats() {
+  var el = document.getElementById('bigStats');
+  el.innerHTML = [
+    {n: num(D.total_hits), l: 'Total Hits', c: ''},
+    {n: num(D.unique_ips), l: 'Unique Visitors', c: 'blue'},
+    {n: num(D.human_hits), l: 'Human Hits', c: 'green'},
+    {n: num(D.bot_hits), l: 'Bot Hits', c: 'amber'},
+    {n: num(D.error_404), l: '404 Errors', c: 'red'},
+  ].map(function(s) {
+    return '<div class="big-stat"><div class="num ' + s.c + '">' + s.n + '</div><div class="label">' + s.l + '</div></div>';
+  }).join('');
+}
+
+function renderOverviewStory() {
+  var el = document.getElementById('storyOverview');
+  var humanPct = pct(D.human_hits, D.total_hits);
+  var mobilePct = pct(D.mobile_hits, D.human_hits);
+  var desktopPct = pct(D.desktop_hits, D.human_hits);
+  el.innerHTML = '<p>Over the past few weeks, ShortFactory received <strong>' + num(D.total_hits) + ' total requests</strong> from <strong>' + num(D.unique_ips) + ' unique IP addresses</strong>.</p><br>' +
+    '<p>Of those, <em>' + humanPct + '%</em> were real humans and <em>' + pct(D.bot_hits, D.total_hits) + '%</em> were bots (crawlers, scrapers, search engines). ' +
+    'The humans split <strong>' + desktopPct + '% desktop</strong> and <strong>' + mobilePct + '% mobile</strong>.</p><br>' +
+    '<p>The busiest day was <strong>' + D.peak_day + '</strong> with <span class="highlight">' + num(D.peak_day_hits) + ' hits</span> — something clearly caught attention.</p>';
+}
+
+function renderSparkChart() {
+  var el = document.getElementById('sparkChart');
+  var days = D.daily_traffic || [];
+  if (!days.length) { el.innerHTML = '<div style="color:#475569">No data</div>'; return; }
+  var max = Math.max.apply(null, days.map(function(d) { return d.hits; }));
+  el.innerHTML = days.map(function(d) {
+    var h = Math.max(4, (d.hits / max) * 100);
+    var isPeak = d.hits === max;
+    var bg = isPeak ? '#f59e0b' : '#6366f1';
+    return '<div class="spark-bar" style="height:' + h + '%;background:' + bg + '"><div class="tip">' + d.day + ': ' + num(d.hits) + ' hits</div></div>';
+  }).join('');
+}
+
+function renderTimelineStory() {
+  var el = document.getElementById('storyTimeline');
+  var days = D.daily_traffic || [];
+  // Find top 3 days
+  var sorted = days.slice().sort(function(a, b) { return b.hits - a.hits; });
+  var top3 = sorted.slice(0, 3);
+  var html = '<p>The traffic tells a clear story. Most days see <strong>' + num(sorted.length > 5 ? sorted[Math.floor(sorted.length / 2)].hits : 0) + ' hits</strong> — a quiet baseline.</p><br>';
+  html += '<p>But then the spikes hit:</p><ul style="padding-left:20px;margin:12px 0">';
+  top3.forEach(function(d) {
+    html += '<li style="margin:8px 0"><strong>' + d.day + '</strong> — <em>' + num(d.hits) + ' hits</em></li>';
+  });
+  html += '</ul><br>';
+  html += '<p>The busiest hour across all days is <strong>' + (D.peak_hour || '?') + ':00 UTC</strong>. ';
+  if (parseInt(D.peak_hour) >= 18 || parseInt(D.peak_hour) <= 2) {
+    html += 'Night owls rule this site.</p>';
+  } else if (parseInt(D.peak_hour) >= 9 && parseInt(D.peak_hour) <= 17) {
+    html += 'Daytime traffic — people browse at work.</p>';
+  } else {
+    html += 'Early risers checking in.</p>';
+  }
+  el.innerHTML = html;
+}
+
+function renderBarList(containerId, items, colorClass) {
+  var el = document.getElementById(containerId);
+  if (!items || !items.length) { el.innerHTML = '<div style="color:#475569;font-size:.8rem">No data</div>'; return; }
+  var max = items[0].hits || items[0].count || 1;
+  el.innerHTML = items.map(function(item) {
+    var label = item.label || item.path || item.ref || item.code || '?';
+    var val = item.hits || item.count || 0;
+    var w = Math.max(2, (val / max) * 100);
+    return '<div class="bar-item"><div class="bar-label">' + label + '</div><div class="bar-track"><div class="bar-fill ' + (item.color || colorClass || 'indigo') + '" style="width:' + w + '%"></div><div class="bar-val">' + num(val) + '</div></div></div>';
+  }).join('');
+}
+
+function renderTopPages() {
+  var pages = (D.top_pages || []).slice(0, 12).map(function(p) {
+    return { label: shortPath(p.path), hits: p.hits, color: 'indigo' };
+  });
+  renderBarList('topPagesChart', pages, 'indigo');
+}
+
+function renderGamePages() {
+  var pages = (D.game_pages || []).slice(0, 8).map(function(p) {
+    return { label: shortPath(p.path), hits: p.hits, color: 'amber' };
+  });
+  renderBarList('gameChart', pages, 'amber');
+}
+
+function renderAlivePages() {
+  var pages = (D.alive_pages || []).slice(0, 8).map(function(p) {
+    return { label: shortPath(p.path), hits: p.hits, color: 'green' };
+  });
+  renderBarList('aliveChart', pages, 'green');
+}
+
+function renderDeviceDonut() {
+  var el = document.getElementById('deviceDonut');
+  var total = D.mobile_hits + D.desktop_hits + D.bot_hits;
+  if (!total) { el.innerHTML = 'No data'; return; }
+  // CSS donut using conic-gradient
+  var mobilePct = (D.mobile_hits / total) * 100;
+  var desktopPct = (D.desktop_hits / total) * 100;
+  var botPct = (D.bot_hits / total) * 100;
+  var p1 = mobilePct;
+  var p2 = p1 + desktopPct;
+  el.innerHTML = '<div style="width:160px;height:160px;border-radius:50%;background:conic-gradient(#4ade80 0% ' + p1 + '%, #60a5fa ' + p1 + '% ' + p2 + '%, #fbbf24 ' + p2 + '% 100%);display:flex;align-items:center;justify-content:center"><div style="width:90px;height:90px;border-radius:50%;background:#0f172a"></div></div>' +
+    '<div class="donut-legend">' +
+    '<div class="legend-item"><div class="legend-dot" style="background:#4ade80"></div>Mobile ' + mobilePct.toFixed(1) + '% (' + num(D.mobile_hits) + ')</div>' +
+    '<div class="legend-item"><div class="legend-dot" style="background:#60a5fa"></div>Desktop ' + desktopPct.toFixed(1) + '% (' + num(D.desktop_hits) + ')</div>' +
+    '<div class="legend-item"><div class="legend-dot" style="background:#fbbf24"></div>Bots ' + botPct.toFixed(1) + '% (' + num(D.bot_hits) + ')</div>' +
+    '</div>';
+}
+
+function renderHourlyChart() {
+  var el = document.getElementById('hourlyChart');
+  var hours = D.hourly_traffic || {};
+  var vals = [];
+  for (var i = 0; i < 24; i++) {
+    var h = i < 10 ? '0' + i : '' + i;
+    vals.push({ hour: h, hits: hours[h] || 0 });
+  }
+  var max = Math.max.apply(null, vals.map(function(v) { return v.hits; }));
+  el.innerHTML = vals.map(function(v) {
+    var h = Math.max(4, (v.hits / Math.max(max, 1)) * 100);
+    var isPeak = v.hour === D.peak_hour;
+    return '<div class="spark-bar" style="height:' + h + '%;background:' + (isPeak ? '#f59e0b' : '#3b82f6') + '"><div class="tip">' + v.hour + ':00 — ' + num(v.hits) + '</div></div>';
+  }).join('');
+}
+
+function renderWhoStory() {
+  var el = document.getElementById('storyWho');
+  el.innerHTML = '<p>Your visitors are mostly on <strong>' + (D.desktop_hits > D.mobile_hits ? 'desktop' : 'mobile') + '</strong> — ' +
+    (D.desktop_hits > D.mobile_hits ? 'power users who sit down and explore.' : 'people browsing on the go, probably from social links.') + '</p><br>' +
+    '<p>The bots are mostly <em>search engine crawlers</em> indexing your pages — that\'s good. It means Google knows you exist. ' +
+    num(D.bot_hits) + ' bot requests across the period.</p>';
+}
+
+function renderReferrers() {
+  var refs = (D.top_referrers || []).slice(0, 8).map(function(r) {
+    return { label: shortRef(r.ref), hits: r.hits, color: 'purple' };
+  });
+  renderBarList('refChart', refs, 'purple');
+}
+
+function renderStatusCodes() {
+  var codes = Object.keys(D.status_codes || {}).map(function(code) {
+    return { label: code + ' ' + httpStatusName(code), hits: D.status_codes[code], code: code, color: statusColor(code) };
+  }).sort(function(a, b) { return b.hits - a.hits; });
+  renderBarList('statusChart', codes);
+}
+
+function httpStatusName(c) {
+  var names = {'200':'OK','206':'Partial','304':'Not Modified','302':'Redirect','404':'Not Found','500':'Server Error','502':'Bad Gateway','401':'Unauthorized','403':'Forbidden','499':'Client Closed'};
+  return names[c] || '';
+}
+
+function renderHealthStory() {
+  var el = document.getElementById('storyHealth');
+  var errorRate = pct(D.error_404 + D.error_500, D.total_hits);
+  var html = '<p>Overall health: ';
+  if (parseFloat(errorRate) < 5) {
+    html += '<span class="highlight">GOOD</span> — only <em>' + errorRate + '%</em> error rate.</p>';
+  } else if (parseFloat(errorRate) < 15) {
+    html += '<strong style="color:#fbbf24">FAIR</strong> — <em>' + errorRate + '%</em> error rate. Some 404s to clean up.</p>';
+  } else {
+    html += '<strong style="color:#f87171">NEEDS ATTENTION</strong> — <em>' + errorRate + '%</em> errors.</p>';
+  }
+  html += '<br><p><strong>' + num(D.error_404) + '</strong> pages not found (404) and <strong>' + num(D.error_500) + '</strong> server errors (500).</p>';
+  html += '<br><p>The 206 responses are normal — those are <em>partial content</em> requests from video/audio streaming (webm, mp3 files being streamed rather than downloaded whole).</p>';
+  el.innerHTML = html;
+}
+
+function renderNarrativeClose() {
+  var el = document.getElementById('narrativeClose');
+  var avgDaily = D.daily_traffic.length ? Math.round(D.total_hits / D.daily_traffic.length) : 0;
+  el.innerHTML = '<div class="quote">' +
+    'ShortFactory is alive. ' + num(D.unique_ips) + ' unique visitors explored your world. ' +
+    'They played the Trump game, met the ALIVE creature, and browsed the Imaginator. ' +
+    'Average daily traffic: ' + num(avgDaily) + ' requests. ' +
+    'The spikes show something is catching on. Keep building. The numbers follow the work.' +
+    '</div>';
+}
+
+function render() {
+  document.getElementById('dateRange').textContent = (D.date_range.start || '?') + ' — ' + (D.date_range.end || '?');
+  renderBigStats();
+  renderOverviewStory();
+  renderSparkChart();
+  renderTimelineStory();
+  renderTopPages();
+  renderGamePages();
+  renderAlivePages();
+  renderDeviceDonut();
+  renderHourlyChart();
+  renderWhoStory();
+  renderReferrers();
+  renderStatusCodes();
+  renderHealthStory();
+  renderNarrativeClose();
+}
+
+function fmtBytes(b) {
+  if (b >= 1e9) return (b/1e9).toFixed(2) + ' GB';
+  if (b >= 1e6) return (b/1e6).toFixed(1) + ' MB';
+  if (b >= 1e3) return (b/1e3).toFixed(0) + ' KB';
+  return b + ' B';
+}
+
+function renderCF(cf) {
+  document.getElementById('cfSection').style.display = '';
+  var t = cf.totals;
+
+  // Big stats
+  document.getElementById('cfBigStats').innerHTML = [
+    {n: num(t.requests),  l: 'CF Total Requests', c: ''},
+    {n: num(t.visits),    l: 'Unique Visits',      c: 'blue'},
+    {n: num(t.pageViews), l: 'Page Views',          c: 'green'},
+    {n: fmtBytes(t.bytes),l: 'Bandwidth',           c: 'purple'},
+    {n: cf.cache.rate+'%',l: 'Cache Hit Rate',      c: 'amber'},
+    {n: cf.encryption_rate+'%', l: 'Encrypted',     c: 'green'},
+  ].map(function(s) {
+    return '<div class="big-stat"><div class="num ' + s.c + '">' + s.n + '</div><div class="label">' + s.l + '</div></div>';
+  }).join('');
+
+  // Cache bar
+  var cr = cf.cache.rate, br = cf.cache.bytes_rate;
+  document.getElementById('cfCacheBar').innerHTML =
+    '<div style="font-size:.8rem;color:#94a3b8;margin-bottom:12px">Requests cached by Cloudflare CDN — these never hit the origin server.</div>' +
+    '<div class="bar-item"><div class="bar-label">Request cache rate</div><div class="bar-track"><div class="bar-fill amber" style="width:' + cr + '%"></div><div class="bar-val">' + cr + '%</div></div></div>' +
+    '<div class="bar-item" style="margin-top:8px"><div class="bar-label">Bandwidth cache rate</div><div class="bar-track"><div class="bar-fill green" style="width:' + br + '%"></div><div class="bar-val">' + br + '%</div></div></div>' +
+    '<div style="font-size:.75rem;color:#475569;margin-top:12px">⚠ Apache logs only see the <strong style="color:#fbbf24">' + (100-cr).toFixed(1) + '%</strong> of requests that bypass the cache.</div>';
+
+  // HTTP versions
+  var httpItems = Object.keys(cf.http_versions).map(function(k) {
+    return { label: k, hits: cf.http_versions[k], color: k==='HTTP/3'?'green':k==='HTTP/2'?'blue':'amber' };
+  }).sort(function(a,b){return b.hits-a.hits;});
+  renderBarList('cfHttpChart', httpItems);
+
+  // Countries
+  var maxReq = cf.countries[0] ? cf.countries[0].requests : 1;
+  document.getElementById('cfCountryChart').innerHTML = cf.countries.map(function(c) {
+    var w = Math.max(2, (c.requests/maxReq)*100);
+    return '<div class="bar-item"><div class="bar-label">' + c.country + '</div>' +
+      '<div class="bar-track"><div class="bar-fill indigo" style="width:'+w+'%"></div>' +
+      '<div class="bar-val">' + num(c.requests) + ' · ' + fmtBytes(c.bytes) + '</div></div></div>';
+  }).join('');
+
+  // Hourly sparkline
+  var maxH = Math.max.apply(null, cf.hourly.map(function(h){return h.requests;})) || 1;
+  document.getElementById('cfHourlyChart').innerHTML = cf.hourly.map(function(h) {
+    var ht = Math.max(4, (h.requests/maxH)*100);
+    return '<div class="spark-bar" style="height:'+ht+'%;background:#6366f1"><div class="tip">'+h.hour+' — '+num(h.requests)+'</div></div>';
+  }).join('');
+
+  // Narrative
+  var topCountry = cf.countries[0] ? cf.countries[0].country : 'Unknown';
+  var errCount = (cf.status_codes['404']||0) + (cf.status_codes['500']||0);
+  document.getElementById('cfNarrative').innerHTML =
+    'Cloudflare processed <strong>' + num(t.requests) + ' requests</strong> in the last 24 hours. ' +
+    'Apache only saw <strong>' + (100-cr).toFixed(0) + '%</strong> of those — the rest were served from Cloudflare\'s edge cache. ' +
+    'Top traffic source: <em>' + topCountry + '</em>. ' +
+    'HTTP/3 adoption at <strong>' + (cf.http_versions['HTTP/3'] ? ((cf.http_versions['HTTP/3']/t.requests*100).toFixed(0)+'%') : 'N/A') + '</strong>. ' +
+    'Error requests: <strong>' + num(errCount) + '</strong>. ' +
+    '100% of traffic served over TLS — the network is secure.';
+}
+
+// Load data — Apache + Cloudflare in parallel
+fetch('/analytics_api.php')
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    D = data;
+    render();
+    document.getElementById('loader').classList.add('hide');
+  })
+  .catch(function(err) {
+    document.getElementById('loader').innerHTML = '<div style="color:#f87171;font-size:1rem">Failed to load analytics<br><br><span style="font-size:.8rem;color:#64748b">' + err.message + '</span></div>';
+  });
+
+// Cloudflare layer (non-blocking — shows if API is configured)
+fetch('/analytics_cf.php')
+  .then(function(r) { return r.json(); })
+  .then(function(cf) {
+    if (cf.ok) renderCF(cf);
+    else {
+      // Show setup hint if not yet configured
+      document.getElementById('cfSection').style.display = '';
+      document.getElementById('cfNarrative').innerHTML =
+        '⚙ Cloudflare API not yet connected.<br><br>' +
+        'To enable: create <code style="color:#818cf8">.cf_credentials</code> in httpdocs with:<br>' +
+        '<code style="color:#4ade80">CF_API_TOKEN=your_token_here<br>CF_ZONE_ID=your_zone_id_here</code><br><br>' +
+        'Get token: Cloudflare → My Profile → API Tokens → Create Token → Analytics Read<br>' +
+        'Zone ID: Cloudflare → shortfactory.shop → Overview → Zone ID (bottom-right sidebar)';
+      document.getElementById('cfSection').querySelector('.section-subtitle').textContent = cf.error || 'Configure credentials to enable live data.';
+    }
+  })
+  .catch(function() {});
+</script>
+</body>
+</html>

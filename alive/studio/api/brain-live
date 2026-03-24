@@ -1,0 +1,36 @@
+<?php
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { exit; }
+
+$cache = sys_get_temp_dir() . '/sf_brain_cache.json';
+$ttl   = 30; // seconds
+
+// Serve cache if fresh
+if (file_exists($cache) && (time() - filemtime($cache)) < $ttl) {
+    echo file_get_contents($cache);
+    exit;
+}
+
+$ctx = stream_context_create(['http'=>['method'=>'POST','timeout'=>12,'ignore_errors'=>true,
+    'header'=>"Content-Type: application/json\r\n",'content'=>'{}']]);
+
+// Try medium server first (bigger brain)
+$resp = @file_get_contents('http://185.230.216.235:8643/alive/studio/api/brain-live', false, $ctx);
+
+// Fall back to local brain
+if (!$resp) {
+    $resp = @file_get_contents('http://127.0.0.1:8643/alive/studio/api/brain-live', false, $ctx);
+}
+
+if ($resp) {
+    @file_put_contents($cache, $resp);
+    echo $resp;
+} else {
+    // Return stale cache rather than error
+    if (file_exists($cache)) {
+        echo file_get_contents($cache);
+    } else {
+        echo json_encode(['error'=>'brain offline']);
+    }
+}

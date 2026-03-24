@@ -1,0 +1,10 @@
+{
+  "id": "sleep",
+  "label": "SLEEP",
+  "walkSpeed": 0, "walkVel": 0, "walkAmp": 0,
+  "walkLift": 0, "bobAmp": 0,
+  "tailFreq": 0.20, "tailAmp": 0.05,
+  "headNod": 0,
+  "breathFreq": 0.28, "breathAmp": 0.034,
+  "headTilt": 0.40
+}

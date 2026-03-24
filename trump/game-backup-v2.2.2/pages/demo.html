@@ -1,0 +1,1624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>TRUMP STATS — SNES</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  font-family: 'Press Start 2P', monospace;
+  background: #0a0a0a;
+  color: #fff;
+  height: 100%;
+  overflow: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+  image-rendering: pixelated;
+  -webkit-touch-callout: none;
+}
+
+img, video {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════
+   RED CURTAIN REVEAL
+   ═══════════════════════════════════════ */
+.curtain {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 10000;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.curtain-left, .curtain-right {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 50%;
+  background: linear-gradient(90deg, #6b0000, #cc0000 30%, #aa0000 60%, #880000);
+  transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.curtain-left {
+  left: 0;
+  background: linear-gradient(90deg, #4a0000, #880000 20%, #cc0000 70%, #aa0000);
+  box-shadow: inset -20px 0 40px rgba(0,0,0,0.5);
+}
+
+.curtain-right {
+  right: 0;
+  background: linear-gradient(90deg, #aa0000, #cc0000 30%, #880000 80%, #4a0000);
+  box-shadow: inset 20px 0 40px rgba(0,0,0,0.5);
+}
+
+/* Curtain folds */
+.curtain-left::before, .curtain-right::before {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 100%;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0px,
+    transparent 20px,
+    rgba(0,0,0,0.15) 20px,
+    rgba(0,0,0,0.15) 22px,
+    transparent 22px,
+    transparent 40px,
+    rgba(255,255,255,0.08) 40px,
+    rgba(255,255,255,0.08) 42px
+  );
+}
+
+/* Gold trim at inner edges */
+.curtain-left::after, .curtain-right::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 8px;
+  background: linear-gradient(180deg, #ffd700, #b8860b, #ffd700, #b8860b, #ffd700);
+}
+.curtain-left::after { right: 0; }
+.curtain-right::after { left: 0; }
+
+.curtain-title {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 14px;
+  color: #ffd700;
+  text-shadow: 3px 3px 0 #000, 0 0 20px rgba(255,215,0,0.5);
+  text-align: center;
+  line-height: 2.5;
+  letter-spacing: 3px;
+  z-index: 10001;
+  opacity: 1;
+  transition: opacity 0.4s ease 0.8s;
+  white-space: nowrap;
+}
+
+.curtain.open .curtain-left { transform: translateX(-105%); }
+.curtain.open .curtain-right { transform: translateX(105%); }
+.curtain.open .curtain-title { opacity: 0; }
+
+/* CRT */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background: #000;
+}
+
+/* ═══════════════════════════════════════
+   HEADER — auto-collapse zone
+   ═══════════════════════════════════════ */
+.header {
+  flex-shrink: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+  max-height: 6px;
+  position: relative;
+}
+
+.header::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, #ff0 0%, #880 50%, #ff0 100%);
+  opacity: 0.4;
+  animation: headerPulse 2s ease-in-out infinite;
+  z-index: 2;
+}
+
+@keyframes headerPulse {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.6; }
+}
+
+.header.open {
+  max-height: 400px;
+}
+
+.header.open::after {
+  opacity: 0;
+}
+
+/* Desktop: hover opens */
+@media (hover: hover) {
+  .header:hover {
+    max-height: 400px;
+  }
+  .header:hover::after {
+    opacity: 0;
+  }
+}
+
+/* ═══════════════════════════════════════
+   STRIP WRAP — handles expansion + arrows
+   ═══════════════════════════════════════ */
+.strip-wrap {
+  position: relative;
+  flex-shrink: 0;
+  height: 55px;
+  transition: height 0.3s ease;
+  border-top: 3px solid #222;
+}
+
+.strip-wrap::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, #ff0 0%, #880 50%, #ff0 100%);
+  opacity: 0.3;
+  animation: headerPulse 2s ease-in-out infinite;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Peek: 50% bigger when scrolling */
+.strip-wrap.peek { height: 82px; }
+.strip-wrap.peek::before { opacity: 0; }
+
+/* Full open */
+.strip-wrap.open { height: 45vh; }
+.strip-wrap.open::before { opacity: 0; }
+
+/* ═══════════════════════════════════════
+   ICON STRIP — infinite scroll
+   ═══════════════════════════════════════ */
+.icon-strip {
+  display: flex;
+  height: 100%;
+  background: #0a0a0a;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  position: relative;
+}
+
+.icon-strip::-webkit-scrollbar { display: none; }
+
+.icon-thumb {
+  flex-shrink: 0;
+  width: 70px;
+  height: 100%;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  opacity: 0.4;
+  transition: opacity 0.2s, width 0.4s;
+  scroll-snap-align: center;
+}
+
+.strip-wrap.open .icon-thumb {
+  width: 45vw;
+}
+
+/* ═══════════════════════════════════════
+   STRIP ARROWS — left, right, collapse
+   ═══════════════════════════════════════ */
+.sn {
+  position: absolute;
+  z-index: 15;
+  background: none;
+  border: none;
+  color: #fff;
+  font-family: sans-serif;
+  cursor: pointer;
+  font-size: 28px;
+  opacity: 0.2;
+  transition: all 0.3s ease;
+  text-shadow: 0 0 12px rgba(0,0,0,0.9);
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.sn:hover, .sn:active { opacity: 0.6; }
+
+.sn-left {
+  left: 0; top: 0; bottom: 0; width: 40px;
+}
+.sn-right {
+  right: 0; top: 0; bottom: 0; width: 40px;
+}
+.sn-collapse {
+  top: 0; left: 50%; transform: translateX(-50%);
+  width: 50px; height: 100%;
+  display: none;
+}
+
+/* When expanded — arrows go massive, show collapse */
+.strip-wrap.open .sn { font-size: 200px; opacity: 0.12; }
+.strip-wrap.open .sn:hover { opacity: 0.5; }
+.strip-wrap.open .sn-left { width: 15%; }
+.strip-wrap.open .sn-right { width: 15%; }
+.strip-wrap.open .sn-collapse {
+  display: flex;
+  width: 120px; height: 60px; font-size: 120px;
+}
+
+/* ═══════════════════════════════════════
+   STATS BUTTON — toggle header
+   ═══════════════════════════════════════ */
+.stats-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 12;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  padding: 5px 8px;
+  color: #ff0;
+  background: rgba(0,0,0,0.6);
+  border: 2px solid #444;
+  border-top-color: #888;
+  border-left-color: #888;
+  cursor: pointer;
+  opacity: 0.4;
+  transition: opacity 0.3s;
+  -webkit-tap-highlight-color: transparent;
+}
+.stats-btn:hover, .stats-btn:active { opacity: 1; }
+
+.icon-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.icon-thumb.active {
+  opacity: 1;
+}
+
+.icon-thumb.active::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: #ff0;
+  z-index: 3;
+}
+
+/* ═══════════════════════════════════════
+   VIDEO AREA
+   ═══════════════════════════════════════ */
+.video-area {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: #15182B;
+}
+
+.video-track {
+  display: flex;
+  height: 100%;
+  transition: transform 0.3s ease;
+  will-change: transform;
+}
+
+.video-track.swiping { transition: none; }
+
+.video-slide {
+  flex-shrink: 0;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  background: #15182B;
+}
+
+.vid-wrap {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0; left: 0;
+}
+
+.vid-wrap video,
+.vid-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  animation: cameraZoom 16s ease-in-out infinite;
+}
+
+@keyframes cameraZoom {
+  0%   { transform: scale(1) translate(0, 0); }
+  10%  { transform: scale(1) translate(0, 0); }
+  30%  { transform: scale(2.4) translate(-3%, -8%); }
+  38%  { transform: scale(2.4) translate(4%, -6%); }
+  46%  { transform: scale(2.4) translate(-2%, -3%); }
+  54%  { transform: scale(2.4) translate(3%, -10%); }
+  65%  { transform: scale(2.4) translate(0%, -5%); }
+  80%  { transform: scale(1) translate(0, 0); }
+  100% { transform: scale(1) translate(0, 0); }
+}
+
+/* ═══════════════════════════════════════
+   VIDEO ANIMATIONS — unique per character
+   ═══════════════════════════════════════ */
+.anim-slowzoom .vid-wrap {
+  animation: slowZoom 8s ease-in-out infinite alternate;
+}
+.anim-shake .vid-wrap {
+  animation: shake 0.15s ease-in-out infinite;
+}
+.anim-breathe .vid-wrap {
+  animation: breathe 4s ease-in-out infinite;
+}
+.anim-drift .vid-wrap {
+  animation: drift 6s ease-in-out infinite alternate;
+}
+.anim-jitter .vid-wrap {
+  animation: jitter 0.08s steps(2) infinite;
+}
+.anim-pulse .vid-wrap {
+  animation: pulseZoom 3s ease-in-out infinite;
+}
+.anim-sway .vid-wrap {
+  animation: sway 5s ease-in-out infinite alternate;
+}
+.anim-twitch .vid-wrap {
+  animation: twitch 4s ease-in-out infinite;
+}
+.anim-creep .vid-wrap {
+  animation: creepZoom 12s ease-in-out infinite alternate;
+}
+.anim-glitch .vid-wrap {
+  animation: glitch 3s steps(1) infinite;
+}
+.anim-wild .vid-wrap {
+  animation: wildZoom 2s ease-in-out infinite alternate, shake 0.3s ease-in-out infinite;
+}
+
+@keyframes slowZoom {
+  0% { transform: scale(1) translate(0, 0); }
+  100% { transform: scale(1.15) translate(-2%, -1%); }
+}
+@keyframes shake {
+  0%, 100% { transform: scale(1.05) translate(0, 0); }
+  25% { transform: scale(1.05) translate(-2px, 1px); }
+  50% { transform: scale(1.05) translate(1px, -2px); }
+  75% { transform: scale(1.05) translate(2px, 1px); }
+}
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+@keyframes drift {
+  0% { transform: scale(1.08) translate(0, 0); }
+  33% { transform: scale(1.08) translate(-3%, 1%); }
+  66% { transform: scale(1.08) translate(2%, -2%); }
+  100% { transform: scale(1.08) translate(-1%, 2%); }
+}
+@keyframes jitter {
+  0% { transform: scale(1.04) translate(1px, -1px); }
+  50% { transform: scale(1.04) translate(-1px, 1px); }
+}
+@keyframes pulseZoom {
+  0%, 100% { transform: scale(1); }
+  30% { transform: scale(1.12); }
+  60% { transform: scale(1.02); }
+}
+@keyframes sway {
+  0% { transform: scale(1.06) rotate(-0.5deg); }
+  100% { transform: scale(1.06) rotate(0.5deg); }
+}
+@keyframes twitch {
+  0%, 90%, 100% { transform: scale(1.05) translate(0,0); }
+  92% { transform: scale(1.05) translate(3px, -2px); }
+  94% { transform: scale(1.05) translate(-2px, 1px); }
+  96% { transform: scale(1.05) translate(1px, 2px); }
+}
+@keyframes creepZoom {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.25) translate(-3%, -2%); }
+}
+@keyframes glitch {
+  0%, 85%, 100% { transform: scale(1.05) translate(0,0); filter: none; }
+  86% { transform: scale(1.05) translate(5px, 0); filter: hue-rotate(90deg); }
+  88% { transform: scale(1.05) translate(-3px, 2px); filter: saturate(2); }
+  90% { transform: scale(1.05) translate(0, -4px); filter: hue-rotate(-60deg); }
+  92% { transform: scale(1.05) translate(2px, 1px); filter: none; }
+}
+@keyframes wildZoom {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.2); }
+}
+
+/* ═══════════════════════════════════════
+   CHARACTER NAME — arcade style
+   ═══════════════════════════════════════ */
+.char-name {
+  position: absolute;
+  top: 6px;
+  left: 0; right: 0;
+  text-align: center;
+  font-size: 10px;
+  color: #ff0;
+  text-shadow:
+    2px 2px 0 #000, -2px -2px 0 #000,
+    2px -2px 0 #000, -2px 2px 0 #000,
+    0 0 8px rgba(255,255,0,0.4);
+  letter-spacing: 3px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* ═══════════════════════════════════════
+   BIG ARCADE STAT BAR — one at a time, cycling
+   ═══════════════════════════════════════ */
+.char-stats {
+  position: absolute;
+  bottom: 50px;
+  left: 6px;
+  right: 6px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.stat-display {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.stat-display.visible {
+  opacity: 1;
+}
+
+.stat-name {
+  font-size: 10px;
+  color: #ff0;
+  text-shadow: 2px 2px 0 #000, -1px -1px 0 #000;
+  margin-bottom: 4px;
+  letter-spacing: 2px;
+}
+
+.snes-meter {
+  width: 100%;
+  height: 28px;
+  background: #000;
+  border: 4px solid #888;
+  border-top-color: #fff;
+  border-left-color: #fff;
+  border-bottom-color: #333;
+  border-right-color: #333;
+  position: relative;
+  overflow: hidden;
+}
+
+.snes-fill {
+  height: 100%;
+  position: relative;
+  transition: width 0.6s ease;
+  image-rendering: pixelated;
+}
+
+/* Chunky segments */
+.snes-fill::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0px,
+    transparent 12px,
+    rgba(0,0,0,0.5) 12px,
+    rgba(0,0,0,0.5) 14px
+  );
+}
+
+/* Top highlight */
+.snes-fill::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 40%;
+  background: rgba(255,255,255,0.35);
+}
+
+.sf-psych {
+  background: linear-gradient(180deg, #ff4444, #aa0000);
+}
+.sf-fin {
+  background: linear-gradient(180deg, #44ff44, #008800);
+}
+.sf-spirit {
+  background: linear-gradient(180deg, #eeeeff, #8888cc);
+}
+
+.snes-val {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  color: #fff;
+  text-shadow: 2px 2px 0 #000, -1px -1px 0 #000;
+  z-index: 1;
+}
+
+/* ═══════════════════════════════════════
+   ACTION BUTTON ON VIDEO
+   ═══════════════════════════════════════ */
+.action-overlay {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  gap: 6px;
+}
+
+.action-btn {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  padding: 12px 20px;
+  color: #ff0;
+  cursor: pointer;
+  white-space: nowrap;
+  background: #000;
+  border: 3px solid #888;
+  border-top-color: #fff;
+  border-left-color: #fff;
+  border-bottom-color: #444;
+  border-right-color: #444;
+  text-shadow: 1px 1px 0 #880;
+  transition: all 0.08s;
+}
+
+.action-btn:active {
+  border-top-color: #444;
+  border-left-color: #444;
+  border-bottom-color: #fff;
+  border-right-color: #fff;
+  transform: translateX(1px) translateY(1px);
+  background: #111;
+}
+
+.action-btn.disabled {
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.action-cost {
+  display: block;
+  font-size: 5px;
+  color: #888;
+  margin-top: 2px;
+  text-align: center;
+}
+
+/* ═══════════════════════════════════════
+   NAV ARROWS — transparent until needed
+   ═══════════════════════════════════════ */
+.nav-arrow {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 10;
+  width: 25%;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 200px;
+  opacity: 0.08;
+  cursor: pointer;
+  transition: opacity 0.3s;
+  -webkit-tap-highlight-color: transparent;
+  font-family: sans-serif;
+  text-shadow: 0 0 20px rgba(0,0,0,0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.nav-arrow:hover,
+.nav-arrow:active {
+  opacity: 0.5;
+}
+.nav-arrow.nav-left { left: 0; }
+.nav-arrow.nav-right { right: 0; }
+
+/* ═══════════════════════════════════════
+   BOTTOM HUD — collapsible, fat bars
+   ═══════════════════════════════════════ */
+.hud {
+  flex-shrink: 0;
+  background: #0a0a0a;
+  padding: 6px 6px 8px;
+}
+
+
+.hud-top {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 8px;
+  color: #666;
+}
+
+.hud-top .val { color: #ff0; font-size: 10px; }
+
+.hud-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.hud-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hud-row-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.hud-label {
+  font-size: 10px;
+  color: #ff0;
+  text-shadow: 2px 2px 0 #000;
+}
+
+.hud-val {
+  font-size: 10px;
+  text-shadow: 2px 2px 0 #000;
+}
+
+.hud-meter {
+  width: 100%;
+  height: 22px;
+  background: #000;
+  border: 3px solid #888;
+  border-top-color: #fff;
+  border-left-color: #fff;
+  border-bottom-color: #333;
+  border-right-color: #333;
+  overflow: hidden;
+  position: relative;
+}
+
+.hud-fill {
+  height: 100%;
+  transition: width 0.4s ease;
+  position: relative;
+}
+
+.hud-fill::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(90deg, transparent 0px, transparent 12px, rgba(0,0,0,0.5) 12px, rgba(0,0,0,0.5) 14px);
+}
+
+.hud-fill::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 40%;
+  background: rgba(255,255,255,0.35);
+}
+
+.hf-hp { background: linear-gradient(180deg, #44ff44, #008800); }
+.hf-hp.low { background: linear-gradient(180deg, #ff4444, #880000); }
+.hf-hp.mid { background: linear-gradient(180deg, #ffdd44, #886600); }
+.hf-purity { background: linear-gradient(180deg, #44ddff, #005588); }
+.hf-ds { background: linear-gradient(180deg, #cc44ff, #550088); }
+.hf-cash { background: linear-gradient(180deg, #90ee90, #226622); }
+
+.hv-hp { color: #44ff44; }
+.hv-purity { color: #44ddff; }
+.hv-ds { color: #cc44ff; }
+.hv-cash { color: #90ee90; }
+
+/* ═══════════════════════════════════════
+   FLOATING DAMAGE
+   ═══════════════════════════════════════ */
+.dmg {
+  position: fixed;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 14px;
+  pointer-events: none;
+  z-index: 9998;
+  animation: floatUp 1.2s ease-out forwards;
+  text-shadow: 3px 3px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+  white-space: nowrap;
+}
+
+.dmg.heal { color: #44ff44; }
+.dmg.damage { color: #ff4444; }
+.dmg.purity-up { color: #44ddff; }
+.dmg.purity-down { color: #ff8844; }
+.dmg.cash { color: #90ee90; }
+.dmg.wild { color: #ffdd44; }
+.dmg.deepstate { color: #cc44ff; }
+
+@keyframes floatUp {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  15% { transform: translateY(-20px) scale(1.4); }
+  100% { opacity: 0; transform: translateY(-100px) scale(0.7); }
+
+/* ═══════════════════════════════════════
+   SCREEN FLASH EFFECTS
+   ═══════════════════════════════════════ */
+.screen-fx {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 9997;
+  opacity: 0;
+}
+
+/* BAD — red flash + screen shake */
+.screen-fx.fx-bad {
+  background: radial-gradient(ellipse at center, rgba(255,0,0,0.5), rgba(200,0,0,0.3), transparent 70%);
+  animation: fxBad 0.4s ease-out forwards;
+}
+@keyframes fxBad {
+  0% { opacity: 1; }
+  15% { opacity: 0.8; }
+  100% { opacity: 0; }
+}
+
+/* GOOD — gold/green glow pulse */
+.screen-fx.fx-good {
+  background: radial-gradient(ellipse at center, rgba(100,255,100,0.35), rgba(255,215,0,0.2), transparent 70%);
+  animation: fxGood 0.5s ease-out forwards;
+}
+@keyframes fxGood {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Shake on the app for damage */
+.app.shake {
+  animation: screenShake 0.3s ease-out;
+}
+@keyframes screenShake {
+  0%   { transform: translate(0, 0); }
+  15%  { transform: translate(-6px, 3px); }
+  30%  { transform: translate(5px, -4px); }
+  45%  { transform: translate(-4px, 2px); }
+  60%  { transform: translate(3px, -2px); }
+  75%  { transform: translate(-2px, 1px); }
+  100% { transform: translate(0, 0); }
+}
+
+/* Glow on current video slide for GOOD */
+.video-slide.glow-good .vid-wrap {
+  box-shadow: inset 0 0 60px rgba(100,255,100,0.4), 0 0 40px rgba(255,215,0,0.3);
+  transition: box-shadow 0.3s;
+}
+
+/* Red vignette on current video slide for BAD */
+.video-slide.glow-bad .vid-wrap {
+  box-shadow: inset 0 0 80px rgba(255,0,0,0.5), 0 0 30px rgba(255,0,0,0.2);
+  transition: box-shadow 0.3s;
+}
+}
+
+/* ═══════════════════════════════════════
+   END OF TURN
+   ═══════════════════════════════════════ */
+.turn-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.92);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.turn-overlay.visible { opacity: 1; pointer-events: auto; }
+
+.turn-text {
+  font-size: 18px;
+  color: #ff0;
+  text-shadow: 3px 3px 0 #000, 0 0 20px rgba(255,255,0,0.3);
+  margin-bottom: 20px;
+  animation: turnPulse 0.8s ease infinite alternate;
+}
+
+@keyframes turnPulse {
+  from { transform: scale(1); }
+  to { transform: scale(1.08); }
+}
+
+.turn-btn {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  padding: 12px 24px;
+  color: #ff0;
+  cursor: pointer;
+  background: #000;
+  border: 3px solid #888;
+  border-top-color: #fff;
+  border-left-color: #fff;
+  border-bottom-color: #444;
+  border-right-color: #444;
+}
+
+.turn-btn:active {
+  border-top-color: #444;
+  border-left-color: #444;
+  border-bottom-color: #fff;
+  border-right-color: #fff;
+}
+</style>
+</head>
+<body>
+
+<div class="screen-fx" id="screen-fx"></div>
+<div class="curtain" id="curtain">
+  <div class="curtain-left"></div>
+  <div class="curtain-right"></div>
+  <div class="curtain-title">TRUMP'S<br>MAKEOVER<br>MACHINE</div>
+</div>
+
+<div class="app">
+  <div class="header" id="header">
+    <div class="hud" id="hud">
+      <div class="hud-top">
+        <span>RND <span class="val" id="r-round">1</span></span>
+        <span>MOVES <span class="val" id="r-moves">5</span></span>
+      </div>
+      <div class="hud-bars">
+        <div class="hud-row">
+          <div class="hud-row-top"><span class="hud-label">HEALTH</span><span class="hud-val hv-hp" id="hv-hp">75</span></div>
+          <div class="hud-meter"><div class="hud-fill hf-hp" id="hf-hp" style="width:75%"></div></div>
+        </div>
+        <div class="hud-row">
+          <div class="hud-row-top"><span class="hud-label">PURITY</span><span class="hud-val hv-purity" id="hv-purity">60</span></div>
+          <div class="hud-meter"><div class="hud-fill hf-purity" id="hf-purity" style="width:60%"></div></div>
+        </div>
+        <div class="hud-row">
+          <div class="hud-row-top"><span class="hud-label">DEEP STATE</span><span class="hud-val hv-ds" id="hv-ds">30</span></div>
+          <div class="hud-meter"><div class="hud-fill hf-ds" id="hf-ds" style="width:30%"></div></div>
+        </div>
+        <div class="hud-row">
+          <div class="hud-row-top"><span class="hud-label">CASH</span><span class="hud-val hv-cash" id="hv-cash">$2.5K</span></div>
+          <div class="hud-meter"><div class="hud-fill hf-cash" id="hf-cash" style="width:25%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="video-area" id="video-area">
+    <div class="video-track" id="video-track"></div>
+    <button class="nav-arrow nav-left" id="nav-left">&#9664;</button>
+    <button class="nav-arrow nav-right" id="nav-right">&#9654;</button>
+    <button class="stats-btn" id="stats-btn">STATS</button>
+  </div>
+  <div class="strip-wrap" id="strip-wrap">
+    <div class="icon-strip" id="icon-strip"></div>
+    <button class="sn sn-left" id="sn-left">&#9664;</button>
+    <button class="sn sn-right" id="sn-right">&#9654;</button>
+    <button class="sn sn-collapse" id="sn-collapse">&#9660;</button>
+  </div>
+</div>
+
+<div class="turn-overlay" id="turn-overlay">
+  <div class="turn-text">END OF TURN</div>
+  <button class="turn-btn" id="next-turn-btn">NEXT ROUND</button>
+</div>
+
+<script>
+const BASE = 'https://www.shortfactory.shop/trump/';
+
+// Each character gets a unique animation style
+const ANIMS = ['anim-slowzoom','anim-shake','anim-drift','anim-jitter','anim-breathe','anim-sway','anim-twitch','anim-pulse','anim-creep','anim-glitch','anim-wild'];
+
+const GROUPS = [
+  { key: 'jihad',     label: 'JIHAD',            icon: BASE+'game/icons/muslim-threat.jpg',       vids: [BASE+'weirdoes/muslim/1.webm', BASE+'weirdoes/muslim/2.webm'],     psych: 50, fin: 30, spirit: 70, anim: 'anim-shake' },
+  { key: 'israel',    label: 'ISRAEL',           icon: BASE+'game/icons/israel-threat.jpg',       vids: [BASE+'weirdoes/israel/1.webm'],                                   psych: 80, fin: 90, spirit: 60, anim: 'anim-slowzoom' },
+  { key: 'feminist',  label: 'FEMINISTS',        icon: BASE+'game/icons/feminism-threata.jpg',    vids: [BASE+'weirdoes/feminist/1.webm', BASE+'weirdoes/feminist/2.webm'], psych: 60, fin: 80, spirit: 40, anim: 'anim-jitter' },
+  { key: 'soy',       label: 'SOY',              icon: BASE+'game/icons/soy.jpg',                 vids: [BASE+'weirdoes/soy/2.webm'],                                       psych: 20, fin: 45, spirit: 10, anim: 'anim-twitch' },
+  { key: 'gigachad',  label: 'GIGACHAD',         icon: BASE+'game/icons/Gigachad-PNG-Photos.png', vids: [BASE+'weirdoes/gigachad/1.webm'],                                   psych: 90, fin: 70, spirit: 85, anim: 'anim-breathe' },
+  { key: 'chad',      label: 'CHAD',             icon: BASE+'game/icons/image.jpg',               vids: [BASE+'weirdoes/chad/1.webm'],                                      psych: 85, fin: 65, spirit: 75, anim: 'anim-sway' },
+  { key: 'tradwife',  label: 'TRADWIFE',         icon: BASE+'game/icons/tradwife.jpg',             vids: [BASE+'weirdoes/tradwife/1.webm', BASE+'weirdoes/tradwife/2.webm'], psych: 80, fin: 50, spirit: 90, anim: 'anim-drift' },
+  { key: 'cucknormy', label: 'CUCK NORMY',       icon: BASE+'game/icons/brown-cuck-normy.png',    vids: [BASE+'weirdoes/blacknormy/1.webm'],                                psych: 35, fin: 40, spirit: 20, anim: 'anim-pulse' },
+  { key: 'dumptruck', label: 'DUMPTRUCK',        icon: BASE+'game/icons/fat.jpg',                  vids: [BASE+'weirdoes/dumptruck/1.webm'],                                 psych: 10, fin: 80, spirit: 40, anim: 'anim-creep' },
+  { key: 'commiegeek',label: 'CUCK COMMIE GEEK', icon: BASE+'game/icons/Soyjak_drawing.jpg',     vids: [BASE+'weirdoes/commiegeek/1.webm'],                                 psych: 25, fin: 30, spirit: 15, anim: 'anim-glitch' },
+  { key: 'wtf',       label: 'WTF',              icon: BASE+'game/icons/wtf.jpg',                  vids: [BASE+'weirdoes/wojak/1.webm'],                                     psych: 50, fin: 50, spirit: 50, anim: 'anim-wild' }
+];
+
+const state = {
+  round: 1, moves: 5, maxMoves: 5,
+  trump: { hp: 75, maxHp: 100, purity: 60, deepState: 30, cash: 2500, maxCash: 10000 },
+  idx: 0
+};
+
+GROUPS.forEach(g => { state[g.key] = { psych: g.psych, fin: g.fin, spirit: g.spirit }; });
+
+// Progression stages
+state.jihad.deports = 0;
+state.jihad.jailed = 0;
+state.feminist.stage = 0;    // 0→kitchen×4→tradwife
+state.soy.stage = 0;         // 0→gym×3→chad
+state.chad.stage = 0;        // 0→gym×2→roids→gigachad
+state.dumptruck.stage = 0;   // 0→ozempic→tax sugar→gym→hot
+state.commiegeek.redpills = 0; // 0→debate×3→make rich
+state.cucknormy.stage = 0;   // instant jail/deport
+
+// ═══════════════════════════════════════
+// getButtons — returns current action set per character stage
+// ═══════════════════════════════════════
+function getButtons(key) {
+  switch(key) {
+
+  // ── JIHAD: deport till gone ──
+  case 'jihad': {
+    const d = state.jihad.deports;
+    if (d >= 5) return [{name:'ALL GONE',icon:'✈️',cost:'DEPORTED',remove:true,fn(){mod('trump.purity',+15);pop('ALL DEPORTED!','wild');pop('+15 PURITY','purity-up');}}];
+    return [{name:'DEPORT',icon:'✈️',cost:(d+1)+'/5',fn(){state.jihad.deports++;mod('jihad.psych',-20);mod('trump.purity',+8);pop('✈️ DEPORT '+(state.jihad.deports)+'/5','damage');pop('+8 PURITY','purity-up');}}];
+  }
+
+  // ── ISRAEL: fund till allied ──
+  case 'israel':
+    return [{name:'FUND',icon:'💰',cost:'1 MOVE',fn(){mod('israel.fin',+12);mod('trump.cash',-500);mod('trump.deepState',+10);pop('+12 GDP','cash');pop('-$500','damage');pop('+10 DEEP ST','deepstate');}}];
+
+  // ── FEMINIST → TRADWIFE: kitchen pipeline ──
+  case 'feminist': {
+    const s = state.feminist.stage;
+    if (s >= 4) return [{name:'NOW TRADWIFE',icon:'🏠',cost:'CONVERTED',remove:true,fn(){mod('tradwife.psych',+15);mod('tradwife.spirit',+15);mod('trump.purity',+20);pop('FEMINIST → TRADWIFE!','wild');pop('+20 PURITY','purity-up');}}];
+    return [{name:'KITCHEN',icon:'🍳',cost:(s+1)+'/4',fn(){state.feminist.stage++;mod('feminist.psych',-18);mod('trump.purity',+10);mod('trump.hp',-5);pop('🍳 KITCHEN '+(state.feminist.stage)+'/4','damage');pop('+10 PURITY','purity-up');}}];
+  }
+
+  // ── SOY → CHAD: gym pipeline ──
+  case 'soy': {
+    const s = state.soy.stage;
+    if (s >= 3) return [{name:'NOW A CHAD',icon:'💪',cost:'CONVERTED',remove:true,fn(){mod('chad.psych',+20);mod('chad.spirit',+15);mod('chad.fin',+10);pop('SOY → CHAD!','wild');pop('+20 CHAD PSY','heal');}}];
+    return [{name:'GYM',icon:'🏋️',cost:(s+1)+'/3',fn(){state.soy.stage++;mod('soy.psych',-15);mod('soy.spirit',+5);pop('🏋️ GYM '+(state.soy.stage)+'/3','heal');pop('+5 GAINS','wild');}}];
+  }
+
+  // ── GIGACHAD: peak form, stays ──
+  case 'gigachad':
+    return [{name:'RALLY',icon:'💪',cost:'1 MOVE',fn(){mod('trump.hp',+10);mod('trump.purity',+8);mod('gigachad.spirit',+5);pop('+10 HP','heal');pop('+8 PURITY','purity-up');pop('+5 FAITH','wild');}}];
+
+  // ── CHAD → GIGACHAD: gym then roids ──
+  case 'chad': {
+    const s = state.chad.stage;
+    if (s >= 3) return [{name:'NOW GIGACHAD',icon:'💪',cost:'ASCENDED',remove:true,fn(){mod('gigachad.psych',+25);mod('gigachad.spirit',+20);mod('gigachad.fin',+15);pop('CHAD → GIGACHAD!','wild');pop('+25 GIGA PSY','heal');}}];
+    if (s >= 2) return [{name:'ROIDS',icon:'💉',cost:'$500',fn(){state.chad.stage=3;mod('trump.cash',-500);mod('chad.psych',+20);pop('💉 JUICED UP!','wild');pop('-$500','damage');}}];
+    return [{name:'GYM',icon:'🏋️',cost:(s+1)+'/2',fn(){state.chad.stage++;mod('chad.psych',+8);mod('chad.spirit',+5);pop('🏋️ GYM '+(state.chad.stage)+'/2','heal');pop('+8 GAINS','heal');}}];
+  }
+
+  // ── TRADWIFE: peak waifu, stays ──
+  case 'tradwife':
+    return [{name:'PRAISE',icon:'🏠',cost:'1 MOVE',fn(){mod('tradwife.spirit',+8);mod('tradwife.psych',+5);mod('trump.purity',+6);pop('+8 BIRTH','wild');pop('+6 PURITY','purity-up');}}];
+
+  // ── CUCK NORMY: deport, instant gone ──
+  case 'cucknormy':
+    return [{name:'DEPORT',icon:'✈️',cost:'REMOVE',remove:true,fn(){mod('trump.purity',+5);pop('DEPORTED!','wild');pop('+5 PURITY','purity-up');}}];
+
+  // ── DUMPTRUCK → HOT: ozempic → tax sugar → gym ──
+  case 'dumptruck': {
+    const s = state.dumptruck.stage;
+    if (s >= 3) return [{name:'NOW HOT',icon:'🔥',cost:'TRANSFORMED',remove:true,fn(){mod('trump.purity',+20);mod('trump.hp',+15);pop('FATTY → HOTTIE!','wild');pop('+20 PURITY','purity-up');}}];
+    return [[
+      {name:'OZEMPIC',icon:'💉',cost:'1/3',fn(){state.dumptruck.stage=1;mod('trump.cash',-300);mod('dumptruck.psych',+10);pop('💉 OZEMPIC 1/3','heal');pop('-$300','damage');}},
+      {name:'TAX SUGAR',icon:'🍬',cost:'2/3',fn(){state.dumptruck.stage=2;mod('trump.cash',+500);mod('dumptruck.fin',-10);pop('🍬 SUGAR TAX 2/3','cash');pop('+$500','cash');}},
+      {name:'MAND. GYM',icon:'🏋️',cost:'3/3',fn(){state.dumptruck.stage=3;mod('trump.cash',-200);mod('dumptruck.psych',+15);mod('dumptruck.spirit',+15);pop('🏋️ GYM 3/3','heal');pop('-$200','damage');}}
+    ][s]];
+  }
+
+  // ── COMMIEGEEK → MAKE RICH: debate pipeline ──
+  case 'commiegeek': {
+    const s = state.commiegeek.redpills;
+    if (s >= 3) return [{name:'MAKE RICH',icon:'💰',cost:'CONVERT',remove:true,fn(){mod('chad.psych',+15);mod('chad.fin',+10);mod('trump.cash',+2000);pop('CONVERTED!','wild');pop('+15 CHAD','heal');pop('+$2000','cash');}}];
+    return [{name:'DEBATE',icon:'🗣',cost:(s+1)+'/3',fn(){state.commiegeek.redpills++;mod('trump.purity',+3);mod('commiegeek.psych',-10);pop('💊 RED PILL '+(state.commiegeek.redpills)+'/3','purity-up');pop('-10 COPE','damage');}}];
+  }
+
+  // ── WTF: chaos, stays ──
+  case 'wtf':
+    return [{name:'???',icon:'❓',cost:'RANDOM',fn(){[()=>{mod('trump.hp',+15);pop('+15 HP!!','heal')},()=>{mod('trump.hp',-12);pop('-12 HP!!','damage')},()=>{mod('trump.purity',+12);pop('+12 PURITY!!','purity-up')},()=>{mod('trump.deepState',+15);pop('+15 DEEP ST!!','deepstate')},()=>{mod('trump.cash',+1500);pop('+$1500!!','cash')},()=>{mod('trump.cash',-1000);pop('-$1000!!','damage')},()=>{mod('trump.hp',+10);mod('trump.purity',+10);mod('trump.cash',+1000);pop('JACKPOT!!','wild')}][Math.floor(Math.random()*7)]();}}];
+
+  default: return [];
+  }
+}
+
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+function mod(path, delta) {
+  const [obj, key] = path.split('.');
+  if (obj === 'trump') {
+    if (key === 'hp') state.trump.hp = clamp(state.trump.hp + delta, 0, state.trump.maxHp);
+    else if (key === 'cash') state.trump.cash = Math.max(0, state.trump.cash + delta);
+    else state.trump[key] = clamp((state.trump[key]||0) + delta, 0, 100);
+  } else {
+    state[obj][key] = clamp(state[obj][key] + delta, 0, 100);
+  }
+}
+
+let popN = 0;
+const BAD_TYPES = ['damage', 'purity-down', 'deepstate'];
+const GOOD_TYPES = ['heal', 'purity-up', 'cash', 'wild'];
+
+function screenFX(good) {
+  const fx = document.getElementById('screen-fx');
+  const app = document.querySelector('.app');
+  // Remove old classes
+  fx.className = 'screen-fx';
+  app.classList.remove('shake');
+  void fx.offsetWidth; // force reflow
+
+  if (good) {
+    fx.classList.add('fx-good');
+    // Glow the current slide
+    const slides = document.querySelectorAll('.video-slide');
+    const cur = slides[state.idx + 1]; // +1 for clone offset
+    if (cur) {
+      cur.classList.add('glow-good');
+      setTimeout(() => cur.classList.remove('glow-good'), 600);
+    }
+  } else {
+    fx.classList.add('fx-bad');
+    app.classList.add('shake');
+    // Red vignette on current slide
+    const slides = document.querySelectorAll('.video-slide');
+    const cur = slides[state.idx + 1];
+    if (cur) {
+      cur.classList.add('glow-bad');
+      setTimeout(() => cur.classList.remove('glow-bad'), 500);
+    }
+    setTimeout(() => app.classList.remove('shake'), 300);
+  }
+  setTimeout(() => fx.className = 'screen-fx', 600);
+}
+
+function pop(text, type) {
+  const el = document.createElement('div');
+  el.className = 'dmg ' + type;
+  el.textContent = text;
+  el.style.left = (50 + Math.random() * 220) + 'px';
+  el.style.top = (100 + popN * 30) + 'px';
+  document.body.appendChild(el);
+  popN++;
+  setTimeout(() => el.remove(), 1200);
+  setTimeout(() => popN = 0, 200);
+
+  // Trigger screen effects
+  if (BAD_TYPES.includes(type)) screenFX(false);
+  else if (GOOD_TYPES.includes(type)) screenFX(true);
+}
+
+// ═══════════════════════════════════════
+// BUILD
+// ═══════════════════════════════════════
+function buildIcons() {
+  const strip = document.getElementById('icon-strip');
+  strip.innerHTML = '';
+  // Render 3x copies for infinite loop
+  for (let copy = 0; copy < 3; copy++) {
+    GROUPS.forEach((g, i) => {
+      const d = document.createElement('div');
+      d.className = 'icon-thumb' + (i === state.idx ? ' active' : '');
+      d.dataset.realIdx = i;
+      d.innerHTML = `<img src="${g.icon}" alt="${g.label}">`;
+      d.addEventListener('click', () => {
+        goTo(i);
+        syncStripToVideo();
+        closeStrip();
+      });
+      strip.appendChild(d);
+    });
+  }
+  // Scroll to middle set
+  requestAnimationFrame(() => {
+    const thumbW = strip.children[0] ? strip.children[0].offsetWidth : 70;
+    strip.scrollLeft = GROUPS.length * thumbW;
+  });
+}
+
+// Sync strip scroll → video
+let scrollSyncing = false;
+const strip = document.getElementById('icon-strip');
+
+strip.addEventListener('scroll', () => {
+  if (scrollSyncing) return;
+  const thumbW = strip.children[0] ? strip.children[0].offsetWidth : 70;
+  const totalW = GROUPS.length * thumbW;
+  const sl = strip.scrollLeft;
+
+  // Infinite loop: if near start or end, jump to middle copy
+  if (sl < thumbW) {
+    scrollSyncing = true;
+    strip.scrollLeft = sl + totalW;
+    scrollSyncing = false;
+  } else if (sl > totalW * 2 - strip.clientWidth) {
+    scrollSyncing = true;
+    strip.scrollLeft = sl - totalW;
+    scrollSyncing = false;
+  }
+
+  // Detect centered character
+  const center = sl + strip.clientWidth / 2;
+  const rawIdx = Math.floor(center / thumbW) % GROUPS.length;
+  const idx = ((rawIdx % GROUPS.length) + GROUPS.length) % GROUPS.length;
+  if (idx !== state.idx) {
+    goTo(idx);
+  }
+});
+
+// Sync video selection → strip scroll position
+function syncStripToVideo() {
+  const thumbW = strip.children[0] ? strip.children[0].offsetWidth : 70;
+  const targetScroll = (GROUPS.length + state.idx) * thumbW - strip.clientWidth / 2 + thumbW / 2;
+  strip.scrollTo({ left: targetScroll, behavior: 'smooth' });
+}
+
+// Strip expand/collapse
+const stripWrap = document.getElementById('strip-wrap');
+let stripTimer = null;
+let peekTimer = null;
+
+function openStrip() {
+  stripWrap.classList.remove('peek');
+  stripWrap.classList.add('open');
+  clearTimeout(stripTimer);
+  clearTimeout(peekTimer);
+}
+function closeStrip() {
+  stripWrap.classList.remove('open');
+  stripWrap.classList.remove('peek');
+  clearTimeout(stripTimer);
+  clearTimeout(peekTimer);
+}
+function peekStrip() {
+  if (stripWrap.classList.contains('open')) return;
+  stripWrap.classList.add('peek');
+  clearTimeout(peekTimer);
+  peekTimer = setTimeout(() => stripWrap.classList.remove('peek'), 800);
+}
+
+// Scroll the strip → peek (50% bigger), auto-collapse
+strip.addEventListener('scroll', () => {
+  peekStrip();
+}, { passive: true });
+
+// Collapse arrow
+document.getElementById('sn-collapse').addEventListener('click', closeStrip);
+
+// Strip left/right arrows — smooth accelerating scroll
+let snRAF = null, snSpeed = 0;
+function startStripScroll(dir) {
+  snSpeed = 2;
+  let held = 0;
+  function tick() {
+    held++;
+    if (held % 10 === 0 && snSpeed < 20) snSpeed += 1; // accelerate over time
+    strip.scrollLeft += dir * snSpeed;
+    snRAF = requestAnimationFrame(tick);
+  }
+  snRAF = requestAnimationFrame(tick);
+}
+function stopStripScroll() {
+  if (snRAF) { cancelAnimationFrame(snRAF); snRAF = null; }
+}
+
+['sn-left', 'sn-right'].forEach(id => {
+  const dir = id === 'sn-right' ? 1 : -1;
+  const el = document.getElementById(id);
+  el.addEventListener('mouseenter', () => startStripScroll(dir));
+  el.addEventListener('mouseleave', stopStripScroll);
+  el.addEventListener('mousedown', () => startStripScroll(dir));
+  el.addEventListener('mouseup', stopStripScroll);
+  el.addEventListener('touchstart', e => { e.stopPropagation(); startStripScroll(dir); }, { passive: false });
+  el.addEventListener('touchend', e => { e.stopPropagation(); stopStripScroll(); });
+});
+
+
+function buildSlides() {
+  const track = document.getElementById('video-track');
+  track.innerHTML = '';
+  const n = GROUPS.length;
+
+  function makeSlide(g, realIdx, isClone) {
+    const gs = state[g.key];
+    const stageVid = getStageVid(g.key);
+    const vidSrc = stageVid || (g.vids.length > 0 ? g.vids[Math.floor(Math.random() * g.vids.length)] : '');
+    const hasVid = !!vidSrc;
+
+    let btnsHtml = '';
+    if (!isClone) {
+      const btns = getButtons(g.key);
+      const noMoves = state.moves <= 0;
+      btns.forEach((b, bi) => {
+        const dis = noMoves && !b.free ? 'disabled' : '';
+        btnsHtml += `<button class="action-btn ${dis}" data-idx="${realIdx}" data-ai="${bi}">
+          ${b.icon} ${b.name}<span class="action-cost">${b.cost}</span></button>`;
+      });
+    }
+
+    const slide = document.createElement('div');
+    slide.className = 'video-slide ' + g.anim + (isClone ? ' clone' : '');
+    slide.innerHTML = `
+      <div class="vid-wrap">
+        ${hasVid
+          ? `<video src="${vidSrc}" ${isClone ? '' : 'autoplay'} loop muted playsinline></video>`
+          : `<img src="${g.icon}" alt="${g.label}">`
+        }
+      </div>
+      <div class="char-name">${g.label}</div>
+      ${isClone ? '' : `
+      <div class="char-stats" data-group="${g.key}">
+        <div class="stat-display visible" data-stat="0">
+          <div class="stat-name">PSYCHOLOGICAL</div>
+          <div class="snes-meter"><div class="snes-fill sf-psych" style="width:${gs.psych}%"></div><span class="snes-val">${gs.psych}</span></div>
+        </div>
+        <div class="stat-display" data-stat="1">
+          <div class="stat-name">FINANCIAL</div>
+          <div class="snes-meter"><div class="snes-fill sf-fin" style="width:${gs.fin}%"></div><span class="snes-val">${gs.fin}</span></div>
+        </div>
+        <div class="stat-display" data-stat="2">
+          <div class="stat-name">SPIRITUAL</div>
+          <div class="snes-meter"><div class="snes-fill sf-spirit" style="width:${gs.spirit}%"></div><span class="snes-val">${gs.spirit}</span></div>
+        </div>
+      </div>
+      <div class="action-overlay">${btnsHtml}</div>
+      `}
+    `;
+    return slide;
+  }
+
+  // Clone of LAST slide (prepended for backward wrap)
+  track.appendChild(makeSlide(GROUPS[n - 1], n - 1, true));
+  // Real slides
+  GROUPS.forEach((g, i) => track.appendChild(makeSlide(g, i, false)));
+  // Clone of FIRST slide (appended for forward wrap)
+  track.appendChild(makeSlide(GROUPS[0], 0, true));
+
+  // Offset by 1 for the prepended clone
+  track.style.transform = `translateX(-${(state.idx + 1) * 100}%)`;
+
+  track.querySelectorAll('.action-btn:not(.disabled)').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      doAction(parseInt(btn.dataset.idx), parseInt(btn.dataset.ai));
+    });
+  });
+
+  pauseAll();
+}
+
+function pauseAll() {
+  document.querySelectorAll('.video-slide').forEach((s, i) => {
+    const v = s.querySelector('video');
+    if (!v) return;
+    // Real slides start at index 1 (after prepended clone)
+    if (i === state.idx + 1) {
+      v.muted = true;
+      if (v.paused || v.readyState < 2) {
+        v.load();
+        v.play().catch(()=>{});
+      }
+    } else {
+      v.pause();
+    }
+  });
+}
+
+function updateHud() {
+  const t = state.trump;
+  const hpPct = t.hp / t.maxHp * 100;
+  const hpBar = document.getElementById('hf-hp');
+  hpBar.style.width = hpPct + '%';
+  hpBar.className = 'hud-fill hf-hp' + (hpPct > 60 ? '' : hpPct > 30 ? ' mid' : ' low');
+  document.getElementById('hv-hp').textContent = t.hp;
+
+  document.getElementById('hf-purity').style.width = t.purity + '%';
+  document.getElementById('hv-purity').textContent = t.purity;
+
+  document.getElementById('hf-ds').style.width = t.deepState + '%';
+  document.getElementById('hv-ds').textContent = t.deepState;
+
+  document.getElementById('hf-cash').style.width = clamp(t.cash / t.maxCash * 100, 0, 100) + '%';
+  document.getElementById('hv-cash').textContent = t.cash >= 1000 ? '$' + (t.cash/1000).toFixed(1) + 'K' : '$' + t.cash;
+
+  document.getElementById('r-round').textContent = state.round;
+  document.getElementById('r-moves').textContent = state.moves;
+}
+
+// ═══════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════
+function goTo(i) {
+  const n = GROUPS.length;
+  const track = document.getElementById('video-track');
+
+  if (i >= n) {
+    // Past last → animate to clone-first, then silently snap to real first
+    state.idx = 0;
+    track.style.transform = `translateX(-${(n + 1) * 100}%)`;
+    const snap = () => {
+      track.removeEventListener('transitionend', snap);
+      track.classList.add('swiping');
+      track.style.transform = `translateX(-100%)`;
+      track.offsetHeight; // force reflow
+      track.classList.remove('swiping');
+    };
+    track.addEventListener('transitionend', snap);
+  } else if (i < 0) {
+    // Past first → animate to clone-last, then silently snap to real last
+    state.idx = n - 1;
+    track.style.transform = `translateX(0%)`;
+    const snap = () => {
+      track.removeEventListener('transitionend', snap);
+      track.classList.add('swiping');
+      track.style.transform = `translateX(-${n * 100}%)`;
+      track.offsetHeight;
+      track.classList.remove('swiping');
+    };
+    track.addEventListener('transitionend', snap);
+  } else {
+    state.idx = i;
+    track.style.transform = `translateX(-${(i + 1) * 100}%)`;
+  }
+
+  // Update active thumb highlights
+  document.querySelectorAll('.icon-thumb').forEach(t => {
+    t.classList.toggle('active', parseInt(t.dataset.realIdx) === state.idx);
+  });
+  pauseAll();
+  syncStripToVideo();
+}
+
+// SWIPE
+let tx = 0, td = 0, sw = false;
+const va = document.getElementById('video-area');
+
+va.addEventListener('touchstart', e => {
+  tx = e.touches[0].clientX; td = 0; sw = true;
+  document.getElementById('video-track').classList.add('swiping');
+}, { passive: true });
+
+va.addEventListener('touchmove', e => {
+  if (!sw) return;
+  td = e.touches[0].clientX - tx;
+  // Offset by 1 for prepended clone
+  document.getElementById('video-track').style.transform = `translateX(${-(state.idx + 1) * window.innerWidth + td}px)`;
+}, { passive: true });
+
+va.addEventListener('touchend', () => {
+  if (!sw) return;
+  sw = false;
+  document.getElementById('video-track').classList.remove('swiping');
+  const thr = window.innerWidth * 0.2;
+  // No boundary clamping — goTo handles wrapping
+  if (td < -thr) goTo(state.idx + 1);
+  else if (td > thr) goTo(state.idx - 1);
+  else goTo(state.idx);
+}, { passive: true });
+
+// KEYBOARD
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowLeft') goTo(state.idx - 1);
+  if (e.key === 'ArrowRight') goTo(state.idx + 1);
+});
+
+// NAV ARROWS — click to advance, hold to auto-advance with acceleration
+let navHold = null, navSpeed = 0, navClicked = false;
+function startNav(dir) {
+  navClicked = false;
+  navSpeed = 700;
+  navHold = setTimeout(function advance() {
+    navClicked = true; // suppress click
+    goTo(state.idx + dir);
+    navSpeed = Math.max(120, navSpeed * 0.75); // accelerate
+    navHold = setTimeout(advance, navSpeed);
+  }, 400); // 400ms before hold kicks in
+}
+function stopNav() {
+  clearTimeout(navHold); navHold = null;
+}
+
+['nav-left', 'nav-right'].forEach(id => {
+  const dir = id === 'nav-right' ? 1 : -1;
+  const el = document.getElementById(id);
+  el.addEventListener('mousedown', e => { e.preventDefault(); startNav(dir); });
+  el.addEventListener('mouseup', () => { if (!navClicked) goTo(state.idx + dir); stopNav(); });
+  el.addEventListener('mouseleave', stopNav);
+  // No touch handlers — on mobile, swipe the video instead. Arrows are visual only on touch.
+});
+
+// ═══════════════════════════════════════
+// ACTIONS
+// ═══════════════════════════════════════
+function doAction(idx, ai) {
+  const g = GROUPS[idx];
+  const btns = getButtons(g.key);
+  const btn = btns[ai] || btns[0];
+
+  if (!btn.free) state.moves--;
+  btn.fn();
+
+  // Generic removal — any button with remove:true splices the character out
+  if (btn.remove) {
+    GROUPS.splice(idx, 1);
+    if (state.idx >= GROUPS.length) state.idx = GROUPS.length - 1;
+    buildIcons();
+  }
+
+  updateHud();
+  buildSlides();
+
+  if (state.moves <= 0) {
+    setTimeout(() => document.getElementById('turn-overlay').classList.add('visible'), 600);
+  }
+}
+
+document.getElementById('next-turn-btn').addEventListener('click', () => {
+  state.round++;
+  state.moves = state.maxMoves;
+  document.getElementById('turn-overlay').classList.remove('visible');
+  updateHud();
+  buildSlides();
+});
+
+// ═══════════════════════════════════════
+// STAGE VIDEO MAPPING — swap webm per transformation stage
+// ═══════════════════════════════════════
+const STAGE_VIDS = {
+  dumptruck: [
+    [BASE+'weirdoes/dumptruck/1.webm'],                          // 0: morbidly obese
+    [BASE+'weirdoes/dumptruck/2-post-ozempic-chunky.webm'],      // 1: ozempic'd
+    [BASE+'weirdoes/dumptruck/3-no-sugar-slimmer.webm'],         // 2: sugar taxed
+    [BASE+'weirdoes/dumptruck/4-gym-hottie-glow-up.webm']        // 3: HOT
+  ],
+  soy: [
+    [BASE+'weirdoes/soy/2.webm'],                                // 0: soyboy
+    [BASE+'weirdoes/soy/2-first-gym-struggling.webm'],           // 1: gym x1
+    [BASE+'weirdoes/soy/3-getting-gains.webm'],                  // 2: gym x2
+    [BASE+'weirdoes/soy/4-full-chad-flexing.webm']               // 3: NOW CHAD
+  ],
+  feminist: [
+    [BASE+'weirdoes/feminist/1.webm',BASE+'weirdoes/feminist/2.webm'], // 0: angry protester
+    [BASE+'weirdoes/feminist/2-dragged-to-kitchen.webm'],        // 1: kitchen x1
+    [BASE+'weirdoes/feminist/3-reluctant-apron.webm'],           // 2: kitchen x2
+    [BASE+'weirdoes/feminist/4-actually-baking.webm'],           // 3: kitchen x3
+    [BASE+'weirdoes/feminist/5-full-tradwife-sundress.webm']     // 4: NOW TRADWIFE
+  ],
+  chad: [
+    [BASE+'weirdoes/chad/1.webm'],                               // 0: regular chad
+    [BASE+'weirdoes/chad/2-hitting-gym-veins.webm'],             // 1: gym x1
+    [BASE+'weirdoes/chad/3-jacked-looking-at-needle.webm'],      // 2: roids ready
+    [BASE+'weirdoes/chad/4-gigachad-jawline-godmode.webm']       // 3: NOW GIGACHAD
+  ],
+  commiegeek: [
+    [BASE+'weirdoes/commiegeek/1.webm'],                         // 0: neckbeard commie
+    [BASE+'weirdoes/commiegeek/2-confused-economics.webm'],      // 1: debate x1
+    [BASE+'weirdoes/commiegeek/3-shaved-shirt-tie.webm'],        // 2: debate x2
+    [BASE+'weirdoes/commiegeek/4-suit-lambo-rich.webm']          // 3: MAKE RICH
+  ]
+};
+
+// Returns current video URL for a character based on stage
+function getStageVid(key) {
+  const map = STAGE_VIDS[key];
+  if (!map) return null; // no stages, use default g.vids
+  const stageKey = key === 'commiegeek' ? state.commiegeek.redpills : state[key].stage;
+  const s = Math.min(stageKey, map.length - 1);
+  const pool = map[s];
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+buildIcons();
+buildSlides();
+updateHud();
+
+// Open curtains after a beat
+setTimeout(() => document.getElementById('curtain').classList.add('open'), 1500);
+
+// Cycle stat bars — show one at a time, big and readable
+let statPhase = 0;
+setInterval(() => {
+  statPhase = (statPhase + 1) % 3;
+  document.querySelectorAll('.char-stats').forEach(container => {
+    container.querySelectorAll('.stat-display').forEach(el => {
+      el.classList.toggle('visible', parseInt(el.dataset.stat) === statPhase);
+    });
+  });
+}, 2000);
+
+// Header auto-collapse
+const headerEl = document.getElementById('header');
+let headerTimer = null;
+
+function openHeader() {
+  headerEl.classList.add('open');
+  clearTimeout(headerTimer);
+  headerTimer = setTimeout(() => headerEl.classList.remove('open'), 4000);
+}
+
+// Mobile: tap the thin bar to expand
+headerEl.addEventListener('click', () => {
+  if (headerEl.classList.contains('open')) {
+    headerEl.classList.remove('open');
+    clearTimeout(headerTimer);
+  } else {
+    openHeader();
+  }
+});
+
+// Show header on load, then auto-collapse
+openHeader();
+
+// Stats button — toggles header
+document.getElementById('stats-btn').addEventListener('click', e => {
+  e.stopPropagation();
+  if (headerEl.classList.contains('open')) {
+    headerEl.classList.remove('open');
+    clearTimeout(headerTimer);
+  } else {
+    openHeader();
+  }
+});
+
+// Block all context menus (long-press menus on mobile)
+document.addEventListener('contextmenu', e => e.preventDefault());
+</script>
+</body>
+</html>

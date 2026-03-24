@@ -1,0 +1,2735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+<title>STOCK MARKET — v4</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; user-select:none; -webkit-tap-highlight-color:transparent; -webkit-touch-callout:none; }
+html,body { overflow:hidden; height:100vh; width:100vw; background:#0a0a12; font-family:monospace; color:#fff; }
+
+.container {
+  max-width:400px; margin:0 auto; height:100vh;
+  display:flex; flex-direction:column; background:#0a0a12; position:relative; overflow:hidden;
+}
+
+/* TOP BAR */
+.top-bar { display:flex; justify-content:space-between; align-items:center; padding:6px 10px; background:#1a1a2e; border-bottom:2px solid #333; flex-shrink:0; }
+.top-bar .title { font-size:10px; color:#0f0; }
+.top-bar .round { font-size:9px; color:#ff0; }
+.top-bar .exit-btn { background:#600; color:#fff; border:1px solid #f00; padding:3px 8px; font-size:9px; cursor:pointer; }
+
+/* EMOTION TRACKER — yellow bar, always visible */
+.emotion-tracker {
+  display:flex; align-items:center; gap:4px; padding:3px 10px;
+  background:#0a0a0a; flex-shrink:0;
+}
+.emo-label { font-size:7px; color:#ff0; width:42px; text-align:right; }
+.emo-bar-bg {
+  flex:1; height:10px; background:#222; border:1px solid #444; position:relative;
+}
+.emo-bar-center {
+  position:absolute; left:50%; top:0; width:1px; height:100%; background:#666;
+}
+.emo-bar-fill {
+  position:absolute; top:0; height:100%;
+  background:#ff0; transition:left 0.3s, width 0.3s;
+}
+.emo-val { font-size:8px; color:#ff0; width:28px; font-weight:bold; }
+
+/* HEADS — Trump left, Boss right */
+.heads { display:flex; height:80px; background:#000; flex-shrink:0; }
+.head-box { width:50%; position:relative; overflow:hidden; }
+.head-box video { width:100%; height:100%; object-fit:cover; }
+.head-label { position:absolute; bottom:2px; left:50%; transform:translateX(-50%); font-size:7px; background:rgba(0,0,0,0.8); padding:1px 6px; color:#fff; }
+/* ADVISOR IN BOSS BOX */
+.advisor-face { display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:#111; align-items:center; justify-content:center; font-size:48px; z-index:5; }
+.advisor-face.show { display:flex; animation:advFaceIn 0.3s ease-out; }
+@keyframes advFaceIn { 0%{transform:scale(0);opacity:0} 100%{transform:scale(1);opacity:1} }
+.head-trump { border-right:2px solid #f00; }
+.head-boss { border-left:2px solid #00f; }
+
+/* GRAPH AREA (where map would be) */
+.graph-section { flex:1; position:relative; background:#001a00; border:2px solid #333; overflow:hidden; min-height:120px; }
+.graph-section video { width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0; }
+.graph-placeholder { position:absolute; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
+.graph-placeholder canvas { width:100%; height:100%; }
+/* FINANCE DOTS — right side of graph */
+.finance-dots {
+  position:absolute; left:3px; top:50%; transform:translateY(-50%);
+  display:flex; flex-direction:column; gap:3px; z-index:15;
+}
+.finance-dot {
+  width:20px; height:20px; border-radius:50%; border:1px solid #333;
+  background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center;
+  font-size:10px; cursor:pointer; transition:all 0.3s; padding:0;
+}
+.finance-dot:active { transform:scale(0.8); }
+.finance-dot.active-short { border-color:#0f0; background:rgba(0,50,0,0.6); animation:dotGlow 1.2s infinite alternate; }
+/* BRAND SPOTLIGHT — cycles on chart */
+.brand-spotlight {
+  position:absolute; bottom:4px; left:28px; z-index:12;
+  background:rgba(0,0,0,0.85); padding:3px 8px; text-align:left;
+  border-left:3px solid #44f; min-width:100px;
+  animation:spotFade 0.4s ease-out;
+}
+@keyframes spotFade { 0%{opacity:0;transform:translateY(6px)} 100%{opacity:1;transform:translateY(0)} }
+.brand-spotlight.red-side { border-color:#f44; }
+.brand-spotlight .spot-icon { font-size:16px; }
+.brand-spotlight .spot-name { font-size:12px; font-weight:bold; font-family:monospace; letter-spacing:1px; }
+.brand-spotlight.red-side .spot-name { color:#f44; }
+.brand-spotlight:not(.red-side) .spot-name { color:#88f; }
+.brand-spotlight .spot-tag { font-size:7px; color:#ff0; font-style:italic; }
+.brand-spotlight .spot-worth { font-size:9px; font-family:monospace; margin-top:1px; }
+.brand-spotlight.red-side .spot-worth { color:#f88; }
+.brand-spotlight:not(.red-side) .spot-worth { color:#aaf; }
+.brand-spotlight .spot-status { font-size:6px; color:#0f0; }
+
+.flip-brands-circle {
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  width:32px; height:32px; border-radius:50%; border:2px solid #555;
+  background:rgba(0,0,0,0.7); font-size:16px; cursor:pointer; z-index:15;
+  display:flex; align-items:center; justify-content:center; padding:0;
+}
+.flip-brands-circle:active { border-color:#ff0; transform:translate(-50%,-50%) scale(0.85); }
+/* ACTIVE INVESTMENT */
+.invest-display {
+  display:none; position:absolute; bottom:20px; left:50%; transform:translateX(-50%);
+  background:rgba(0,0,0,0.9); border:2px solid #ff0; padding:4px 10px;
+  text-align:center; z-index:15;
+}
+.invest-display.show { display:block; }
+.invest-display.winning { border-color:#0f0; }
+.invest-display.winning .invest-mult { color:#0f0; }
+.invest-display.losing { border-color:#f00; }
+.invest-display.losing .invest-mult { color:#f00; }
+.invest-asset { font-size:7px; color:#888; }
+.invest-mult { font-size:20px; font-weight:bold; color:#ff0; font-family:monospace; }
+.invest-cash-btn {
+  background:#220; border:1px solid #ff0; color:#ff0;
+  padding:2px 10px; font-size:7px; font-family:monospace; cursor:pointer; margin-top:2px;
+}
+.invest-cash-btn:active { background:#440; }
+/* CASHOUT RESULT — fullscreen flash */
+.cashout-result {
+  display:none; position:fixed; top:0; left:0; right:0; bottom:0;
+  z-index:9800; background:rgba(0,0,0,0.95);
+  flex-direction:column; align-items:center; justify-content:center; text-align:center;
+}
+.cashout-result.show { display:flex; animation:cashoutPop 0.5s ease-out; }
+@keyframes cashoutPop { 0%{opacity:0;transform:scale(0.5)} 100%{opacity:1;transform:scale(1)} }
+.cashout-result .co-mult { font-size:48px; font-weight:bold; font-family:monospace; }
+.cashout-result .co-msg { font-size:12px; margin-top:8px; }
+.cashout-result .co-detail { font-size:8px; color:#888; margin-top:4px; }
+.cashout-result.win .co-mult { color:#0f0; text-shadow:0 0 30px #0f0; }
+.cashout-result.win .co-msg { color:#0f0; }
+.cashout-result.lose .co-mult { color:#f00; text-shadow:0 0 30px #f00; }
+.cashout-result.lose .co-msg { color:#f00; }
+.cashout-result.mega .co-mult { color:#ff0; text-shadow:0 0 40px #ff0,0 0 80px #f80; font-size:60px; animation:megaPulse 0.3s infinite alternate; }
+@keyframes megaPulse { 0%{transform:scale(1)} 100%{transform:scale(1.1)} }
+.cashout-result.mega .co-msg { color:#ff0; }
+.cashout-result.doom .co-mult { color:#f00; animation:doomShake 0.1s infinite; }
+@keyframes doomShake { 0%{transform:translate(-2px,0)} 50%{transform:translate(2px,-1px)} 100%{transform:translate(-1px,1px)} }
+
+/* MARKET STATS */
+.market-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:2px; padding:4px; background:#111; flex-shrink:0; }
+.market-stat { text-align:center; padding:3px 2px; background:#1a1a2e; font-size:7px; }
+.market-stat .name { color:#888; }
+.market-stat .val { font-size:9px; font-weight:bold; }
+.market-stat .val.up { color:#0f0; }
+.market-stat .val.down { color:#f00; }
+.market-stat .val.flat { color:#ff0; }
+
+/* HEALTH BARS */
+.health-bars { padding:6px 10px; background:#0a0a12; flex-shrink:0; }
+.hp-row { display:flex; align-items:center; gap:6px; margin-bottom:4px; }
+.hp-label { font-size:7px; width:60px; text-align:right; }
+.hp-bar { flex:1; height:14px; background:#222; border:1px solid #444; position:relative; }
+.hp-fill { height:100%; transition:width 0.3s; }
+.hp-fill.trump { background:linear-gradient(90deg,#800,#f00); }
+.hp-fill.boss { background:linear-gradient(90deg,#008,#00f); }
+.hp-text { position:absolute; right:4px; top:0; font-size:8px; line-height:14px; color:#fff; }
+
+/* DEEP STATE BAR */
+.ds-row { margin-top:2px; }
+.ds-bar { flex:1; height:10px; background:#222; border:1px solid #444; position:relative; }
+.ds-fill { height:100%; background:linear-gradient(90deg,#408,#808); transition:width 0.3s; }
+
+/* 8 ACTION BUTTONS — icons toggle between red/blue */
+.actions { padding:4px 2px; flex-shrink:0; }
+.actions-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:2px; }
+.action-btn {
+  background:none; border:none; padding:4px 2px; cursor:pointer;
+  text-align:center; color:#fff; display:flex; flex-direction:column;
+  align-items:center; gap:1px; justify-content:center;
+  transition:opacity 0.3s, transform 0.2s;
+}
+.action-btn:active { transform:scale(0.85); }
+/* RED side — visible by default */
+.action-btn .btn-icon { font-size:18px; }
+.action-btn .btn-label { font-size:6px; color:#999; }
+/* BLUE side — hidden by default */
+.action-btn .btn-blue { display:none; }
+.action-btn .btn-blue-icon { font-size:18px; }
+.action-btn.locked { opacity:0.3; pointer-events:none; }
+.action-btn.cooldown { opacity:0.6; }
+/* TRUMP PRESSED — red glow */
+.action-btn.trump-hit { filter:drop-shadow(0 0 8px rgba(255,0,0,0.8)); }
+.action-btn.trump-hit .btn-label { color:#f44; }
+/* DEVIL PRESSED — blue fire glow, no icon swap */
+.action-btn.devil-hit { animation:devilFire 0.15s infinite alternate !important; }
+@keyframes devilFire {
+  0%{filter:drop-shadow(0 0 6px #00f) drop-shadow(0 0 12px #80f);}
+  100%{filter:drop-shadow(0 0 10px #80f) drop-shadow(0 0 20px #00f);}
+}
+
+/* FLIPPED MODE — hide red, show blue */
+.action-btn.flipped .btn-icon { display:none; }
+.action-btn.flipped .btn-label { display:none; }
+.action-btn.flipped .btn-blue { display:block; font-size:6px; color:#aaf; }
+
+/* FLIP TOGGLE */
+.flip-bar { display:flex; justify-content:center; padding:2px; flex-shrink:0; }
+.flip-btn {
+  padding:3px 12px; font-size:8px; font-family:monospace; cursor:pointer;
+  border:2px solid #444; background:#111; color:#888;
+}
+.flip-btn.red-mode { border-color:#f00; color:#f44; background:#200; }
+.flip-btn.blue-mode { border-color:#00f; color:#44f; background:#002; }
+
+/* DICE DISPLAY */
+.dice-display { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:9500; text-align:center; pointer-events:none; }
+.dice-display.show { display:block; animation:dicePop 0.4s ease-out; }
+@keyframes dicePop { 0%{transform:translate(-50%,-50%) scale(0) rotate(-180deg)} 100%{transform:translate(-50%,-50%) scale(1) rotate(0deg)} }
+.dice-display .dice-num { font-size:48px; font-weight:bold; text-shadow:0 0 20px currentColor; }
+.dice-display .dice-label { font-size:10px; margin-top:4px; }
+.dice-display .dice-emo { font-size:8px; color:#ff0; }
+.dice-display.trump-dice { color:#0f0; }
+.dice-display.devil-dice { color:#f00; }
+.action-btn.flash-boost {
+  animation:flashBoost 0.4s infinite alternate;
+  border-color:#ff0 !important; position:relative;
+}
+@keyframes flashBoost { 0%{background:#1a1a2e;box-shadow:none} 100%{background:#443300;box-shadow:0 0 20px #ff0, 0 0 40px rgba(255,255,0,0.4)} }
+.action-btn.flash-boost::after {
+  content:'BOOST!'; position:absolute; top:-10px; right:-4px;
+  background:#f00; color:#fff; font-size:6px; padding:1px 4px;
+  animation:boostBlink 0.5s infinite;
+}
+@keyframes boostBlink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* MORAL PURITY METER — red (bankrupt) to white (pure) */
+.moral-bar { padding:3px 8px; background:#0a0a0a; flex-shrink:0; }
+.moral-row { display:flex; align-items:center; gap:4px; }
+.moral-label-l { font-size:6px; color:#f44; width:40px; text-align:right; }
+.moral-label-r { font-size:6px; color:#fff; width:40px; }
+.moral-meter { flex:1; height:10px; background:linear-gradient(90deg,#400,#800,#a44,#ccc,#fff); border:1px solid #444; position:relative; }
+.moral-marker { position:absolute; top:-2px; width:3px; height:14px; background:#ff0; transition:left 0.3s; }
+.moral-val { font-size:7px; color:#ff0; text-align:center; margin-top:1px; }
+
+/* SHORT BUTTON */
+.short-bar { padding:3px; flex-shrink:0; }
+.finance-row { display:flex; gap:4px; justify-content:center; }
+.short-btn {
+  padding:3px 8px; font-size:7px; font-family:monospace; cursor:pointer;
+  border:1px solid #f00; background:#200; color:#f44;
+}
+.short-btn:active { background:#400; border-color:#ff0; }
+.short-btn.active-short { border-color:#0f0; background:#020; color:#0f0; animation:shortPulse 1s infinite alternate; }
+@keyframes shortPulse { 0%{box-shadow:none} 100%{box-shadow:0 0 8px rgba(0,255,0,0.4)} }
+.invest-btn {
+  padding:3px 8px; font-size:7px; font-family:monospace; cursor:pointer;
+  border:1px solid #ff0; background:#220; color:#ff0;
+}
+.invest-btn:active { background:#440; }
+.invest-btn.hidden { display:none; }
+
+/* WOKE vs MANLY BRANDS — icons toggle like actions */
+.brands-section { padding:4px 2px; background:#0a0a0a; flex-shrink:0; }
+.brands-title { font-size:7px; color:#888; text-align:center; margin-bottom:3px; }
+.brands-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:2px; }
+.brand-pair {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  cursor:pointer; padding:4px 2px; transition:transform 0.2s;
+}
+.brand-pair:active { transform:scale(0.85); }
+/* Manly side — visible by default */
+.brand-pair .manly-side { display:flex; flex-direction:column; align-items:center; gap:1px; }
+.brand-pair .manly-side .brand-icon { font-size:18px; }
+.brand-pair .manly-side .brand-name { font-size:5px; color:#999; }
+/* Woke side — hidden by default */
+.brand-pair .woke-side { display:none; flex-direction:column; align-items:center; gap:1px; }
+.brand-pair .woke-side .brand-icon { font-size:18px; }
+.brand-pair .woke-side .brand-name { font-size:5px; color:#888; }
+/* Flipped — show woke, hide manly */
+.brand-pair.flipped .manly-side { display:none; }
+.brand-pair.flipped .woke-side { display:flex; }
+/* Woke grey = vulnerable */
+.brand-pair.woke-grey .woke-side .brand-name { color:#fff; }
+/* Woke bankrupt */
+.brand-pair.woke-bankrupt .woke-side { opacity:0.4; }
+.brand-pair.woke-bankrupt .woke-side .brand-name { color:#0f0; }
+/* Manly boosted */
+.brand-pair.manly-boosted .manly-side .brand-icon { filter:drop-shadow(0 0 4px #0f0); }
+.brand-pair.manly-boosted .manly-side .brand-name { color:#0f0; }
+
+/* EVENT BANNER */
+.event-banner { display:none; padding:4px 8px; background:#330; border:2px solid #ff0; text-align:center; flex-shrink:0; }
+.event-banner.show { display:block; animation:eventFlash 0.6s ease-out; }
+@keyframes eventFlash { 0%{background:#ff0;color:#000} 100%{background:#330;color:#ff0} }
+.event-banner .event-name { font-size:9px; color:#ff0; font-weight:bold; }
+.event-banner .event-hint { font-size:7px; color:#ccc; }
+
+/* DEFAMATION PANEL — tank the red line */
+.defame-panel { padding:4px; background:#1a0a0a; border-top:2px solid #f00; flex-shrink:0; display:none; }
+.defame-panel.show { display:block; }
+.defame-title { font-size:8px; color:#f44; text-align:center; margin-bottom:4px; }
+.defame-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:3px; }
+.defame-btn {
+  background:#200; border:2px solid #f00; padding:4px 2px; cursor:pointer;
+  text-align:center; font-size:7px; color:#fff; display:flex; flex-direction:column;
+  align-items:center; gap:1px;
+}
+.defame-btn:active { background:#400; border-color:#ff0; }
+.defame-btn .defame-icon { font-size:14px; }
+.defame-btn .defame-label { font-size:6px; color:#f88; }
+.defame-btn.used { opacity:0.2; pointer-events:none; border-color:#333; }
+
+/* SHELTER PANEL — park green in Bitcoin/Gold */
+.shelter-panel { display:none; padding:4px 6px; background:#0a1a0a; border:2px solid #0a0; flex-shrink:0; }
+.shelter-panel.show { display:block; }
+.shelter-title { font-size:8px; color:#0f0; text-align:center; margin-bottom:3px; }
+.shelter-btns { display:flex; gap:4px; justify-content:center; }
+.shelter-btn {
+  padding:6px 12px; border:2px solid #444; background:#111; cursor:pointer;
+  font-size:8px; color:#fff; font-family:monospace; display:flex; align-items:center; gap:4px;
+}
+.shelter-btn:active { background:#222; border-color:#ff0; }
+.shelter-btn .s-icon { font-size:14px; }
+
+/* SHELTERED STATE — active banner */
+.sheltered-banner { display:none; padding:4px 8px; background:#001a00; border:2px solid #0f0; text-align:center; flex-shrink:0; }
+.sheltered-banner.show { display:block; animation:shelterPulse 1.5s infinite alternate; }
+@keyframes shelterPulse { 0%{border-color:#0f0;box-shadow:none} 100%{border-color:#ff0;box-shadow:0 0 10px rgba(0,255,0,0.3)} }
+.sheltered-banner .shelter-info { font-size:9px; color:#0f0; }
+.sheltered-banner .shelter-asset { font-size:7px; color:#ff0; }
+.sheltered-banner .shelter-pnl { font-size:8px; margin-top:2px; }
+.sheltered-banner .shelter-pnl.up { color:#0f0; }
+.sheltered-banner .shelter-pnl.down { color:#f00; }
+.buyback-btn {
+  margin-top:4px; padding:4px 14px; background:#ff0; color:#000; border:2px solid #ff0;
+  font-size:9px; font-family:monospace; cursor:pointer; font-weight:bold;
+}
+.buyback-btn:active { background:#cc0; }
+
+/* EMOTION BANNER — only shows at extremes */
+.emotion-banner { display:none; padding:3px 8px; text-align:center; flex-shrink:0; border:2px solid #ff0; font-size:8px; }
+.emotion-banner.show { display:block; }
+.emotion-banner.mania { background:#332200; border-color:#ff0; color:#ff0; animation:emoPulseUp 0.8s infinite alternate; }
+.emotion-banner.depression { background:#000022; border-color:#44f; color:#88f; animation:emoPulseDown 1.2s infinite alternate; }
+@keyframes emoPulseUp { 0%{box-shadow:none} 100%{box-shadow:0 0 12px rgba(255,255,0,0.4)} }
+@keyframes emoPulseDown { 0%{box-shadow:none} 100%{box-shadow:0 0 12px rgba(100,100,255,0.4)} }
+
+/* BUBBLE INDICATORS */
+.bubble-bar { display:none; padding:2px 8px; background:#111; flex-shrink:0; }
+.bubble-bar.show { display:flex; gap:6px; justify-content:center; }
+.bubble-item { font-size:7px; display:flex; align-items:center; gap:3px; }
+.bubble-meter { width:50px; height:6px; background:#222; border:1px solid #444; }
+.bubble-fill { height:100%; transition:width 0.3s; }
+.bubble-fill.ai { background:linear-gradient(90deg,#048,#0af); }
+.bubble-fill.housing { background:linear-gradient(90deg,#840,#fa0); }
+.bubble-fill.danger { animation:bubbleDanger 0.5s infinite alternate; }
+@keyframes bubbleDanger { 0%{opacity:0.7} 100%{opacity:1;box-shadow:0 0 6px rgba(255,0,0,0.5)} }
+
+/* MONEY COUNTER */
+.money-bar { display:flex; justify-content:center; align-items:center; gap:8px; padding:3px; background:#1a1a0a; border-bottom:1px solid #440; flex-shrink:0; }
+.money-amount { font-size:12px; color:#0f0; }
+.money-label { font-size:7px; color:#888; }
+.money-gain { font-size:8px; color:#0f0; animation:moneyPop 0.5s ease-out; position:absolute; right:10px; }
+@keyframes moneyPop { 0%{transform:translateY(0);opacity:1} 100%{transform:translateY(-15px);opacity:0} }
+
+/* UNLOCK BUTTONS — small inline row like allies bar */
+.unlock-section { display:none; gap:3px; padding:2px 8px; justify-content:center; flex-shrink:0; background:#0a0a12; }
+.unlock-section.show { display:flex; }
+.unlocks-toggle { background:#111; border:1px solid #333; color:#555; padding:2px 6px; font-size:8px; font-family:monospace; cursor:pointer; }
+.unlocks-toggle.has-unlocks { border-color:#ff0; color:#ff0; }
+.unlock-btn {
+  width:24px; height:24px; border-radius:50%; border:2px solid #333; background:#111;
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+  font-size:11px; padding:0; position:relative;
+  filter:grayscale(1) brightness(0.3); transition:all 0.3s;
+}
+.unlock-btn .unlock-label, .unlock-btn .unlock-cost { display:none; }
+.unlock-btn.unlocked { border-color:#ff0; background:#1a1a00; filter:none; box-shadow:0 0 6px rgba(255,255,0,0.5); }
+.unlock-btn.affordable { border-color:#440; filter:grayscale(0.5) brightness(0.6); }
+.unlock-btn:active { transform:scale(0.85); }
+
+/* ACHIEVEMENT POPUP */
+.achievement { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) scale(0); background:rgba(0,0,0,0.95); border:3px solid #ff0; padding:15px 25px; z-index:9999; text-align:center; display:none; }
+.achievement.show { display:block; animation:achPop 0.4s ease-out forwards; }
+@keyframes achPop { 0%{transform:translate(-50%,-50%) scale(0)} 60%{transform:translate(-50%,-50%) scale(1.15)} 100%{transform:translate(-50%,-50%) scale(1)} }
+.achievement .ach-icon { font-size:30px; }
+.achievement .ach-title { font-size:10px; color:#ff0; margin:6px 0 3px; }
+.achievement .ach-name { font-size:8px; color:#fff; }
+.achievement .ach-sub { font-size:6px; color:#0f0; margin-top:4px; }
+
+/* BATTLE LOG — your move vs devil's move */
+.battle-log { padding:4px 8px; background:#111; flex-shrink:0; display:flex; gap:4px; min-height:36px; }
+.move-card { flex:1; padding:4px; border:2px solid #333; display:flex; align-items:center; gap:4px; font-size:7px; }
+.move-card.red { border-color:#0a0; background:rgba(0,100,0,0.15); }
+.move-card.blue { border-color:#a00; background:rgba(100,0,0,0.15); }
+.move-card .move-icon { font-size:16px; }
+.move-card .move-text { display:flex; flex-direction:column; gap:1px; }
+.move-card .move-name { color:#fff; font-size:7px; }
+.move-card .move-effect { font-size:6px; }
+.move-card.red .move-effect { color:#0f0; }
+.move-card.blue .move-effect { color:#f44; }
+.move-card.empty { border-color:#222; opacity:0.3; justify-content:center; color:#444; }
+
+/* NEWS TICKER */
+.ticker { background:#000; color:#ff0; font-size:8px; padding:4px; text-align:center; border-top:1px solid #f00; flex-shrink:0; overflow:hidden; white-space:nowrap; }
+
+/* XI REACTION */
+.xi-flash { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,0,0,0.3); display:none; z-index:9000; align-items:center; justify-content:center; flex-direction:column; }
+.xi-flash.show { display:flex; }
+.xi-flash .xi-text { font-size:28px; color:#f00; text-shadow:0 0 20px #f00; }
+.xi-flash .xi-sub { font-size:10px; color:#ff0; margin-top:8px; }
+
+/* CONSEQUENCE OVERLAY (fullscreen webm) */
+.consequence-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:#000; display:none; z-index:8000; }
+.consequence-overlay.show { display:flex; align-items:center; justify-content:center; }
+.consequence-overlay video { width:100%; height:100%; object-fit:contain; }
+
+/* TAP WAR OVERLAY */
+.tapwar-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); display:none; z-index:9800; flex-direction:column; }
+.tapwar-overlay.show { display:flex; }
+.tapwar-title { text-align:center; padding:10px; font-size:12px; color:#ff0; }
+.tapwar-timer { text-align:center; font-size:24px; color:#fff; }
+.tapwar-arena { flex:1; display:flex; }
+.tapwar-side { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; user-select:none; -webkit-user-select:none; }
+.tapwar-side.masc { background:rgba(0,50,0,0.3); border-right:2px solid #444; }
+.tapwar-side.masc:active { background:rgba(0,100,0,0.5); }
+.tapwar-side.fem { background:rgba(50,0,0,0.3); }
+.tapwar-side .tap-icon { font-size:48px; }
+.tapwar-side .tap-label { font-size:10px; margin-top:6px; }
+.tapwar-side .tap-count { font-size:36px; font-weight:bold; margin-top:10px; }
+.tapwar-side.masc .tap-count { color:#0f0; }
+.tapwar-side.fem .tap-count { color:#f00; }
+.tapwar-bar { height:20px; background:#222; margin:0 20px; position:relative; border:1px solid #444; }
+.tapwar-fill-m { position:absolute; left:0; top:0; height:100%; background:#0f0; transition:width 50ms; }
+.tapwar-fill-f { position:absolute; right:0; top:0; height:100%; background:#f00; transition:width 50ms; }
+.tapwar-result { text-align:center; padding:15px; font-size:14px; display:none; }
+
+/* AI GUIDE OVERLAY */
+.guide-overlay { position:fixed; top:0; left:0; width:100%; height:100%; z-index:10000; display:none; }
+.guide-overlay.show { display:block; }
+.guide-dim { position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); }
+.guide-highlight { position:absolute; z-index:10001; border:3px solid #ff0; box-shadow:0 0 20px #ff0, 0 0 40px rgba(255,255,0,0.3); animation:guidePulse 1s infinite; pointer-events:none; }
+@keyframes guidePulse { 0%,100%{box-shadow:0 0 20px #ff0, 0 0 40px rgba(255,255,0,0.3)} 50%{box-shadow:0 0 30px #ff0, 0 0 60px rgba(255,255,0,0.5)} }
+.guide-box { position:fixed; bottom:60px; left:50%; transform:translateX(-50%); width:340px; max-width:90vw; background:#111; border:3px solid #ff0; padding:12px; z-index:10002; text-align:center; }
+.guide-step { font-size:8px; color:#888; margin-bottom:4px; }
+.guide-title { font-size:13px; color:#ff0; margin-bottom:6px; font-weight:bold; }
+.guide-text { font-size:10px; color:#ccc; line-height:1.4; margin-bottom:10px; }
+.guide-btns { display:flex; gap:8px; justify-content:center; }
+.guide-btn { padding:6px 16px; font-size:10px; font-family:monospace; cursor:pointer; border:2px solid; }
+.guide-btn.next { background:#ff0; color:#000; border-color:#ff0; }
+.guide-btn.skip { background:transparent; color:#888; border-color:#444; }
+.guide-btn:active { opacity:0.7; }
+.guide-ai { font-size:7px; color:#0f0; margin-bottom:4px; }
+
+/* HELP BUTTON */
+.help-btn { background:transparent; color:#ff0; border:1px solid #ff0; padding:2px 6px; font-size:8px; cursor:pointer; font-family:monospace; }
+
+/* ADVISOR ICONS — small circles inside Trump head-box */
+.advisor-dots {
+  position:absolute; left:3px; top:50%; transform:translateY(-50%);
+  display:flex; flex-direction:column; gap:3px; z-index:10;
+}
+.advisor-dot {
+  width:18px; height:18px; border-radius:50%; border:1px solid #333;
+  background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center;
+  font-size:10px; cursor:pointer; transition:all 0.3s; padding:0;
+}
+.advisor-dot:active { transform:scale(0.8); }
+.advisor-dot.has-advice {
+  transform:scale(1.2); border-color:#ff0;
+  animation:dotGlow 1.2s infinite alternate;
+}
+@keyframes dotGlow { 0%{box-shadow:none} 100%{box-shadow:0 0 6px rgba(255,255,0,0.6)} }
+.advisor-dot.finance.has-advice { border-color:#0f0; animation-name:dotGlowG; }
+@keyframes dotGlowG { 0%{box-shadow:none} 100%{box-shadow:0 0 6px rgba(0,255,0,0.6)} }
+.advisor-dot.priest.has-advice { border-color:#ff0; }
+.advisor-dot.elon.has-advice { border-color:#0af; animation-name:dotGlowB; }
+@keyframes dotGlowB { 0%{box-shadow:none} 100%{box-shadow:0 0 6px rgba(0,170,255,0.6)} }
+.advisor-dot.devil.has-advice { border-color:#f00; animation-name:dotGlowR; }
+@keyframes dotGlowR { 0%{box-shadow:none} 100%{box-shadow:0 0 6px rgba(255,0,0,0.6)} }
+
+/* ADVISOR SPEECH BUBBLE */
+.advisor-speech { display:none; padding:6px 8px; background:#111; border:2px solid #ff0; flex-shrink:0; position:relative; }
+.advisor-speech.show { display:block; animation:speechPop 0.2s ease-out; }
+@keyframes speechPop { 0%{opacity:0;transform:scaleY(0.5)} 100%{opacity:1;transform:scaleY(1)} }
+.advisor-speech .speech-who { font-size:8px; font-weight:bold; margin-bottom:2px; }
+.advisor-speech .speech-text { font-size:9px; color:#ccc; line-height:1.3; }
+.advisor-speech .speech-rec { font-size:7px; color:#ff0; margin-top:3px; }
+.advisor-speech .speech-close { position:absolute; top:2px; right:6px; cursor:pointer; font-size:10px; color:#888; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <span class="title">STOCK MARKET v4</span>
+    <span class="round" id="round-display">ROUND 1</span>
+    <button class="unlocks-toggle" id="unlocks-toggle" onclick="toggleUnlocks()">UNLOCKS</button>
+    <button class="help-btn" onclick="startGuide()">? GUIDE</button>
+    <button class="exit-btn" onclick="exitMarket()">EXIT</button>
+  </div>
+
+  <!-- UNLOCK ROW — small circles like allies bar -->
+  <div class="unlock-section">
+    <button class="unlock-btn" id="unlock-0" onclick="tryUnlock(0)" title="AI FUNDING $50K"><span class="unlock-icon">🤖</span><span class="unlock-label">AI</span><span class="unlock-cost" id="ucost-0">$50K</span></button>
+    <button class="unlock-btn" id="unlock-1" onclick="tryUnlock(1)" title="MILITARY $75K"><span class="unlock-icon">🎖️</span><span class="unlock-label">MIL</span><span class="unlock-cost" id="ucost-1">$75K</span></button>
+    <button class="unlock-btn" id="unlock-2" onclick="tryUnlock(2)" title="QUANTUM $100K"><span class="unlock-icon">⚛️</span><span class="unlock-label">QTM</span><span class="unlock-cost" id="ucost-2">$100K</span></button>
+    <button class="unlock-btn" id="unlock-3" onclick="tryUnlock(3)" title="SPACE FORCE $120K"><span class="unlock-icon">🚀</span><span class="unlock-label">SPC</span><span class="unlock-cost" id="ucost-3">$120K</span></button>
+    <button class="unlock-btn" id="unlock-4" onclick="tryUnlock(4)" title="BIOLOGY DEPO $150K"><span class="unlock-icon">🧬</span><span class="unlock-label">BIO</span><span class="unlock-cost" id="ucost-4">$150K</span></button>
+    <button class="unlock-btn" id="unlock-5" onclick="tryUnlock(5)" title="HELLthcare $200K"><span class="unlock-icon">💊</span><span class="unlock-label">HP</span><span class="unlock-cost" id="ucost-5">$200K</span></button>
+  </div>
+
+  <!-- MONEY BAR -->
+  <div class="money-bar">
+    <span class="money-label">EARNINGS</span>
+    <span class="money-amount" id="money-amount">$0</span>
+  </div>
+
+  <!-- EMOTION TRACKER — always visible, yellow -->
+  <div class="emotion-tracker" id="emotion-tracker">
+    <span class="emo-label">EMOTION</span>
+    <div class="emo-bar-bg">
+      <div class="emo-bar-center"></div>
+      <div class="emo-bar-fill" id="emo-fill"></div>
+    </div>
+    <span class="emo-val" id="emo-val">0</span>
+  </div>
+
+  <!-- HEADS -->
+  <div class="heads">
+    <div class="head-box head-trump">
+      <video id="trump-video" autoplay loop muted playsinline>
+        <source src="https://shortfactory.shop/trump/Trumpsnes5.webm" type="video/webm">
+      </video>
+      <div class="advisor-dots">
+        <button class="advisor-dot finance" id="adv-finance" onclick="askAdvisor('finance')">💰</button>
+        <button class="advisor-dot priest" id="adv-priest" onclick="askAdvisor('priest')">⛪</button>
+        <button class="advisor-dot elon" id="adv-elon" onclick="askAdvisor('elon')">🚀</button>
+        <button class="advisor-dot devil" id="adv-devil" onclick="askAdvisor('devil')">😈</button>
+      </div>
+      <div class="head-label">TRUMP</div>
+    </div>
+    <div class="head-box head-boss">
+      <video id="boss-video" autoplay loop muted playsinline>
+        <source src="" type="video/webm">
+      </video>
+      <div class="advisor-face" id="advisor-face"></div>
+      <div class="head-label" id="boss-label">DEEP STATE</div>
+    </div>
+  </div>
+
+  <!-- GRAPH AREA -->
+  <div class="graph-section" id="graph-section">
+    <div class="graph-placeholder">
+      <canvas id="graph-canvas"></canvas>
+    </div>
+    <div class="brand-spotlight" id="brand-spotlight"></div>
+    <button class="flip-brands-circle" onclick="flipBrandsToggle()">🔄</button>
+    <div class="finance-dots">
+      <button class="finance-dot" id="short-btn" onclick="toggleShort()" title="SHORT">📉</button>
+      <button class="finance-dot" id="invest-crypto-btn" onclick="investIn('crypto')" title="BITCOIN">₿</button>
+      <button class="finance-dot" id="invest-gold-btn" onclick="investIn('gold')" title="GOLD">🥇</button>
+    </div>
+    <!-- ACTIVE INVESTMENT DISPLAY -->
+    <div class="invest-display" id="invest-display">
+      <div class="invest-asset" id="invest-asset-name">—</div>
+      <div class="invest-mult" id="invest-mult">x1.0</div>
+      <button class="invest-cash-btn" onclick="cashOutInvestment()">💰 CASH OUT</button>
+    </div>
+  </div>
+
+  <!-- MARKET STATS -->
+  <div class="market-stats" id="market-stats">
+    <div class="market-stat"><div class="name">NASDAQ</div><div class="val flat" id="stat-nasdaq">0</div></div>
+    <div class="market-stat"><div class="name">DOW</div><div class="val flat" id="stat-dow">0</div></div>
+    <div class="market-stat"><div class="name">FTSE</div><div class="val flat" id="stat-ftse">0</div></div>
+    <div class="market-stat"><div class="name">CRYPTO</div><div class="val flat" id="stat-crypto">0</div></div>
+    <div class="market-stat"><div class="name">GOLD</div><div class="val flat" id="stat-gold">0</div></div>
+    <div class="market-stat"><div class="name">BRICS</div><div class="val flat" id="stat-brics">0</div></div>
+    <div class="market-stat"><div class="name">PETRO$</div><div class="val flat" id="stat-petro">0</div></div>
+    <div class="market-stat"><div class="name">MUSK</div><div class="val flat" id="stat-musk">0</div></div>
+  </div>
+
+  <!-- EMOTION BANNER — only appears at extremes -->
+  <div class="emotion-banner" id="emotion-banner"></div>
+
+  <!-- BUBBLE METERS -->
+  <div class="bubble-bar" id="bubble-bar">
+    <div class="bubble-item"><span style="color:#0af">AI</span><div class="bubble-meter"><div class="bubble-fill ai" id="bubble-ai" style="width:0%"></div></div><span id="bubble-ai-pct" style="color:#0af">0%</span></div>
+    <div class="bubble-item"><span style="color:#fa0">HOUSING</span><div class="bubble-meter"><div class="bubble-fill housing" id="bubble-housing" style="width:0%"></div></div><span id="bubble-housing-pct" style="color:#fa0">0%</span></div>
+  </div>
+
+  <!-- HEALTH BARS -->
+  <div class="health-bars">
+    <div class="hp-row">
+      <div class="hp-label" style="color:#f44">TRUMP</div>
+      <div class="hp-bar"><div class="hp-fill trump" id="trump-hp" style="width:100%"></div><span class="hp-text" id="trump-hp-text">100</span></div>
+    </div>
+    <div class="hp-row">
+      <div class="hp-label" style="color:#44f" id="boss-hp-label">DEEP STATE</div>
+      <div class="hp-bar"><div class="hp-fill boss" id="boss-hp" style="width:100%"></div><span class="hp-text" id="boss-hp-text">100</span></div>
+    </div>
+    <div class="hp-row ds-row">
+      <div class="hp-label" style="color:#a4f;font-size:6px">DS POWER</div>
+      <div class="ds-bar"><div class="ds-fill" id="ds-fill" style="width:80%"></div></div>
+    </div>
+  </div>
+
+  <!-- ADVISORS now inside Trump head-box -->
+  <div class="advisor-speech" id="advisor-speech">
+    <span class="speech-close" onclick="closeSpeech()">X</span>
+    <div class="speech-who" id="speech-who"></div>
+    <div class="speech-text" id="speech-text"></div>
+    <div class="speech-rec" id="speech-rec"></div>
+  </div>
+
+  <!-- FLIP TOGGLE -->
+  <div class="flip-bar">
+    <button class="flip-btn red-mode" id="flip-btn" onclick="toggleFlip()">TRUMP MODE (RED)</button>
+  </div>
+
+  <!-- 8 ACTION BUTTONS -->
+  <div class="actions">
+    <div class="actions-grid" id="actions-grid">
+      <button class="action-btn" id="act-0" onclick="doAction(0)"><span class="btn-icon">💪</span><span class="btn-label">MASCULINE ADS</span><span class="btn-blue"><span class="btn-blue-icon">🏳️‍🌈</span> WOKE ADS</span></button>
+      <button class="action-btn" id="act-1" onclick="doAction(1)"><span class="btn-icon">✝️</span><span class="btn-label">JESUS</span><span class="btn-blue"><span class="btn-blue-icon">😈</span> THE DEVIL</span></button>
+      <button class="action-btn" id="act-2" onclick="doAction(2)"><span class="btn-icon">🛡️</span><span class="btn-label">WATERSHED</span><span class="btn-blue"><span class="btn-blue-icon">🔞</span> SEXUALISE</span></button>
+      <button class="action-btn" id="act-3" onclick="doAction(3)"><span class="btn-icon">🧒</span><span class="btn-label">PROTECT KIDS</span><span class="btn-blue"><span class="btn-blue-icon">🩺</span> MUTILATION</span></button>
+      <button class="action-btn" id="act-4" onclick="doAction(4)"><span class="btn-icon">⚖️</span><span class="btn-label">VALUES</span><span class="btn-blue"><span class="btn-blue-icon">💕</span> NO STANDARDS</span></button>
+      <button class="action-btn" id="act-5" onclick="doAction(5)"><span class="btn-icon">📰</span><span class="btn-label">TRUTH</span><span class="btn-blue"><span class="btn-blue-icon">🤥</span> LIES</span></button>
+      <button class="action-btn" id="act-6" onclick="doAction(6)"><span class="btn-icon">💣</span><span class="btn-label">STRENGTH</span><span class="btn-blue"><span class="btn-blue-icon">🤡</span> CLOWNPOCALYPSE</span></button>
+      <button class="action-btn" id="act-7" onclick="doAction(7)"><span class="btn-icon">📜</span><span class="btn-label">DEFAMATION</span><span class="btn-blue"><span class="btn-blue-icon">❌</span> CANCEL CULTURE</span></button>
+    </div>
+  </div>
+
+  <!-- MORAL PURITY METER -->
+  <div class="moral-bar">
+    <div class="moral-row">
+      <span class="moral-label-l">BANKRUPT</span>
+      <div class="moral-meter"><div class="moral-marker" id="moral-marker" style="left:50%"></div></div>
+      <span class="moral-label-r">PURE</span>
+    </div>
+    <div class="moral-val" id="moral-val">MORALITY: 50</div>
+  </div>
+
+  <!-- NEWS TICKER -->
+  <div class="ticker" id="ticker">MARKETS OPEN — YOUR MOVE</div>
+
+</div>
+
+<!-- CASHOUT RESULT -->
+<div class="cashout-result" id="cashout-result" onclick="this.classList.remove('show')">
+  <div class="co-mult" id="co-mult"></div>
+  <div class="co-msg" id="co-msg"></div>
+  <div class="co-detail" id="co-detail"></div>
+  <div style="font-size:7px;color:#555;margin-top:12px;">TAP TO CLOSE</div>
+</div>
+
+<!-- ACHIEVEMENT POPUP -->
+<div class="achievement" id="achievement">
+  <div class="ach-icon" id="ach-icon"></div>
+  <div class="ach-title">YUGE ACHIEVEMENT!</div>
+  <div class="ach-name" id="ach-name"></div>
+  <div class="ach-sub" id="ach-sub"></div>
+</div>
+
+<!-- XI REACTION -->
+<div class="xi-flash" id="xi-flash">
+  <div class="xi-text">MOAR!!!</div>
+  <div class="xi-sub">🇨🇳 XI JINPING APPROVES 🇨🇳</div>
+</div>
+
+<!-- CONSEQUENCE OVERLAY -->
+<div class="consequence-overlay" id="consequence-overlay">
+  <video id="consequence-vid" playsinline></video>
+</div>
+
+<!-- AI GUIDE OVERLAY -->
+<div class="guide-overlay" id="guide-overlay">
+  <div class="guide-dim"></div>
+  <div class="guide-highlight" id="guide-highlight"></div>
+  <div class="guide-box">
+    <div class="guide-ai" id="guide-ai">AI ADVISOR</div>
+    <div class="guide-step" id="guide-step">STEP 1 / 10</div>
+    <div class="guide-title" id="guide-title">WELCOME</div>
+    <div class="guide-text" id="guide-text">Loading...</div>
+    <div class="guide-btns">
+      <button class="guide-btn skip" onclick="endGuide()">SKIP</button>
+      <button class="guide-btn next" onclick="nextGuide()">NEXT</button>
+    </div>
+  </div>
+</div>
+
+<!-- TAP WAR OVERLAY -->
+<div class="tapwar-overlay" id="tapwar-overlay">
+  <div class="tapwar-title" id="tapwar-title">💪 TAP WAR — MASCULINE vs FEMININE 💅</div>
+  <div class="tapwar-timer" id="tapwar-timer">5</div>
+  <div class="tapwar-bar"><div class="tapwar-fill-m" id="tapbar-m" style="width:50%"></div><div class="tapwar-fill-f" id="tapbar-f" style="width:50%"></div></div>
+  <div class="tapwar-arena">
+    <div class="tapwar-side masc" id="tap-masc" ontouchstart="tapMasc(event)" onmousedown="tapMasc(event)">
+      <div class="tap-icon">💪</div>
+      <div class="tap-label">TRUMP — TAP FAST!</div>
+      <div class="tap-count" id="tap-masc-count">0</div>
+    </div>
+    <div class="tapwar-side fem" id="tap-fem">
+      <div class="tap-icon">💅</div>
+      <div class="tap-label">DEVIL — AUTO</div>
+      <div class="tap-count" id="tap-fem-count">0</div>
+    </div>
+  </div>
+  <div class="tapwar-result" id="tapwar-result"></div>
+</div>
+
+<!-- DICE DISPLAY -->
+<div class="dice-display" id="dice-display">
+  <div class="dice-num" id="dice-num">6</div>
+  <div class="dice-label" id="dice-label">TRUMP ROLLS</div>
+  <div class="dice-emo" id="dice-emo"></div>
+</div>
+
+<script>
+document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+window.onerror = function(msg, url, line, col, err) {
+  var d = document.createElement('div');
+  d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:red;color:#fff;font-size:10px;padding:4px;z-index:99999;font-family:monospace;';
+  d.textContent = 'ERROR L' + line + ': ' + msg;
+  document.body.appendChild(d);
+};
+const BASE = 'https://shortfactory.shop/trump/';
+const MKT_BASE = BASE + 'stockmarket/';
+
+// ==================== GAME STATE ====================
+const S = {
+  round: 1,
+  trumpHP: 100,
+  bossHP: 100,
+  deepStatePower: 80,
+  bossIndex: 0,
+  movesLeft: 3,
+  maxMoves: 3,
+
+  // Markets — start at 0, go up (good) or down (bad)
+  nasdaq: 0, dow: 0, ftse: 0, crypto: 0,
+  gold: 0, brics: 0, petro: 0, musk: 0
+};
+
+// ==================== BUTTONS: RED vs BLUE ====================
+const ACTIONS = [
+  {
+    red: { name: 'Masculine Adverts', icon: '💪', effect: { nasdaq: 5, dow: 3, musk: 4, bossHP: -8 } },
+    blue: { name: 'Woke LGBTQ Adverts', icon: '🏳️‍🌈', effect: { nasdaq: -5, dow: -3, musk: -2, trumpHP: -6 } }
+  },
+  {
+    red: { name: 'Jesus', icon: '✝️', effect: { gold: 4, brics: 3, petro: 2, bossHP: -7 } },
+    blue: { name: 'The Devil', icon: '😈', effect: { gold: -4, crypto: -3, trumpHP: -8 } }
+  },
+  {
+    red: { name: 'Protect Children (Watershed)', icon: '🛡️', effect: { ftse: 5, dow: 4, bossHP: -6 } },
+    blue: { name: 'Corrupt Children (Sexualisation)', icon: '🔞', effect: { ftse: -4, dow: -3, trumpHP: -7 } }
+  },
+  {
+    red: { name: 'Protect Kids from Dumb Ideas', icon: '🧒', effect: { nasdaq: 3, crypto: 4, bossHP: -7 } },
+    blue: { name: 'Gender Affirming Mutilation', icon: '🩺', effect: { nasdaq: -4, crypto: -5, trumpHP: -9 } }
+  },
+  {
+    red: { name: 'Values', icon: '⚖️', effect: { dow: 5, ftse: 3, gold: 3, bossHP: -5 } },
+    blue: { name: 'Love Everyone (No Standards)', icon: '💕', effect: { dow: -4, ftse: -3, trumpHP: -5 } }
+  },
+  {
+    red: { name: 'Truth', icon: '📰', effect: { nasdaq: 4, musk: 5, bossHP: -8 } },
+    blue: { name: 'Lies', icon: '🤥', effect: { nasdaq: -3, musk: -4, trumpHP: -6 } }
+  },
+  {
+    red: { name: 'Peace Through Strength', icon: '💣', effect: { petro: 5, brics: 4, gold: 3, bossHP: -9 } },
+    blue: { name: 'Fail Upwards (Clownpocalypse)', icon: '🤡', effect: { petro: -5, brics: -4, trumpHP: -7 } }
+  },
+  {
+    red: { name: 'Defamation (Sue BBC £10B)', icon: '📜', effect: { ftse: 6, musk: 4, nasdaq: 3, bossHP: -10 } },
+    blue: { name: 'Cancel Culture', icon: '❌', effect: { ftse: -5, musk: -5, trumpHP: -8 } }
+  }
+];
+
+// ==================== BOSSES ====================
+const BOSSES = [
+  { name: 'DEEP STATE', bias: 0.5 },
+  { name: 'SOROS', bias: 0.6 },
+  { name: 'GATES FOUNDATION', bias: 0.4 },
+  { name: 'CLINTONS', bias: 0.5 },
+  { name: 'ROTHSCHILDS', bias: 0.7 },
+  { name: 'EPSTEIN NETWORK', bias: 0.6 },
+  { name: 'NETANYAHU', bias: 0.3 },
+  { name: 'PINK POUND', bias: 0.4 }
+];
+
+// ==================== EMOTION — YELLOW CHART ====================
+// -100 (deep depression) to +100 (hypermania). Starts neutral.
+// Only SHOWS on graph + banner when |emotion| > 30
+// High = devil boost (irrational markets, easy to manipulate)
+// Low = devil penalty (sober population, see through BS)
+// Trump is ICE COLD — unaffected
+let emotion = 0;
+const emotionHistory = [0];
+
+function tickEmotion() {
+  // Emotion drifts based on market performance + random
+  const totalMarket = S.nasdaq + S.dow + S.ftse + S.crypto + S.gold + S.brics + S.petro + S.musk;
+  let drift = Math.floor(Math.random() * 7) - 3; // random -3 to +3
+
+  // Markets booming = excitement rises
+  if (totalMarket > 15) drift += 3;
+  else if (totalMarket < -10) drift -= 4;
+
+  // Big trump gains = euphoria
+  if (trumpScore > devilScore + 20) drift += 2;
+  // Devil winning = fear/depression
+  if (devilScore > trumpScore + 10) drift -= 3;
+
+  // Bubble pops cause emotional crashes
+  // (handled in popBubble)
+
+  // Natural rubber-band back toward 0 (mild)
+  if (emotion > 20) drift -= 1;
+  if (emotion < -20) drift += 1;
+
+  emotion = Math.max(-100, Math.min(100, emotion + drift));
+  emotionHistory.push(emotion);
+}
+
+function getEmotionModifier() {
+  // Returns multiplier for devil's damage (old system, kept for compatibility)
+  if (emotion > 50) return 1.3;
+  if (emotion < -50) return 0.7;
+  return 1.0;
+}
+
+// NEW: Dice emotion bonus — simple: 0 (mostly), +1, or -1
+// Devil gets 2x whatever this returns
+function getEmotionDiceBonus() {
+  if (emotion > 50) return 1;   // mania = +1 (devil gets +2)
+  if (emotion < -50) return -1; // depression = -1 (devil gets -2)
+  return 0;                     // neutral = 0
+}
+
+function updateEmotionTracker() {
+  var fill = document.getElementById('emo-fill');
+  var val = document.getElementById('emo-val');
+  if (!fill) return;
+  // emotion: -100 to +100. Center = 50%. Fill grows from center outward.
+  var pct = emotion / 100; // -1 to 1
+  if (pct >= 0) {
+    fill.style.left = '50%';
+    fill.style.width = (pct * 50) + '%';
+    fill.style.background = '#ff0';
+  } else {
+    fill.style.left = (50 + pct * 50) + '%';
+    fill.style.width = (-pct * 50) + '%';
+    fill.style.background = '#88f';
+  }
+  val.textContent = (emotion > 0 ? '+' : '') + emotion;
+  val.style.color = emotion > 30 ? '#ff0' : emotion < -30 ? '#88f' : '#ff0';
+}
+
+function updateEmotionBanner() {
+  updateEmotionTracker();
+  const banner = document.getElementById('emotion-banner');
+  if (emotion > 40) {
+    banner.className = 'emotion-banner show mania';
+    if (emotion > 70) banner.textContent = 'HYPERMANIA! DEVIL +30% — CROWD IS INSANE';
+    else banner.textContent = 'EUPHORIA RISING (' + emotion + ') — DEVIL FEEDS ON MANIA';
+  } else if (emotion < -40) {
+    banner.className = 'emotion-banner show depression';
+    if (emotion < -70) banner.textContent = 'DEEP DEPRESSION — DEVIL -30% — PEOPLE SEE TRUTH';
+    else banner.textContent = 'DEPRESSION SPREADING (' + emotion + ') — DEVIL WEAKENS';
+  } else {
+    banner.classList.remove('show');
+  }
+}
+
+// ==================== BUBBLES — AI + HOUSING ====================
+let aiBubble = 0;      // 0-100, pops at 100
+let housingBubble = 0;  // 0-100, pops at 100
+
+function tickBubbles() {
+  // AI bubble grows when NASDAQ/MUSK are positive
+  if (S.nasdaq > 0) aiBubble += Math.floor(Math.random() * 3) + 1;
+  if (S.musk > 5) aiBubble += 2;
+  // Slight natural deflation
+  aiBubble = Math.max(0, aiBubble - 1);
+
+  // Housing bubble grows when DOW/FTSE are positive
+  if (S.dow > 0) housingBubble += Math.floor(Math.random() * 3) + 1;
+  if (S.ftse > 5) housingBubble += 2;
+  housingBubble = Math.max(0, housingBubble - 1);
+
+  // Check for pops
+  if (aiBubble >= 100) popBubble('ai');
+  if (housingBubble >= 100) popBubble('housing');
+
+  updateBubbleDisplay();
+}
+
+function popBubble(type) {
+  if (type === 'ai') {
+    // AI BUBBLE POPS — NASDAQ and MUSK crash, emotion tanks
+    S.nasdaq -= Math.floor(Math.random() * 10) + 8;
+    S.musk -= Math.floor(Math.random() * 8) + 6;
+    S.crypto -= Math.floor(Math.random() * 6) + 3;
+    emotion = Math.max(-100, emotion - 30);
+    devilScore = Math.max(0, devilScore - 12); // devil gets kicked in the red nuts
+    aiBubble = 0;
+    setTicker('AI BUBBLE POPS! NASDAQ CRASHES! DEVIL -12 — DEPRESSION HITS!');
+
+    // Flash graph yellow then blue
+    const graph = document.getElementById('graph-section');
+    graph.style.background = '#330';
+    setTimeout(() => { graph.style.background = '#003'; }, 600);
+    setTimeout(() => { graph.style.background = '#001a00'; }, 1200);
+  } else {
+    // HOUSING BUBBLE POPS — DOW and FTSE crash, emotion tanks
+    S.dow -= Math.floor(Math.random() * 10) + 8;
+    S.ftse -= Math.floor(Math.random() * 8) + 6;
+    S.gold += Math.floor(Math.random() * 5) + 3; // gold pumps on housing crash (safe haven)
+    emotion = Math.max(-100, emotion - 25);
+    devilScore = Math.max(0, devilScore - 10); // kick in red nuts
+    housingBubble = 0;
+    setTicker('HOUSING BUBBLE POPS! DOW CRASHES! DEVIL -10 — GOLD PUMPS!');
+
+    const graph = document.getElementById('graph-section');
+    graph.style.background = '#330';
+    setTimeout(() => { graph.style.background = '#003'; }, 600);
+    setTimeout(() => { graph.style.background = '#001a00'; }, 1200);
+  }
+}
+
+function updateBubbleDisplay() {
+  const bar = document.getElementById('bubble-bar');
+  // Show bubble bar when either bubble > 20
+  if (aiBubble > 20 || housingBubble > 20) {
+    bar.classList.add('show');
+  } else {
+    bar.classList.remove('show');
+  }
+
+  const aiEl = document.getElementById('bubble-ai');
+  const houEl = document.getElementById('bubble-housing');
+  aiEl.style.width = aiBubble + '%';
+  houEl.style.width = housingBubble + '%';
+  document.getElementById('bubble-ai-pct').textContent = aiBubble + '%';
+  document.getElementById('bubble-housing-pct').textContent = housingBubble + '%';
+
+  // Danger flash when close to popping
+  if (aiBubble > 75) aiEl.classList.add('danger'); else aiEl.classList.remove('danger');
+  if (housingBubble > 75) houEl.classList.add('danger'); else houEl.classList.remove('danger');
+}
+
+// ==================== BUTTON STATES ====================
+let flipped = false; // false = Trump red mode, true = Devil blue mode
+
+function clearButtonStates() {
+  document.querySelectorAll('.action-btn').forEach(b => {
+    b.classList.remove('trump-hit', 'devil-hit');
+  });
+}
+
+function toggleFlip() {
+  flipped = !flipped;
+  const btn = document.getElementById('flip-btn');
+  const actBtns = document.querySelectorAll('.action-btn');
+  const brandPairs = document.querySelectorAll('.brand-pair');
+  if (flipped) {
+    btn.textContent = 'DEVIL MODE (BLUE)';
+    btn.className = 'flip-btn blue-mode';
+    actBtns.forEach(b => b.classList.add('flipped'));
+    brandPairs.forEach(b => b.classList.add('flipped'));
+  } else {
+    btn.textContent = 'TRUMP MODE (RED)';
+    btn.className = 'flip-btn red-mode';
+    actBtns.forEach(b => b.classList.remove('flipped'));
+    brandPairs.forEach(b => b.classList.remove('flipped'));
+  }
+}
+
+// ==================== DICE SYSTEM ====================
+function rollDice() {
+  return Math.floor(Math.random() * 6) + 1; // 1-6
+}
+
+function showDice(roll, who, emoBonus) {
+  const el = document.getElementById('dice-display');
+  const numEl = document.getElementById('dice-num');
+  const labelEl = document.getElementById('dice-label');
+  const emoEl = document.getElementById('dice-emo');
+
+  numEl.textContent = roll;
+  if (who === 'trump') {
+    labelEl.textContent = 'TRUMP ROLLS';
+    el.className = 'dice-display show trump-dice';
+    emoEl.textContent = '';
+  } else {
+    labelEl.textContent = 'DEVIL ROLLS';
+    el.className = 'dice-display show devil-dice';
+    if (emoBonus !== 0) {
+      emoEl.textContent = 'EMOTION ' + (emoBonus > 0 ? '+' : '') + emoBonus + ' (x2)';
+    } else {
+      emoEl.textContent = '';
+    }
+  }
+
+  // Auto-hide
+  setTimeout(() => { el.classList.remove('show'); }, 600);
+}
+
+// Dice multiplier: roll 1=0.5x, 2=0.7x, 3=0.85x, 4=1.0x, 5=1.2x, 6=1.5x
+function diceMultiplier(roll) {
+  const table = { 1: 0.5, 2: 0.7, 3: 0.85, 4: 1.0, 5: 1.2, 6: 1.5 };
+  return table[Math.max(1, Math.min(6, roll))] || 1.0;
+}
+
+function scaleEffect(effect, mult) {
+  const scaled = {};
+  for (const [k, v] of Object.entries(effect)) {
+    scaled[k] = Math.round(v * mult);
+  }
+  return scaled;
+}
+
+// ==================== CORE LOGIC ====================
+let actionLock = false;
+
+// 0=off, 1=manly(red), 2=woke(blue)
+var brandBarMode = 0;
+
+function flipBrandsToggle() {
+  brandBarMode = (brandBarMode + 1) % 3;
+  var pairs = document.querySelectorAll('.brand-pair');
+  if (brandBarMode === 2) {
+    pairs.forEach(function(p) { p.classList.add('flipped'); });
+  } else {
+    pairs.forEach(function(p) { p.classList.remove('flipped'); });
+  }
+  drawGraph();
+}
+
+function setTurnBanner(who) { return; }
+
+function doAction(idx) {
+  if (actionLock || S.movesLeft <= 0) return;
+  actionLock = true;
+  setTurnBanner('trump');
+
+  const action = ACTIONS[idx];
+
+  // Check for event boost FIRST
+  const boosted = checkEventBoost(idx);
+
+  // DICE ROLL for Trump
+  const trumpRoll = rollDice();
+  const trumpMult = diceMultiplier(trumpRoll);
+  showDice(trumpRoll, 'trump', 0);
+
+  // Tick morality based on which side we're playing
+  tickMorality(idx, flipped);
+
+  // Pick red or blue side based on flip mode
+  const side = flipped ? action.blue : action.red;
+  const sideKey = flipped ? 'blue' : 'red';
+
+  // Scale effect by dice roll
+  let effect = scaleEffect(side.effect, trumpMult);
+
+  // AI FUNDING boost
+  let marketDelta = sumMarketEffect(effect);
+  if (S.aiBoost) marketDelta = Math.floor(marketDelta * 1.2);
+  if (boosted) marketDelta = Math.floor(marketDelta * 2);
+
+  // MILITARY boost on boss damage
+  if (S.milBoost && effect.bossHP) effect.bossHP = Math.floor(effect.bossHP * 1.5);
+  if (boosted && effect.bossHP) effect.bossHP = Math.floor(effect.bossHP * 1.5);
+
+  applyEffect(effect);
+
+  // When using red buttons: green grows. When using blue (flipped): green still grows but less
+  if (flipped) {
+    // Using devil's weapons — markets take the blue hit but trump scores from chaos
+    trumpScore += Math.max(1, Math.abs(marketDelta));
+  } else {
+    trumpScore += marketDelta;
+  }
+  trumpHistory.push(trumpScore);
+  devilHistory.push(devilScore);
+  emotionHistory.push(emotion);
+
+  // DEFAMATION BONUS: tank a random woke brand
+  if (idx === 7 && !flipped) {
+    var targets = [];
+    for (var di = 0; di < BRANDS.length; di++) { if (!wokeBankrupt[di]) targets.push(di); }
+    if (targets.length > 0) {
+      var pick = targets[Math.floor(Math.random() * targets.length)];
+      wokeBankrupt[pick] = true;
+      trumpScore += Math.floor(BRANDS[pick].crash * 0.6);
+      devilScore = Math.max(0, devilScore - BRANDS[pick].crash);
+      brandBarMode = 2; // show woke bars so player sees the tank
+      updateBrandsState();
+    }
+  }
+
+  showYourMove(side);
+  setTicker('🎲' + trumpRoll + ' ' + side.icon + ' ' + side.name.toUpperCase() + '!');
+
+  // Flash button — red or blue depending on mode
+  clearButtonStates();
+  document.getElementById('act-' + idx).classList.add(flipped ? 'devil-hit' : 'trump-hit');
+
+  S.movesLeft--;
+
+  updateDisplay();
+  drawGraph();
+
+  // Devil responds after delay
+  setTimeout(() => {
+    devilTurn(idx);
+  }, 800);
+}
+
+let manipulation = 0; // builds toward black swan
+
+function devilTurn(playerIdx) {
+  setTurnBanner('devil');
+  const boss = BOSSES[S.bossIndex];
+
+  // Devil picks a counter — sometimes the direct counter, sometimes random
+  let counterIdx;
+  if (Math.random() < boss.bias) {
+    counterIdx = playerIdx;
+  } else {
+    counterIdx = Math.floor(Math.random() * 8);
+  }
+
+  const counter = ACTIONS[counterIdx];
+
+  // DICE ROLL for Devil + emotion bonus (devil gets 2x emotion)
+  const emoBonus = getEmotionDiceBonus();
+  const devilEmoBonus = emoBonus * 2; // devil gets 2x
+  let devilRoll = rollDice() + devilEmoBonus;
+  devilRoll = Math.max(1, Math.min(6, devilRoll)); // clamp 1-6
+  const devilMult = diceMultiplier(devilRoll);
+
+  // Show devil dice after brief delay
+  setTimeout(() => showDice(devilRoll, 'devil', devilEmoBonus), 200);
+
+  // Scale blue effect by dice roll
+  const scaledBlue = scaleEffect(counter.blue.effect, devilMult);
+
+  // === DEVIL'S REAL GAME: Attack green line + build own score ===
+
+  // 1. Apply scaled blue effect (damages Trump HP + markets)
+  applyEffect(scaledBlue);
+  const blueMarketDmg = Math.abs(sumMarketEffect(scaledBlue));
+
+  // 2. Devil's score grows — dice already factors in
+  devilScore += blueMarketDmg + Math.floor(Math.random() * 3);
+
+  // 3. Devil DRAGS DOWN the green line (actively sabotaging your gains)
+  // BUT NOT if green is invested in Bitcoin/Gold!
+  if (!investState.active) {
+    const sabotage = Math.floor(blueMarketDmg * 0.4);
+    trumpScore = Math.max(0, trumpScore - sabotage);
+  }
+
+  // CANCEL CULTURE: devil tanks a random manly brand (hurts green)
+  if (counterIdx === 7) {
+    var alive = [];
+    for (var ci = 0; ci < BRANDS.length; ci++) { if (!wokeBankrupt[ci]) alive.push(ci); }
+    if (alive.length > 0) {
+      var pick = alive[Math.floor(Math.random() * alive.length)];
+      trumpScore = Math.max(0, trumpScore - Math.floor(BRANDS[pick].crash * 0.4));
+      brandBarMode = 1; // show manly bars so player sees the hit
+    }
+  }
+
+  // 4. Build manipulation toward black swan
+  manipulation += 2 + Math.floor(Math.random() * 3);
+
+  // 5. Check for BLACK SWAN — devil overtaking + enough manipulation
+  if (devilScore >= trumpScore && manipulation >= 25) {
+    triggerBlackSwan(boss);
+  } else {
+    showDevilMove(counter.blue, boss.name);
+    setTicker('🎲' + devilRoll + ' 😈 ' + boss.name + ': ' + counter.blue.name.toUpperCase());
+
+    // Flash counter button ON FIRE — Devil's press
+    document.getElementById('act-' + counterIdx).classList.add('devil-hit');
+
+    // Xi laughs when devil rolls high or does big damage
+    if (devilRoll >= 5 || (scaledBlue.trumpHP && scaledBlue.trumpHP <= -7)) {
+      showXi();
+    }
+  }
+
+  // Push all histories (they move in lockstep)
+  trumpHistory.push(trumpScore);
+  devilHistory.push(devilScore);
+  emotionHistory.push(emotion);
+
+  // Random volatility
+  const markets = ['nasdaq','dow','ftse','crypto','gold','brics','petro','musk'];
+  const rndMarket = markets[Math.floor(Math.random() * markets.length)];
+  S[rndMarket] += Math.floor(Math.random() * 7) - 3;
+
+  // Update shelter P&L if active
+  updateShelterEachTurn();
+
+  updateDisplay();
+  drawGraph();
+
+  // Check end of moves
+  if (S.movesLeft <= 0) {
+    setTimeout(endRound, 600);
+  } else {
+    actionLock = false;
+  }
+}
+
+function triggerBlackSwan(boss) {
+  // BLACK SWAN: green crashes, red spikes — one guy with all the money gaming it
+  // BUT if invested — green is IMMUNE and asset pumps!
+  if (investState.active) {
+    devilScore += Math.floor(devilScore * 0.3) + 10;
+    S.nasdaq -= Math.floor(Math.random() * 8) + 3;
+    S.dow -= Math.floor(Math.random() * 8) + 3;
+    S.ftse -= Math.floor(Math.random() * 6) + 2;
+    // Bitcoin/Gold PUMPS during crash (safe haven!)
+    S[investState.asset] += Math.floor(Math.random() * 8) + 5;
+    manipulation = 0;
+    showBlackSwanMove(boss.name);
+    setTicker('🦢 BLACK SWAN! BUT YOU\'RE IN ' + (investState.asset === 'crypto' ? 'BITCOIN' : 'GOLD') + '! IT PUMPS!');
+    showXi();
+    updateInvestEachTurn();
+    trumpHistory.push(trumpScore);
+    devilHistory.push(devilScore);
+    updateDisplay();
+    drawGraph();
+    if (S.movesLeft <= 0) { setTimeout(endRound, 600); } else { actionLock = false; }
+    return;
+  }
+
+  let crashSize = Math.floor(trumpScore * 0.4) + 10;
+  const spikeSize = Math.floor(crashSize * 0.7);
+
+  trumpScore = Math.max(0, trumpScore - crashSize);
+  devilScore += spikeSize;
+
+  // Hammer the markets
+  S.nasdaq -= Math.floor(Math.random() * 8) + 3;
+  S.dow -= Math.floor(Math.random() * 8) + 3;
+  S.ftse -= Math.floor(Math.random() * 6) + 2;
+  S.crypto -= Math.floor(Math.random() * 10) + 5;
+
+  // Trump takes HP damage from the crash
+  S.trumpHP = Math.max(1, S.trumpHP - 12);
+
+  // Reset manipulation counter (needs to build up again)
+  manipulation = 0;
+
+  showBlackSwanMove(boss.name);
+  setTicker('🦢 BLACK SWAN! ' + boss.name + ' CRASHES THE MARKET!');
+  showXi();
+
+  // Flash the graph area red briefly
+  const graph = document.getElementById('graph-section');
+  graph.style.background = '#300';
+  setTimeout(() => { graph.style.background = '#0a0a12'; }, 1500);
+}
+
+function endRound() {
+  S.round++;
+  S.movesLeft = S.maxMoves;
+
+  // Clear button states + lingering events
+  clearButtonStates();
+  clearEvent();
+
+  // EARN MONEY each round
+  const earned = earnMoney();
+
+  // 50% chance of an event each round (starting round 2)
+  if (S.round >= 2 && Math.random() < 0.5) {
+    setTimeout(triggerEvent, 800);
+  }
+
+  // Tick emotion + bubbles each round
+  tickEmotion();
+  tickBubbles();
+  updateEmotionBanner();
+
+  // UNLOCK EFFECTS each round
+  if (S.bioRegen) S.trumpHP = Math.min(200, S.trumpHP + 5);
+  if (S.hellDrain) S.bossHP = Math.max(0, S.bossHP - 3);
+
+  // Deep state power shifts based on boss HP
+  S.deepStatePower = Math.max(0, Math.min(100, S.bossHP * 0.8));
+
+  // Boss rotates every 3 rounds
+  if (S.round % 3 === 0) {
+    S.bossIndex = (S.bossIndex + 1) % BOSSES.length;
+    setTicker('NEW OPPONENT: ' + BOSSES[S.bossIndex].name + ' | +$' + (earned/1000).toFixed(1) + 'K');
+  } else {
+    setTicker('RND ' + S.round + ' | +$' + (earned/1000).toFixed(1) + 'K | MOVES: ' + S.movesLeft);
+  }
+
+  updateDisplay();
+
+  // Check win/lose
+  if (S.bossHP <= 0) {
+    setTicker('MARKET VICTORY! DEEP STATE CRUSHED!');
+    setTimeout(() => exitMarket(true), 3000);
+    return;
+  }
+  if (S.trumpHP <= 0) {
+    setTicker('MARKET CRASH! DEEP STATE WINS!');
+    setTimeout(() => exitMarket(false), 3000);
+    return;
+  }
+
+  // TAP WAR every 4 rounds
+  if (S.round > 1 && S.round % 4 === 0) {
+    actionLock = true;
+    setTimeout(startTapWar, 1000);
+    return;
+  }
+
+  actionLock = false;
+}
+
+function applyEffect(effect) {
+  for (const [key, val] of Object.entries(effect)) {
+    if (key === 'trumpHP') S.trumpHP = Math.max(0, Math.min(200, S.trumpHP + val));
+    else if (key === 'bossHP') S.bossHP = Math.max(0, Math.min(100, S.bossHP + val));
+    else if (S[key] !== undefined) S[key] += val;
+  }
+}
+
+// ==================== DISPLAY ====================
+function updateDisplay() {
+  document.getElementById('round-display').textContent = 'RND ' + S.round + ' | MOVES: ' + S.movesLeft;
+
+  // HP bars
+  document.getElementById('trump-hp').style.width = Math.min(100, S.trumpHP) + '%';
+  document.getElementById('trump-hp-text').textContent = Math.floor(S.trumpHP);
+  document.getElementById('boss-hp').style.width = S.bossHP + '%';
+  document.getElementById('boss-hp-text').textContent = Math.floor(S.bossHP);
+
+  // Boss name
+  const boss = BOSSES[S.bossIndex];
+  document.getElementById('boss-label').textContent = boss.name;
+  document.getElementById('boss-hp-label').textContent = boss.name;
+
+  // Deep state bar
+  document.getElementById('ds-fill').style.width = S.deepStatePower + '%';
+
+  // Market stats
+  const markets = ['nasdaq','dow','ftse','crypto','gold','brics','petro','musk'];
+  markets.forEach(m => {
+    const el = document.getElementById('stat-' + m);
+    const v = S[m];
+    el.textContent = (v >= 0 ? '+' : '') + v;
+    el.className = 'val ' + (v > 0 ? 'up' : v < 0 ? 'down' : 'flat');
+  });
+
+  // Check if defamation panel should show
+  checkDefamePanel();
+
+  // Check if shelter option should show
+  checkShelterPanel();
+
+  // Update moral meter + brands
+  updateMoralDisplay();
+
+  // Short bar
+  checkShortBar();
+
+  // Update advisor glow states
+  updateAdvisors();
+}
+
+// ==================== GRAPH ====================
+let trumpScore = 0, devilScore = 0;
+const trumpHistory = [0];
+const devilHistory = [0];
+
+function sumMarketEffect(effect) {
+  let sum = 0;
+  const markets = ['nasdaq','dow','ftse','crypto','gold','brics','petro','musk'];
+  for (const k of markets) { if (effect[k]) sum += effect[k]; }
+  return sum;
+}
+
+// LIVE GRAPH — scrolling window, noise between turns
+const GRAPH_WINDOW = 40; // show last 40 data points
+let graphNoise = 0; // micro-noise for live feel
+let graphAnimId = null;
+
+function drawGraph() {
+  const canvas = document.getElementById('graph-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth;
+  canvas.height = canvas.offsetHeight;
+  const w = canvas.width, h = canvas.height;
+
+  // Background
+  ctx.fillStyle = '#0a0a12';
+  ctx.fillRect(0, 0, w, h);
+
+  // Grid — slight jitter for live feel
+  ctx.strokeStyle = '#1a1a2e';
+  ctx.lineWidth = 1;
+  const gridOff = graphNoise * 0.5;
+  for (let y = gridOff % 20; y < h; y += 20) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+  for (let x = gridOff % 20; x < w; x += 20) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+
+  // Zero line
+  ctx.strokeStyle = '#444';
+  ctx.beginPath(); ctx.moveTo(0, h - 16); ctx.lineTo(w, h - 16); ctx.stroke();
+
+  // Day labels scrolling along bottom
+  ctx.font = '7px monospace';
+  ctx.fillStyle = '#333';
+  const totalPts = trumpHistory.length;
+  const visStart = Math.max(0, totalPts - GRAPH_WINDOW);
+  for (let i = 0; i < GRAPH_WINDOW; i++) {
+    const dayNum = visStart + i + 1;
+    if (dayNum % 5 === 0) {
+      const x = (i / (GRAPH_WINDOW - 1)) * w;
+      ctx.fillStyle = '#444';
+      ctx.fillText('D' + dayNum, x - 6, h - 2);
+      ctx.strokeStyle = '#1a1a2e';
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h - 16); ctx.stroke();
+    }
+  }
+
+  // Scrolling window — only show last N points
+  const sliceStart = Math.max(0, trumpHistory.length - GRAPH_WINDOW);
+  const tSlice = trumpHistory.slice(sliceStart);
+  const dSlice = devilHistory.slice(sliceStart);
+  const eSlice = emotionHistory.slice(sliceStart);
+
+  const allVals = [...tSlice, ...dSlice];
+  const maxVal = Math.max(20, Math.max(...allVals));
+  const numPts = Math.max(tSlice.length, dSlice.length);
+  if (numPts < 2) return;
+
+  function drawLine(data, color, fillColor) {
+    if (data.length < 2) return;
+    const step = w / (numPts - 1);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    data.forEach((v, i) => {
+      const noise = (i === data.length - 1) ? graphNoise : 0; // noise on last point only
+      const x = i * step;
+      const y = h - 16 - ((v + noise) / maxVal) * (h - 26);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+    // Fill under
+    ctx.lineTo((data.length - 1) * step, h - 16);
+    ctx.lineTo(0, h - 16);
+    ctx.closePath();
+    ctx.fillStyle = fillColor;
+    ctx.fill();
+  }
+
+  drawLine(tSlice, '#0f0', 'rgba(0,255,0,0.15)');
+  drawLine(dSlice, '#f00', 'rgba(255,0,0,0.15)');
+
+  // Pulsing dot at end of each line
+  const lastStep = w;
+  const lastTY = h - 16 - ((tSlice[tSlice.length-1] + graphNoise) / maxVal) * (h - 26);
+  const lastDY = h - 16 - ((dSlice[dSlice.length-1] + graphNoise) / maxVal) * (h - 26);
+  ctx.fillStyle = '#0f0';
+  ctx.beginPath(); ctx.arc(w - 2, lastTY, 3 + Math.abs(graphNoise) * 0.3, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#f00';
+  ctx.beginPath(); ctx.arc(w - 2, lastDY, 3 + Math.abs(graphNoise) * 0.3, 0, Math.PI * 2); ctx.fill();
+
+  // Labels
+  ctx.font = '11px monospace';
+  ctx.fillStyle = '#0f0';
+  ctx.fillText('▲ TRUMP +' + trumpScore, 6, 14);
+  ctx.fillStyle = '#f00';
+  ctx.fillText('▼ DEVIL +' + devilScore, 6, 28);
+
+  // Masculine/Feminine power
+  ctx.fillStyle = '#0af';
+  ctx.fillText('💪' + mascPower + ' 💅' + femPower, w - 80, 28);
+
+  // YELLOW EMOTION LINE
+  if (Math.abs(emotion) > 30 && eSlice.length > 1) {
+    const step = w / (numPts - 1);
+    ctx.strokeStyle = '#ff0';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    eSlice.forEach((v, i) => {
+      const x = i * step;
+      const normalized = (v + 100) / 200;
+      const y = h - 16 - normalized * (h - 26);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#ff0';
+    ctx.fillText('♦ MOOD ' + (emotion > 0 ? '+' : '') + emotion, 6, 42);
+  }
+
+  // Who's winning
+  if (trumpScore > devilScore) {
+    ctx.fillStyle = '#0f0'; ctx.fillText('MARKETS RISING', w - 100, 14);
+  } else if (devilScore > trumpScore) {
+    ctx.fillStyle = '#f00'; ctx.fillText('MARKETS FALLING', w - 110, 14);
+  }
+
+  // BRAND POWER BARS — only when toggled (brandBarMode 1=manly red, 2=woke blue)
+  barHitBoxes = [];
+  if (brandBarMode > 0) {
+    var barCount = BRANDS.length;
+    var barW = Math.floor((w - 20) / barCount) - 2;
+    var barMaxH = 50;
+    var barY = h - 50;
+    for (var bi = 0; bi < barCount; bi++) {
+      var bx = 10 + bi * (barW + 2);
+      var b = BRANDS[bi];
+      var icon, pwr, bh;
+      if (brandBarMode === 2) {
+        pwr = wokeBankrupt[bi] ? 2 : (b.crash + 10);
+        bh = (pwr / 35) * barMaxH;
+        ctx.fillStyle = wokeBankrupt[bi] ? 'rgba(50,50,100,0.4)' : 'rgba(80,80,255,0.7)';
+        ctx.fillRect(bx, barY - bh, barW, bh);
+        icon = b.wokeIcon;
+      } else {
+        pwr = wokeBankrupt[bi] ? (b.crash + 15) : (b.crash);
+        bh = (pwr / 40) * barMaxH;
+        ctx.fillStyle = wokeBankrupt[bi] ? 'rgba(255,50,50,0.8)' : 'rgba(200,50,50,0.5)';
+        ctx.fillRect(bx, barY - bh, barW, bh);
+        icon = b.manlyIcon;
+      }
+      // Big centered icon inside bar
+      ctx.font = (barW > 28 ? '18' : '14') + 'px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#fff';
+      ctx.fillText(icon, bx + barW / 2, barY - bh / 2);
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
+      // Store hit box for hover
+      barHitBoxes.push({ x: bx, y: barY - bh, w: barW, h: bh, idx: bi });
+    }
+  }
+}
+
+// Live graph ticker — auto-scrolls like days passing
+let dayCounter = 0;
+let graphScrollOffset = 0;
+
+function startGraphTicker() {
+  // Micro-noise for live jitter at ~10fps
+  setInterval(() => { graphNoise = (Math.random() - 0.5) * 4; drawGraph(); }, 100);
+
+  // Auto-add a data point every 2s to simulate days ticking by
+  setInterval(() => {
+    dayCounter++;
+    // Small random drift on scores (doesn't change real game state much)
+    const tDrift = (Math.random() - 0.45) * 0.5; // slight upward bias for trump
+    const dDrift = (Math.random() - 0.55) * 0.5; // slight downward bias for devil
+    trumpScore = Math.max(0, trumpScore + tDrift);
+    devilScore = Math.max(0, devilScore + dDrift);
+    trumpHistory.push(trumpScore);
+    devilHistory.push(devilScore);
+    emotionHistory.push(emotion);
+    graphScrollOffset++;
+    drawGraph();
+  }, 2000);
+}
+
+// ==================== BRAND SPOTLIGHT CYCLE ====================
+var spotIdx = 0;
+var spotSide = 'woke';
+var barHitBoxes = [];
+var spotHoverLock = false; // true when user is hovering a bar
+
+function showBrandSpotlight(idx, side) {
+  var el = document.getElementById('brand-spotlight');
+  var b = BRANDS[idx];
+  var isRed = (side === 'manly');
+  var name = isRed ? b.manly : b.woke;
+  var icon = isRed ? b.manlyIcon : b.wokeIcon;
+  var tag = isRed ? b.manlyTag : b.wokeTag;
+  var bankrupt = wokeBankrupt[idx];
+  var worth = isRed ? (b.crash + (bankrupt ? 15 : 0)) : (bankrupt ? 0 : b.crash + 10);
+  var worthStr = '$' + (worth * 4.2).toFixed(1) + 'B';
+  var status = '';
+  if (!isRed && bankrupt) status = '💀 BANKRUPTED';
+  else if (isRed && bankrupt) status = '📈 DOMINANT';
+
+  el.className = 'brand-spotlight' + (isRed ? ' red-side' : '');
+  el.innerHTML = '<span class="spot-icon">' + icon + '</span> ' +
+    '<span class="spot-name">' + name + '</span><br>' +
+    '<span class="spot-tag">"' + tag + '"</span><br>' +
+    '<span class="spot-worth">' + worthStr + '</span>' +
+    (status ? ' <span class="spot-status">' + status + '</span>' : '');
+}
+
+function cycleBrandSpotlight() {
+  if (spotHoverLock) return;
+  showBrandSpotlight(spotIdx, spotSide);
+  spotIdx++;
+  if (spotIdx >= BRANDS.length) {
+    spotIdx = 0;
+    spotSide = (spotSide === 'woke') ? 'manly' : 'woke';
+  }
+}
+
+// Cycle every 2.5s
+setInterval(cycleBrandSpotlight, 2500);
+
+// Hover/touch on bar chart → show that brand in spotlight
+(function() {
+  var canvas = document.getElementById('graph-canvas');
+  function hitTest(cx, cy) {
+    var rect = canvas.getBoundingClientRect();
+    var sx = (cx - rect.left) * (canvas.width / rect.width);
+    var sy = (cy - rect.top) * (canvas.height / rect.height);
+    for (var i = 0; i < barHitBoxes.length; i++) {
+      var box = barHitBoxes[i];
+      if (sx >= box.x && sx <= box.x + box.w && sy >= box.y && sy <= box.y + box.h) return box.idx;
+    }
+    return -1;
+  }
+  canvas.addEventListener('mousemove', function(e) {
+    var hit = hitTest(e.clientX, e.clientY);
+    if (hit >= 0) {
+      spotHoverLock = true;
+      showBrandSpotlight(hit, brandBarMode === 2 ? 'woke' : 'manly');
+    } else {
+      spotHoverLock = false;
+    }
+  });
+  canvas.addEventListener('mouseleave', function() { spotHoverLock = false; });
+  canvas.addEventListener('touchstart', function(e) {
+    var t = e.touches[0];
+    var hit = hitTest(t.clientX, t.clientY);
+    if (hit >= 0) {
+      spotHoverLock = true;
+      showBrandSpotlight(hit, brandBarMode === 2 ? 'woke' : 'manly');
+    }
+  }, {passive:true});
+  canvas.addEventListener('touchend', function() { spotHoverLock = false; }, {passive:true});
+})();
+
+// ==================== MONEY + UNLOCKS ====================
+let money = 0;
+const UNLOCKS = [
+  { name: 'AI FUNDING', icon: '🤖', cost: 50000, effect: 'All market gains +20%', unlocked: false },
+  { name: 'MILITARY', icon: '🎖️', cost: 75000, effect: 'Boss damage +50%', unlocked: false },
+  { name: 'QUANTUM', icon: '⚛️', cost: 100000, effect: 'Shelter gains +50% in Bitcoin/Gold', unlocked: false },
+  { name: 'SPACE FORCE', icon: '🚀', cost: 120000, effect: 'Bonus move per round', unlocked: false },
+  { name: 'BIOLOGY DEPO', icon: '🧬', cost: 150000, effect: 'HP regen each round', unlocked: false },
+  { name: 'HELLthcare', icon: '💊', cost: 200000, effect: 'Devil HP drain each round', unlocked: false }
+];
+
+function earnMoney() {
+  // Earn based on how green is doing vs red
+  const marketTotal = S.nasdaq + S.dow + S.ftse + S.crypto + S.gold + S.brics + S.petro + S.musk;
+  const lead = Math.max(0, trumpScore - devilScore);
+  const earn = Math.floor(lead * 100) + Math.max(0, marketTotal * 50) + 500;
+  money += earn;
+  updateMoneyDisplay();
+  return earn;
+}
+
+function updateMoneyDisplay() {
+  const el = document.getElementById('money-amount');
+  if (money >= 1000000) {
+    el.textContent = '$' + (money / 1000000).toFixed(1) + 'M';
+  } else if (money >= 1000) {
+    el.textContent = '$' + (money / 1000).toFixed(1) + 'K';
+  } else {
+    el.textContent = '$' + money;
+  }
+  // Update affordable state on unlock buttons
+  UNLOCKS.forEach((u, i) => {
+    const btn = document.getElementById('unlock-' + i);
+    if (u.unlocked) return;
+    if (money >= u.cost) {
+      btn.classList.add('affordable');
+    } else {
+      btn.classList.remove('affordable');
+    }
+  });
+}
+
+function toggleUnlocks() {
+  var sec = document.querySelector('.unlock-section');
+  sec.classList.toggle('show');
+}
+
+function checkUnlocksVisible() {
+  // Show the toggle button highlighted if any unlock owned
+  var any = UNLOCKS.some(function(u) { return u.unlocked; });
+  var btn = document.getElementById('unlocks-toggle');
+  if (any) btn.classList.add('has-unlocks');
+}
+
+function tryUnlock(idx) {
+  const u = UNLOCKS[idx];
+  if (u.unlocked || money < u.cost) {
+    if (money < u.cost) {
+      setTicker('NOT ENOUGH! NEED $' + (u.cost/1000) + 'K — YOU HAVE $' + (money/1000).toFixed(1) + 'K');
+    }
+    return;
+  }
+  money -= u.cost;
+  u.unlocked = true;
+
+  // Mark button as unlocked
+  const btn = document.getElementById('unlock-' + idx);
+  btn.classList.add('unlocked');
+  btn.classList.remove('affordable');
+  document.getElementById('ucost-' + idx).textContent = 'UNLOCKED';
+
+  // Show achievement
+  showAchievement(u.icon, u.name, u.effect);
+
+  // Apply the unlock effect
+  applyUnlockEffect(idx);
+
+  updateMoneyDisplay();
+  setTicker('YUGE! ' + u.name + ' UNLOCKED!');
+  checkUnlocksVisible();
+}
+
+function applyUnlockEffect(idx) {
+  // These modify the game state going forward
+  switch(idx) {
+    case 0: // AI FUNDING — all market gains +20%
+      S.aiBoost = true;
+      break;
+    case 1: // MILITARY — boss damage +50%
+      S.milBoost = true;
+      break;
+    case 2: // QUANTUM — shelter gains boosted (leverage x3 instead of x2)
+      S.quantumBoost = true;
+      break;
+    case 3: // SPACE FORCE — bonus move per round
+      S.maxMoves = 4;
+      S.movesLeft = Math.max(S.movesLeft, 4);
+      break;
+    case 4: // BIOLOGY DEPO — HP regen each round
+      S.bioRegen = true;
+      break;
+    case 5: // HELLthcare — devil HP drain each round
+      S.hellDrain = true;
+      break;
+  }
+}
+
+function showAchievement(icon, name, sub) {
+  const el = document.getElementById('achievement');
+  document.getElementById('ach-icon').textContent = icon;
+  document.getElementById('ach-name').textContent = name;
+  document.getElementById('ach-sub').textContent = sub;
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ==================== MORAL PURITY ====================
+// 0 = moral bankruptcy (red), 100 = moral purity (white)
+let morality = 50;
+
+function tickMorality(btnIdx, isFlipped) {
+  // Red (good) buttons raise morality, blue (flipped/devil) lowers it
+  if (!isFlipped) {
+    // Playing good — morality rises
+    morality = Math.min(100, morality + 3);
+  } else {
+    // Playing devil's side — morality drops
+    morality = Math.max(0, morality - 5);
+  }
+}
+
+function updateMoralDisplay() {
+  document.getElementById('moral-marker').style.left = morality + '%';
+  document.getElementById('moral-val').textContent = 'MORALITY: ' + morality + (morality >= 70 ? ' PURE' : morality <= 30 ? ' BANKRUPT' : '');
+  updateBrandsState();
+}
+
+// ==================== SHORT THE DEVIL ====================
+let shortActive = false;
+let shortEntry = 0; // devilScore when short opened
+
+function toggleShort() {
+  if (shortActive) {
+    // Close the short — cash out
+    closeShort();
+  } else {
+    // Open short — bet against devil
+    shortActive = true;
+    shortEntry = devilScore;
+    document.getElementById('short-btn').textContent = '📈';
+    document.getElementById('short-btn').classList.add('active-short');
+    setTicker('📉 SHORT OPENED ON DEVIL AT ' + shortEntry + '!');
+  }
+}
+
+function closeShort() {
+  if (!shortActive) return;
+  const profit = shortEntry - devilScore; // positive if devil went DOWN
+  shortActive = false;
+
+  if (profit > 0) {
+    // Devil dropped — you profit!
+    trumpScore += profit;
+    money += profit * 300;
+    setTicker('📉 SHORT CLOSED! PROFIT +' + profit + ' GREEN! +$' + ((profit * 300) / 1000).toFixed(1) + 'K!');
+  } else if (profit < 0) {
+    // Devil went UP — you lose
+    trumpScore = Math.max(0, trumpScore + profit); // profit is negative
+    setTicker('📉 SHORT CLOSED AT LOSS! GREEN ' + profit + '!');
+  } else {
+    setTicker('📉 SHORT CLOSED — BREAK EVEN');
+  }
+
+  document.getElementById('short-btn').textContent = '📉';
+  document.getElementById('short-btn').classList.remove('active-short');
+  updateMoneyDisplay();
+  trumpHistory.push(trumpScore);
+  devilHistory.push(devilScore);
+  emotionHistory.push(emotion);
+  updateDisplay();
+  drawGraph();
+}
+
+function checkShortBar() { return; }
+
+// ==================== WOKE vs MANLY BRANDS ====================
+const BRANDS = [
+  { woke: 'BUD LIGHT', wokeIcon: '🍺', wokeTag: 'DYLAN MULVANEY', manly: 'MARLBORO', manlyIcon: '🚬', manlyTag: 'REAL MEN SMOKE', crash: 18, market: 'dow', threshold: 60 },
+  { woke: 'DISNEY', wokeIcon: '🏰', wokeTag: 'GAY AGENDA KIDS MOVIES', manly: 'NINTENDO', manlyIcon: '🎮', manlyTag: 'PURE GAMING', crash: 20, market: 'nasdaq', threshold: 55 },
+  { woke: 'BLACKROCK', wokeIcon: '🪨', wokeTag: 'ESG SOCIAL CREDIT', manly: 'TRUMP EMPIRE!', manlyIcon: '🏛️', manlyTag: 'GOLD STANDARD', crash: 25, market: 'ftse', threshold: 65 },
+  { woke: 'MICROSOFT', wokeIcon: '💻', wokeTag: 'DEI HIRING QUOTAS', manly: 'xAI', manlyIcon: '🤖', manlyTag: 'FREE SPEECH AI', crash: 18, market: 'nasdaq', threshold: 60 },
+  { woke: 'BBC', wokeIcon: '📺', wokeTag: 'LICENCE FEE PROPAGANDA', manly: 'TWITTER (X)', manlyIcon: '🐦', manlyTag: 'CITIZEN JOURNALISM', crash: 22, market: 'ftse', threshold: 70 },
+  { woke: 'FACEBOOK', wokeIcon: '👤', wokeTag: 'CENSORSHIP MACHINE', manly: 'NEURALINK', manlyIcon: '🧠', manlyTag: 'MIND FREEDOM', crash: 16, market: 'crypto', threshold: 55 },
+  { woke: 'NIKE', wokeIcon: '🌈', wokeTag: 'RAINBOW CAPITALISM', manly: 'TESLA', manlyIcon: '⚡', manlyTag: 'AMERICAN ENGINEERING', crash: 20, market: 'musk', threshold: 65 },
+  { woke: 'GOOGLE', wokeIcon: '📱', wokeTag: 'SEARCH MANIPULATION', manly: 'SPACEX', manlyIcon: '🚀', manlyTag: 'MARS OR BUST', crash: 22, market: 'petro', threshold: 75 }
+];
+const wokeBankrupt = [false,false,false,false,false,false,false,false];
+
+function updateBrandsState() {
+  BRANDS.forEach((b, i) => {
+    const pair = document.getElementById('brand-' + i);
+    if (!pair) return;
+    pair.classList.remove('woke-grey', 'woke-bankrupt', 'manly-boosted');
+    if (wokeBankrupt[i]) {
+      pair.classList.add('woke-bankrupt', 'manly-boosted');
+    } else if (morality >= b.threshold) {
+      pair.classList.add('woke-grey');
+    }
+  });
+}
+
+function bankruptWoke(idx) {
+  if (wokeBankrupt[idx] || actionLock) return;
+  const b = BRANDS[idx];
+  if (morality < b.threshold) {
+    setTicker('MORALITY TOO LOW! NEED ' + b.threshold + ' TO BANKRUPT ' + b.woke);
+    return;
+  }
+
+  wokeBankrupt[idx] = true;
+  actionLock = true;
+
+  // AUTO-SHORT: crash the devil's red line
+  devilScore = Math.max(0, devilScore - b.crash);
+
+  // Market impact
+  S[b.market] += Math.floor(Math.random() * 4) + 2; // manly brand boosts market
+
+  // Boss damage
+  S.bossHP = Math.max(0, S.bossHP - 4);
+
+  // Green spikes from the auto-short
+  trumpScore += Math.floor(b.crash * 0.6);
+
+  // Morality bonus for bankrupting evil
+  morality = Math.min(100, morality + 5);
+
+  // Money from the bankruptcy
+  money += b.crash * 400;
+
+  trumpHistory.push(trumpScore);
+  devilHistory.push(devilScore);
+  emotionHistory.push(emotion);
+
+  // Battle log removed — ticker handles it
+
+  setTicker('💀 ' + b.woke + ' BANKRUPTED! AUTO-SHORT! ' + b.manly + ' TAKES OVER!');
+
+  // Flash graph
+  const graph = document.getElementById('graph-section');
+  graph.style.background = '#030';
+  setTimeout(() => { graph.style.background = '#001a00'; }, 1000);
+
+  updateMoralDisplay();
+  updateMoneyDisplay();
+  updateDisplay();
+  drawGraph();
+
+  // Uses a move
+  S.movesLeft--;
+  if (S.movesLeft <= 0) {
+    setTimeout(endRound, 600);
+  } else {
+    setTimeout(() => { actionLock = false; }, 400);
+  }
+}
+
+// OLD defamation kept for emergency (simplified)
+const DEFAME_TARGETS = [
+  { name: 'SHELL', icon: '⛽', crash: 12, market: 'petro', marketHit: 3 },
+  { name: 'FORD', icon: '🚗', crash: 10, market: 'dow', marketHit: 2 },
+  { name: 'TRUMP EMPIRE', icon: '🏛️', crash: 14, market: 'gold', marketHit: 4 }
+];
+const defameUsed = [false, false, false];
+
+function checkDefamePanel() { return; }
+
+function defame(idx) { return; }
+
+// ==================== XI REACTION ====================
+function showXi() {
+  const el = document.getElementById('xi-flash');
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 1500);
+}
+
+// ==================== BATTLE LOG (removed — moves show in ticker) ====================
+function showYourMove(action) { return; }
+function showDevilMove(action, bossName) { return; }
+function showBlackSwanMove(bossName) { return; }
+
+function formatEffect(effect) {
+  const parts = [];
+  const markets = ['nasdaq','dow','ftse','crypto','gold','brics','petro','musk'];
+  for (const m of markets) {
+    if (effect[m]) parts.push(m.toUpperCase() + (effect[m] > 0 ? '+' : '') + effect[m]);
+  }
+  if (effect.bossHP) parts.push('DMG ' + Math.abs(effect.bossHP));
+  if (effect.trumpHP) parts.push('HP ' + effect.trumpHP);
+  return parts.join(' ');
+}
+
+// ==================== TICKER ====================
+function setTicker(msg) {
+  document.getElementById('ticker').textContent = msg;
+}
+
+// ==================== EXIT ====================
+function exitMarket(won) {
+  const totalMarket = S.nasdaq + S.dow + S.ftse + S.crypto + S.gold + S.brics + S.petro + S.musk;
+  window.parent.postMessage({
+    type: 'stockmarket-complete',
+    won: won !== undefined ? won : null,
+    trumpHP: S.trumpHP,
+    bossHP: S.bossHP,
+    deepStatePower: S.deepStatePower,
+    marketScore: totalMarket,
+    money: money,
+    round: S.round,
+    markets: {
+      nasdaq: S.nasdaq, dow: S.dow, ftse: S.ftse, crypto: S.crypto,
+      gold: S.gold, brics: S.brics, petro: S.petro, musk: S.musk
+    },
+    unlocks: UNLOCKS.map(u => ({ name: u.name, unlocked: u.unlocked })),
+    mascPower: mascPower,
+    femPower: femPower,
+    morality: morality,
+    wokeBankrupt: wokeBankrupt.filter(Boolean).length
+  }, '*');
+}
+
+// ==================== URL PARAMS ====================
+const params = new URLSearchParams(window.location.search);
+if (params.get('hp')) S.trumpHP = parseInt(params.get('hp'));
+if (params.get('ds')) S.deepStatePower = parseInt(params.get('ds'));
+
+// ==================== INVEST IN CRYPTO/GOLD ====================
+let shelterState = { active: false, asset: null, parkedScore: 0, entryPrice: 0, pnl: 0 };
+var investState = {
+  active: false,
+  asset: null,       // 'crypto' or 'gold'
+  staked: 0,         // green score when invested
+  entryPrice: 0,     // S.crypto or S.gold at entry
+  turnsHeld: 0,
+  drift: 0           // accumulated random drift for multiplier
+};
+
+function investIn(asset) {
+  if (investState.active || trumpScore <= 0) return;
+  investState.active = true;
+  investState.asset = asset;
+  investState.staked = trumpScore;
+  investState.entryPrice = S[asset];
+  investState.turnsHeld = 0;
+  investState.drift = 0;
+
+  document.getElementById('invest-crypto-btn').classList.add('hidden');
+  document.getElementById('invest-gold-btn').classList.add('hidden');
+  document.getElementById('invest-display').classList.add('show');
+  document.getElementById('invest-asset-name').textContent = (asset === 'crypto' ? '₿ BITCOIN' : '🥇 GOLD') + ' — STAKED: ' + investState.staked;
+
+  setTicker('ALL IN ON ' + (asset === 'crypto' ? 'BITCOIN' : 'GOLD') + '! GREEN LOCKED AT ' + trumpScore);
+  updateInvestDisplay();
+}
+
+function updateInvestEachTurn() {
+  if (!investState.active) return;
+  investState.turnsHeld++;
+  // Each turn the investment drifts — crypto wild, gold steady
+  if (investState.asset === 'crypto') {
+    // Crypto: big swings, slight upward bias
+    investState.drift += (Math.random() * 30) - 12; // -12 to +18
+  } else {
+    // Gold: smaller swings, steady upward bias
+    investState.drift += (Math.random() * 12) - 4; // -4 to +8
+  }
+  updateInvestDisplay();
+}
+
+function getInvestMultiplier() {
+  if (!investState.active) return 1;
+  // Based on accumulated drift over turns held
+  var base = 1 + (investState.drift / 100);
+  return Math.max(0.1, Math.round(base * 10) / 10);
+}
+
+function updateInvestDisplay() {
+  if (!investState.active) return;
+  var mult = getInvestMultiplier();
+  var el = document.getElementById('invest-display');
+  var multEl = document.getElementById('invest-mult');
+  multEl.textContent = 'x' + mult.toFixed(1);
+  el.classList.remove('winning', 'losing');
+  if (mult >= 1.5) el.classList.add('winning');
+  else if (mult < 0.8) el.classList.add('losing');
+}
+
+function cashOutInvestment() {
+  if (!investState.active) return;
+  var mult = getInvestMultiplier();
+  var payout = Math.floor(investState.staked * mult);
+  var profit = payout - investState.staked;
+
+  // Apply to green score
+  trumpScore = payout;
+  trumpHistory.push(trumpScore);
+  devilHistory.push(devilScore);
+  emotionHistory.push(emotion);
+
+  // Show result screen
+  var res = document.getElementById('cashout-result');
+  var multEl = document.getElementById('co-mult');
+  var msgEl = document.getElementById('co-msg');
+  var detEl = document.getElementById('co-detail');
+
+  multEl.textContent = 'x' + mult.toFixed(1);
+  detEl.textContent = 'STAKED: ' + investState.staked + ' → RETURN: ' + payout + ' (' + (profit >= 0 ? '+' : '') + profit + ')';
+
+  res.className = 'cashout-result show';
+  if (mult >= 3) {
+    // MEGA WIN — new era of wealth
+    res.classList.add('mega');
+    msgEl.textContent = 'ELON MUSK MONEY! HUMANITY WINS!';
+    money += profit * 500;
+    setTicker('QUADRUPLE! THE GREATEST DEAL IN HISTORY!');
+    // Massive green spike + celebration
+    emotion = Math.min(100, emotion + 40);
+  } else if (mult >= 2) {
+    res.classList.add('win');
+    msgEl.textContent = 'DOUBLED UP! TREMENDOUS!';
+    money += profit * 300;
+    setTicker('MONEY DOUBLED! ART OF THE DEAL!');
+    emotion = Math.min(100, emotion + 20);
+  } else if (mult >= 1.2) {
+    res.classList.add('win');
+    msgEl.textContent = 'PROFIT! SMART MOVE!';
+    money += profit * 200;
+    setTicker('SOLID GAINS! WELL PLAYED!');
+  } else if (mult >= 0.5) {
+    res.classList.add('lose');
+    msgEl.textContent = 'LOST MONEY... PAINFUL';
+    setTicker('BAD TRADE. MARKETS ARE CRUEL.');
+    emotion = Math.max(-100, emotion - 20);
+  } else {
+    // DOOM — national debt territory
+    res.classList.add('doom');
+    msgEl.textContent = 'NATIONAL DEBT! GAME OVER TERRITORY!';
+    setTicker('TOTAL WIPEOUT! AMERICA IN RUINS!');
+    emotion = Math.max(-100, emotion - 50);
+    S.trumpHP = Math.max(1, S.trumpHP - 30);
+    // Could trigger game over if HP already low
+    if (S.trumpHP <= 5) {
+      detEl.textContent += ' — TRUMP ON LIFE SUPPORT!';
+    }
+  }
+
+  // Reset investment
+  investState.active = false;
+  investState.asset = null;
+  document.getElementById('invest-display').classList.remove('show');
+  document.getElementById('invest-crypto-btn').classList.remove('hidden');
+  document.getElementById('invest-gold-btn').classList.remove('hidden');
+
+  updateMoneyDisplay();
+  updateDisplay();
+  drawGraph();
+}
+
+function updateShelterEachTurn() { updateInvestEachTurn(); }
+function updateShelterDisplay() { }
+function buyBack() { }
+function checkShelterPanel() { }
+
+// ==================== ADVISORS ====================
+function getFinanceAdvice() {
+  const totalMarket = S.nasdaq + S.dow + S.ftse + S.crypto + S.gold + S.brics + S.petro + S.musk;
+  const lead = trumpScore - devilScore;
+  let text = '', rec = '';
+
+  // Find weakest and strongest markets
+  const mks = [{n:'NASDAQ',v:S.nasdaq},{n:'DOW',v:S.dow},{n:'FTSE',v:S.ftse},{n:'CRYPTO',v:S.crypto},{n:'GOLD',v:S.gold},{n:'BRICS',v:S.brics},{n:'PETRO$',v:S.petro},{n:'MUSK',v:S.musk}];
+  mks.sort((a,b) => a.v - b.v);
+  const worst = mks[0], best = mks[mks.length-1];
+
+  if (totalMarket < -10) {
+    text = 'Markets are in the RED overall (' + totalMarket + '). You need to diversify — stop hitting the same buttons.';
+    rec = 'DIVERSIFY YOUR PICKS — boost ' + worst.n + ' (at ' + worst.v + ')';
+  } else if (lead < 0) {
+    text = 'The RED line is AHEAD of green by ' + Math.abs(lead) + '. Devil is winning the market war. Use defamation if available.';
+    rec = 'USE DEFAMATION BUTTONS TO CRASH RED LINE';
+  } else if (money >= 50000 && !UNLOCKS[0].unlocked) {
+    text = 'You have $' + (money/1000).toFixed(1) + 'K — enough for AI FUNDING. That +20% on all gains compounds FAST.';
+    rec = 'BUY AI FUNDING NOW — $50K';
+  } else if (totalMarket > 20) {
+    text = 'Markets strong at +' + totalMarket + '! ' + best.n + ' leading at +' + best.v + '. Keep the pressure on.';
+    rec = 'STAY AGGRESSIVE — YOUR LEAD IS ' + lead;
+  } else {
+    text = worst.n + ' is your weakest market at ' + worst.v + '. Consider buttons that boost it.';
+    // Map worst market to best button
+    const mktToBtns = {NASDAQ:[0,3,5],DOW:[0,2,4],FTSE:[2,4,7],CRYPTO:[3,5],GOLD:[1,4,6],BRICS:[1,6],['PETRO$']:[6],MUSK:[0,5,7]};
+    const suggest = mktToBtns[worst.n];
+    if (suggest) rec = 'TRY: ' + suggest.map(i => ACTIONS[i].red.name.toUpperCase()).join(' or ');
+    else rec = 'DIVERSIFY YOUR PICKS';
+  }
+  return { text, rec };
+}
+
+function getPriestAdvice() {
+  let text = '', rec = '';
+  const moralBtns = [1, 2, 3, 4]; // Jesus, Watershed, Protect Kids, Values
+
+  if (manipulation > 15 && !investState.active) {
+    text = 'My son, I sense great darkness building (manipulation: ' + manipulation + '). A black swan approaches. Invest in Bitcoin or Gold — the Lord provides safe harbor for the wise.';
+    rec = 'INVEST GREEN IN BITCOIN OR GOLD — RIDE OUT THE STORM!';
+  } else if (investState.active) {
+    var mult = getInvestMultiplier();
+    if (mult > 1.5) {
+      text = 'Your ' + (investState.asset === 'crypto' ? 'Bitcoin' : 'Gold') + ' is at x' + mult.toFixed(1) + '! The Lord rewards patience. But greed is a sin — consider cashing out before fortune turns.';
+      rec = 'CASH OUT NOW — LOCK IN THE MULTIPLIER!';
+    } else if (mult < 0.7) {
+      text = 'Your investment is bleeding, my son. Cash out now before it becomes national debt. Sometimes you must cut losses.';
+      rec = 'CASH OUT — STOP THE BLEEDING!';
+    } else {
+      text = 'Hold steady, my son. Your green is invested. Let the market play out. Gold and Bitcoin are God\'s safe havens.';
+      rec = 'HOLD — WAIT FOR THE MULTIPLIER TO GROW';
+    }
+  } else if (S.trumpHP <= 30) {
+    text = 'My son, your health is failing (' + S.trumpHP + ' HP). The Lord provides for those who believe. Faith heals all wounds.';
+    rec = 'PRESS JESUS — DIVINE STRENGTH FLOWS THROUGH FAITH';
+  } else if (S.bossHP > 70) {
+    text = 'The enemy is strong (' + S.bossHP + ' HP). Evil thrives when good men do nothing. Protect what matters most.';
+    rec = 'PRESS PROTECT KIDS or VALUES — MORAL HIGH GROUND WINS WARS';
+  } else if (devilScore > trumpScore) {
+    text = 'The wicked prosper temporarily, but righteousness endures. Consider investing in Gold — it always endures. Or Bitcoin — the future of free money.';
+    rec = 'SHELTER IN BITCOIN OR GOLD — THEN BUY BACK THE RED DEATH';
+  } else {
+    text = 'You walk in the light, my son. The markets reflect God\'s order when led by moral men. Stay the course.';
+    rec = 'KEEP FAITH — MORAL BUTTONS HAVE STRONG MARKET EFFECTS';
+  }
+  return { text, rec };
+}
+
+function getElonAdvice() {
+  let text = '', rec = '';
+
+  if (!UNLOCKS[0].unlocked && money < 50000) {
+    text = 'First priority: earn enough for AI FUNDING ($50K). That 20% boost on everything is literally the most efficient play. It\'s basic math.';
+    rec = 'GRIND FOR $50K — AI FUNDING IS YOUR SPACESHIP';
+  } else if (!UNLOCKS[3].unlocked && money >= 120000) {
+    text = 'You can afford SPACE FORCE ($120K). An extra move per round is... let me do the math... yeah, 33% more output. Obviously buy it.';
+    rec = 'BUY SPACE FORCE — 4 MOVES > 3 MOVES. SIMPLE.';
+  } else if (S.musk < 0) {
+    text = 'MUSK index is at ' + S.musk + '. That\'s basically a personal attack. Press TRUTH or MASCULINE ADS — both pump my stock.';
+    rec = 'PRESS TRUTH (+5 MUSK) or MASCULINE ADS (+4 MUSK)';
+  } else if (S.crypto < -5) {
+    text = 'Crypto crashing at ' + S.crypto + '. The future of money is being attacked. PROTECT KIDS and TRUTH both boost crypto.';
+    rec = 'BOOST CRYPTO — IT\'S THE FUTURE OF FREEDOM';
+  } else if (UNLOCKS[0].unlocked && !UNLOCKS[2].unlocked) {
+    text = 'You have AI. Next target: QUANTUM ($100K). It boosts your shelter leverage from x2 to x3. Park in Bitcoin, watch it 3x. That\'s called winning.';
+    rec = 'SAVE FOR QUANTUM — SUPERCHARGE YOUR BITCOIN/GOLD SHELTER';
+  } else {
+    text = 'MUSK at +' + S.musk + '. Based. Keep pressing TRUTH and DEFAMATION — they pump tech stocks and my personal index. We\'re going to Mars.';
+    rec = 'TRUTH + DEFAMATION = TECH DOMINANCE';
+  }
+  return { text, rec };
+}
+
+function getDevilAdvice() {
+  let text = '', rec = '';
+
+  // Devil tells you what HE would do — so you do the opposite
+  const bossName = BOSSES[S.bossIndex].name;
+
+  if (S.trumpHP > 80) {
+    text = 'If I were you... I\'d press WOKE LGBTQ ADS. Tank your own DOW, hurt your own base. But YOU should do the OPPOSITE.';
+    rec = 'DEVIL SAYS: WOKE ADS → YOU PRESS: MASCULINE ADS 💪';
+  } else if (S.trumpHP <= 40) {
+    text = 'You\'re weak at ' + S.trumpHP + ' HP. I\'d finish you with CANCEL CULTURE... so do the opposite. DEFAMATION hits hardest when you\'re cornered.';
+    rec = 'DEVIL SAYS: CANCEL CULTURE → YOU PRESS: DEFAMATION 📜';
+  } else if (devilScore > trumpScore) {
+    text = 'I\'m WINNING the graph war. I\'d press LIES to keep your MUSK tanking... so you should press TRUTH. It\'s my biggest weakness right now.';
+    rec = 'DEVIL SAYS: LIES → YOU PRESS: TRUTH 📰';
+  } else if (manipulation > 18) {
+    text = 'My manipulation is at ' + manipulation + '... almost enough for a BLACK SWAN crash. I\'d do SEXUALISATION to push kids toward my side. Counter me with WATERSHED.';
+    rec = 'DEVIL SAYS: CORRUPT CHILDREN → YOU PRESS: WATERSHED 🛡️';
+  } else if (S.bossHP < 30) {
+    text = bossName + ' is almost dead at ' + S.bossHP + 'HP. I\'d use CLOWNPOCALYPSE to stall. Counter with STRENGTH — maximum boss damage.';
+    rec = 'DEVIL SAYS: CLOWNPOCALYPSE → YOU PRESS: STRENGTH 💣';
+  } else {
+    text = 'Honestly? I\'d press GENDER MUTILATION to corrupt the youth AND tank your crypto. So you should press PROTECT KIDS. Hard counter.';
+    rec = 'DEVIL SAYS: GENDER MUTILATION → YOU PRESS: PROTECT KIDS 🧒';
+  }
+  return { text, rec };
+}
+
+const ADVISOR_NAMES = {
+  finance: { name: '💰 FINANCIAL ADVISOR', color: '#0f0', emoji: '💰', bg: '#0a1a0a' },
+  priest: { name: '⛪ THE PRIEST', color: '#ff0', emoji: '⛪', bg: '#1a1a0a' },
+  elon: { name: '🚀 ELON MUSK', color: '#0af', emoji: '🚀', bg: '#0a0a1a' },
+  devil: { name: '😈 THE DEVIL (do the opposite!)', color: '#f00', emoji: '😈', bg: '#1a0a0a' }
+};
+
+var advisorTTSActive = false;
+
+function askAdvisor(who) {
+  let advice;
+  switch(who) {
+    case 'finance': advice = getFinanceAdvice(); break;
+    case 'priest': advice = getPriestAdvice(); break;
+    case 'elon': advice = getElonAdvice(); break;
+    case 'devil': advice = getDevilAdvice(); break;
+  }
+
+  // Show advisor emoji in boss box
+  var face = document.getElementById('advisor-face');
+  var bossLabel = document.getElementById('boss-label');
+  face.textContent = ADVISOR_NAMES[who].emoji;
+  face.style.background = ADVISOR_NAMES[who].bg;
+  face.classList.remove('show');
+  void face.offsetWidth;
+  face.classList.add('show');
+  bossLabel.textContent = ADVISOR_NAMES[who].name;
+  bossLabel.style.color = ADVISOR_NAMES[who].color;
+
+  // Show speech bubble
+  const speech = document.getElementById('advisor-speech');
+  const whoEl = document.getElementById('speech-who');
+  const textEl = document.getElementById('speech-text');
+  const recEl = document.getElementById('speech-rec');
+
+  whoEl.textContent = ADVISOR_NAMES[who].name;
+  whoEl.style.color = ADVISOR_NAMES[who].color;
+  textEl.textContent = advice.text;
+  recEl.textContent = advice.rec;
+
+  speech.style.borderColor = ADVISOR_NAMES[who].color;
+  speech.classList.remove('show');
+  void speech.offsetWidth;
+  speech.classList.add('show');
+
+  // TTS — read out the advice
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    var utter = new SpeechSynthesisUtterance(advice.text);
+    utter.rate = 1.1;
+    utter.pitch = who === 'devil' ? 0.6 : who === 'priest' ? 1.2 : who === 'elon' ? 0.9 : 1.0;
+    utter.volume = 0.8;
+    advisorTTSActive = true;
+    utter.onend = function() {
+      advisorTTSActive = false;
+      // Auto-dismiss after TTS finishes (3s delay to read rec)
+      setTimeout(function() { if (!advisorTTSActive) dismissAdvisor(); }, 3000);
+    };
+    window.speechSynthesis.speak(utter);
+  }
+}
+
+function dismissAdvisor() {
+  // Hide advisor face, restore boss label
+  var face = document.getElementById('advisor-face');
+  face.classList.remove('show');
+  var boss = BOSSES[S.bossIndex];
+  document.getElementById('boss-label').textContent = boss.name;
+  document.getElementById('boss-label').style.color = '#fff';
+  // Hide speech
+  document.getElementById('advisor-speech').classList.remove('show');
+}
+
+function closeSpeech() {
+  if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+  advisorTTSActive = false;
+  dismissAdvisor();
+}
+
+// Update advisor glow states based on game state
+function updateAdvisors() {
+  const totalMarket = S.nasdaq + S.dow + S.ftse + S.crypto + S.gold + S.brics + S.petro + S.musk;
+  const lead = trumpScore - devilScore;
+
+  // Finance glows when: markets tanking, can afford unlock, or red overtaking
+  const financeUrgent = totalMarket < -5 || lead < 0 || (money >= 50000 && UNLOCKS.some(u => !u.unlocked && money >= u.cost));
+  document.getElementById('adv-finance').classList.toggle('has-advice', financeUrgent);
+
+  // Priest glows when: HP low, manipulation high, moral crisis
+  const priestUrgent = S.trumpHP <= 40 || manipulation > 15 || S.bossHP > 80;
+  document.getElementById('adv-priest').classList.toggle('has-advice', priestUrgent);
+
+  // Elon glows when: MUSK or CRYPTO tanking, can afford tech unlocks
+  const elonUrgent = S.musk < -3 || S.crypto < -5 || (!UNLOCKS[0].unlocked && money >= 50000) || (!UNLOCKS[3].unlocked && money >= 120000);
+  document.getElementById('adv-elon').classList.toggle('has-advice', elonUrgent);
+
+  // Devil ALWAYS glows — he always has something to say
+  document.getElementById('adv-devil').classList.toggle('has-advice', true);
+}
+
+// ==================== EVENTS — FLASH BOOST SYSTEM ====================
+const EVENTS = [
+  {
+    name: 'NETFLIX AIRS "CUTIES"',
+    hint: 'HIT JESUS FOR A CHRISTIAN REVIVAL!',
+    btnIdx: 1, // Jesus button
+    video: null, // Dan will bake in meme vids later
+    boost: { green: 25, earnings: 8000, bossHP: -15, nasdaq: 8, dow: 6, gold: 5 },
+    ticker: 'CHRISTIAN REVIVAL! FAITH ECONOMY SOARS!'
+  },
+  {
+    name: 'BUD LIGHT GOES WOKE',
+    hint: 'HIT MASCULINE ADS — REAL MEN DRINK REAL BEER!',
+    btnIdx: 0, // Masculine Ads
+    video: null,
+    boost: { green: 20, earnings: 6000, bossHP: -12, dow: 10, musk: 8 },
+    ticker: 'MASCULINITY SURGE! DOW EXPLODES!'
+  },
+  {
+    name: 'DRAG QUEEN STORY HOUR',
+    hint: 'HIT PROTECT KIDS — PARENTS ARE FURIOUS!',
+    btnIdx: 3, // Protect Kids
+    video: null,
+    boost: { green: 22, earnings: 7000, bossHP: -14, nasdaq: 7, crypto: 6, ftse: 4 },
+    ticker: 'PARENTAL REVOLT! MARKETS RALLY!'
+  },
+  {
+    name: 'CNN CAUGHT LYING AGAIN',
+    hint: 'HIT TRUTH — EXPOSE THEM ALL!',
+    btnIdx: 5, // Truth
+    video: null,
+    boost: { green: 18, earnings: 5000, bossHP: -10, musk: 12, nasdaq: 5 },
+    ticker: 'TRUTH BOMB! MUSK INDEX MOONS!'
+  },
+  {
+    name: 'CHINA THREATENS TAIWAN',
+    hint: 'HIT STRENGTH — PEACE THROUGH POWER!',
+    btnIdx: 6, // Strength
+    video: null,
+    boost: { green: 24, earnings: 9000, bossHP: -16, petro: 10, brics: 8, gold: 6 },
+    ticker: 'STRENGTH WINS! COMMODITIES MOON!'
+  },
+  {
+    name: 'SCHOOLS PUSH GENDER IDEOLOGY',
+    hint: 'HIT WATERSHED — PROTECT THE CHILDREN!',
+    btnIdx: 2, // Watershed
+    video: null,
+    boost: { green: 20, earnings: 6500, bossHP: -13, ftse: 8, dow: 7, nasdaq: 4 },
+    ticker: 'WATERSHED MOMENT! COMMON SENSE RETURNS!'
+  },
+  {
+    name: 'SOROS FUNDS ANOTHER DA',
+    hint: 'HIT DEFAMATION — SUE THEM INTO OBLIVION!',
+    btnIdx: 7, // Defamation
+    video: null,
+    boost: { green: 22, earnings: 7500, bossHP: -12, ftse: 9, musk: 6, nasdaq: 5 },
+    ticker: 'DEFAMATION WIN! DEEP STATE REELING!'
+  },
+  {
+    name: 'CELEBRITY SAYS "ALL RELIGIONS EQUAL"',
+    hint: 'HIT VALUES — STAND FOR SOMETHING!',
+    btnIdx: 4, // Values
+    video: null,
+    boost: { green: 18, earnings: 5500, bossHP: -11, dow: 8, gold: 7, ftse: 5 },
+    ticker: 'VALUES VICTORY! TRADITION PAYS!'
+  }
+];
+
+let activeEvent = null;
+let flashTimeout = null;
+
+function triggerEvent() {
+  // Pick a random event
+  const evt = EVENTS[Math.floor(Math.random() * EVENTS.length)];
+  activeEvent = evt;
+
+  // Show event in ticker instead of banner
+  setTicker('⚡ ' + evt.name + ' — ' + evt.hint);
+
+  // Flash the target button
+  const btns = document.querySelectorAll('.action-btn');
+  btns[evt.btnIdx].classList.add('flash-boost');
+
+  // Event expires after 2 moves (or end of round)
+  flashTimeout = setTimeout(() => {
+    clearEvent();
+  }, 15000); // 15s max if they don't press it
+}
+
+function clearEvent() {
+  if (!activeEvent) return;
+  document.querySelectorAll('.action-btn').forEach(b => b.classList.remove('flash-boost'));
+  activeEvent = null;
+  if (flashTimeout) { clearTimeout(flashTimeout); flashTimeout = null; }
+}
+
+function checkEventBoost(btnIdx) {
+  // Returns true if this button press triggers a boost
+  if (!activeEvent || activeEvent.btnIdx !== btnIdx) return false;
+
+  const evt = activeEvent;
+
+  // MASSIVE green boost
+  trumpScore += evt.boost.green;
+
+  // Bonus earnings
+  money += evt.boost.earnings;
+  updateMoneyDisplay();
+
+  // Boss damage
+  if (evt.boost.bossHP) S.bossHP = Math.max(0, S.bossHP + evt.boost.bossHP);
+
+  // Market boosts
+  const markets = ['nasdaq','dow','ftse','crypto','gold','brics','petro','musk'];
+  markets.forEach(m => { if (evt.boost[m]) S[m] += evt.boost[m]; });
+
+  // Flash graph green hard
+  const graph = document.getElementById('graph-section');
+  graph.style.background = '#060';
+  graph.style.boxShadow = '0 0 30px #0f0';
+  setTimeout(() => { graph.style.background = '#001a00'; graph.style.boxShadow = 'none'; }, 1500);
+
+  // Ticker
+  setTicker(evt.ticker);
+
+  clearEvent();
+  return true;
+}
+
+// ==================== MASCULINE vs FEMININE POWER ====================
+let mascPower = 0;
+let femPower = 0;
+
+// ==================== TAP WAR ====================
+let tapWarActive = false;
+let tapMascCount = 0;
+let tapFemCount = 0;
+let tapTimer = null;
+let tapDevilTimer = null;
+let tapTimeLeft = 5;
+// Difficulty: devil taps per second (3=easy, 8=hard, 12=nearly impossible)
+let tapDifficulty = 6; // starts moderate, increases
+
+function startTapWar() {
+  tapWarActive = true;
+  tapMascCount = 0;
+  tapFemCount = 0;
+  tapTimeLeft = 5;
+
+  // Scale difficulty with rounds
+  tapDifficulty = Math.min(12, 4 + Math.floor(S.round / 3));
+
+  document.getElementById('tapwar-overlay').classList.add('show');
+  document.getElementById('tap-masc-count').textContent = '0';
+  document.getElementById('tap-fem-count').textContent = '0';
+  document.getElementById('tapwar-timer').textContent = '5';
+  document.getElementById('tapwar-result').style.display = 'none';
+  document.getElementById('tapwar-title').textContent = '💪 TAP WAR — MASCULINE vs FEMININE 💅 (DEVIL SPEED: ' + tapDifficulty + '/s)';
+  updateTapBar();
+
+  // Countdown
+  tapTimer = setInterval(() => {
+    tapTimeLeft--;
+    document.getElementById('tapwar-timer').textContent = tapTimeLeft;
+    if (tapTimeLeft <= 0) {
+      endTapWar();
+    }
+  }, 1000);
+
+  // Devil auto-taps
+  tapDevilTimer = setInterval(() => {
+    if (!tapWarActive) return;
+    tapFemCount++;
+    document.getElementById('tap-fem-count').textContent = tapFemCount;
+    updateTapBar();
+  }, 1000 / tapDifficulty);
+}
+
+function tapMasc(e) {
+  if (!tapWarActive) return;
+  e.preventDefault();
+  tapMascCount++;
+  document.getElementById('tap-masc-count').textContent = tapMascCount;
+  updateTapBar();
+}
+
+function updateTapBar() {
+  const total = tapMascCount + tapFemCount || 1;
+  const mPct = (tapMascCount / total) * 100;
+  const fPct = (tapFemCount / total) * 100;
+  document.getElementById('tapbar-m').style.width = mPct + '%';
+  document.getElementById('tapbar-f').style.width = fPct + '%';
+}
+
+function endTapWar() {
+  tapWarActive = false;
+  clearInterval(tapTimer);
+  clearInterval(tapDevilTimer);
+
+  const result = document.getElementById('tapwar-result');
+  result.style.display = 'block';
+
+  if (tapMascCount > tapFemCount) {
+    // MASCULINE WINS
+    mascPower++;
+    result.style.color = '#0f0';
+    result.textContent = '💪 MASCULINE WINS! ' + tapMascCount + ' vs ' + tapFemCount + ' — TRUMP +1 POWER!';
+    // Boost trump
+    trumpScore += 5;
+    S.trumpHP = Math.min(200, S.trumpHP + 3);
+    morality = Math.min(100, morality + 2);
+  } else if (tapFemCount > tapMascCount) {
+    // FEMININE WINS
+    femPower++;
+    result.style.color = '#f00';
+    result.textContent = '💅 FEMININE WINS! ' + tapFemCount + ' vs ' + tapMascCount + ' — DEVIL +1 POWER!';
+    // Boost devil
+    devilScore += 5;
+    emotion = Math.min(100, emotion + 10);
+  } else {
+    result.style.color = '#ff0';
+    result.textContent = 'DRAW! ' + tapMascCount + ' vs ' + tapFemCount + ' — NO BOOST!';
+  }
+
+  trumpHistory.push(trumpScore);
+  devilHistory.push(devilScore);
+  emotionHistory.push(emotion);
+  updateDisplay();
+  drawGraph();
+
+  // Close after 2s
+  setTimeout(() => {
+    document.getElementById('tapwar-overlay').classList.remove('show');
+    actionLock = false;
+  }, 2000);
+}
+
+// ==================== AI GUIDE ====================
+const GUIDE_STEPS = [
+  {
+    target: null,
+    title: 'WELCOME TO THE STOCK MARKET',
+    text: 'You are Trump. The Deep State is gaming the markets against you. Your job: grow the GREEN line, crush the RED line, and earn YUGE money. This guide will show you how.',
+    ai: 'AI ADVISOR'
+  },
+  {
+    target: '.actions',
+    title: '8 ACTION BUTTONS',
+    text: 'These are your weapons. Each button has a RED effect (good — grows green line, damages boss) and the Devil will counter with a BLUE version (bad — shrinks markets, hurts you). You get 3 moves per round.',
+    ai: 'OFFENSE 101'
+  },
+  {
+    target: '#graph-section',
+    title: 'THE GRAPH — GREEN vs RED',
+    text: 'GREEN line = your market gains. RED line = the Devil\'s damage. If RED overtakes GREEN and manipulation is high enough — BLACK SWAN CRASH. Keep green above red at all costs.',
+    ai: 'MARKET INTEL'
+  },
+  {
+    target: '.market-stats',
+    title: '8 MARKET STATS',
+    text: 'NASDAQ, DOW, FTSE, CRYPTO, GOLD, BRICS, PETRO$, MUSK. Each action affects different markets. Green numbers = good. Red numbers = the Devil is winning that sector.',
+    ai: 'MARKET DATA'
+  },
+  {
+    target: '.health-bars',
+    title: 'HEALTH BARS',
+    text: 'TRUMP HP = your health. If it hits 0, you lose. BOSS HP = current enemy health. Beat them and the next boss rotates in. DS POWER = Deep State influence (tied to boss HP).',
+    ai: 'VITALS'
+  },
+  {
+    target: '.battle-log',
+    title: 'BATTLE LOG',
+    text: 'Left card = YOUR move (green). Right card = DEVIL\'S counter (red). Watch the numbers — this tells you exactly what happened each turn. The Devil picks counters based on the current boss\'s bias.',
+    ai: 'COMBAT LOG'
+  },
+  {
+    target: '.heads',
+    title: 'TRUMP vs BOSS',
+    text: 'Left = Trump. Right = current boss. Bosses rotate every 3 rounds: Deep State, Soros, Gates Foundation, Clintons, Rothschilds, Epstein Network, Netanyahu, Pink Pound. Each boss has different counter tendencies.',
+    ai: 'KNOW YOUR ENEMY'
+  },
+  {
+    target: '#defame-panel',
+    title: 'DEFAMATION BUTTONS',
+    text: 'When the RED line gets close to GREEN, these appear. Sue woke companies (Bud Light, Disney, BlackRock, Microsoft, BBC, Facebook) to CRASH the red line. Each one is single-use — save them for emergencies!',
+    ai: 'EMERGENCY WEAPONS'
+  },
+  {
+    target: '.money-bar',
+    title: 'MONEY — EARNINGS',
+    text: 'You earn money each round based on how far GREEN leads RED, plus total market performance. More lead = more money. You\'ll need this for unlocks.',
+    ai: 'ECONOMICS'
+  },
+  {
+    target: '.unlock-section',
+    title: 'UNLOCK BUTTONS — SPEND YUGE',
+    text: 'AI Funding (+20% gains), Military (+50% boss dmg), Quantum (halves black swan crash), Space Force (+1 move/round), Biology Depo (HP regen), HELLthcare (drain boss HP). Grey = locked. Yellow border = you can afford it. TAP to buy.',
+    ai: 'INVESTMENTS'
+  },
+  {
+    target: '#ticker',
+    title: 'FLASH BOOST EVENTS',
+    text: 'Random events happen! "NETFLIX AIRS CUTIES", "CNN CAUGHT LYING", etc. When one fires, a button FLASHES YELLOW with a BOOST tag. Press it for a MASSIVE green spike, bonus earnings, and extra boss damage. Don\'t miss them!',
+    ai: 'POWER SURGES'
+  },
+  {
+    target: '#shelter-panel',
+    title: 'SHELTER — AVOID THE CRASH',
+    text: 'When a BLACK SWAN is coming (manipulation builds each turn), the Priest tells you to SHELTER green in BITCOIN or GOLD. Your score freezes, immune to crashes. The asset moves up/down — you profit or lose. BUY BACK when red is weak for the ultimate power move!',
+    ai: 'SHELTER STRATEGY'
+  },
+  {
+    target: null,
+    title: 'BLACK SWAN WARNING',
+    text: 'The Devil builds MANIPULATION each turn. When it hits 25+ AND the red line overtakes green — BLACK SWAN CRASH. If sheltered, you\'re IMMUNE and your asset might even pump! If not sheltered, green drops 40%. Watch the Priest — he\'ll warn you.',
+    ai: 'CRITICAL THREAT'
+  },
+  {
+    target: null,
+    title: 'GO GET \'EM',
+    text: 'Strategy: diversify your button picks to boost all markets. Watch the red line — if it gets close, use DEFAMATION. Earn money early, unlock AI FUNDING first for the +20% boost. Good luck, Mr. President.',
+    ai: 'FINAL BRIEFING'
+  }
+];
+
+let guideStep = 0;
+
+function startGuide() {
+  guideStep = 0;
+  document.getElementById('guide-overlay').classList.add('show');
+  showGuideStep();
+}
+
+function showGuideStep() {
+  const step = GUIDE_STEPS[guideStep];
+  document.getElementById('guide-step').textContent = 'STEP ' + (guideStep + 1) + ' / ' + GUIDE_STEPS.length;
+  document.getElementById('guide-title').textContent = step.title;
+  document.getElementById('guide-text').textContent = step.text;
+  document.getElementById('guide-ai').textContent = step.ai;
+
+  // Highlight target element
+  const hl = document.getElementById('guide-highlight');
+  if (step.target) {
+    let el;
+    // (defame panel removed)
+    el = document.querySelector(step.target);
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      hl.style.display = 'block';
+      hl.style.top = rect.top + 'px';
+      hl.style.left = rect.left + 'px';
+      hl.style.width = rect.width + 'px';
+      hl.style.height = rect.height + 'px';
+    } else {
+      hl.style.display = 'none';
+    }
+  } else {
+    hl.style.display = 'none';
+  }
+}
+
+function nextGuide() {
+  // Clean up forced shows
+  if (GUIDE_STEPS[guideStep].target === '#defame-panel') {
+    checkDefamePanel(); // restore natural state
+  }
+  guideStep++;
+  if (guideStep >= GUIDE_STEPS.length) {
+    endGuide();
+    return;
+  }
+  showGuideStep();
+}
+
+function endGuide() {
+  document.getElementById('guide-overlay').classList.remove('show');
+  // Restore defame panel to natural state
+  checkDefamePanel();
+  localStorage.setItem('stockmarket_guided', '1');
+}
+
+// ==================== INIT ====================
+updateDisplay();
+drawGraph();
+
+// Guide is manual only — press "? GUIDE" button to see it
+updateAdvisors();
+
+// Start live graph ticker
+startGraphTicker();
+</script>
+</body>
+</html>

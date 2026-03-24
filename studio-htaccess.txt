@@ -1,0 +1,4 @@
+RewriteEngine On
+
+# Proxy API requests to Cortex brain server
+RewriteRule ^api/(.*)$ http://127.0.0.1:8643/api/$1 [P,L]

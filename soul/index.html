@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOUL LINK — ShortFactory</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#000;
+  color:#fff;
+  font-family:'Courier New',monospace;
+  min-height:100vh;
+  display:flex; align-items:center; justify-content:center;
+  overflow:hidden;
+  transition:background 1.2s;
+}
+body.paired { background:#100900; }
+
+.bg {
+  position:fixed; inset:0;
+  background:radial-gradient(ellipse at 50% 40%, #09060e 0%, #000 70%);
+  z-index:0;
+  transition:background 1.2s;
+}
+body.paired .bg { background:radial-gradient(ellipse at 50% 40%, #1a1000 0%, #000 70%); }
+
+.stage {
+  position:relative; z-index:1;
+  text-align:center;
+  padding:40px 24px;
+  max-width:460px;
+  width:100%;
+}
+
+/* ── Tri animation ── */
+.tri-wrap {
+  width:200px; height:200px;
+  margin:0 auto 32px;
+  position:relative;
+}
+.tri-wrap svg { overflow:visible; }
+.ring-1 { animation:triPulse 2.4s ease-in-out infinite; }
+.ring-2 { animation:triPulse 2.4s ease-in-out infinite 0.28s; }
+.ring-3 { animation:triPulse 2.4s ease-in-out infinite 0.56s; }
+@keyframes triPulse { 0%,100%{opacity:0.3;transform:scale(1);transform-origin:50% 65%} 50%{opacity:1;transform:scale(1.05);transform-origin:50% 65%} }
+
+/* Bluetooth glow overlaid on triangle */
+.bt-glow {
+  position:absolute; inset:0;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(255,199,44,0) 30%, rgba(255,199,44,0.22) 70%, rgba(255,199,44,0) 100%);
+  opacity:0;
+  transition:opacity 0.8s;
+  pointer-events:none;
+  animation:none;
+}
+.bt-glow.active {
+  opacity:1;
+  animation:btPulse 1.4s ease-in-out infinite;
+}
+@keyframes btPulse { 0%,100%{opacity:0.5;transform:scale(0.9)} 50%{opacity:1;transform:scale(1.15)} }
+
+/* Status */
+.status {
+  font-size:10px; letter-spacing:0.3em;
+  color:#333; margin-bottom:12px;
+  transition:color 0.4s;
+  min-height:16px;
+}
+.status.on { color:#FFC72C; }
+.status.bt { color:#FFC72C; text-shadow:0 0 12px rgba(255,199,44,0.6); }
+.status.err { color:#ff4444; }
+
+h1 {
+  font-size:clamp(20px,5vw,32px);
+  letter-spacing:0.3em;
+  margin-bottom:10px;
+  opacity:0; transform:translateY(14px);
+  transition:all 0.6s;
+  color:#fff;
+}
+h1.show { opacity:1; transform:translateY(0); }
+h1.gold { color:#FFC72C; text-shadow:0 0 20px rgba(255,199,44,0.4); }
+h1.glow-pulse { animation:headPulse 1.2s ease-in-out infinite; }
+@keyframes headPulse { 0%,100%{text-shadow:0 0 10px rgba(255,199,44,0.3)} 50%{text-shadow:0 0 30px rgba(255,199,44,0.8), 0 0 60px rgba(255,199,44,0.3)} }
+
+.sub {
+  color:#444; font-size:10px; letter-spacing:0.2em;
+  margin-bottom:24px;
+  opacity:0; transition:opacity 0.6s 0.3s;
+}
+.sub.show { opacity:1; }
+
+/* Token box */
+.token-box {
+  background:rgba(255,199,44,0.04);
+  border:1px solid rgba(255,199,44,0.15);
+  border-radius:10px;
+  padding:12px 14px;
+  font-size:9px; color:#555; letter-spacing:0.08em;
+  word-break:break-all; line-height:1.7;
+  margin-bottom:14px;
+  opacity:0; transition:opacity 0.5s 0.5s;
+  text-align:left;
+}
+.token-box.show { opacity:1; }
+.token-label { color:#FFC72C; font-size:8px; letter-spacing:0.25em; display:block; margin-bottom:5px; }
+
+/* Device box */
+.device-box {
+  background:rgba(255,255,255,0.02);
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:10px;
+  padding:10px 14px;
+  font-size:9px; color:#2a2a2a; letter-spacing:0.1em;
+  margin-bottom:20px;
+  opacity:0; transition:opacity 0.5s 0.7s;
+  text-align:left;
+}
+.device-box.show { opacity:1; }
+.device-label { color:#444; font-size:8px; letter-spacing:0.25em; display:block; margin-bottom:4px; }
+
+/* BT section */
+.bt-section {
+  background:rgba(255,199,44,0.04);
+  border:1px solid rgba(255,199,44,0.12);
+  border-radius:12px;
+  padding:16px;
+  margin-bottom:20px;
+  opacity:0; transition:opacity 0.5s 0.9s;
+}
+.bt-section.show { opacity:1; }
+.bt-title { color:#FFC72C; font-size:9px; letter-spacing:0.25em; margin-bottom:10px; }
+.bt-status-text { color:#444; font-size:9px; letter-spacing:0.12em; margin-bottom:12px; min-height:14px; }
+.bt-status-text.found { color:#FFC72C; }
+.bt-status-text.searching { animation:textBlink 0.8s ease-in-out infinite; }
+@keyframes textBlink { 0%,100%{opacity:0.4} 50%{opacity:1} }
+.btn-bt {
+  background:transparent;
+  border:1px solid rgba(255,199,44,0.4);
+  color:#FFC72C;
+  padding:10px 20px; border-radius:30px;
+  font-size:10px; letter-spacing:0.2em;
+  cursor:pointer; font-family:'Courier New',monospace;
+  transition:all 0.3s; width:100%;
+}
+.btn-bt:hover { background:rgba(255,199,44,0.08); box-shadow:0 0 14px rgba(255,199,44,0.2); }
+.btn-bt:disabled { opacity:0.4; cursor:default; }
+.bt-devices { margin-top:10px; }
+.bt-device-item {
+  color:#FFC72C; font-size:9px; letter-spacing:0.12em;
+  padding:6px 0; border-bottom:1px solid rgba(255,199,44,0.1);
+  animation:fadeInUp 0.4s ease-out;
+}
+@keyframes fadeInUp { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+/* Action buttons */
+.btn-row {
+  display:flex; gap:10px;
+  opacity:0; transition:opacity 0.5s 1.1s;
+}
+.btn-row.show { opacity:1; }
+.btn-go {
+  flex:1;
+  background:linear-gradient(135deg,#FFC72C,#ff8c00);
+  color:#000; border:none;
+  padding:13px; border-radius:30px;
+  font-size:11px; font-weight:bold;
+  letter-spacing:0.2em; cursor:pointer;
+  font-family:'Courier New',monospace;
+  transition:all 0.3s;
+}
+.btn-go:hover { transform:scale(1.02); box-shadow:0 4px 18px rgba(255,199,44,0.35); }
+.btn-pet {
+  flex:1; background:transparent;
+  border:1px solid rgba(255,255,255,0.1); color:#444;
+  padding:13px; border-radius:30px;
+  font-size:10px; letter-spacing:0.15em; cursor:pointer;
+  font-family:'Courier New',monospace; transition:all 0.2s;
+}
+.btn-pet:hover { border-color:#555; color:#666; }
+
+/* Ripple */
+.ripple {
+  position:fixed; inset:0; z-index:20;
+  pointer-events:none;
+  background:radial-gradient(circle at 50% 42%, rgba(255,199,44,0.14) 0%, transparent 65%);
+  animation:rippleOut 1.4s ease-out forwards;
+}
+@keyframes rippleOut { 0%{opacity:1;transform:scale(0.4)} 100%{opacity:0;transform:scale(2.2)} }
+
+/* Error */
+.err-msg { color:#ff4444; font-size:11px; letter-spacing:0.2em; }
+</style>
+</head>
+<body>
+<div class="bg"></div>
+
+<div class="stage">
+  <div class="tri-wrap">
+    <svg width="200" height="200" viewBox="0 0 200 200" id="triSVG">
+      <defs>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="3.5" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <g filter="url(#glow)">
+        <polygon class="ring-1" points="100,12 12,188 188,188"
+          fill="none" stroke="#FFC72C" stroke-width="1.5" opacity="0.5"/>
+        <polygon class="ring-2" points="100,40 36,166 164,166"
+          fill="none" stroke="#FFC72C" stroke-width="1.5" opacity="0.4"/>
+        <polygon class="ring-3" points="100,68 60,144 140,144"
+          fill="none" stroke="#FFC72C" stroke-width="1.5" opacity="0.35"/>
+        <circle cx="100" cy="152" r="4" fill="#FFC72C" opacity="0.9"/>
+      </g>
+    </svg>
+    <div class="bt-glow" id="btGlow"></div>
+  </div>
+
+  <p class="status" id="status">READING SOUL TOKEN</p>
+  <h1 id="headline"></h1>
+  <p class="sub" id="subline"></p>
+
+  <div class="token-box" id="tokenBox">
+    <span class="token-label">SOUL TOKEN</span>
+    <span id="tokenDisplay"></span>
+  </div>
+
+  <div class="device-box" id="deviceBox">
+    <span class="device-label">ANONYMOUS DEVICE ID</span>
+    <span id="deviceDisplay"></span>
+  </div>
+
+  <!-- THUMB HOLD PAIR BUTTON -->
+  <div id="thumbSection" style="opacity:0;transition:opacity 0.5s 0.9s;margin-bottom:20px;">
+    <div style="font-size:9px;letter-spacing:0.25em;color:#444;text-align:center;margin-bottom:16px;" id="thumbLabel">
+      HOLD TO CONFIRM YOUR PRESENCE
+    </div>
+    <div id="thumbBtn" style="
+      width:100px;height:100px;border-radius:50%;
+      border:2px solid rgba(255,199,44,0.3);
+      margin:0 auto;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      flex-direction:column;gap:6px;
+      position:relative;overflow:hidden;
+      transition:border-color 0.3s;
+      user-select:none;-webkit-user-select:none;
+    ">
+      <svg width="36" height="36" viewBox="0 0 36 36" fill="none" id="thumbIcon">
+        <path d="M18 4C18 4 10 8 10 18C10 24 13 30 18 32C23 30 26 24 26 18C26 8 18 4 18 4Z" stroke="#FFC72C" stroke-width="1.2" fill="none" opacity="0.6"/>
+        <path d="M14 16C14 16 14 12 18 12C22 12 22 16 22 18C22 22 20 26 18 28" stroke="#FFC72C" stroke-width="1.2" fill="none" opacity="0.6"/>
+        <circle cx="18" cy="18" r="3" fill="#FFC72C" opacity="0.5"/>
+      </svg>
+      <span style="font-family:'Courier New',monospace;font-size:7px;letter-spacing:0.2em;color:rgba(255,199,44,0.5);">HOLD</span>
+      <!-- Progress ring -->
+      <svg id="thumbRing" style="position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="46" fill="none" stroke="#FFC72C" stroke-width="2.5"
+          stroke-dasharray="289" stroke-dashoffset="289"
+          id="thumbProgress" style="transition:stroke-dashoffset 0.05s linear;"/>
+      </svg>
+    </div>
+    <div id="thumbConfirm" style="text-align:center;margin-top:14px;font-size:9px;letter-spacing:0.2em;color:#FFC72C;opacity:0;transition:opacity 0.4s;">
+      ▲ PRESENCE CONFIRMED · ALIVE KNOWS YOU
+    </div>
+  </div>
+
+  <div class="bt-section" id="btSection">
+    <div class="bt-title">▲ BLUETOOTH PROXIMITY PAIR</div>
+    <div class="bt-status-text" id="btStatusText">TAP TO SCAN FOR NEARBY ALIVE DEVICES</div>
+    <button class="btn-bt" id="btBtn" onclick="startBluetooth()">SCAN FOR ALIVE PET</button>
+    <div class="bt-devices" id="btDevices"></div>
+  </div>
+
+  <div class="bt-section" id="cameraSection" style="margin-top:0;">
+    <div class="bt-title" style="color:#FFC72C;">▲ TRIANGLE CAMERA LOCK</div>
+    <div class="bt-status-text">POINT AT ALIVE INNER TRIANGLE — ALIGNMENT = PAIRING</div>
+    <button class="btn-bt" onclick="location.href='/soul/camera-pair.html'"
+      style="background:rgba(255,199,44,0.08);border-color:rgba(255,199,44,0.5);color:#FFC72C;">
+      OPEN CAMERA LOCK ▲
+    </button>
+  </div>
+
+  <div class="bt-section" style="margin-top:0;">
+    <div class="bt-title" style="color:#FFC72C;">▲ SHAPE HANDSHAKE</div>
+    <div class="bt-status-text">PHONE FACES LAPTOP · SHAPES NEGOTIATE · GENOME MINTED</div>
+    <div style="display:flex;gap:10px;margin-top:4px;">
+      <button class="btn-bt" onclick="location.href='/soul/shape-handshake.html'"
+        style="background:rgba(255,199,44,0.08);border-color:rgba(255,199,44,0.5);color:#FFC72C;">
+        PHONE ▲
+      </button>
+      <button class="btn-bt" onclick="location.href='/soul/shape-beacon.html'"
+        style="background:rgba(255,199,44,0.04);border-color:rgba(255,199,44,0.3);color:rgba(255,199,44,0.6);">
+        LAPTOP ▲
+      </button>
+    </div>
+  </div>
+
+  <div class="btn-row" id="btnRow">
+    <button class="btn-go" onclick="location.href='/logos/'">▲ YOUR LOGOS</button>
+    <button class="btn-pet" onclick="location.href='/alive/'">ALIVE PET</button>
+  </div>
+</div>
+
+<script>
+const MCY = '#FFC72C';
+
+// ── Utils ──
+function qp(name) { return new URLSearchParams(location.search).get(name); }
+
+function b64uDecode(s) {
+  const b64 = s.replace(/-/g,'+').replace(/_/g,'/') + '=='.slice(0,(4-s.length%4)%4);
+  try { return decodeURIComponent(escape(atob(b64))); } catch { return null; }
+}
+
+function djb2(s) {
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h) ^ s.charCodeAt(i);
+  return (h >>> 0).toString(16).toUpperCase().padStart(8,'0');
+}
+
+function getDeviceId() {
+  let id = localStorage.getItem('sf_device_id');
+  if (!id) {
+    const e = [navigator.userAgent,screen.width+'x'+screen.height,
+               new Date().getTimezoneOffset(),navigator.language,
+               Math.random().toString(36).slice(2)].join('|');
+    id = 'DEV-' + djb2(e) + djb2(e.split('').reverse().join(''));
+    localStorage.setItem('sf_device_id', id);
+  }
+  return id;
+}
+
+// ── Trigger full-screen glow ──
+function triggerGlow() {
+  document.body.classList.add('paired');
+  document.getElementById('btGlow').classList.add('active');
+  document.getElementById('headline').classList.add('glow-pulse');
+  // Ripple
+  const r = document.createElement('div');
+  r.className = 'ripple';
+  document.body.appendChild(r);
+  setTimeout(() => r.remove(), 1400);
+}
+
+// ── Bluetooth ──
+async function startBluetooth() {
+  const btn = document.getElementById('btBtn');
+  const statusEl = document.getElementById('btStatusText');
+  const devicesEl = document.getElementById('btDevices');
+
+  if (!navigator.bluetooth) {
+    statusEl.textContent = 'BLUETOOTH NOT AVAILABLE ON THIS BROWSER';
+    statusEl.classList.add('found');
+    return;
+  }
+
+  btn.disabled = true;
+  statusEl.classList.add('searching');
+  statusEl.textContent = 'SCANNING FOR NEARBY ALIVE DEVICES...';
+  devicesEl.innerHTML = '';
+
+  try {
+    // Request any nearby BLE device — user gesture triggers OS picker
+    const device = await navigator.bluetooth.requestDevice({
+      acceptAllDevices: true,
+      optionalServices: [
+        // ShortFactory custom service UUID
+        '12345678-1234-5678-1234-567812345678',
+        // Common services as fallback
+        'battery_service',
+        'device_information'
+      ]
+    });
+
+    statusEl.classList.remove('searching');
+    statusEl.classList.add('found');
+    statusEl.textContent = '▲ ALIVE DEVICE FOUND — LINKING...';
+
+    // Show device
+    const item = document.createElement('div');
+    item.className = 'bt-device-item';
+    item.textContent = '▲ ' + (device.name || 'UNNAMED DEVICE') + ' — LINKED';
+    devicesEl.appendChild(item);
+
+    // Store BT device name with soul link
+    const soulToken = localStorage.getItem('sf_soul_token');
+    if (soulToken) {
+      localStorage.setItem('sf_bt_device', device.name || 'unknown');
+      localStorage.setItem('sf_bt_paired_at', Date.now().toString());
+
+      // Try to connect and write soul token to GATT characteristic
+      try {
+        const server = await device.gatt.connect();
+        statusEl.textContent = '▲ GATT CONNECTED — WRITING SOUL TOKEN...';
+        try {
+          const service = await server.getPrimaryService('12345678-1234-5678-1234-567812345678');
+          const char = await service.getCharacteristic('12345678-1234-5678-1234-567812345679');
+          const encoder = new TextEncoder();
+          await char.writeValue(encoder.encode(soulToken));
+          statusEl.textContent = '▲ SOUL TOKEN WRITTEN — ALIVE PET NOW KNOWS YOU';
+        } catch {
+          // Service not found — that's ok, proximity confirmed by BT connection
+          statusEl.textContent = '▲ PROXIMITY CONFIRMED — SOUL LINKED VIA BLUETOOTH';
+        }
+        server.disconnect();
+      } catch {
+        statusEl.textContent = '▲ DEVICE FOUND — PROXIMITY SOUL LINK ACTIVE';
+      }
+
+      // Report to server (anonymous)
+      const deviceId = getDeviceId();
+      fetch('/soul/link.php', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          device_id: deviceId,
+          token_hash: djb2(soulToken),
+          bt_device: djb2(device.name || ''),
+          bt_paired: true,
+          linked_at: Date.now()
+        })
+      }).catch(()=>{});
+    }
+
+    triggerGlow();
+    btn.textContent = '▲ PAIRED';
+
+  } catch(e) {
+    statusEl.classList.remove('searching');
+    if (e.name === 'NotFoundError') {
+      statusEl.textContent = 'NO DEVICE SELECTED — TRY AGAIN';
+    } else if (e.name === 'SecurityError') {
+      statusEl.textContent = 'BLUETOOTH PERMISSION DENIED';
+    } else {
+      statusEl.textContent = 'SCAN ERROR: ' + e.message;
+    }
+    btn.disabled = false;
+  }
+}
+
+// ── Main init ──
+function init() {
+  const encoded = qp('t');
+  const statusEl = document.getElementById('status');
+  const headline = document.getElementById('headline');
+  const subline  = document.getElementById('subline');
+
+  if (!encoded) {
+    statusEl.textContent = 'NO SOUL TOKEN';
+    statusEl.classList.add('err');
+    headline.textContent = 'SCAN A LOGO QR FIRST';
+    headline.style.color = '#ff4444';
+    headline.classList.add('show');
+    return;
+  }
+
+  const token = b64uDecode(encoded);
+  if (!token) {
+    statusEl.textContent = 'CORRUPTED TOKEN';
+    statusEl.classList.add('err');
+    headline.textContent = 'BAD LINK';
+    headline.style.color = '#ff4444';
+    headline.classList.add('show');
+    return;
+  }
+
+  // Store soul token on this device
+  localStorage.setItem('sf_soul_token', token);
+  localStorage.setItem('sf_soul_linked_at', Date.now().toString());
+  const deviceId = getDeviceId();
+
+  // Anonymous server report
+  fetch('/soul/link.php', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      device_id: deviceId,
+      token_hash: djb2(token),
+      linked_at: Date.now()
+    })
+  }).catch(()=>{});
+
+  // Fire ALIVE pair signal — announces presence to any listening desktop
+  const myClaims = JSON.parse(localStorage.getItem('sf_my_claims')||'[]');
+  const logoId = myClaims.length ? myClaims[myClaims.length-1].logoId : '';
+  function firePairSignal() {
+    fetch('/soul/pair.php', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ th: djb2(token), lid: logoId, did: deviceId })
+    }).catch(()=>{});
+  }
+  firePairSignal();
+  // Re-fire every 30s while page is open (keeps presence alive)
+  setInterval(firePairSignal, 30000);
+
+  // Initial ripple
+  const r = document.createElement('div');
+  r.className = 'ripple';
+  document.body.appendChild(r);
+  setTimeout(() => r.remove(), 1400);
+
+  // Sequence animation
+  statusEl.textContent = 'SOUL LINKED';
+  statusEl.classList.add('on');
+
+  setTimeout(() => {
+    headline.textContent = 'YOU ARE KNOWN';
+    headline.classList.add('show','gold');
+  }, 200);
+
+  setTimeout(() => {
+    subline.textContent = 'THIS DEVICE IS NOW BOUND TO YOUR SOUL TOKEN · ANONYMOUS · PERMANENT';
+    subline.classList.add('show');
+  }, 500);
+
+  setTimeout(() => {
+    document.getElementById('tokenDisplay').textContent = token;
+    document.getElementById('tokenBox').classList.add('show');
+  }, 800);
+
+  setTimeout(() => {
+    document.getElementById('deviceDisplay').textContent = deviceId;
+    document.getElementById('deviceBox').classList.add('show');
+  }, 1100);
+
+  setTimeout(() => {
+    document.getElementById('thumbSection').style.opacity='1';
+    initThumbBtn(token, logoId, deviceId);
+  }, 1000);
+
+  setTimeout(() => {
+    document.getElementById('btSection').classList.add('show');
+  }, 1400);
+
+  setTimeout(() => {
+    document.getElementById('btnRow').classList.add('show');
+  }, 1700);
+
+  // Auto-attempt proximity via server polling (no BT permission needed)
+  // If another device with same network registers within 30s — proximity confirmed
+  setTimeout(() => autoProximityCheck(token, deviceId), 2000);
+}
+
+// ── Auto proximity (server-based, no BT needed) ──
+async function autoProximityCheck(token, deviceId) {
+  try {
+    const res = await fetch('/soul/proximity.php?dh=' + djb2(token) + '&ts=' + (Date.now()-30000));
+    const data = await res.json();
+    if (data.nearby) {
+      document.getElementById('btStatusText').textContent = '▲ ALIVE PET DETECTED NEARBY — SOUL LINK ACTIVE';
+      document.getElementById('btStatusText').classList.add('found');
+      triggerGlow();
+    }
+  } catch {}
+}
+
+// ── THUMB HOLD PAIRING ──
+function initThumbBtn(token, logoId, deviceId) {
+  const btn      = document.getElementById('thumbBtn');
+  const progress = document.getElementById('thumbProgress');
+  const label    = document.getElementById('thumbLabel');
+  const confirm  = document.getElementById('thumbConfirm');
+  const icon     = document.getElementById('thumbIcon');
+  const HOLD_MS  = 1200, CIRCUMF = 289;
+  let holdStart=null, raf=null, confirmed=false;
+
+  function setProgress(f){ progress.style.strokeDashoffset = CIRCUMF*(1-f); }
+
+  function onStart(e){
+    e.preventDefault();
+    if(confirmed) return;
+    holdStart=Date.now();
+    btn.style.borderColor='rgba(255,199,44,0.9)';
+    if(navigator.vibrate) navigator.vibrate(10);
+    raf=requestAnimationFrame(tick);
+  }
+  function onEnd(){
+    if(confirmed) return;
+    cancelAnimationFrame(raf); holdStart=null;
+    setProgress(0);
+    btn.style.borderColor='rgba(255,199,44,0.3)';
+    label.textContent='HOLD TO CONFIRM YOUR PRESENCE';
+  }
+  function tick(){
+    if(!holdStart) return;
+    const f=Math.min((Date.now()-holdStart)/HOLD_MS,1);
+    setProgress(f);
+    const pct=Math.floor(f*100);
+    label.textContent='SCANNING · '+pct+'%';
+    if(navigator.vibrate && pct%25===0 && pct>0) navigator.vibrate(8);
+    f<1 ? raf=requestAnimationFrame(tick) : completePair();
+  }
+  function completePair(){
+    confirmed=true;
+    if(navigator.vibrate) navigator.vibrate([40,20,40,20,80]);
+    btn.style.cssText += ';border-color:#FFC72C;box-shadow:0 0 30px rgba(255,199,44,0.5);background:rgba(255,199,44,0.08);';
+    label.textContent='▲ CONFIRMED';
+    confirm.style.opacity='1';
+    fetch('/soul/pair.php',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({th:djb2(token),lid:logoId,did:deviceId})
+    }).catch(()=>{});
+    triggerGlow();
+  }
+  btn.addEventListener('touchstart', onStart,{passive:false});
+  btn.addEventListener('touchend',   onEnd);
+  btn.addEventListener('touchcancel',onEnd);
+  btn.addEventListener('mousedown',  onStart);
+  btn.addEventListener('mouseup',    onEnd);
+  btn.addEventListener('mouseleave', onEnd);
+}
+
+init();
+</script>
+</body>
+</html>

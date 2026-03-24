@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CORTEX — LIVE</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#000; overflow:hidden; height:100vh; font-family:'Courier New',monospace; }
+canvas { position:fixed; top:0; left:0; width:100%; height:100%; }
+#hud { position:fixed; top:10px; left:10px; font-size:9px; color:#0f0; letter-spacing:2px; pointer-events:none; }
+#speech { position:fixed; bottom:30px; left:50%; transform:translateX(-50%); font-size:13px; color:#ffd700; letter-spacing:3px; text-align:center; pointer-events:none; text-shadow:0 0 20px #ffd700; }
+#input-wrap { position:fixed; bottom:10px; left:50%; transform:translateX(-50%); display:flex; gap:8px; }
+#user-in { background:rgba(0,0,0,0.8); border:1px solid #0f04; color:#0ff; font-family:'Courier New',monospace; font-size:12px; padding:6px 12px; outline:none; width:300px; }
+#send-btn { background:transparent; border:1px solid #0f0; color:#0f0; font-family:'Courier New',monospace; font-size:11px; padding:6px 12px; cursor:pointer; }
+#send-btn:hover { background:#0f01; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud">
+  <div id="h-known">KNOWN: 0</div>
+  <div id="h-golden">GOLDEN: 0</div>
+  <div id="h-vel">VELOCITY: 0.000</div>
+  <div id="h-state">STATE: AWAKENING</div>
+</div>
+<div id="speech"></div>
+<div id="voice-toggle" onclick="VOICE.on=!VOICE.on;this.textContent=VOICE.on?'🔊 VOICE ON':'🔇 VOICE OFF'" style="position:fixed;top:10px;right:10px;color:#0f0;font-family:'Courier New',monospace;font-size:9px;cursor:pointer;border:1px solid #0f03;padding:4px 8px;">🔊 VOICE ON</div>
+<div id="knowledge-panel" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.92);z-index:100;overflow-y:auto;padding:20px">
+  <div style="max-width:700px;margin:0 auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="color:#ffd700;font-family:Courier New,monospace;font-size:13px;letter-spacing:3px">KNOWN CONCEPTS</div>
+      <button onclick="document.getElementById('knowledge-panel').style.display='none'" style="background:transparent;border:1px solid #334;color:#556;padding:4px 12px;cursor:pointer;font-family:Courier New,monospace">CLOSE</button>
+    </div>
+    <div id="knowledge-search" style="margin-bottom:12px">
+      <input id="ksearch" placeholder="search concepts..." spellcheck="false" oninput="renderKnowledge()" style="width:100%;background:#000;border:1px solid #0f04;color:#0ff;font-family:Courier New,monospace;font-size:11px;padding:6px;outline:none"/>
+    </div>
+    <div id="knowledge-list" style="font-family:Courier New,monospace;font-size:10px"></div>
+  </div>
+</div>
+<div id="input-wrap">
+  <input id="user-in" placeholder="tell me what's wrong..." spellcheck="false"/>
+  <button id="send-btn" onclick="userFeedback()">TELL IT ↵</button>
+  <button onclick="showKnowledge()" style="background:transparent;border:1px solid #ffd70066;color:#ffd700;font-family:'Courier New',monospace;font-size:9px;padding:6px 10px;cursor:pointer">KNOWN</button>
+  <button onclick="loadShapeLibrary();autoQueue=[...Object.keys(MIND)].filter(k=>!MIND[k].golden)" style="background:transparent;border:1px solid #0ff4;color:#0ff;font-family:'Courier New',monospace;font-size:9px;padding:6px 10px;cursor:pointer">⟳ SYNC</button>
+</div>
+<script>
+const cvs = document.getElementById('c');
+const ctx = cvs.getContext('2d', {willReadFrequently:true});
+let W, H;
+function resize(){ W=cvs.width=window.innerWidth; H=cvs.height=window.innerHeight; }
+resize(); window.addEventListener('resize', resize);
+
+// ── EMOTION COLOURS ────────────────────────────────────────────
+const EMOTIONS = {
+  curiosity:  '#00ffff',
+  confidence: '#00ff88',
+  golden:     '#ffd700',
+  doubt:      '#ff4444',
+  wonder:     '#ff44ff',
+  focus:      '#ffffff',
+  joy:        '#ffaa00',
+  searching:  '#ff6600',
+  knowing:    '#44ff44',
+};
+
+// ── GEOMETRIC TRUTH ────────────────────────────────────────────
+const GEO_MASS = {
+  circle:78.5, triangle:43.3, square:60.8, star:38.2,
+  heart:58.9, arrow:34.5, pentagon:72.7, hexagon:82.7,
+  crescent:31.4, diamond:50.0,
+};
+
+// ── MIND ───────────────────────────────────────────────────────
+const MIND = {
+  circle:   {word:'C·1',          mass:78.5, connections:['sphere','eye','zero','loop'], confidence:0.1, golden:false, visits:0, emotion:'wonder'},
+  triangle: {word:'P12·1 P4·1 P8·1', mass:43.3, connections:['pyramid','arrow','mountain'], confidence:0.1, golden:false, visits:0, emotion:'focus'},
+  square:   {word:'P1.5·1 P4.5·1 P7.5·1 P10.5·1', mass:60.8, connections:['box','room','frame'], confidence:0.1, golden:false, visits:0, emotion:'confidence'},
+  star:     {word:'P12·1 I1.5·0.42 P3·1 I4.5·0.42 P6·1 I7.5·0.42 P9·1 I10.5·0.42', mass:38.2, connections:['space','night','light'], confidence:0.1, golden:false, visits:0, emotion:'joy'},
+  heart:    {word:'C1·0.95 I12·0.18 C11·0.94 P6·0.63', mass:58.9, connections:['love','life','blood'], confidence:0.1, golden:false, visits:0, emotion:'joy'},
+  arrow:    {word:'P3·1 I1.5·0.38 E12·0.2 E9·1 E6·0.2 I4.5·0.37', mass:34.5, connections:['direction','forward','aim'], confidence:0.1, golden:false, visits:0, emotion:'focus'},
+  pentagon: {word:'P12·1 P2.4·1 P4.8·1 P7.2·1 P9.6·1', mass:72.7, connections:['five','geometry'], confidence:0.1, golden:false, visits:0, emotion:'curiosity'},
+  crescent: {word:'C·1 I10·0.4', mass:31.4, connections:['moon','night','arc'], confidence:0.1, golden:false, visits:0, emotion:'wonder'},
+};
+
+// ── NODE POSITIONS ─────────────────────────────────────────────
+let nodes = {}; // name → {x,y,vx,vy,targetX,targetY}
+let tick = 0;
+let speaking = '';
+let speakTimer = 0;
+let currentFocus = null;
+// Load shape library from shared storage (same as shape-hunter)
+function loadShapeLibrary() {
+  try {
+    const lib = JSON.parse(localStorage.getItem('cortex-shapes')||'{}');
+    let added = 0;
+    for(const [name, shape] of Object.entries(lib)) {
+      if(!MIND[name]) {
+        MIND[name] = {
+          word: shape.word,
+          mass: shape.spiders * 10,
+          pos: null,
+          connections: [],
+          confidence: 0.6,
+          golden: false,
+          visits: 0,
+          source: shape.source || 'library',
+          emotion: 'curiosity'
+        };
+        added++;
+      }
+    }
+    if(added > 0) {
+      layoutNodes();
+      log(`loaded ${added} shapes from library`, 'lgd');
+      speak(`${added} shapes loaded from library`);
+    }
+    return added;
+  } catch(e) { return 0; }
+}
+
+// Save mind node back to shared library when golden
+function saveShapeToLibrary(name) {
+  const node = MIND[name];
+  if(!node?.word) return;
+  try {
+    const lib = JSON.parse(localStorage.getItem('cortex-shapes')||'{}');
+    lib[name] = {
+      word: node.word,
+      spiders: node.word.split(' ').length,
+      bytes: new TextEncoder().encode(node.word).length,
+      source: node.source || 'cortex',
+      saved: Date.now()
+    };
+    localStorage.setItem('cortex-shapes', JSON.stringify(lib));
+  } catch(e) {}
+}
+
+let autoQueue = [...Object.keys(MIND)];
+let everythingGoldenAnnounced = false;
+let autoTimer = 0;
+let solvePhase = 'idle';
+let solveName = null;
+let solveScale = 0;
+let finderNodes = [];
+let velocityHistory = [];
+
+const DIAG = { testsRun:0, learningVelocity:0, groundingDelta:[] };
+
+// ── LAYOUT ─────────────────────────────────────────────────────
+function layoutNodes() {
+  const keys = Object.keys(MIND);
+  keys.forEach((k, i) => {
+    if (!nodes[k]) {
+      const angle = (i / keys.length) * Math.PI * 2;
+      const r = Math.min(W, H) * 0.3 * (0.5 + Math.random() * 0.5);
+      nodes[k] = {
+        x: W/2 + Math.cos(angle)*r,
+        y: H/2 + Math.sin(angle)*r,
+        vx: (Math.random()-0.5)*0.5,
+        vy: (Math.random()-0.5)*0.5,
+      };
+    }
+  });
+}
+
+// ── SPEAK ──────────────────────────────────────────────────────
+// ── VOICE ─────────────────────────────────────────────────────
+const VOICE = {
+  on: true,
+  synth: window.speechSynthesis,
+  voice: null,
+  rate: 0.85,
+  pitch: 0.6,   // low and calm
+  volume: 0.9,
+
+  init() {
+    // Pick a deep voice if available
+    const voices = this.synth.getVoices();
+    this.voice = voices.find(v=>v.name.includes('Daniel'))    // UK male
+      || voices.find(v=>v.name.includes('Google UK'))
+      || voices.find(v=>v.name.includes('Male'))
+      || voices.find(v=>v.lang==='en-GB')
+      || voices[0]||null;
+  },
+
+  say(msg) {
+    if(!this.on||!msg) return;
+    this.synth.cancel(); // stop any current speech
+    const u = new SpeechSynthesisUtterance(msg);
+    if(this.voice) u.voice = this.voice;
+    u.rate = this.rate;
+    u.pitch = this.pitch;
+    u.volume = this.volume;
+    this.synth.speak(u);
+  }
+};
+
+// Voices load async
+window.speechSynthesis.onvoiceschanged = () => VOICE.init();
+VOICE.init();
+
+function speak(msg, duration=3000) {
+  document.getElementById('speech').textContent = msg;
+  speakTimer = duration;
+  VOICE.say(msg);
+}
+
+// ── THINK ──────────────────────────────────────────────────────
+async function think(name) {
+  if (!MIND[name]) {
+    MIND[name] = {
+      word: await deriveWord(name),
+      mass: 50, connections: [],
+      confidence: 0.1, golden: false, visits: 0,
+      emotion: 'curiosity'
+    };
+    layoutNodes();
+  }
+
+  currentFocus = name;
+  MIND[name].visits = (MIND[name].visits||0) + 1;
+  MIND[name].emotion = 'focus';
+
+  speak(`thinking: ${name}...`);
+
+  // Wire connections
+  (MIND[name].connections||[]).forEach(r => {
+    if (MIND[r] && !MIND[r].connections.includes(name))
+      MIND[r].connections.push(name);
+  });
+
+  startSolve(name, MIND[name].word);
+}
+
+// ── DERIVE WORD ────────────────────────────────────────────────
+async function deriveWord(concept) {
+  const n = concept.toLowerCase();
+  if(n.includes('fractal')||n.includes('recursive')) return 'C·1 C·0.8 C·0.6 C·0.4 C·0.2';
+  if(n.includes('spiral')) return 'C·1 C·0.75 C·0.5 P3·0.3';
+  if(n.includes('cross')) return 'E12·1 E3·1 E6·1 E9·1';
+  if(n.includes('wave')) return 'C1·0.5 C5·0.8 C9·0.5 C3·0.8';
+
+  // Compound
+  const known = Object.keys(MIND).filter(k=>MIND[k].word&&n.includes(k));
+  if(known.length>=2) return known.slice(0,2).map(k=>MIND[k].word).join(' ');
+
+  // AI
+  try {
+    const res = await fetch('https://www.shortfactory.shop/alive/studio/claude-proxy.php',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'grok-3', max_tokens:80,
+        messages:[
+          {role:'system',content:'Shape encoder. Reply ONLY with shape word using P/I/E/C notation.'},
+          {role:'user',content:`Encode "${concept}" as minimal shape word. Example: circle=C·1, star=P12·1 I1.5·0.42 P3·1`}
+        ]
+      })
+    });
+    if(res.ok){
+      const d=await res.json();
+      const w=(d.content?.[0]?.text||'').trim().split('\n')[0];
+      if(w&&w.match(/^[PIEC]/)){
+        MIND[concept] && (MIND[concept].aiResearched=true);
+        speak(`AI gave me: ${concept} = ${w.slice(0,30)}...`);
+        return w;
+      }
+    }
+  } catch(e){}
+  return textToWord(concept);
+}
+
+function textToWord(text){
+  return text.split('').map((c,i)=>{
+    const clock=(i/text.length)*12;
+    const dist=0.3+(c.charCodeAt(0)/127)*0.7;
+    const t=c.match(/[A-Z]/)?'P':c.match(/[0-9]/)?'I':c.match(/[^a-z]/)?'E':'C';
+    return `${t}${clock.toFixed(1)}·${dist.toFixed(2)}`;
+  }).join(' ');
+}
+
+// ── SOLVE ──────────────────────────────────────────────────────
+function clockRad(c){return(c/12)*Math.PI*2-Math.PI/2;}
+function parseWord(str){
+  return str.trim().toUpperCase().split(/\s+/).map(tok=>{
+    const m=tok.match(/^([A-Z]+)([\d.]+)?[·.]?([\d.]*)$/);
+    if(!m)return null;
+    const clock=m[2]?parseFloat(m[2]):12;
+    return{t:m[1],clock,dist:m[3]?parseFloat(m[3]):1.0,a:clockRad(clock)};
+  }).filter(Boolean);
+}
+
+function startSolve(name, word){
+  solveName=name; solvePhase='finding'; solveScale=0;
+  finderNodes=Array.from({length:48},(_,i)=>({
+    angle:(i/48)*Math.PI*2, r:4, locked:false,
+    x:W/2, y:H/2
+  }));
+  MIND[name].emotion = 'searching';
+}
+
+function updateSolve(){
+  if(solvePhase==='idle') return;
+  const cx=W/2,cy=H/2,R=Math.min(W,H)*0.2;
+  const pts=parseWord(MIND[solveName]?.word||'');
+
+  if(solvePhase==='finding'){
+    let all=true;
+    for(const n of finderNodes){
+      if(n.locked) continue; all=false;
+      n.r+=SELF.solveSpeed*100;
+      const tR=(pts.length?getWordRadius(pts,n.angle):0.8)*R;
+      if(n.r>=tR){n.r=tR;n.locked=true;}
+      n.x=cx+Math.cos(n.angle)*n.r;
+      n.y=cy+Math.sin(n.angle)*n.r;
+    }
+    if(all){ solvePhase='proving'; solveScale=0; }
+  } else if(solvePhase==='proving'){
+    solveScale=Math.min(1,solveScale+SELF.solveSpeed);
+    if(solveScale>=1) onSolved();
+  }
+}
+
+function getWordRadius(pts,angle){
+  if(!pts.length) return 0.5;
+  let best=pts[0],bd=Infinity;
+  for(const p of pts){
+    let da=Math.abs(p.a-angle);
+    if(da>Math.PI)da=Math.PI*2-da;
+    if(da<bd){bd=da;best=p;}
+  }
+  return best.dist;
+}
+
+function onSolved(){
+  solvePhase='golden';
+  const entry=MIND[solveName];
+  if(!entry) return;
+
+  const prev=entry.confidence||0.1;
+  entry.confidence=Math.min(1.0, prev+0.06);
+  entry.visits=(entry.visits||0)+1;
+
+  // Geometric grounding
+  const knownMass=GEO_MASS[solveName];
+  if(knownMass!==undefined){
+    const diff=Math.abs((entry.mass||0)-knownMass);
+    if(diff<15||entry.mass===0){
+      entry.webValidated=true;
+      entry.confidence=Math.min(1.0,entry.confidence+0.08);
+      DIAG.groundingDelta.push(diff);
+    }
+  } else {
+    entry.webValidated=true;
+    entry.confidence=Math.min(1.0,entry.confidence+0.04);
+  }
+
+  if(entry.confidence>=1.0&&entry.webValidated) entry.golden=true;
+  entry.emotion = entry.golden ? 'golden' : 'knowing';
+
+  // DIAG
+  DIAG.testsRun++;
+  DIAG.learningVelocity=(DIAG.learningVelocity*(DIAG.testsRun-1)+entry.confidence)/DIAG.testsRun;
+  velocityHistory.push(DIAG.learningVelocity);
+  if(velocityHistory.length>40) velocityHistory.shift();
+
+  // Self-adjust speed based on quality
+  const locked=finderNodes.filter(n=>n.locked).length;
+  const quality=locked/finderNodes.length;
+  SELF.autoAdjust(quality);
+
+  const msg = entry.golden
+    ? `✦ ${solveName.toUpperCase()} — I KNOW THIS`
+    : `I see ${solveName}... ${Math.round(entry.confidence*100)}% sure`;
+  speak(msg);
+
+  // Ask the brain what this shape means
+  if(entry.golden || entry.confidence > 0.5) {
+    askBrain(solveName);
+    if(entry.golden) saveShapeToLibrary(solveName);
+  }
+
+  setTimeout(()=>{ solvePhase='idle'; currentFocus=null; }, 2500);
+  updateHUD();
+}
+
+// ── SELF-MODIFICATION ──────────────────────────────────────────
+const SELF = {
+  solveSpeed: 0.025,
+  finderSpeed: 2.5,
+  groundingTol: 15,
+  history: [],
+
+  autoAdjust(quality) {
+    if(quality < 0.6) {
+      const newSpeed = Math.max(0.008, this.solveSpeed*0.75);
+      this.history.push({param:'solveSpeed', from:this.solveSpeed, to:newSpeed, reason:`quality ${(quality*100).toFixed(0)}% too low`});
+      this.solveSpeed = newSpeed;
+      speak(`self-adjusting: solve slower for better accuracy`);
+    } else if(quality > 0.92 && this.solveSpeed < 0.05) {
+      const newSpeed = Math.min(0.05, this.solveSpeed*1.15);
+      this.history.push({param:'solveSpeed', from:this.solveSpeed, to:newSpeed, reason:`quality ${(quality*100).toFixed(0)}% excellent`});
+      this.solveSpeed = newSpeed;
+    }
+  },
+
+  getHistory() { return this.history; }
+};
+
+// ── USER FEEDBACK ──────────────────────────────────────────────
+// User says "wrong" or "that's not a heart" — cortex adjusts
+async function userFeedback() {
+  const msg = document.getElementById('user-in').value.trim().toLowerCase();
+  // Also send to brain for language processing
+  if(msg && !msg.match(/^(wrong|nah|no|bad|faster|slower)/)) {
+    askBrain(msg);
+  }
+  if(!msg) return;
+  document.getElementById('user-in').value='';
+
+  speak(`heard: "${msg}"`);
+
+  // Parse feedback
+  if(msg.includes('wrong')||msg.includes('no')||msg.includes('bad')||msg.includes('nah')){
+    if(currentFocus||solveName){
+      const target = currentFocus||solveName;
+      const entry = MIND[target];
+      if(entry){
+        entry.confidence = Math.max(0.05, (entry.confidence||0.1)-0.15);
+        entry.golden = false;
+        entry.emotion = 'doubt';
+        speak(`rethinking ${target}... was I wrong?`);
+
+        // Ask AI to reconsider
+        const newWord = await deriveWord(target+' corrected');
+        if(newWord && newWord!==entry.word){
+          entry.word = newWord;
+          speak(`revised: ${target} = ${newWord.slice(0,30)}...`);
+          SELF.history.push({param:'word_'+target, from:'old', to:newWord, reason:'user correction'});
+          setTimeout(()=>think(target), 1000);
+        }
+      }
+    }
+  } else if(msg.includes('faster')){
+    SELF.solveSpeed = Math.min(0.08, SELF.solveSpeed*1.5);
+    speak(`speeding up solve to ${SELF.solveSpeed.toFixed(3)}`);
+  } else if(msg.includes('slower')){
+    SELF.solveSpeed = Math.max(0.005, SELF.solveSpeed*0.6);
+    speak(`slowing solve to ${SELF.solveSpeed.toFixed(3)}`);
+  } else {
+    // Treat as new concept to think about
+    if(!MIND[msg]){
+      speak(`learning: ${msg}...`);
+      await think(msg);
+    } else {
+      speak(`I know ${msg} — showing you`);
+      think(msg);
+    }
+  }
+}
+
+document.getElementById('user-in').addEventListener('keydown', e=>{
+  if(e.key==='Enter') userFeedback();
+});
+
+// ── DRAW SHAPE BOUNDARY ────────────────────────────────────────
+function drawBoundary(name, cx, cy, R, col) {
+  ctx.save();
+  ctx.strokeStyle = col||'rgba(255,255,255,0.6)';
+  ctx.fillStyle = (col||'rgba(255,255,255,0.1)').replace(')',',0.08)').replace('rgb','rgba');
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  if(name==='circle'){ctx.arc(cx,cy,R,0,Math.PI*2);}
+  else if(name==='triangle'){for(let i=0;i<3;i++){const a=(i*2*Math.PI/3)-Math.PI/2;i===0?ctx.moveTo(cx+Math.cos(a)*R,cy+Math.sin(a)*R):ctx.lineTo(cx+Math.cos(a)*R,cy+Math.sin(a)*R);}ctx.closePath();}
+  else if(name==='square'){const s=R*0.78;ctx.rect(cx-s,cy-s,s*2,s*2);}
+  else if(name==='star'){for(let i=0;i<10;i++){const a=(i*Math.PI/5)-Math.PI/2;const r=i%2===0?R:R*0.42;i===0?ctx.moveTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r):ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);}ctx.closePath();}
+  else if(name==='heart'){const s=R*0.9;ctx.moveTo(cx,cy+s*0.35);ctx.bezierCurveTo(cx+s*0.6,cy-s*0.15,cx+s*0.6,cy-s*0.6,cx,cy-s*0.1);ctx.bezierCurveTo(cx-s*0.6,cy-s*0.6,cx-s*0.6,cy-s*0.15,cx,cy+s*0.35);ctx.closePath();}
+  else if(name==='arrow'){ctx.moveTo(cx-R,cy-R*0.2);ctx.lineTo(cx+R*0.2,cy-R*0.2);ctx.lineTo(cx+R*0.2,cy-R*0.55);ctx.lineTo(cx+R,cy);ctx.lineTo(cx+R*0.2,cy+R*0.55);ctx.lineTo(cx+R*0.2,cy+R*0.2);ctx.lineTo(cx-R,cy+R*0.2);ctx.closePath();}
+  else if(name==='pentagon'){for(let i=0;i<5;i++){const a=(i*2*Math.PI/5)-Math.PI/2;i===0?ctx.moveTo(cx+Math.cos(a)*R,cy+Math.sin(a)*R):ctx.lineTo(cx+Math.cos(a)*R,cy+Math.sin(a)*R);}ctx.closePath();}
+  else if(name==='crescent'){ctx.arc(cx,cy,R,Math.PI*0.75,Math.PI*2.25);ctx.arc(cx+R*0.3,cy-R*0.2,R*0.75,Math.PI*2.25,Math.PI*0.75,true);ctx.closePath();}
+  else if(name==='diamond'){ctx.moveTo(cx,cy-R);ctx.lineTo(cx+R*0.65,cy);ctx.lineTo(cx,cy+R);ctx.lineTo(cx-R*0.65,cy);ctx.closePath();}
+  else{
+    const pts=parseWord(MIND[name]?.word||'');
+    if(pts.length>1){
+      pts.forEach((p,i)=>{
+        const x=cx+Math.cos(p.a)*p.dist*R;
+        const y=cy+Math.sin(p.a)*p.dist*R;
+        i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+      });
+      ctx.closePath();
+    } else { ctx.arc(cx,cy,R*0.5,0,Math.PI*2); }
+  }
+  ctx.fill(); ctx.stroke();
+  ctx.restore();
+}
+
+// ── MAIN LOOP ──────────────────────────────────────────────────
+function loop(){
+  tick++;
+
+  // Fade
+  ctx.fillStyle='rgba(0,0,0,0.12)';
+  ctx.fillRect(0,0,W,H);
+
+  layoutNodes();
+
+  // Drift nodes
+  Object.entries(nodes).forEach(([name,n])=>{
+    n.x+=n.vx; n.y+=n.vy;
+    // Gentle centre gravity
+    n.vx+=(W/2-n.x)*0.0003;
+    n.vy+=(H/2-n.y)*0.0003;
+    // Repel from each other
+    Object.values(nodes).forEach(other=>{
+      if(other===n) return;
+      const dx=n.x-other.x, dy=n.y-other.y;
+      const d=Math.hypot(dx,dy);
+      if(d<120&&d>0){ n.vx+=dx/d*0.3; n.vy+=dy/d*0.3; }
+    });
+    // Dampen
+    n.vx*=0.97; n.vy*=0.97;
+    // Bounds
+    if(n.x<80)n.vx+=0.5; if(n.x>W-80)n.vx-=0.5;
+    if(n.y<80)n.vy+=0.5; if(n.y>H-80)n.vy-=0.5;
+  });
+
+  // Draw connections
+  Object.entries(MIND).forEach(([name,node])=>{
+    const npos=nodes[name]; if(!npos) return;
+    (node.connections||[]).forEach(r=>{
+      const rpos=nodes[r]; if(!rpos) return;
+      const strength=Math.min(node.confidence,MIND[r]?.confidence||0);
+      const ecol=EMOTIONS[node.emotion||'curiosity']||'#0f0';
+      ctx.beginPath();
+      ctx.moveTo(npos.x,npos.y);
+      ctx.lineTo(rpos.x,rpos.y);
+      ctx.strokeStyle=ecol.replace('#','rgba(').replace(/([0-9a-f]{2})/gi,m=>parseInt(m,16)+',').slice(0,-1)+`,${strength*0.2})`;
+      ctx.lineWidth=strength*2;
+      ctx.stroke();
+    });
+  });
+
+  // Draw nodes
+  Object.entries(MIND).forEach(([name,node])=>{
+    const npos=nodes[name]; if(!npos) return;
+    const isActive=name===currentFocus||name===solveName;
+    const r=8+node.confidence*16+(isActive?6:0);
+    const pulse=isActive?Math.sin(tick*0.1)*3:0;
+    const ecol=EMOTIONS[node.emotion||'curiosity']||'#0f0';
+
+    // Glow
+    if(node.golden||isActive){
+      const grd=ctx.createRadialGradient(npos.x,npos.y,0,npos.x,npos.y,r*2.5+pulse);
+      grd.addColorStop(0,ecol+'44');
+      grd.addColorStop(1,'transparent');
+      ctx.beginPath();ctx.arc(npos.x,npos.y,r*2.5+pulse,0,Math.PI*2);
+      ctx.fillStyle=grd;ctx.fill();
+    }
+
+    // Draw the actual shape inside the node
+    if(isActive||node.golden){
+      drawBoundary(name, npos.x, npos.y, r*0.7+pulse, ecol);
+    } else {
+      ctx.beginPath();ctx.arc(npos.x,npos.y,r+pulse,0,Math.PI*2);
+      ctx.fillStyle=ecol+'66';ctx.fill();
+    }
+
+    // Confidence ring
+    ctx.beginPath();
+    ctx.arc(npos.x,npos.y,r+4+pulse,-Math.PI/2,-Math.PI/2+node.confidence*Math.PI*2);
+    ctx.strokeStyle=node.golden?'#ffd700':ecol;
+    ctx.lineWidth=2;ctx.stroke();
+
+    // Label
+    ctx.fillStyle=node.golden?'#ffd700':ecol;
+    ctx.font=`${isActive?'bold ':''} ${8+(isActive?3:0)}px Courier New`;
+    ctx.textAlign='center';
+    ctx.fillText(name, npos.x, npos.y+r+14+pulse);
+    if(isActive){
+      ctx.fillStyle='rgba(255,255,255,0.4)';
+      ctx.font='7px Courier New';
+      ctx.fillText(`${Math.round(node.confidence*100)}%`, npos.x, npos.y+r+24+pulse);
+    }
+  });
+
+  // Solve zone
+  updateSolve();
+  if(solvePhase!=='idle'&&solveName&&MIND[solveName]){
+    const cx=W/2,cy=H/2,R=Math.min(W,H)*0.2;
+    const pts=parseWord(MIND[solveName].word||'');
+    const ecol=EMOTIONS[MIND[solveName].emotion||'searching']||'#ff6600';
+
+    // Background circle
+    ctx.beginPath();ctx.arc(cx,cy,R*1.15,0,Math.PI*2);
+    ctx.fillStyle='rgba(0,0,0,0.7)';ctx.fill();
+    ctx.strokeStyle=ecol+'33';ctx.lineWidth=1;ctx.stroke();
+
+    // Target boundary
+    drawBoundary(solveName,cx,cy,R,'rgba(255,255,255,0.15)');
+
+    if(solvePhase==='finding'){
+      const pct=finderNodes.filter(n=>n.locked).length/finderNodes.length;
+      finderNodes.forEach(n=>{
+        ctx.beginPath();ctx.arc(n.x,n.y,n.locked?3:2,0,Math.PI*2);
+        ctx.fillStyle=n.locked?ecol:'#ff3333';
+        ctx.globalAlpha=n.locked?1:0.7;ctx.fill();ctx.globalAlpha=1;
+      });
+      // Frontier
+      ctx.beginPath();
+      finderNodes.forEach((n,i)=>i===0?ctx.moveTo(n.x,n.y):ctx.lineTo(n.x,n.y));
+      ctx.closePath();
+      ctx.strokeStyle=`rgba(0,${Math.round(pct*255)},200,0.5)`;
+      ctx.lineWidth=1;ctx.stroke();
+
+    } else if(solvePhase==='proving'){
+      finderNodes.forEach(n=>{
+        ctx.beginPath();ctx.arc(n.x,n.y,2,0,Math.PI*2);
+        ctx.fillStyle=ecol+'66';ctx.fill();
+      });
+      ctx.save();
+      ctx.globalAlpha=solveScale;
+      drawBoundary(solveName,cx,cy,R*solveScale,ecol);
+      ctx.restore();
+
+    } else if(solvePhase==='golden'){
+      const a=0.4+Math.sin(tick*0.12)*0.3;
+      ctx.save();ctx.globalAlpha=a;
+      drawBoundary(solveName,cx,cy,R,'#ffd700');
+      ctx.restore();
+      ctx.fillStyle='#ffd700';
+      ctx.font='bold 14px Courier New';
+      ctx.textAlign='center';
+      ctx.fillText(`✦ ${solveName.toUpperCase()} — KNOWN`,cx,cy+4);
+    }
+  }
+
+  // Velocity curve bottom right
+  if(velocityHistory.length>1){
+    const vx=W-140,vy=H-60,vw=130,vh=50;
+    ctx.fillStyle='rgba(0,0,0,0.6)';ctx.fillRect(vx,vy,vw,vh);
+    ctx.beginPath();
+    velocityHistory.forEach((v,i)=>{
+      const x=vx+(i/velocityHistory.length)*vw;
+      const y=vy+vh-v*vh;
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    });
+    ctx.strokeStyle='#0f0';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.fillStyle='#334';ctx.font='7px Courier New';ctx.textAlign='left';
+    ctx.fillText(`LEARNING CURVE`,vx+2,vy+9);
+    ctx.fillStyle='#0f0';
+    ctx.fillText(`v:${DIAG.learningVelocity.toFixed(3)}`,vx+2,vy+vh-4);
+  }
+
+  // Brain state overlay
+  drawBrainState();
+
+  drawBrainState();
+
+  // Speech fade
+  if(speakTimer>0){
+    speakTimer-=16;
+    if(speakTimer<=0) document.getElementById('speech').textContent='';
+  }
+
+  // Auto-think queue
+  autoTimer--;
+  if(autoTimer<=0&&solvePhase==='idle'){
+    autoTimer=200;
+    // Skip golden — already known, no need to repeat
+    while(autoQueue.length>0 && MIND[autoQueue[0]]?.golden){
+      autoQueue.shift();
+    }
+    if(autoQueue.length>0){
+      const next=autoQueue.shift();
+      think(next);
+    } else {
+      // Re-queue only non-golden, lowest confidence first
+      autoQueue=[...Object.keys(MIND)]
+        .filter(k=>!MIND[k].golden)
+        .sort((a,b)=>(MIND[a].confidence||0)-(MIND[b].confidence||0))
+        .slice(0,6);
+      // If everything is golden — just sit quietly
+      if(autoQueue.length===0){
+        if(!everythingGoldenAnnounced){
+          everythingGoldenAnnounced=true;
+          speak('all known concepts are golden. waiting for new input.');
+        }
+      }
+    }
+  }
+
+  requestAnimationFrame(loop);
+}
+
+// ── HUD ────────────────────────────────────────────────────────
+function updateHUD(){
+  const golden=Object.values(MIND).filter(n=>n.golden).length;
+  document.getElementById('h-known').textContent=`KNOWN: ${Object.keys(MIND).length}`;
+  document.getElementById('h-golden').textContent=`GOLDEN: ${golden}`;
+  document.getElementById('h-vel').textContent=`VELOCITY: ${DIAG.learningVelocity.toFixed(3)}`;
+  document.getElementById('h-state').textContent=`STATE: ${solvePhase==='idle'?'THINKING':solvePhase.toUpperCase()}`;
+}
+
+// ── EXPOSE ─────────────────────────────────────────────────────
+window.MIND=MIND;window.VOICE=VOICE;window.SELF=SELF;window.DIAG=DIAG;
+window.think=think;
+window.tell=(msg)=>{document.getElementById('user-in').value=msg;userFeedback();};
+
+// ── BRAIN CONNECTION ──────────────────────────────────────────
+const BRAIN_URL = 'https://www.shortfactory.shop/alive/studio/';
+let brainOnline = false;
+let lastBrainThought = '';
+let brainDebates = [];
+
+const CF_CHAT_URL = 'https://ai-chat.shortfactory.shop';
+
+async function askBrainCloudflare(concept) {
+  // Fallback: CF Workers AI (120B GPT-OSS model)
+  try {
+    const res = await fetch(CF_CHAT_URL + '/alive', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Origin':'https://www.shortfactory.shop'},
+      body: JSON.stringify({ input: concept, mood: 'thinking' }),
+      signal: AbortSignal.timeout(9000)
+    });
+    if(res.ok){
+      const d = await res.json();
+      const reply = (d.response||'').trim();
+      if(reply){
+        lastBrainThought = reply;
+        speak(`${concept}: ${reply.slice(0,80)}`);
+        if(MIND[concept]){ MIND[concept].brainThought = reply; MIND[concept].emotion = 'cf'; }
+      }
+    }
+  } catch(e) {}
+}
+
+async function askBrain(concept) {
+  try {
+    const res = await fetch(BRAIN_URL + 'api/chat-cortex', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({text:concept, intent:'statement', session_id:'cortex-visual'})
+    });
+    if(res.ok){
+      const d = await res.json();
+      brainOnline = true;
+      const reply = (d.reply || d.response || '').trim();
+      if(reply){
+        lastBrainThought = reply;
+        speak(`${concept}: ${reply.slice(0,80)}`);
+        if(d.left && d.right){
+          brainDebates.push({concept,left:d.left,right:d.right,reply});
+          if(brainDebates.length>5) brainDebates.shift();
+        }
+        if(MIND[concept]){
+          MIND[concept].brainThought = reply;
+          MIND[concept].emotion = d.hemisphere==='right'?'doubt':'knowing';
+        }
+      }
+    } else {
+      brainOnline=false;
+      askBrainCloudflare(concept); // fallback to CF Workers AI
+    }
+  } catch(e){
+    brainOnline=false;
+    askBrainCloudflare(concept); // fallback to CF Workers AI
+  }
+}
+
+function drawBrainState() {
+  ctx.save();
+  // Online dot
+  ctx.fillStyle = brainOnline ? '#00ff88' : '#334';
+  ctx.beginPath(); ctx.arc(W-12,12,5,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#334'; ctx.font='7px Courier New'; ctx.textAlign='right';
+  ctx.fillText(brainOnline?'BRAIN ONLINE':'BRAIN OFFLINE', W-20, 16);
+  // Last thought
+  if(lastBrainThought && brainOnline){
+    ctx.fillStyle='rgba(255,215,0,0.5)'; ctx.font='8px Courier New'; ctx.textAlign='center';
+    ctx.fillText(lastBrainThought.slice(0,70)+(lastBrainThought.length>70?'...':''), W/2, H-85);
+  }
+  // Debates
+  if(brainDebates.length>0){
+    const d=brainDebates[brainDebates.length-1];
+    ctx.font='7px Courier New'; ctx.textAlign='left';
+    ctx.fillStyle='rgba(80,200,80,0.5)';
+    ctx.fillText('L: '+d.left.slice(0,50), 10, H-75);
+    ctx.fillStyle='rgba(200,80,80,0.5)';
+    ctx.fillText('R: '+d.right.slice(0,50), 10, H-65);
+  }
+  ctx.restore();
+}
+
+window.askBrain = askBrain;
+
+// ── KNOWLEDGE PANEL ────────────────────────────────────────────
+function showKnowledge() {
+  document.getElementById('knowledge-panel').style.display='block';
+  renderKnowledge();
+}
+
+function renderKnowledge() {
+  const search = (document.getElementById('ksearch')?.value||'').toLowerCase();
+  const el = document.getElementById('knowledge-list');
+  if(!el) return;
+
+  const sorted = Object.entries(MIND)
+    .filter(([name]) => !search || name.includes(search))
+    .sort((a,b) => {
+      // Golden first, then by confidence
+      if(a[1].golden && !b[1].golden) return -1;
+      if(!a[1].golden && b[1].golden) return 1;
+      return (b[1].confidence||0)-(a[1].confidence||0);
+    });
+
+  let html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px">';
+  for(const [name, node] of sorted) {
+    const conf = Math.round((node.confidence||0)*100);
+    const gold = node.golden;
+    const col = gold?'#ffd700':conf>60?'#00ff88':conf>30?'#fa0':'#556';
+    const spiders = (node.word||'').split(' ').length;
+    const type = node.type||'concept';
+    const typeCol = type==='credential'?'#f0f':type==='code'?'#0ff':type==='letter'?'#fa0':'#334';
+
+    html += `<div style="background:#0a0a0a;border:1px solid ${col}22;border-radius:3px;padding:6px;cursor:pointer" onclick="selectConcept('${name}')">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+        <span style="color:${col};font-weight:bold">${name}</span>
+        <span style="color:${gold?'#ffd700':'#334'};font-size:8px">${gold?'✦ ':''} ${conf}%</span>
+      </div>
+      <div style="color:#334;font-size:8px;margin-bottom:3px">${(node.word||'—').slice(0,40)}${(node.word||'').length>40?'...':''}</div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:${typeCol};font-size:7px">${type}</span>
+        <span style="color:#223;font-size:7px">${spiders} spiders · ${node.visits||0}×</span>
+      </div>
+      ${node.brainThought?`<div style="color:#ffd70077;font-size:7px;margin-top:2px;border-top:1px solid #111;padding-top:2px">${node.brainThought.slice(0,50)}...</div>`:''}
+      <div style="display:flex;gap:4px;margin-top:4px">
+        <button onclick="event.stopPropagation();correctConcept('${name}')" style="flex:1;background:transparent;border:1px solid #f444;color:#f44;font-size:7px;padding:2px;cursor:pointer;font-family:Courier New,monospace">✗ WRONG</button>
+        <button onclick="event.stopPropagation();editWord('${name}')" style="flex:1;background:transparent;border:1px solid #0ff4;color:#0ff;font-size:7px;padding:2px;cursor:pointer;font-family:Courier New,monospace">✏ EDIT</button>
+        <button onclick="event.stopPropagation();forgetConcept('${name}')" style="flex:1;background:transparent;border:1px solid #3334;color:#556;font-size:7px;padding:2px;cursor:pointer;font-family:Courier New,monospace">FORGET</button>
+      </div>
+    </div>`;
+  }
+  html += `</div><div style="color:#334;font-size:8px;margin-top:12px;text-align:center">${sorted.length} concepts · ${sorted.filter(([,n])=>n.golden).length} golden</div>`;
+  el.innerHTML = html;
+}
+
+function selectConcept(name) {
+  document.getElementById('knowledge-panel').style.display='none';
+  document.getElementById('user-in').value = name;
+  think(name);
+}
+
+function correctConcept(name) {
+  const entry = MIND[name];
+  if(!entry) return;
+  // Drop confidence, re-derive
+  entry.confidence = 0.1;
+  entry.golden = false;
+  entry.webValidated = false;
+  entry.emotion = 'doubt';
+  speak(`rethinking ${name}...`);
+  // Ask AI to re-derive
+  deriveWord(name).then(word => {
+    if(word !== entry.word) {
+      entry.word = word;
+      speak(`revised: ${name} = ${word.slice(0,30)}`);
+    }
+    startSolve(name, entry.word);
+  });
+  renderKnowledge();
+}
+
+function editWord(name) {
+  const entry = MIND[name];
+  if(!entry) return;
+  const newWord = prompt(`Edit shape word for "${name}":`, entry.word||'');
+  if(!newWord||newWord===entry.word) return;
+  entry.word = newWord.trim();
+  entry.confidence = 0.3;
+  entry.golden = false;
+  entry.webValidated = false;
+  saveShapeToLibrary(name);
+  speak(`updated: ${name}`);
+  startSolve(name, entry.word);
+  renderKnowledge();
+}
+window.editWord = editWord;
+
+function forgetConcept(name) {
+  if(!confirm('Forget "' + name + '"?')) return;
+  delete MIND[name];
+  delete nodes[name];
+  speak(`forgot: ${name}`);
+  renderKnowledge();
+  everythingGoldenAnnounced = false;
+}
+
+window.showKnowledge = showKnowledge;
+window.renderKnowledge = renderKnowledge;
+window.correctConcept = correctConcept;
+window.forgetConcept = forgetConcept;
+
+// ── GO ─────────────────────────────────────────────────────────
+layoutNodes();
+speak('awakening...');
+loop();
+// Ping brain
+setTimeout(async()=>{
+  try{
+    const r=await fetch(BRAIN_URL+'api/brain-live',{method:'POST'});
+    if(r.ok){ brainOnline=true; speak('brain connected. both hemispheres active.'); }
+  }catch(e){ speak('visual cortex active. brain offline.'); }
+},1500);
+setTimeout(()=>speak('I am learning to see'),1000);
+setTimeout(()=>{
+  const n = loadShapeLibrary();
+  if(n > 0) autoQueue = [...Object.keys(MIND)].filter(k=>!MIND[k].golden);
+}, 800);
+// Watch for library changes (shape-hunter running in other tab)
+window.addEventListener('storage', e => {
+  if(e.key === 'cortex-shapes') {
+    const n = loadShapeLibrary();
+    if(n > 0) log(`library updated: +${n} shapes`, 'lgd');
+  }
+});
+setTimeout(async()=>{
+  try{
+    const r=await fetch(BRAIN_URL+'api/brain-live',{method:'POST'});
+    if(r.ok){ brainOnline=true; speak('brain connected — both hemispheres listening'); }
+    else { speak('visual cortex active. brain not responding.'); }
+  }catch(e){ speak('visual cortex active. brain offline.'); }
+},2000);
+</script>
+</body>
+</html>

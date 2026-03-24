@@ -1,0 +1,12 @@
+name = "grok-proxy"
+main = "index.js"
+compatibility_date = "2024-09-23"
+account_id = "2783e78b87a0ffd54f8e91017e2695b7"
+workers_dev = true
+
+routes = [
+  { pattern = "api.shortfactory.shop/grok/*", zone_name = "shortfactory.shop" }
+]
+
+[vars]
+ALLOWED_ORIGIN = "https://www.shortfactory.shop"

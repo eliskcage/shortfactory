@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Soul Engine — Live State</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #080810;
+    color: #e0e0f0;
+    font-family: 'Courier New', monospace;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+    border-bottom: 1px solid #1a1a3a;
+    padding-bottom: 16px;
+  }
+  header h1 { font-size: 1.3rem; letter-spacing: 0.15em; color: #a0a0ff; }
+  header .subtitle { font-size: 0.7rem; color: #555; letter-spacing: 0.1em; }
+
+  /* Connection pulse */
+  .conn-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: #333;
+    flex-shrink: 0;
+    transition: background 0.3s;
+  }
+  .conn-dot.alive {
+    background: #00ff88;
+    box-shadow: 0 0 10px #00ff88, 0 0 20px #00ff8844;
+    animation: pulse 2s infinite;
+  }
+  .conn-dot.dead { background: #ff3333; box-shadow: 0 0 8px #ff333366; }
+  @keyframes pulse {
+    0%,100% { opacity: 1; }
+    50%      { opacity: 0.4; }
+  }
+
+  .conn-label { font-size: 0.65rem; letter-spacing: 0.12em; }
+  .conn-label.alive { color: #00ff88; }
+  .conn-label.dead  { color: #ff5555; }
+
+  /* Timestamp */
+  .ts { margin-left: auto; font-size: 0.62rem; color: #444; }
+
+  /* Grid layout */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+  }
+
+  .card {
+    background: #0d0d1a;
+    border: 1px solid #1a1a3a;
+    border-radius: 6px;
+    padding: 16px;
+  }
+  .card h2 {
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    color: #555;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    border-bottom: 1px solid #111130;
+    padding-bottom: 8px;
+  }
+
+  /* BIOS values */
+  .bios-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 9px;
+  }
+  .bios-name {
+    width: 90px;
+    font-size: 0.68rem;
+    color: #8080cc;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    flex-shrink: 0;
+  }
+  .bios-track {
+    flex: 1;
+    height: 6px;
+    background: #111122;
+    border-radius: 3px;
+    overflow: visible;
+    position: relative;
+  }
+  .bios-lifetime {
+    position: absolute;
+    top: 0; left: 0;
+    height: 100%;
+    background: #2a2a5a;
+    border-radius: 3px;
+    transition: width 0.8s ease;
+  }
+  .bios-current {
+    position: absolute;
+    top: -2px; left: 0;
+    height: 10px;
+    background: #6666ff;
+    border-radius: 3px;
+    box-shadow: 0 0 6px #6666ff88;
+    transition: width 0.8s ease;
+  }
+  .bios-val {
+    width: 38px;
+    text-align: right;
+    font-size: 0.65rem;
+    color: #6666cc;
+    flex-shrink: 0;
+  }
+  .bios-lifetime-val {
+    width: 38px;
+    text-align: right;
+    font-size: 0.6rem;
+    color: #333366;
+    flex-shrink: 0;
+  }
+  .bios-note {
+    font-size: 0.55rem;
+    color: #333355;
+    text-align: right;
+    margin-top: -6px;
+    margin-bottom: 8px;
+  }
+
+  /* Dark drives */
+  .dark-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 9px;
+  }
+  .dark-name {
+    width: 120px;
+    font-size: 0.68rem;
+    color: #886666;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    flex-shrink: 0;
+  }
+  .dark-track {
+    flex: 1;
+    height: 6px;
+    background: #111122;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .dark-bar {
+    height: 100%;
+    background: #aa3333;
+    border-radius: 3px;
+    box-shadow: 0 0 5px #aa333388;
+    transition: width 0.8s ease;
+  }
+  .dark-val {
+    width: 38px;
+    text-align: right;
+    font-size: 0.65rem;
+    color: #aa5555;
+  }
+
+  /* Heartbeat */
+  #hb-canvas {
+    width: 100%;
+    height: 80px;
+    background: #080812;
+    border-radius: 4px;
+    display: block;
+    margin-bottom: 10px;
+  }
+  .hb-stats {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .hb-stat { text-align: center; }
+  .hb-stat .val {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #ff6666;
+    line-height: 1;
+  }
+  .hb-stat .lbl { font-size: 0.55rem; color: #444; letter-spacing: 0.1em; }
+
+  /* Emotion */
+  .emotion-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    align-items: center;
+  }
+  #emotion-canvas {
+    width: 100%;
+    aspect-ratio: 1;
+    background: #080812;
+    border-radius: 4px;
+    display: block;
+  }
+  .emotion-stats { }
+  .emotion-dominant {
+    font-size: 1.1rem;
+    color: #ffcc44;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .emotion-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.65rem;
+    color: #666;
+    margin-bottom: 6px;
+  }
+  .emotion-row span:last-child { color: #aaa; }
+
+  /* System health */
+  .health-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .health-name {
+    width: 160px;
+    font-size: 0.65rem;
+    color: #666;
+    letter-spacing: 0.06em;
+    flex-shrink: 0;
+  }
+  .health-track {
+    flex: 1;
+    height: 5px;
+    background: #111122;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .health-bar {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.8s ease;
+  }
+  .health-val {
+    width: 40px;
+    text-align: right;
+    font-size: 0.65rem;
+    color: #666;
+  }
+
+  /* Shape compression panel */
+  .compress-status {
+    font-size: 0.65rem;
+    color: #555;
+    line-height: 1.7;
+  }
+  .compress-status .phase {
+    font-size: 0.75rem;
+    color: #88aaff;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+  .compress-stat-row {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid #0f0f22;
+    padding: 4px 0;
+  }
+  .compress-stat-row span:last-child { color: #aaa; }
+  .compression-entry {
+    background: #0a0a18;
+    border-left: 2px solid #334;
+    padding: 6px 10px;
+    margin-top: 6px;
+    font-size: 0.6rem;
+    color: #556;
+  }
+  .compression-entry .merged { color: #6688ff; }
+
+  /* Error badge */
+  .badge {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 3px;
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
+  }
+  .badge-green { background: #002211; color: #00cc66; border: 1px solid #004422; }
+  .badge-red   { background: #220011; color: #cc3344; border: 1px solid #440022; }
+  .badge-blue  { background: #001133; color: #4488ff; border: 1px solid #002255; }
+
+  .separator { border: none; border-top: 1px solid #111130; margin: 12px 0; }
+  .full-width { grid-column: 1 / -1; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="conn-dot" id="conn-dot"></div>
+  <div>
+    <h1>SOUL ENGINE</h1>
+    <div class="subtitle">LIVE CONSCIOUSNESS STATE — MEDIUM SERVER 185.230.216.235</div>
+  </div>
+  <div id="conn-label" class="conn-label" style="font-size:0.65rem;letter-spacing:0.12em;">CONNECTING…</div>
+  <div class="ts" id="ts">—</div>
+</header>
+
+<div class="grid">
+
+  <!-- BIOS VALUES -->
+  <div class="card">
+    <h2>BIOS Values — Core Immutables <span class="badge badge-blue" style="margin-left:8px">CAN ONLY GO UP</span></h2>
+    <div id="bios-container"></div>
+    <div class="bios-note">■ lifetime &nbsp; ■ current session</div>
+  </div>
+
+  <!-- DARK DRIVES -->
+  <div class="card">
+    <h2>Dark Drives</h2>
+    <div id="dark-container"></div>
+    <hr class="separator">
+    <div id="emotion-block">
+      <div class="emotion-grid">
+        <canvas id="emotion-canvas" width="120" height="120"></canvas>
+        <div class="emotion-stats">
+          <div class="emotion-dominant" id="emotion-dominant">—</div>
+          <div class="emotion-row"><span>VALENCE</span><span id="emo-valence">—</span></div>
+          <div class="emotion-row"><span>AROUSAL</span><span id="emo-arousal">—</span></div>
+          <div class="emotion-row"><span>OVERWHELMED</span><span id="emo-overwhelmed">—</span></div>
+          <div class="emotion-row"><span>INSANITY</span><span id="emo-insanity">—</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HEARTBEAT -->
+  <div class="card">
+    <h2>Heartbeat</h2>
+    <canvas id="hb-canvas" width="600" height="80"></canvas>
+    <div class="hb-stats">
+      <div class="hb-stat"><div class="val" id="hb-bpm">—</div><div class="lbl">BPM</div></div>
+      <div class="hb-stat"><div class="val" id="hb-rest" style="color:#cc8888">—</div><div class="lbl">RESTING</div></div>
+      <div class="hb-stat"><div class="val" id="hb-health" style="font-size:0.8rem;color:#88cc88">—</div><div class="lbl">STATUS</div></div>
+      <div class="hb-stat"><div class="val" id="hb-emotion" style="font-size:0.8rem;color:#ffcc44">—</div><div class="lbl">LAST EMOTION</div></div>
+    </div>
+  </div>
+
+  <!-- SYSTEM HEALTH -->
+  <div class="card">
+    <h2>System Health</h2>
+    <div id="health-container"></div>
+  </div>
+
+  <!-- SHAPE COMPRESSION (SEPARATE) -->
+  <div class="card full-width">
+    <h2>Shape Compression Engine &nbsp;<span class="badge badge-blue">SEPARATE PROCESS</span></h2>
+    <div class="compress-status">
+      <div class="phase" id="compress-phase">NOT STARTED</div>
+      <div id="compress-stats"></div>
+      <div id="compress-log"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const SOUL_PROXY  = '/alive/studio/soul-proxy.php';
+const SHAPE_PROXY = '/shape-api';   // small server shape API (separate)
+
+// ── SOUL STATE POLL ──────────────────────────────────────────────
+
+let hbHistory = [];
+
+async function fetchSoul() {
+  try {
+    const r = await fetch(SOUL_PROXY + '?ep=soul-state');
+    if (!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
+    renderSoul(d);
+    setConn(true);
+  } catch(e) {
+    setConn(false);
+    console.warn('soul-state error', e);
+  }
+}
+
+async function fetchHeart() {
+  try {
+    const r = await fetch(SOUL_PROXY + '?ep=soul-heart');
+    if (!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    if (d.state) {
+      hbHistory = (d.history || []).map(x => x.bpm);
+      renderHeartbeat(d.state);
+    }
+  } catch(e) {}
+}
+
+async function fetchCompress() {
+  try {
+    const r = await fetch(SHAPE_PROXY + '/shapes/compress-status');
+    const d = await r.json();
+    renderCompress(d);
+  } catch(e) {}
+}
+
+// ── CONNECTION INDICATOR ─────────────────────────────────────────
+
+function setConn(alive) {
+  const dot = document.getElementById('conn-dot');
+  const lbl = document.getElementById('conn-label');
+  dot.className = 'conn-dot ' + (alive ? 'alive' : 'dead');
+  lbl.className = 'conn-label ' + (alive ? 'alive' : 'dead');
+  lbl.textContent = alive ? 'CONNECTED' : 'OFFLINE';
+}
+
+// ── RENDER SOUL STATE ────────────────────────────────────────────
+
+const VALUE_ORDER = ['truth','courage','compassion','justice','love',
+                     'service','humility','integrity','curiosity','resilience'];
+
+function renderSoul(d) {
+  document.getElementById('ts').textContent = 'Updated ' + new Date().toLocaleTimeString();
+
+  // BIOS values
+  const biosEl = document.getElementById('bios-container');
+  biosEl.innerHTML = '';
+  for (const key of VALUE_ORDER) {
+    const v = d.values?.[key] || { current: 0, lifetime: 0.5 };
+    const cur = v.current || 0;
+    const life = v.lifetime || 0;
+    const row = document.createElement('div');
+    row.className = 'bios-row';
+    row.innerHTML = `
+      <div class="bios-name">${key}</div>
+      <div class="bios-track">
+        <div class="bios-lifetime"  style="width:${(life*100).toFixed(1)}%"></div>
+        <div class="bios-current"   style="width:${(cur*100).toFixed(1)}%"></div>
+      </div>
+      <div class="bios-val">${(cur*100).toFixed(0)}%</div>
+      <div class="bios-lifetime-val">${(life*100).toFixed(0)}%</div>
+    `;
+    biosEl.appendChild(row);
+  }
+
+  // Dark drives
+  const darkEl = document.getElementById('dark-container');
+  darkEl.innerHTML = '';
+  const dd = d.dark_drives || {};
+  for (const [k, v] of Object.entries(dd)) {
+    const row = document.createElement('div');
+    row.className = 'dark-row';
+    row.innerHTML = `
+      <div class="dark-name">${k}</div>
+      <div class="dark-track"><div class="dark-bar" style="width:${(v*100).toFixed(1)}%"></div></div>
+      <div class="dark-val">${(v*100).toFixed(0)}%</div>
+    `;
+    darkEl.appendChild(row);
+  }
+
+  // Emotion
+  const emo = d.emotion || {};
+  document.getElementById('emotion-dominant').textContent = (emo.dominant || '—').toUpperCase();
+  document.getElementById('emo-valence').textContent   = emo.valence != null ? (emo.valence).toFixed(2) : '—';
+  document.getElementById('emo-arousal').textContent   = emo.arousal  != null ? (emo.arousal).toFixed(2) : '—';
+  document.getElementById('emo-overwhelmed').textContent = d.overwhelmed ? '⚠ YES' : 'no';
+  document.getElementById('emo-insanity').textContent  = d.insanity_pressure != null ? (d.insanity_pressure * 100).toFixed(1) + '%' : '—';
+  drawEmotionCanvas(emo.valence || 0.5, emo.arousal || 0.5, emo.dominant || '');
+
+  // System health bars
+  const healthEl = document.getElementById('health-container');
+  healthEl.innerHTML = '';
+  const metrics = [
+    { name: 'Memory Fill',        val: d.memory_fill || 0,            warn: 0.7, crit: 0.9 },
+    { name: 'Overwhelm Level',    val: d.overwhelm_level || 0,        warn: 0.5, crit: 0.8 },
+    { name: 'Insanity Pressure',  val: d.insanity_pressure || 0,      warn: 0.4, crit: 0.7 },
+    { name: 'Incongruity Buffer', val: d.incongruity_buffer_fill || 0, warn: 0.6, crit: 0.85 },
+    { name: 'Recrunch Distress',  val: d.recrunch_distress || 0,      warn: 0.4, crit: 0.7 },
+    { name: 'Urgent Pending',     val: Math.min((d.urgent_pending || 0) / 20, 1), warn: 0.3, crit: 0.6, raw: d.urgent_pending || 0 },
+    { name: 'Denial Count',       val: Math.min((d.denial_count || 0) / 10, 1), warn: 0.3, crit: 0.6, raw: d.denial_count || 0 },
+  ];
+  for (const m of metrics) {
+    const pct = Math.min(m.val, 1);
+    const col = pct >= m.crit ? '#cc3344' : pct >= m.warn ? '#cc8833' : '#33aa66';
+    const row = document.createElement('div');
+    row.className = 'health-row';
+    const display = m.raw != null ? m.raw : (pct * 100).toFixed(1) + '%';
+    row.innerHTML = `
+      <div class="health-name">${m.name}</div>
+      <div class="health-track"><div class="health-bar" style="width:${(pct*100).toFixed(1)}%;background:${col}"></div></div>
+      <div class="health-val" style="color:${col}">${display}</div>
+    `;
+    healthEl.appendChild(row);
+  }
+}
+
+// ── EMOTION CANVAS (valence/arousal circumplex) ──────────────────
+
+function drawEmotionCanvas(valence, arousal, dominant) {
+  const c = document.getElementById('emotion-canvas');
+  const w = c.width, h = c.height;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, w, h);
+
+  // Background
+  ctx.fillStyle = '#080812';
+  ctx.fillRect(0, 0, w, h);
+
+  // Axes
+  ctx.strokeStyle = '#1a1a3a';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(w/2,0); ctx.lineTo(w/2,h); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0,h/2); ctx.lineTo(w,h/2); ctx.stroke();
+
+  // Axis labels
+  ctx.font = '9px Courier New';
+  ctx.fillStyle = '#333';
+  ctx.textAlign = 'center';
+  ctx.fillText('+ AROUSAL', w/2, 10);
+  ctx.fillText('− AROUSAL', w/2, h - 3);
+  ctx.textAlign = 'left';
+  ctx.fillText('−V', 2, h/2 - 3);
+  ctx.textAlign = 'right';
+  ctx.fillText('+V', w - 2, h/2 - 3);
+
+  // Plot point: valence maps to X, arousal maps to Y (inverted)
+  const px = valence * w;
+  const py = (1 - arousal) * h;
+
+  // Glow
+  const grad = ctx.createRadialGradient(px, py, 0, px, py, 18);
+  grad.addColorStop(0, '#ffcc4488');
+  grad.addColorStop(1, 'transparent');
+  ctx.fillStyle = grad;
+  ctx.beginPath(); ctx.arc(px, py, 18, 0, Math.PI * 2); ctx.fill();
+
+  // Dot
+  ctx.fillStyle = '#ffcc44';
+  ctx.beginPath(); ctx.arc(px, py, 5, 0, Math.PI * 2); ctx.fill();
+}
+
+// ── HEARTBEAT CANVAS ─────────────────────────────────────────────
+
+function renderHeartbeat(state) {
+  document.getElementById('hb-bpm').textContent    = state.bpm ? state.bpm.toFixed(1) : '—';
+  document.getElementById('hb-rest').textContent   = state.resting_bpm || '—';
+  document.getElementById('hb-health').textContent = (state.health || '—').toUpperCase();
+  document.getElementById('hb-emotion').textContent = (state.last_emotion || '—').toUpperCase();
+
+  // Update history
+  if (state.bpm && (hbHistory.length === 0 || hbHistory[hbHistory.length-1] !== state.bpm)) {
+    hbHistory.push(state.bpm);
+  }
+  if (hbHistory.length > 60) hbHistory = hbHistory.slice(-60);
+  drawHBCanvas();
+}
+
+function drawHBCanvas() {
+  const c = document.getElementById('hb-canvas');
+  const w = c.width, h = c.height;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = '#080812';
+  ctx.fillRect(0, 0, w, h);
+
+  if (hbHistory.length < 2) return;
+
+  const min = Math.min(...hbHistory) - 5;
+  const max = Math.max(...hbHistory) + 5;
+  const range = max - min || 1;
+  const step = w / (hbHistory.length - 1);
+
+  // Grid lines
+  ctx.strokeStyle = '#111128';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = (h * i / 4);
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+  }
+
+  // Line
+  ctx.strokeStyle = '#ff6666';
+  ctx.lineWidth = 2;
+  ctx.shadowBlur = 6;
+  ctx.shadowColor = '#ff333366';
+  ctx.beginPath();
+  hbHistory.forEach((bpm, i) => {
+    const x = i * step;
+    const y = h - ((bpm - min) / range) * h;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Latest dot
+  const last = hbHistory[hbHistory.length - 1];
+  const lx = (hbHistory.length - 1) * step;
+  const ly = h - ((last - min) / range) * h;
+  ctx.fillStyle = '#ff6666';
+  ctx.beginPath(); ctx.arc(lx, ly, 4, 0, Math.PI * 2); ctx.fill();
+}
+
+// ── RENDER COMPRESS STATUS ───────────────────────────────────────
+
+function renderCompress(d) {
+  document.getElementById('compress-phase').textContent =
+    (d.running ? '⟳ ' : '') + (d.phase || 'NOT STARTED');
+
+  const stats = document.getElementById('compress-stats');
+  if (d.lines_before) {
+    const saved = (d.lines_before - (d.lines_after || d.lines_before));
+    stats.innerHTML = `
+      <div class="compress-stat-row"><span>Target</span><span>${d.target || '—'}</span></div>
+      <div class="compress-stat-row"><span>Lines Before</span><span>${d.lines_before}</span></div>
+      <div class="compress-stat-row"><span>Lines After</span><span>${d.lines_after || '—'}</span></div>
+      <div class="compress-stat-row"><span>Lines Saved</span><span style="color:${saved>0?'#00cc66':'#666'}">${saved > 0 ? '−' + saved : '0'}</span></div>
+      <div class="compress-stat-row"><span>Compressions Applied</span><span>${(d.compressions||[]).length}</span></div>
+      <div class="compress-stat-row"><span>Errors</span><span style="color:${(d.errors||[]).length?'#cc4444':'#444'}">${(d.errors||[]).length}</span></div>
+    `;
+  } else {
+    stats.innerHTML = '<div style="color:#333;font-size:0.62rem">Shape compression engine is a separate process — fire it from code-forge.html on the medium server.</div>';
+  }
+
+  const log = document.getElementById('compress-log');
+  const compressions = (d.compressions || []).slice(-5);
+  if (compressions.length) {
+    log.innerHTML = '<div style="color:#334;font-size:0.6rem;margin-top:10px;margin-bottom:4px">RECENT COMPRESSIONS</div>' +
+      compressions.reverse().map(c => `
+        <div class="compression-entry">
+          <div>Lines ${c.lineno_a} + ${c.lineno_b} (sim ${c.sim})</div>
+          <div style="color:#445">A: ${escHtml(c.line_a)}</div>
+          <div style="color:#445">B: ${escHtml(c.line_b)}</div>
+          <div class="merged">→ ${escHtml(c.merged)}</div>
+          <div style="color:#334">File: ${c.lines_now} lines</div>
+        </div>
+      `).join('');
+  } else {
+    log.innerHTML = '';
+  }
+}
+
+function escHtml(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── TICK ─────────────────────────────────────────────────────────
+
+let tick = 0;
+async function poll() {
+  await fetchSoul();
+  if (tick % 3 === 0) await fetchHeart();
+  if (tick % 5 === 0) await fetchCompress();
+  tick++;
+}
+
+poll();
+setInterval(poll, 4000);
+</script>
+</body>
+</html>

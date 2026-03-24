@@ -1,0 +1,22 @@
+# Prevent caching of HTML pages (Cloudflare + browser)
+<FilesMatch "\.(html|htm)$">
+  Header set Cache-Control "no-cache, no-store, must-revalidate"
+  Header set Pragma "no-cache"
+  Header set Expires "0"
+  Header set CDN-Cache-Control "no-store"
+  Header set Cloudflare-CDN-Cache-Control "no-store"
+</FilesMatch>
+
+# Service worker must NEVER be cached — stale SW = broken site
+<Files "sw.js">
+  Header set Cache-Control "no-cache, no-store, must-revalidate"
+  Header set Pragma "no-cache"
+  Header set Expires "0"
+  Header set CDN-Cache-Control "no-store"
+  Header set Cloudflare-CDN-Cache-Control "no-store"
+</Files>
+
+# Allow caching of static assets with short revalidation
+<FilesMatch "\.(mp4|mp3|gif|png|jpg|jpeg|webp|svg|css|js)$">
+  Header set Cache-Control "public, max-age=3600, must-revalidate"
+</FilesMatch>

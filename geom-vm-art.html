@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Geometric Virtual Machine — Living Equations</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #000; overflow: hidden; font-family: monospace; }
+  canvas { display: block; }
+  #ui {
+    position: fixed; top: 20px; left: 20px;
+    color: rgba(0,204,255,0.7); font-size: 11px; line-height: 1.8;
+    pointer-events: none; text-shadow: 0 0 8px #00ccff;
+  }
+  #ui .eq { color: rgba(255,200,0,0.6); font-size: 10px; }
+  #label {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    color: rgba(255,255,255,0.25); font-size: 10px; letter-spacing: 3px;
+    text-transform: uppercase; pointer-events: none;
+  }
+  #controls {
+    position: fixed; top: 20px; right: 20px;
+    display: flex; flex-direction: column; gap: 8px;
+    pointer-events: all;
+  }
+  .btn {
+    background: rgba(0,204,255,0.08); border: 1px solid rgba(0,204,255,0.3);
+    color: #00ccff; padding: 6px 12px; cursor: pointer; font-size: 10px;
+    letter-spacing: 2px; text-transform: uppercase; transition: all 0.2s;
+  }
+  .btn:hover { background: rgba(0,204,255,0.2); }
+  .btn.active { background: rgba(0,204,255,0.25); border-color: #00ccff; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="ui">
+  <div id="dim-label">DIMENSION: 5D</div>
+  <div id="gpo-count">GPOs: 3</div>
+  <div id="intersect-label">INTERSECTIONS: 0</div>
+  <div id="basis-label">BASIS PLANE: rotating</div>
+  <br>
+  <div class="eq">v·b₁ → x₂ᴅ</div>
+  <div class="eq">v·b₂ → y₂ᴅ</div>
+  <div class="eq">‖vₐ − v_b‖ &lt; ε → emerge</div>
+</div>
+<div id="label">GB2605704.2 — GEOMETRIC VIRTUAL MACHINE — SHORTFACTORY.SHOP</div>
+<div id="controls">
+  <button class="btn active" id="btn5d" onclick="setDim(5)">5D</button>
+  <button class="btn" id="btn6d" onclick="setDim(6)">6D</button>
+  <button class="btn" id="btn7d" onclick="setDim(7)">7D</button>
+  <button class="btn" id="btnIntersect" onclick="toggleIntersect()">INTERSECT</button>
+  <button class="btn" id="btnExplode" onclick="explode()">EXPLODE</button>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+
+let W, H, cx, cy;
+function resize() {
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+  cx = W/2; cy = H/2;
+}
+resize();
+window.addEventListener('resize', resize);
+
+// ─── MATH CORE ──────────────────────────────────────────────────────────────
+
+// Rotate in plane (i,j) by angle θ — core GPO rotation operator
+function rotateND(verts, i, j, theta) {
+  const c = Math.cos(theta), s = Math.sin(theta);
+  return verts.map(v => {
+    const nv = [...v];
+    nv[i] = v[i]*c - v[j]*s;
+    nv[j] = v[i]*s + v[j]*c;
+    return nv;
+  });
+}
+
+// Project N-dim vertices → 2D via basis plane b1, b2
+// This IS the execution operator: run the program at this angle
+function projectND(verts, b1, b2, scale) {
+  return verts.map(v => ({
+    x: cx + dot(v, b1) * scale,
+    y: cy + dot(v, b2) * scale
+  }));
+}
+
+function dot(a, b) {
+  let s = 0;
+  for (let i = 0; i < a.length; i++) s += a[i] * b[i];
+  return s;
+}
+
+function normalise(v) {
+  const m = Math.sqrt(v.reduce((s,x) => s + x*x, 0));
+  return v.map(x => x / (m || 1));
+}
+
+// Build N-hypercube vertices: all (±1)^N
+function hypercubeVerts(N) {
+  const count = 1 << N;
+  const verts = [];
+  for (let i = 0; i < count; i++) {
+    const v = [];
+    for (let d = 0; d < N; d++) v.push((i >> d & 1) ? 1 : -1);
+    verts.push(v);
+  }
+  return verts;
+}
+
+// Hypercube edges: pairs differing in exactly one coordinate
+function hypercubeEdges(N) {
+  const count = 1 << N;
+  const edges = [];
+  for (let i = 0; i < count; i++)
+    for (let d = 0; d < N; d++) {
+      const j = i ^ (1 << d);
+      if (j > i) edges.push([i, j]);
+    }
+  return edges;
+}
+
+// ─── GPO CLASS ───────────────────────────────────────────────────────────────
+
+let DIM = 5;
+let showIntersect = true;
+
+class GPO {
+  constructor(color, phase, speed, offset) {
+    this.color   = color;
+    this.phase   = phase;   // basis plane phase
+    this.speed   = speed;   // rotation speed
+    this.offset  = offset;  // spatial offset
+    this.particles = [];
+    this.intersectCount = 0;
+    this.rebuild();
+  }
+
+  rebuild() {
+    this.N     = DIM;
+    this.verts = hypercubeVerts(this.N);
+    this.edges = hypercubeEdges(this.N);
+    // rotation angles for all N*(N-1)/2 planes
+    this.angles = [];
+    for (let i = 0; i < this.N; i++)
+      for (let j = i+1; j < this.N; j++)
+        this.angles.push(Math.random() * Math.PI * 2);
+    this.scale = Math.min(W, H) * 0.18;
+  }
+
+  update(t) {
+    this.N = DIM;
+    // Rotate in ALL N*(N-1)/2 hyperplanes simultaneously
+    let verts = hypercubeVerts(this.N);
+    let ai = 0;
+    for (let i = 0; i < this.N; i++) {
+      for (let j = i+1; j < this.N; j++) {
+        const rate = this.speed * (0.3 + (i + j * 0.4) * 0.15);
+        verts = rotateND(verts, i, j, t * rate + this.angles[ai]);
+        ai++;
+      }
+    }
+    this.rotated = verts;
+
+    // Basis plane: two orthonormal vectors in ℝᴺ, slowly rotating
+    const ph  = t * 0.12 + this.phase;
+    const ph2 = t * 0.07 + this.phase + 1.3;
+    this.b1 = normalise(Array.from({length: this.N}, (_, d) =>
+      Math.cos(ph  + d * Math.PI * 0.618) * Math.sin(ph * 0.3 + d)));
+    this.b2 = normalise(Array.from({length: this.N}, (_, d) =>
+      Math.sin(ph2 + d * Math.PI * 0.618) * Math.cos(ph2 * 0.3 + d)));
+    // Gram-Schmidt: make b2 orthogonal to b1
+    const d = dot(this.b1, this.b2);
+    this.b2 = normalise(this.b2.map((x, i) => x - d * this.b1[i]));
+
+    this.proj = projectND(this.rotated, this.b1, this.b2, this.scale);
+
+    // depth for each vertex: dot with b3 (3rd basis vec, for z-sort)
+    const b3 = normalise(this.b1.map((_, i) => this.b1[i] * 0.3 - this.b2[i] * 0.7 + (i === 2 ? 1 : 0)));
+    this.depth = this.rotated.map(v => dot(v, b3));
+
+    // update particles
+    this.particles = this.particles.filter(p => p.life > 0);
+    this.particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy;
+      p.vy += 0.05;
+      p.life -= 1;
+      p.vx *= 0.97; p.vy *= 0.97;
+    });
+  }
+
+  spawnParticles(x, y, col) {
+    for (let i = 0; i < 18; i++) {
+      const ang = Math.random() * Math.PI * 2;
+      const spd = 1 + Math.random() * 4;
+      this.particles.push({
+        x, y,
+        vx: Math.cos(ang) * spd,
+        vy: Math.sin(ang) * spd,
+        life: 40 + Math.random() * 40,
+        maxLife: 80,
+        color: col
+      });
+    }
+  }
+
+  getPoints2D() { return this.proj; }
+
+  draw(alpha = 1) {
+    if (!this.proj) return;
+    const pts = this.proj;
+    const dep = this.depth;
+
+    // sort edges by average depth (painter's algorithm)
+    const sortedEdges = [...this.edges].sort((a, b) =>
+      (dep[a[0]] + dep[a[1]]) - (dep[b[0]] + dep[b[1]]));
+
+    const maxD = Math.max(...dep.map(Math.abs)) || 1;
+
+    // draw edges
+    for (const [a, b] of sortedEdges) {
+      const dAvg = ((dep[a] + dep[b]) / 2 / maxD + 1) / 2; // 0-1 normalised
+      const brightness = 0.2 + dAvg * 0.8;
+      const w = 0.4 + dAvg * 1.8;
+
+      ctx.beginPath();
+      ctx.moveTo(pts[a].x, pts[a].y);
+      ctx.lineTo(pts[b].x, pts[b].y);
+
+      // glow for front edges
+      if (dAvg > 0.6) {
+        ctx.shadowColor = this.color;
+        ctx.shadowBlur  = 6 * dAvg;
+      } else {
+        ctx.shadowBlur = 0;
+      }
+
+      ctx.strokeStyle = hexAlpha(this.color, brightness * alpha);
+      ctx.lineWidth   = w;
+      ctx.stroke();
+    }
+
+    // draw vertices
+    for (let i = 0; i < pts.length; i++) {
+      const dv = (dep[i] / maxD + 1) / 2;
+      if (dv < 0.3) continue;
+      ctx.beginPath();
+      ctx.arc(pts[i].x, pts[i].y, 1 + dv * 2, 0, Math.PI*2);
+      ctx.fillStyle = hexAlpha(this.color, dv * alpha);
+      ctx.shadowColor = this.color;
+      ctx.shadowBlur  = 4 * dv;
+      ctx.fill();
+    }
+
+    ctx.shadowBlur = 0;
+
+    // draw particles
+    for (const p of this.particles) {
+      const a = p.life / p.maxLife;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 2 * a, 0, Math.PI*2);
+      ctx.fillStyle = hexAlpha(p.color, a);
+      ctx.shadowColor = p.color;
+      ctx.shadowBlur  = 6;
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+  }
+}
+
+// ─── INTERSECTION ENGINE ─────────────────────────────────────────────────────
+
+let intersectPoints = [];
+let intersectGlow   = 0;
+
+function checkIntersections(gpos) {
+  intersectPoints = [];
+  if (!showIntersect) return;
+
+  const EPS = 28; // pixel distance threshold — ‖vₐ − v_b‖ < ε
+  for (let gi = 0; gi < gpos.length; gi++) {
+    for (let gj = gi+1; gj < gpos.length; gj++) {
+      const pa = gpos[gi].getPoints2D();
+      const pb = gpos[gj].getPoints2D();
+      if (!pa || !pb) continue;
+      for (const a of pa) {
+        for (const b of pb) {
+          const dx = a.x - b.x, dy = a.y - b.y;
+          if (dx*dx + dy*dy < EPS*EPS) {
+            const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+            intersectPoints.push({x: mx, y: my,
+              ca: gpos[gi].color, cb: gpos[gj].color});
+          }
+        }
+      }
+    }
+  }
+  return intersectPoints.length;
+}
+
+function drawIntersections(t) {
+  for (const pt of intersectPoints) {
+    // Gold emergence flash — "emergent code" at intersection
+    const r = 12 + Math.sin(t * 8) * 6;
+    const grd = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, r);
+    grd.addColorStop(0, 'rgba(255,220,0,0.9)');
+    grd.addColorStop(0.4, 'rgba(255,140,0,0.5)');
+    grd.addColorStop(1, 'rgba(255,80,0,0)');
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, r, 0, Math.PI*2);
+    ctx.fillStyle = grd;
+    ctx.shadowColor = '#ffd700';
+    ctx.shadowBlur = 20;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Rune-like tick marks radiating outward — "code lines appearing"
+    for (let k = 0; k < 6; k++) {
+      const ang  = (k / 6) * Math.PI*2 + t * 2;
+      const r1   = r + 4, r2 = r1 + 6 + Math.sin(t*5 + k)*4;
+      ctx.beginPath();
+      ctx.moveTo(pt.x + Math.cos(ang)*r1, pt.y + Math.sin(ang)*r1);
+      ctx.lineTo(pt.x + Math.cos(ang)*r2, pt.y + Math.sin(ang)*r2);
+      ctx.strokeStyle = 'rgba(255,220,80,0.7)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+  }
+}
+
+// ─── BACKGROUND ──────────────────────────────────────────────────────────────
+
+// Slowly drifting star field + equation ghost text
+const STARS = Array.from({length: 200}, () => ({
+  x: Math.random(), y: Math.random(),
+  r: Math.random() * 1.2,
+  s: 0.00003 + Math.random() * 0.0001
+}));
+
+const EQ_GHOSTS = [
+  'v·b₁ → x', 'v·b₂ → y', '‖vₐ−v_b‖<ε',
+  'GPO∈ℝᴺ', 'Ω(t)=Rθ·v', 'emerge(∩)',
+  'dim=N', 'basis⊂ℝᴺ', 'rotate∀planes',
+  'project→ℝ²', 'GB2605704.2', 'Σ∩≠∅'
+];
+const ghosts = EQ_GHOSTS.map((txt, i) => ({
+  txt,
+  x: Math.random(),
+  y: Math.random(),
+  vx: (Math.random() - 0.5) * 0.00008,
+  vy: (Math.random() - 0.5) * 0.00008,
+  alpha: 0.04 + Math.random() * 0.06,
+  size: 10 + Math.random() * 8
+}));
+
+function drawBG(t) {
+  // Full black fade (motion blur effect — trail on polytopes)
+  ctx.fillStyle = 'rgba(0,0,0,0.18)';
+  ctx.fillRect(0, 0, W, H);
+
+  // Stars
+  for (const s of STARS) {
+    s.x = (s.x + s.s) % 1;
+    const tw = Math.sin(t * 0.5 + s.x * 10) * 0.4 + 0.6;
+    ctx.beginPath();
+    ctx.arc(s.x * W, s.y * H, s.r * tw, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(150,200,255,${0.2 * tw})`;
+    ctx.fill();
+  }
+
+  // Ghost equations drifting
+  ctx.save();
+  for (const g of ghosts) {
+    g.x = ((g.x + g.vx) + 1) % 1;
+    g.y = ((g.y + g.vy) + 1) % 1;
+    ctx.font = `${g.size}px monospace`;
+    ctx.fillStyle = `rgba(0,180,255,${g.alpha})`;
+    ctx.fillText(g.txt, g.x * W, g.y * H);
+  }
+  ctx.restore();
+}
+
+// ─── ORBIT PATHS ─────────────────────────────────────────────────────────────
+// GPOs orbit centre — like planets, each "executing" in its own trajectory
+
+class OrbitGPO extends GPO {
+  constructor(color, phase, speed, orbitR, orbitSpeed, orbitPhase) {
+    super(color, phase, speed, 0);
+    this.orbitR     = orbitR;
+    this.orbitSpeed = orbitSpeed;
+    this.orbitPhase = orbitPhase;
+  }
+  update(t) {
+    // Shift canvas centre during projection
+    const ox = Math.cos(t * this.orbitSpeed + this.orbitPhase) * this.orbitR;
+    const oy = Math.sin(t * this.orbitSpeed * 0.7 + this.orbitPhase) * this.orbitR;
+    this._ox = ox; this._oy = oy;
+    super.update(t);
+    // Apply orbit offset to projected points
+    if (this.proj) this.proj = this.proj.map(p => ({x: p.x + ox, y: p.y + oy}));
+  }
+}
+
+// ─── EXPLODE EFFECT ──────────────────────────────────────────────────────────
+
+let explodeParticles = [];
+
+function explode() {
+  for (let i = 0; i < 300; i++) {
+    const ang = Math.random() * Math.PI * 2;
+    const spd = 2 + Math.random() * 12;
+    const cols = ['#00ccff','#ffd700','#ff4444','#44ff88','#ff44ff'];
+    explodeParticles.push({
+      x: cx, y: cy,
+      vx: Math.cos(ang) * spd,
+      vy: Math.sin(ang) * spd,
+      life: 80 + Math.random() * 80,
+      maxLife: 160,
+      color: cols[Math.floor(Math.random() * cols.length)],
+      size: 1 + Math.random() * 3
+    });
+  }
+}
+
+function drawExplode() {
+  explodeParticles = explodeParticles.filter(p => p.life > 0);
+  for (const p of explodeParticles) {
+    p.x += p.vx; p.y += p.vy;
+    p.vx *= 0.96; p.vy *= 0.96;
+    p.life--;
+    const a = p.life / p.maxLife;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size * a, 0, Math.PI*2);
+    ctx.fillStyle = hexAlpha(p.color, a);
+    ctx.shadowColor = p.color;
+    ctx.shadowBlur  = 6;
+    ctx.fill();
+  }
+  ctx.shadowBlur = 0;
+}
+
+// ─── GRID OVERLAY (basis plane visualisation) ─────────────────────────────────
+
+function drawBasisGrid(gpos, t) {
+  // draw a faint rotating grid representing the basis plane for each GPO
+  for (const g of gpos) {
+    if (!g.b1 || !g.b2) continue;
+    const ox = g._ox || 0, oy = g._oy || 0;
+    const sc = g.scale * 0.5;
+    ctx.save();
+    ctx.globalAlpha = 0.04;
+    ctx.strokeStyle = g.color;
+    ctx.lineWidth = 0.5;
+    const steps = 6;
+    for (let k = -steps; k <= steps; k++) {
+      // lines along b1
+      const bx1 = cx + ox + g.b1[0]*sc*k*0.3, by1 = cy + oy + g.b1[1]*sc*k*0.3;
+      ctx.beginPath();
+      ctx.moveTo(bx1 + g.b2[0]*sc * -steps*0.3, by1 + g.b2[1]*sc * -steps*0.3);
+      ctx.lineTo(bx1 + g.b2[0]*sc *  steps*0.3, by1 + g.b2[1]*sc *  steps*0.3);
+      ctx.stroke();
+      // lines along b2
+      const bx2 = cx + ox + g.b2[0]*sc*k*0.3, by2 = cy + oy + g.b2[1]*sc*k*0.3;
+      ctx.beginPath();
+      ctx.moveTo(bx2 + g.b1[0]*sc * -steps*0.3, by2 + g.b1[1]*sc * -steps*0.3);
+      ctx.lineTo(bx2 + g.b1[0]*sc *  steps*0.3, by2 + g.b1[1]*sc *  steps*0.3);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+
+function hexAlpha(hex, a) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${Math.max(0,Math.min(1,a))})`;
+}
+
+// ─── MAIN ─────────────────────────────────────────────────────────────────────
+
+let gpos = [];
+
+function buildGPOs() {
+  const orbitR = Math.min(W, H) * 0.12;
+  gpos = [
+    new OrbitGPO('#00ccff', 0,    0.35, orbitR * 0.7, 0.25, 0),
+    new OrbitGPO('#ff4466', 2.1,  0.28, orbitR,       0.19, Math.PI * 0.67),
+    new OrbitGPO('#44ff99', 4.2,  0.22, orbitR * 1.3, 0.15, Math.PI * 1.33),
+  ];
+}
+buildGPOs();
+
+function setDim(d) {
+  DIM = d;
+  buildGPOs();
+  document.querySelectorAll('.btn[id^="btn"]').forEach(b => {
+    b.classList.toggle('active', b.id === 'btn' + d + 'd');
+  });
+  document.getElementById('dim-label').textContent = 'DIMENSION: ' + d + 'D';
+}
+
+function toggleIntersect() {
+  showIntersect = !showIntersect;
+  document.getElementById('btnIntersect').classList.toggle('active', showIntersect);
+}
+
+let t = 0;
+let frameCount = 0;
+
+function loop() {
+  requestAnimationFrame(loop);
+  t += 0.008;
+  frameCount++;
+
+  drawBG(t);
+
+  // Update all GPOs
+  for (const g of gpos) g.update(t);
+
+  // Basis grid (subtle)
+  drawBasisGrid(gpos, t);
+
+  // Check intersections
+  const ic = checkIntersections(gpos);
+
+  // Draw GPOs back-to-front (fudged z = orbit phase)
+  for (const g of gpos) g.draw(0.85);
+
+  // Draw intersection emergence
+  drawIntersections(t);
+
+  // Draw explode particles
+  drawExplode();
+
+  // Spawn intersection particles occasionally
+  if (frameCount % 8 === 0 && intersectPoints.length > 0) {
+    const pt = intersectPoints[Math.floor(Math.random() * intersectPoints.length)];
+    gpos[0].spawnParticles(pt.x, pt.y, '#ffd700');
+  }
+
+  // Update UI
+  if (frameCount % 6 === 0) {
+    document.getElementById('intersect-label').textContent =
+      'INTERSECTIONS: ' + intersectPoints.length;
+    document.getElementById('gpo-count').textContent =
+      'GPOs: ' + gpos.length + ' (' + (1 << DIM) + ' verts each)';
+    document.getElementById('basis-label').textContent =
+      'BASIS PLANE: ℝ' + DIM + '→ℝ²';
+  }
+}
+
+loop();
+</script>
+</body>
+</html>

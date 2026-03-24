@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0a0a12">
+  <title>Trump's World</title>
+
+  <!-- SNES-style retro font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+  <!-- CSS Files - Edit these to change appearance -->
+  <link rel="stylesheet" href="css/variables.css?v=20260209-1">
+  <link rel="stylesheet" href="css/layout.css?v=20260209-1">
+  <link rel="stylesheet" href="css/components.css?v=20260209-1">
+  <link rel="stylesheet" href="css/overlays.css?v=20260209-1">
+  <link rel="stylesheet" href="css/animations.css?v=20260209-1">
+  <link rel="stylesheet" href="css/notifications.css?v=20260209-1">
+
+  <!-- Game Start Screen Styles -->
+  <style>
+    .game-start-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #000 0%, #1a0000 50%, #000 100%);
+      z-index: 99999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: opacity 0.5s;
+    }
+
+    .game-start-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .start-content {
+      text-align: center;
+      font-family: 'Press Start 2P', monospace;
+      color: #fff;
+      padding: 20px;
+    }
+
+    .start-title {
+      font-size: clamp(2rem, 10vw, 5rem);
+      color: #ff0;
+      text-shadow:
+        0 0 20px #ff0,
+        0 0 40px #f00,
+        4px 4px 0 #000;
+      margin-bottom: 50px;
+      animation: titlePulse 2s ease-in-out infinite;
+      line-height: 1.3;
+    }
+
+    @keyframes titlePulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .start-subtitle {
+      font-size: clamp(0.8rem, 3vw, 1.2rem);
+      color: #0ff;
+      text-shadow: 0 0 10px #0ff, 2px 2px 0 #000;
+      margin-bottom: 30px;
+      animation: blink 1.5s ease-in-out infinite;
+      line-height: 1.8;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .start-hint {
+      font-size: clamp(0.5rem, 2vw, 0.8rem);
+      color: #f0f;
+      text-shadow: 0 0 10px #f0f, 2px 2px 0 #000;
+      margin-top: 30px;
+      animation: pulse 1s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.7; }
+      50% { opacity: 1; }
+    }
+
+    @keyframes oilSellFlash {
+      0%, 100% { opacity: 1; transform: scale(1.2); }
+      50% { opacity: 0.3; transform: scale(1.4); }
+    }
+    @keyframes priceGoodPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; transform: scale(1.1); }
+    }
+    @keyframes poopFlashWarn {
+      0%, 100% { opacity: 1; filter: drop-shadow(0 0 4px #f00); }
+      50% { opacity: 0.4; filter: drop-shadow(0 0 8px #ff0000) drop-shadow(0 0 16px #ff0000); }
+    }
+    @keyframes poopFlashCrit {
+      0%, 100% { opacity: 1; filter: drop-shadow(0 0 6px #f00) drop-shadow(0 0 12px #f00); }
+      50% { opacity: 0.2; filter: drop-shadow(0 0 12px #ff0000) drop-shadow(0 0 24px #ff0000); transform: scale(1.15); }
+    }
+    @keyframes impeachPulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.6; }
+    }
+    @keyframes heartFlashWarn {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; filter: drop-shadow(0 0 8px #ff0000) drop-shadow(0 0 16px #ff0000) hue-rotate(300deg); }
+    }
+    @keyframes heartFlashCrit {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.2; filter: drop-shadow(0 0 12px #ff0000) drop-shadow(0 0 24px #ff0000) hue-rotate(300deg); transform: scale(1.15); }
+    }
+
+    /* Mobile/Desktop specific text */
+    .mobile-only { display: none; }
+    .desktop-only { display: inline; }
+
+    @media (max-width: 768px), (hover: none) {
+      .mobile-only { display: inline; }
+      .desktop-only { display: none; }
+    }
+
+    /* Toggle row - side by side */
+    .toggle-row {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 20px;
+      z-index: 100;
+    }
+    .toggle-row .rumble-toggle-container {
+      position: static;
+      transform: none;
+      bottom: auto;
+      left: auto;
+    }
+
+    /* Shake slider - cyan instead of green */
+    input:checked + .shake-slider {
+      background: linear-gradient(135deg, #0ff, #088) !important;
+      border-color: #066 !important;
+    }
+
+    /* Test slider - magenta */
+    input:checked + .test-slider {
+      background: linear-gradient(135deg, #f0f, #808) !important;
+      border-color: #606 !important;
+    }
+
+    /* When shake is OFF, kill all shake/transform animations on phone */
+    .phone-frame.no-shake.shake,
+    .phone-frame.no-shake.rumble-shake,
+    .phone-frame.no-shake.charging-shake {
+      animation: none !important;
+      transform: none !important;
+    }
+  </style>
+</head>
+<body>
+  <!-- GAME START SCREEN (overlay - all cinematic + rotation lives HERE) -->
+  <div class="game-start-overlay" id="game-start-overlay">
+    <video id="menu-bg-video" autoplay muted loop playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;filter:contrast(1.3) brightness(0.9);z-index:0;"></video>
+    <div id="menu-lightning" style="position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:1;"></div>
+    <div class="start-content" style="position:relative;z-index:2;">
+      <h1 class="start-title">TRUMP vs<br>DEEPSTATE</h1>
+      <div style="font-size:clamp(0.5rem,1.5vw,0.8rem);color:#ff0;text-shadow:0 0 10px #ff0,2px 2px 0 #000;margin-bottom:15px;letter-spacing:0.15em;">v2.2</div>
+      <div class="start-subtitle" id="start-subtitle">
+        <span class="mobile-only">TAP TO START</span>
+        <span class="desktop-only">🎮 BEST PLAYED ON MOBILE 📱<br><br>CLICK TO START ANYWAY</span>
+      </div>
+      <div class="start-hint">⚡ HIGH SCORES UNLOCK AT 97% PURITY ⚡</div>
+
+      <!-- VIBRATE + SHAKE TOGGLES (on start screen so they don't interfere with gameplay) -->
+      <div class="toggle-row" style="position:relative;bottom:auto;left:auto;transform:none;justify-content:center;margin-top:25px;" onclick="event.stopPropagation();">
+        <div class="rumble-toggle-container">
+          <label class="rumble-switch">
+            <input type="checkbox" id="rumble-toggle" checked onchange="toggleRumble(this.checked)">
+            <span class="rumble-slider"></span>
+          </label>
+          <div class="rumble-label" id="rumble-label">
+            <span class="rumble-text">VIBRATE</span>
+            <span class="rumble-state">ON</span>
+          </div>
+        </div>
+        <div class="rumble-toggle-container" id="shake-toggle-container">
+          <label class="rumble-switch">
+            <input type="checkbox" id="shake-toggle" checked onchange="toggleShake(this.checked)">
+            <span class="rumble-slider shake-slider"></span>
+          </label>
+          <div class="rumble-label" id="shake-label">
+            <span class="rumble-text" style="color:#0ff;text-shadow:1px 1px 0 #066;">SHAKE</span>
+            <span class="rumble-state" style="color:#0ff;text-shadow:1px 1px 0 #066;">ON</span>
+          </div>
+        </div>
+        <div class="rumble-toggle-container" id="test-toggle-container">
+          <label class="rumble-switch">
+            <input type="checkbox" id="test-toggle" onchange="toggleTestMode(this.checked)">
+            <span class="rumble-slider test-slider"></span>
+          </label>
+          <div class="rumble-label" id="test-label">
+            <span class="rumble-text" style="color:#f0f;text-shadow:1px 1px 0 #606;">TEST</span>
+            <span class="rumble-state" style="color:#f0f;text-shadow:1px 1px 0 #606;">OFF</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="menu-counter" style="position:absolute;top:50%;right:20px;transform:translateY(-50%);z-index:3;text-align:center;cursor:pointer;font-family:'Press Start 2P',monospace;">
+      <div style="font-size:clamp(3rem,8vw,6rem);color:#ff0;text-shadow:0 0 30px #ff0,0 0 60px #f00,4px 4px 0 #000;line-height:1;" id="menu-screen-num">10</div>
+      <div style="font-size:clamp(0.6rem,1.5vw,1rem);color:#0ff;text-shadow:0 0 10px #0ff,2px 2px 0 #000;margin-top:10px;" id="menu-screen-total">OF 15 SCREENS</div>
+      <div style="font-size:0.5rem;color:#ff0;text-shadow:0 0 8px #ff0;margin-top:8px;">CLICK → NEXT</div>
+    </div>
+    <div id="menu-countdown" style="position:absolute;bottom:20px;right:20px;z-index:3;font-family:'Press Start 2P',monospace;font-size:clamp(1.5rem,4vw,3rem);color:#ff0;text-shadow:0 0 20px #ff0,0 0 40px #f00,4px 4px 0 #000;background:rgba(0,0,0,0.8);padding:15px 25px;border-radius:15px;border:3px solid #ff0;box-shadow:0 0 30px rgba(255,255,0,0.5);">30</div>
+    <audio id="menu-bond-music" loop preload="auto"><source src="https://www.shortfactory.shop/trump/bond.mp3" type="audio/mpeg"></audio>
+    <audio id="menu-lightning-sound" preload="auto"><source src="https://www.shortfactory.shop/trump/lightning-strike.mp3" type="audio/mpeg"></audio>
+  </div>
+
+  <div class="phone-frame game-loading" id="phone">
+    <div class="screen-flash" id="flash"></div>
+
+    <!-- FULLSCREEN VIDEO -->
+    <div class="fullscreen-video" id="fullscreen-video">
+      <video id="fs-vid" playsinline></video>
+      <div class="nuke-text-overlay" id="nuke-text-overlay">
+        <div class="nuke-target" id="nuke-target">SOMALIA</div>
+        <div class="nuke-subtitle">NUKED</div>
+        <div class="nuke-tagline" id="nuke-tagline">NOTHING OF VALUE LOST</div>
+      </div>
+    </div>
+
+    <!-- ⚠️ DO NOT DELETE - PIPE BOMB DETONATOR SEQUENCE ⚠️ -->
+    <div class="pipebomb-overlay" id="pipebomb-overlay">
+      <video id="pipebomb-video" playsinline></video>
+      <div class="detonator-button-hotspot" id="detonator-hotspot" onclick="detonateNecklace()">
+        <div class="button-ring"></div>
+      </div>
+      <div class="detonator-timer" id="detonator-timer">10</div>
+    </div>
+    <!-- ⚠️ END PROTECTED SECTION ⚠️ -->
+
+    <!-- ADVISOR SELECT -->
+    <div class="advisor-overlay" id="advisor-overlay">
+      <img id="advisor-img" src="https://www.shortfactory.shop/trump/advisor/advisor.jpg" alt="Choose">
+      <div class="advisor-countdown" id="advisor-countdown">10</div>
+      <div class="advisor-hotspot hotspot-1" onclick="selectAdvisor(1)"></div>
+      <div class="advisor-hotspot hotspot-2" onclick="selectAdvisor(2)"></div>
+      <div class="advisor-hotspot hotspot-3" onclick="selectAdvisor(3)"></div>
+      <div class="advisor-hotspot hotspot-4" onclick="selectAdvisor(4)"></div>
+      <div class="advisor-hotspot hotspot-5" onclick="selectAdvisor(5)"></div>
+      <div class="advisor-hotspot hotspot-6" id="trump-hotspot" onclick="selectAdvisor(6)"></div>
+      <div class="advisor-hotspot hotspot-7" id="hitler-hotspot" onclick="selectAdvisor(7)">💀 HITLER</div>
+    </div>
+
+    <!-- UNLOCK BANNER -->
+    <div class="unlock-banner" id="unlock-banner">NEW ADVISOR UNLOCKED!</div>
+
+    <!-- DICE -->
+    <div class="dice-overlay" id="dice-overlay">
+      <div class="dice-result" id="dice-result"></div>
+      <div class="dice-text" id="dice-text">Rolling...</div>
+    </div>
+
+    <!-- MEAN TWEETS -->
+    <div class="mean-tweets-overlay" id="mean-tweets-overlay">
+      <div class="tweet-instruction">FAST TAP TO FILL THE BAR!</div>
+      <div class="tweet-timer" id="tweet-timer">10</div>
+      <div class="tweet-progress-container">
+        <div class="tweet-progress-fill" id="tweet-progress-fill"></div>
+        <div class="tweet-progress-text">TWEET POWER</div>
+      </div>
+      <button class="tweet-button" id="tweet-btn" onclick="tapTweet()" oncontextmenu="return false;"><img src="https://www.shortfactory.shop/trump/george.png" alt="TAP"></button>
+      <div class="tweet-counter">Taps: <span id="tweet-count">0</span></div>
+    </div>
+
+    <!-- BOOST ANNOUNCEMENT -->
+    <div class="boost-announce" id="boost-announce">
+      <div class="boost-text" id="boost-text">10X BOOST!</div>
+    </div>
+
+    <!-- POWERUP TAP GAME -->
+    <div class="powerup-tap-overlay" id="powerup-tap-overlay">
+      <div class="powerup-tap-title">⚡ RAPID TAP FOR BOOST! ⚡</div>
+      <div class="powerup-tap-timer" id="powerup-tap-timer">3</div>
+      <div class="powerup-tap-multiplier">x<span id="powerup-tap-mult">1</span></div>
+      <div class="powerup-tap-bar-container">
+        <div class="powerup-tap-bar-fill" id="powerup-tap-fill"></div>
+        <div class="powerup-tap-bar-markers">
+          <span>1x</span><span>3x</span><span>5x</span><span>7x</span><span>10x</span>
+        </div>
+      </div>
+      <button class="powerup-tap-btn" id="powerup-tap-btn" onclick="tapPowerup()"><img src="https://www.shortfactory.shop/trump/george.png" alt="TAP"></button>
+      <div class="powerup-tap-action" id="powerup-tap-action">HOME</div>
+    </div>
+
+    <!-- TRUMP CARD -->
+    <div class="trump-card-overlay" id="trump-card-overlay">
+      <div class="trump-card-container" id="trump-card-container">
+        <div class="trump-card">
+          <div class="trump-card-inner">
+            <div class="trump-card-front"><video id="trump-card-video" muted playsinline></video></div>
+            <div class="trump-card-back"><img src="https://shortfactory.shop/trump/trumpcard.jpeg" alt="Card"></div>
+          </div>
+        </div>
+      </div>
+      <div class="trump-card-effect" id="trump-card-effect"></div>
+    </div>
+
+    <!-- TRUMP STAGE -->
+    <div class="trump-stage">
+      <div class="round-display" id="round-display">1</div>
+      <div class="stat-pill pill-debt" id="pill-debt">DEBT: <span id="disp-debt">$38T</span></div>
+      <div class="stat-pill pill-moves" id="pill-moves" onclick="tryDiceRoll()">MOVES: <span id="disp-moves">5</span></div>
+      <div class="stat-pill pill-round" id="pill-round">ROUND: <span id="disp-round">1</span></div>
+      <div class="wealth-stack" id="wealth-stack"></div>
+      <button class="advisor-info-btn" id="advisor-info-btn" onclick="playAdvisorInfo()">i</button>
+      <button class="trump-side-btn btn-emergency test-btn" id="btn-emergency" onclick="activateEmergencyTier()" style="display:none">☢️</button>
+      <button class="trump-side-btn btn-litigation test-btn" id="btn-litigation" onclick="toggleLitigation()" style="display:none">⚖️</button>
+      <button class="trump-side-btn btn-gas-test test-btn" id="btn-gas-test" onclick="triggerBioattackEffect(12000)" style="display:none;background: linear-gradient(135deg, #0f0, #080); border-color: #ff0; top: 90px;">☣️</button>
+      <button class="trump-side-btn btn-pipebomb-test test-btn" onclick="testPipeBombSequence()" style="display:none;background: linear-gradient(135deg, #f00, #800); border-color: #ff0; top: 140px;">💣</button>
+      <div class="trump-box" id="trump-box">
+        <video id="trump-video" autoplay loop muted playsinline></video>
+        <div class="trump-hp-bar"><div class="trump-hp-fill" id="trump-hp-fill" style="width:100%"></div><span class="trump-hp-text" id="trump-hp-text">100%</span></div>
+      </div>
+    </div>
+
+    <!-- STATUS -->
+    <div class="status-section">
+      <div class="news-ticker">
+        <span style="color:#f00">*</span>
+        <span id="news-text">YOUR MOVE</span>
+        <span id="population-display" style="margin-left: 15px; font-size: 10px;"></span>
+      </div>
+      <div class="purity-display"><span>PURITY</span> <span class="purity-value" id="disp-purity">6%</span></div>
+      <div class="deepstate-bar-container">
+        <span class="deepstate-label">DEEP ST.</span>
+        <div class="deepstate-bar-bg"><div class="deepstate-fill" id="ds-fill" style="width:30%"></div></div>
+      </div>
+    </div>
+
+    <!-- MAP -->
+    <div class="map-section" id="map-section">
+      <video id="map-video" autoplay loop muted playsinline></video>
+      <button class="map-toggle-btn" id="stats-btn" onclick="toggleStats()">STATS</button>
+      <button class="map-toggle-btn" id="bug-btn" onclick="showFeedbackModal()" style="right:auto;left:6px;background:linear-gradient(135deg,#f0f,#808);border-color:#606;font-size:8px;padding:4px 8px;min-width:0;">BUG?</button>
+
+      <!-- IMPEACHMENT OVERLAY - shows when HP <= 15 -->
+      <div id="impeach-overlay" style="display:none;position:absolute;inset:0;z-index:50;background:rgba(0,0,0,0.7);display:none;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;" onclick="toggleLitigation()">
+        <div style="font-family:'Press Start 2P',monospace;font-size:clamp(12px,3vw,20px);color:#ff0000;text-shadow:0 0 20px #f00,0 0 40px #f00,3px 3px 0 #000;animation:impeachPulse 0.8s ease-in-out infinite;text-align:center;padding:10px;">
+          ⚖️ IMPEACHED ⚖️
+        </div>
+        <div style="font-family:'Press Start 2P',monospace;font-size:clamp(8px,2vw,12px);color:#ffff00;text-shadow:0 0 10px #ff0,2px 2px 0 #000;margin-top:10px;animation:blink 1s infinite;text-align:center;">
+          TAP TO FIGHT IN COURT
+        </div>
+        <div id="impeach-phrase" style="font-family:'Press Start 2P',monospace;font-size:clamp(7px,1.8vw,10px);color:#0ff;text-shadow:0 0 8px #0ff;margin-top:15px;text-align:center;max-width:90%;"></div>
+      </div>
+
+      <!-- Danger Warning -->
+      <div class="danger-warning" id="danger-warning">
+        <span class="danger-icon">⚠️</span>
+        <span class="danger-stat" id="danger-stat">TRUMP HP LOW</span>
+      </div>
+
+      <!-- Threat Meters (appear when relevant) -->
+      <div class="threat-meters" id="threat-meters">
+        <div class="threat-meter hidden" id="feminist-meter">
+          <span class="threat-label">♀</span>
+          <div class="threat-hearts"></div>
+        </div>
+        <div class="threat-meter hidden" id="muslim-meter">
+          <span class="threat-label muslim-label">☪️</span>
+          <div class="threat-hearts"></div>
+        </div>
+      </div>
+
+      <!-- ⚠️ DO NOT DELETE - SLOT MACHINE SINGLE ICON (SATIRICAL GAMBLING CRITIQUE) ⚠️ -->
+      <div class="slot-machine-icon" id="slot-machine-icon" onclick="slotMachineClick()">☢️</div>
+      <!-- ⚠️ END PROTECTED SECTION ⚠️ -->
+
+      <div class="emergency-drop" id="emergency-drop">
+        <div class="emerg-icon pulse" id="emerg-litigation" onclick="emergLitigation()">⚖️</div>
+        <div class="emerg-icon pulse" id="emerg-nuke" onclick="activateNuke()">☢️</div>
+        <div class="emerg-icon pulse" id="emerg-blackops" onclick="activateBlackOps()">🎯</div>
+      </div>
+
+      <!-- Emergency Alert - shows at HP thresholds -->
+      <span class="blackops-alert-icon" id="blackops-alert-icon" onclick="handleAlertClick()">☢️</span>
+      <div class="blackops-alert-text" id="blackops-alert-text">BLACK OPS AVAILABLE</div>
+
+      <div class="nuke-confirm" id="nuke-confirm">
+        <div class="nuke-countdown" id="nuke-countdown">10</div>
+        <div class="nuke-question">LAUNCH NUKE?</div>
+        <div class="nuke-buttons">
+          <button class="nuke-btn yes" onclick="nukeDecision(true)">YES</button>
+          <button class="nuke-btn no" onclick="nukeDecision(false)">NO</button>
+        </div>
+      </div>
+
+      <div class="wheel-overlay" id="wheel-overlay">
+        <div class="wheel-countdown" id="wheel-countdown">15</div>
+        <div class="wheel-pointer">▼</div>
+        <div class="wheel-container">
+          <img src="https://shortfactory.shop/trump/map/wheel.png" class="wheel-img" id="wheel-img">
+          <div class="george-btn" onclick="spinWheel()"><img src="https://shortfactory.shop/trump/george.png"></div>
+        </div>
+        <div class="wheel-result" id="wheel-result"></div>
+        <div class="wheel-text">PRESS TO SPIN</div>
+      </div>
+
+      <div class="blackops-overlay" id="blackops-overlay">
+        <div class="blackops-title">BLACK OPS</div>
+        <div class="blackops-countdown" id="blackops-countdown">15</div>
+        <div class="blackops-scroll" id="blackops-scroll"></div>
+      </div>
+
+      <div class="stats-overlay" id="stats-overlay">
+        <!-- Stereotype Groups Section -->
+        <div class="groups-section">
+          <div class="groups-scroll" id="groups-scroll">
+          <!-- JIHADI ZONE -->
+          <div class="group-card" data-index="0">
+            <img src="icons/muslim-threat.jpg" class="group-icon">
+            <div class="group-label">JIHAD</div>
+            <div class="group-stat" id="stat-deadbodies">0 💀</div>
+          </div>
+
+          <!-- ISRAEL ZONE -->
+          <div class="group-card" data-index="1">
+            <img src="icons/israel-threat.jpg" class="group-icon">
+            <div class="group-label">ISRAEL</div>
+            <div class="group-stat" id="stat-israel-aid">$0B</div>
+          </div>
+
+          <!-- FEMINISM ZONE (rotating icons) -->
+          <div class="group-card" data-index="2">
+            <img id="feminism-icon" src="icons/feminism-threata.jpg" class="group-icon">
+            <div class="group-label">FEMINISTS</div>
+            <div class="group-stat" id="stat-abortions">0 ☠️</div>
+          </div>
+          <div class="group-card" data-index="3">
+            <img src="icons/soy.jpg" class="group-icon">
+            <div class="group-label">SOYBOY</div>
+            <div class="group-stat">WEAK</div>
+          </div>
+
+          <!-- GIGACHAD ZONE -->
+          <div class="group-card" data-index="4">
+            <img src="icons/Gigachad-PNG-Photos.png" class="group-icon">
+            <div class="group-label">GIGACHAD</div>
+            <div class="group-stat" id="stat-babies">0 👶</div>
+          </div>
+          <div class="group-card" data-index="5">
+            <img id="chad-icon" src="icons/image.jpg" class="group-icon">
+            <div class="group-label">CHAD</div>
+            <div class="group-stat">STRONG</div>
+          </div>
+          <div class="group-card" data-index="6">
+            <img id="tradwife-icon" src="icons/tradwife.jpg" class="group-icon">
+            <div class="group-label">TRADWIFE</div>
+            <div class="group-stat">BASED</div>
+          </div>
+          <div class="group-card" data-index="7">
+            <img src="icons/Soyjak_drawing.jpg" class="group-icon">
+            <div class="group-label">WOJAK</div>
+            <div class="group-stat">SAD</div>
+          </div>
+          <div class="group-card" data-index="8">
+            <img src="icons/brown-cuck-normy.png" class="group-icon">
+            <div class="group-label">CUCK NORMY</div>
+            <div class="group-stat">WEAK</div>
+          </div>
+          <div class="group-card" data-index="9">
+            <img src="icons/fat.jpg" class="group-icon">
+            <div class="group-label">DUMPTRUCK</div>
+            <div class="group-stat">THICC</div>
+          </div>
+          <div class="group-card" data-index="10">
+            <img src="icons/wtf.jpg" class="group-icon">
+            <div class="group-label">WTF</div>
+            <div class="group-stat">???</div>
+          </div>
+          </div>
+
+          <!-- Health Meter Strip - Feminist, Jew, Muslim, Christian -->
+          <div class="health-meter-strip">
+            <div class="health-meter">
+              <div class="health-meter-fill" id="health-muslim" style="width: 50%;"></div>
+              <div class="health-meter-label">JIHAD</div>
+            </div>
+            <div class="health-meter">
+              <div class="health-meter-fill" id="health-israel" style="width: 50%;"></div>
+              <div class="health-meter-label">JEW</div>
+            </div>
+            <div class="health-meter">
+              <div class="health-meter-fill" id="health-feminist" style="width: 40%;"></div>
+              <div class="health-meter-label">FEMINIST</div>
+            </div>
+            <div class="health-meter">
+              <div class="health-meter-fill" id="health-christian" style="width: 80%;"></div>
+              <div class="health-meter-label">CHRISTIAN</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-card-label">Oil Reserves</div><div class="stat-card-value" id="stat-oil">145B BBL</div></div>
+          <div class="stat-card"><div class="stat-card-label">Birthrate</div><div class="stat-card-value" id="stat-birth">1.64</div></div>
+          <div class="stat-card"><div class="stat-card-label">Trump Age</div><div class="stat-card-value" id="stat-age">78</div></div>
+          <div class="stat-card"><div class="stat-card-label">Israel GDP</div><div class="stat-card-value" id="stat-israel">$564B</div></div>
+          <div class="stat-card"><div class="stat-card-label">Optics</div><div class="stat-card-value" id="stat-optics">GOOD</div></div>
+          <div class="stat-card"><div class="stat-card-label">DeepState</div><div class="stat-card-value" id="stat-ds">30%</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GAME BUTTONS -->
+    <div class="game-buttons" id="game-buttons">
+      <button class="game-btn" data-action="oil" data-idx="0" data-cost="0"><img id="btn-oil-img" src="https://shortfactory.shop/trump/rollover/1.gif"><span class="powerup-badge">5x</span><span class="unlock-cost">FREE</span></button>
+      <button class="game-btn locked" data-action="home" data-idx="1" data-cost="1000"><img src="https://shortfactory.shop/trump/rollover/3.gif"><span class="powerup-badge">5x</span><span class="unlock-cost">$1000</span></button>
+      <button class="game-btn locked" data-action="psyop" data-idx="2" data-cost="2000"><img src="https://shortfactory.shop/trump/rollover/8.gif"><span class="powerup-badge">5x</span><span class="unlock-cost">$2000</span></button>
+      <button class="game-btn locked" data-action="aid" data-idx="3" data-cost="3000"><img src="https://shortfactory.shop/trump/rollover/5.gif"><span class="powerup-badge">5x</span><span class="unlock-cost">$3000</span></button>
+      <button class="game-btn locked" data-action="war" data-idx="4" data-cost="4000"><img src="https://shortfactory.shop/trump/rollover/2.gif"><span class="powerup-badge">5x</span><span class="unlock-cost">$4000</span></button>
+      <button class="game-btn locked" data-action="audit" data-idx="5" data-cost="5000"><img src="https://shortfactory.shop/trump/rollover/4.gif"><span class="powerup-badge">5x</span><span class="unlock-cost">$5000</span></button>
+      <button class="game-btn locked" data-action="drone" data-idx="6" data-cost="6000"><img src="https://shortfactory.shop/trump/rollover/7.gif"><span class="powerup-badge">5x</span><span class="unlock-cost">$6000</span></button>
+      <button class="game-btn" data-action="loan" data-idx="7" data-cost="0"><img id="btn-loan-img" src="https://shortfactory.shop/trump/rollover/6.gif"><span class="powerup-badge">5x</span><span class="unlock-cost">FREE</span></button>
+    </div>
+
+    <!-- CREDITS - ASCII ART -->
+    <div class="game-credits">
+      <pre class="ascii-art adam-cola">
+ ▄▀█ █▀▄ ▄▀█ █▀▄▀█   █▀▀ █▀█ █   ▄▀█
+ █▀█ █▄▀ █▀█ █ ▀ █   █▄▄ █▄█ █▄▄ █▀█</pre>
+      <pre class="ascii-art eliskcage">
+ █▀▀ █   █ █▀ █▄▀ █▀▀ ▄▀█ █▀▀ █▀▀
+ ██▄ █▄▄ █ ▄█ █ █ █▄▄ █▀█ █▄█ ██▄</pre>
+    </div>
+
+    <!-- CLAUDE LOGO (removed - was interfering with gameplay) -->
+
+    <!-- DEEPSTATE POPUP (Legacy - kept for fallback) -->
+    <div class="deepstate-popup" id="ds-popup">
+      <div class="deepstate-content">
+        <button class="popup-mute-btn" id="ds-mute-btn" onclick="toggleDeepstateMute()">🔊</button>
+        <button class="popup-close-btn" onclick="closeDeepstatePopup()">×</button>
+        <div class="deepstate-header" id="ds-header">DEEPSTATE!</div>
+        <div class="deepstate-meme"><video id="ds-video" loop playsinline></video></div>
+        <div class="deepstate-message" id="ds-message">Swamp!</div>
+        <div class="deepstate-damage">
+          <div class="damage-item"><div class="damage-label">HP</div><div class="damage-value" id="ds-dmg-hp">-10</div></div>
+          <div class="damage-item"><div class="damage-label">DS</div><div class="damage-value" id="ds-dmg-ds">+5</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LITIGATION IFRAME OVERLAY -->
+    <div class="iframe-overlay" id="litigation-overlay">
+      <iframe id="litigation-iframe" src="" frameborder="0" scrolling="no"></iframe>
+    </div>
+
+    <!-- GAME HINTS - SNES Style floating tips -->
+    <div class="game-hint-overlay" id="game-hint" onclick="dismissHint()">
+      <div class="hint-text" id="hint-text">★ TAP OIL TO START ★</div>
+      <div class="hint-sub" id="hint-sub">Build up cash to unlock more actions!</div>
+      <div class="hint-dismiss">PRESS ANY KEY</div>
+    </div>
+
+    <!-- RESULT POPUP -->
+    <div class="result-popup" id="result-popup">
+      <div class="result-title" id="result-title">RESULT</div>
+      <div class="result-outcome" id="result-outcome"></div>
+      <div class="result-stats" id="result-stats"></div>
+      <button class="result-close" onclick="closeResult()">OK</button>
+    </div>
+
+    <!-- DISASTER ANNOUNCEMENT -->
+    <div class="disaster-overlay" id="disaster-overlay">
+      <div class="disaster-name" id="disaster-name">TSUNAMI</div>
+      <div class="disaster-effects" id="disaster-effects"></div>
+    </div>
+
+    <!-- IFRAME OVERLAYS -->
+    <div class="iframe-overlay" id="tally-overlay">
+      <iframe id="tally-iframe" src="" frameborder="0" scrolling="no"></iframe>
+    </div>
+    <div class="iframe-overlay" id="ending-overlay">
+      <iframe id="ending-iframe" src="" frameborder="0" scrolling="no"></iframe>
+    </div>
+  </div>
+
+  <audio id="mute-sound" src="https://www.shortfactory.shop/trump/trump-shut-up-silly-woman.mp3" preload="auto"></audio>
+  <audio id="click-sound" src="https://www.shortfactory.shop/trump/powerup1.mp3" preload="auto"></audio>
+  <audio id="drone-sound" src="https://www.shortfactory.shop/trump/powerup1.mp3" preload="auto"></audio>
+  <audio id="breath-sound" src="https://www.shortfactory.shop/trump/arcadecounter.mp3" preload="auto"></audio>
+  <audio id="success-sound" src="https://www.shortfactory.shop/trump/powerup1.mp3" preload="auto"></audio>
+  <audio id="longhold-charge-a" src="https://www.shortfactory.shop/trump/longholdcharge.wav" preload="auto"></audio>
+  <audio id="longhold-charge-b" src="https://www.shortfactory.shop/trump/longholdchargeb.wav" preload="auto"></audio>
+
+
+  <!-- JavaScript Files - Edit these to change behavior -->
+  <script src="js/config.js?v=20260209-1"></script>
+  <script src="js/state.js?v=20260209-1"></script>
+  <script src="js/assetmanager.js?v=20260209-1"></script>
+  <script src="js/notifications.js?v=20260209-1"></script>
+  <script src="js/actions.js?v=20260209-1"></script>
+  <script src="js/main.js?v=20260209-2"></script>
+
+  <!-- High Score System -->
+  <script src="highscore_system.js?v=20260209-1"></script>
+
+  <!-- Cortex Command System -->
+  <script src="cortex_commands.js?v=20260209-1"></script>
+<!-- User Interaction Tracking -->
+<script src="/tracking.js"></script>
+
+<!-- Live Player Heartbeat -->
+<script>
+(function(){
+  var sid = sessionStorage.getItem('sf_session_id');
+  if (!sid) { sid = Math.random().toString(36).substr(2,15); sessionStorage.setItem('sf_session_id', sid); }
+  function beat(){
+    fetch('/api_pulse.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'heartbeat',session:sid,page:'/trump/game/'})}).catch(function(){});
+  }
+  beat();
+  setInterval(beat, 30000);
+})();
+</script>
+
+<!-- AI Feedback System - disabled on game page (interferes with game UI) -->
+<!-- <script src="/ai_feedback.js"></script> -->
+
+<!-- Game Start Handler + Menu Cinematic (all on the overlay, nothing touches the game) -->
+<script src="/rotation_config.js?v=20260209-1"></script>
+<script>
+let gameStarted = false;
+
+document.addEventListener('DOMContentLoaded', () => {
+    const overlay = document.getElementById('game-start-overlay');
+    const bgVideo = document.getElementById('menu-bg-video');
+    const lightning = document.getElementById('menu-lightning');
+    const bondMusic = document.getElementById('menu-bond-music');
+    const lightningSound = document.getElementById('menu-lightning-sound');
+    const counterEl = document.getElementById('menu-counter');
+    const countdownEl = document.getElementById('menu-countdown');
+    const screenNumEl = document.getElementById('menu-screen-num');
+    const screenTotalEl = document.getElementById('menu-screen-total');
+    let menuActive = true;
+    let lightningTimer, countdownTimer;
+
+    // Set screen number from rotation config
+    if (typeof ROTATION_CONFIG !== 'undefined') {
+        const screens = ROTATION_CONFIG.screens;
+        const idx = screens.findIndex(s => window.location.pathname.includes(s.url) || s.url.includes('/trump/game'));
+        if (idx !== -1) screenNumEl.textContent = idx + 1;
+        screenTotalEl.textContent = 'OF ' + screens.length + ' SCREENS';
+    }
+
+    // Start background video
+    if (bgVideo) {
+        bgVideo.src = 'https://www.shortfactory.shop/trump/background.webm';
+        bgVideo.play().catch(()=>{});
+    }
+
+    // Video pulse
+    let vDir = 1, vOp = 0;
+    function pulseVid() {
+        if (!menuActive) return;
+        vOp += 0.003 * vDir;
+        if (vOp >= 0.6) { vOp = 0.6; vDir = -1; }
+        else if (vOp <= 0) { vOp = 0; vDir = 1; }
+        if (bgVideo) bgVideo.style.opacity = vOp;
+        requestAnimationFrame(pulseVid);
+    }
+    pulseVid();
+
+    // Lightning
+    function flash() {
+        if (!menuActive) return;
+        const n = Math.floor(Math.random() * 3) + 1;
+        let d = 0;
+        if (lightningSound) { lightningSound.currentTime = 0; lightningSound.volume = 0.5; lightningSound.play().catch(()=>{}); }
+        for (let i = 0; i < n; i++) {
+            setTimeout(() => {
+                if (!menuActive) return;
+                lightning.style.opacity = 0.6 + Math.random() * 0.4;
+                setTimeout(() => { lightning.style.opacity = 0; }, 60 + Math.random() * 80);
+            }, d);
+            d += 100 + Math.random() * 150;
+        }
+    }
+    lightningTimer = setInterval(flash, 5000 + Math.random() * 8000);
+
+    // Countdown (30s)
+    let timeLeft = 30;
+    countdownTimer = setInterval(() => {
+        timeLeft--;
+        if (countdownEl) countdownEl.textContent = timeLeft;
+        if (timeLeft <= 10 && countdownEl) {
+            countdownEl.style.color = '#f00';
+            countdownEl.style.borderColor = '#f00';
+            countdownEl.style.textShadow = '0 0 20px #f00, 0 0 40px #f00, 4px 4px 0 #000';
+            countdownEl.style.boxShadow = '0 0 30px rgba(255,0,0,0.8)';
+        }
+        if (timeLeft <= 0) goNext();
+    }, 1000);
+
+    // Navigate to next screen
+    function goNext() {
+        killMenu();
+        if (typeof getNextScreen === 'function') {
+            const next = getNextScreen(window.location.href);
+            window.location.href = next.url;
+        } else {
+            window.location.href = '/finished_showcase.html';
+        }
+    }
+
+    // Counter click = next
+    if (counterEl) counterEl.addEventListener('click', (e) => { e.stopPropagation(); goNext(); });
+
+    // Kill all menu stuff
+    function killMenu() {
+        menuActive = false;
+        if (lightningTimer) clearInterval(lightningTimer);
+        if (countdownTimer) clearInterval(countdownTimer);
+        if (bgVideo) { bgVideo.pause(); }
+        if (bondMusic) { bondMusic.pause(); }
+        if (lightningSound) { lightningSound.pause(); }
+    }
+
+    // Click overlay = start game (not the counter)
+    if (overlay) {
+        overlay.addEventListener('click', () => {
+            killMenu();
+            overlay.classList.add('hidden');
+            gameStarted = true;
+            console.log('🎮 Game started by user');
+
+            if (typeof trackEvent === 'function') {
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                trackEvent('game_start', isMobile ? 'mobile' : 'desktop');
+            }
+        });
+    }
+});
+
+// Shake toggle - controls screen shake animations (separate from phone vibration)
+let shakeEnabled = localStorage.getItem('shakeEnabled') !== 'false'; // default ON
+
+window.toggleShake = function(enabled) {
+    shakeEnabled = enabled;
+    localStorage.setItem('shakeEnabled', enabled.toString());
+    const phone = document.getElementById('phone');
+    const label = document.getElementById('shake-label');
+    if (phone) {
+        if (!enabled) {
+            phone.classList.add('no-shake');
+        } else {
+            phone.classList.remove('no-shake');
+            // Test shake so user sees it working
+            phone.classList.add('rumble-shake');
+            setTimeout(() => phone.classList.remove('rumble-shake'), 600);
+        }
+    }
+    if (label) {
+        label.querySelector('.rumble-state').textContent = enabled ? 'ON' : 'OFF';
+        if (!enabled) label.classList.add('off');
+        else label.classList.remove('off');
+    }
+    console.log('📳 SHAKE:', enabled ? 'ON' : 'OFF');
+};
+
+// TEST MODE toggle - shows/hides the 4 test buttons (☢️⚖️☣️💣)
+var testModeEnabled = localStorage.getItem('testMode') === 'true';
+window.toggleTestMode = function(enabled) {
+    testModeEnabled = enabled;
+    localStorage.setItem('testMode', enabled);
+    var testBtns = document.querySelectorAll('.test-btn');
+    testBtns.forEach(function(btn) {
+        btn.style.display = enabled ? '' : 'none';
+    });
+    var label = document.getElementById('test-label');
+    if (label) {
+        label.querySelector('.rumble-state').textContent = enabled ? 'ON' : 'OFF';
+        if (!enabled) label.classList.add('off');
+        else label.classList.remove('off');
+    }
+    console.log('🧪 TEST MODE:', enabled ? 'ON' : 'OFF');
+};
+
+// Sync both toggles with localStorage on load + detect vibration support
+setTimeout(() => {
+    var hasVibrate = !!navigator.vibrate;
+    var isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+
+    // Rumble (vibrate) toggle
+    var rToggle = document.getElementById('rumble-toggle');
+    var rLabel = document.getElementById('rumble-label');
+    if (rToggle && typeof rumbleEnabled !== 'undefined') {
+        rToggle.checked = rumbleEnabled;
+        if (rLabel) {
+            var stateEl = rLabel.querySelector('.rumble-state');
+            if (!hasVibrate) {
+                // Device doesn't support vibration
+                stateEl.textContent = isIOS ? 'NO iOS' : 'N/A';
+                stateEl.style.color = '#888';
+                rToggle.disabled = true;
+                rLabel.querySelector('.rumble-text').style.color = '#888';
+                rLabel.querySelector('.rumble-text').style.textShadow = 'none';
+            } else {
+                stateEl.textContent = rumbleEnabled ? 'ON' : 'OFF';
+                if (!rumbleEnabled) rLabel.classList.add('off');
+            }
+        }
+    }
+
+    // Shake toggle
+    var sToggle = document.getElementById('shake-toggle');
+    var sLabel = document.getElementById('shake-label');
+    var phone = document.getElementById('phone');
+    if (sToggle) sToggle.checked = shakeEnabled;
+    if (sLabel) {
+        sLabel.querySelector('.rumble-state').textContent = shakeEnabled ? 'ON' : 'OFF';
+        if (!shakeEnabled) sLabel.classList.add('off');
+    }
+    if (phone && !shakeEnabled) phone.classList.add('no-shake');
+
+    // Test mode toggle
+    var tToggle = document.getElementById('test-toggle');
+    var tLabel = document.getElementById('test-label');
+    if (tToggle) tToggle.checked = testModeEnabled;
+    if (tLabel) {
+        tLabel.querySelector('.rumble-state').textContent = testModeEnabled ? 'ON' : 'OFF';
+        if (!testModeEnabled) tLabel.classList.add('off');
+    }
+    // Show/hide test buttons based on stored state
+    if (testModeEnabled) {
+        var testBtns = document.querySelectorAll('.test-btn');
+        testBtns.forEach(function(btn) { btn.style.display = ''; });
+    }
+
+    console.log('📱 Vibrate API:', hasVibrate ? 'SUPPORTED' : 'NOT SUPPORTED', '| iOS:', isIOS);
+}, 100);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ShortFactory — ADVERTainment</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Syne:wght@700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Syne',sans-serif;}
+
+/* ── STAGE ── */
+#stage{
+  position:fixed;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  background:#000;
+  overflow:hidden;
+}
+
+/* Full-bleed media layer */
+#media-layer{position:absolute;inset:0;z-index:1;}
+#media-layer video,#media-layer img{
+  width:100%;height:100%;
+  object-fit:cover;
+  position:absolute;inset:0;
+  opacity:0;
+  transition:opacity 0.6s ease;
+}
+#media-layer video.vis,#media-layer img.vis{opacity:1;}
+
+/* Overlay tint */
+#tint{
+  position:absolute;inset:0;z-index:2;
+  background:rgba(0,0,0,0);
+  transition:background 1s ease;
+  pointer-events:none;
+}
+
+/* Scanline effect */
+#scanlines{
+  position:absolute;inset:0;z-index:3;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);
+  pointer-events:none;
+  opacity:0.6;
+}
+
+/* ── PROGRESS BAR ── */
+#progress-bar{
+  position:absolute;top:0;left:0;right:0;height:3px;
+  background:rgba(255,255,255,0.1);z-index:20;
+}
+#progress-fill{
+  height:100%;background:linear-gradient(90deg,#e8c84a,#f04a6a);
+  width:0%;transition:width 0.3s linear;
+}
+
+/* ── CREDIT COUNTER (top right) ── */
+#credit-counter{
+  position:absolute;top:16px;right:16px;z-index:20;
+  display:flex;align-items:center;gap:8px;
+  background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);
+  border:1px solid rgba(232,200,74,0.3);
+  border-radius:4px;padding:6px 14px;
+  opacity:0;transition:opacity 0.5s;
+}
+#credit-counter.show{opacity:1;}
+#credit-icon{font-size:14px;}
+#credit-num{
+  font-family:'DM Serif Display',serif;font-size:22px;color:#e8c84a;
+  min-width:48px;line-height:1;
+}
+#credit-num.pop{animation:cpop 0.4s cubic-bezier(0.34,1.56,0.64,1);}
+@keyframes cpop{0%{transform:scale(1)}50%{transform:scale(1.5);color:#fff}100%{transform:scale(1)}}
+#credit-label{font-size:9px;color:rgba(232,200,74,0.6);letter-spacing:0.2em;text-transform:uppercase;font-family:'Share Tech Mono',monospace;}
+
+/* ── TIMER (top left) ── */
+#timer{
+  position:absolute;top:16px;left:16px;z-index:20;
+  font-family:'Share Tech Mono',monospace;font-size:12px;
+  color:rgba(255,255,255,0.4);
+  opacity:0;transition:opacity 0.5s;
+  letter-spacing:0.1em;
+}
+#timer.show{opacity:1;}
+
+/* ── TEXT LAYER ── */
+#text-layer{
+  position:absolute;inset:0;z-index:10;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;
+  padding:20px;
+  pointer-events:none;
+}
+
+.scene-title{
+  font-family:'DM Serif Display',serif;
+  font-size:clamp(28px,8vw,72px);
+  color:#fff;
+  line-height:1.05;
+  text-shadow:0 4px 32px rgba(0,0,0,0.9);
+  opacity:0;
+  transform:translateY(20px);
+  transition:all 0.6s cubic-bezier(0.34,1.56,0.64,1);
+  max-width:900px;
+}
+.scene-title.vis{opacity:1;transform:translateY(0);}
+.scene-title em{color:#e8c84a;font-style:italic;}
+.scene-title .red{color:#f04a6a;}
+
+.scene-sub{
+  font-family:'Share Tech Mono',monospace;
+  font-size:clamp(11px,2vw,16px);
+  color:rgba(255,255,255,0.6);
+  letter-spacing:0.2em;
+  text-transform:uppercase;
+  margin-top:14px;
+  opacity:0;
+  transition:opacity 0.5s 0.3s;
+}
+.scene-sub.vis{opacity:1;}
+
+.scene-body{
+  font-size:clamp(14px,2.5vw,22px);
+  color:rgba(255,255,255,0.85);
+  line-height:1.6;
+  max-width:700px;
+  margin-top:16px;
+  opacity:0;
+  transition:opacity 0.5s 0.4s;
+  text-shadow:0 2px 12px rgba(0,0,0,0.8);
+  font-weight:700;
+}
+.scene-body.vis{opacity:1;}
+
+/* ── POT COUNTER ── */
+#pot-display{
+  position:absolute;
+  bottom:100px;left:50%;transform:translateX(-50%);
+  z-index:15;
+  text-align:center;
+  opacity:0;transition:opacity 0.5s;
+}
+#pot-display.show{opacity:1;}
+#pot-label{font-family:'Share Tech Mono',monospace;font-size:11px;color:rgba(255,255,255,0.5);letter-spacing:0.2em;text-transform:uppercase;margin-bottom:6px;}
+#pot-amount{font-family:'DM Serif Display',serif;font-size:clamp(40px,10vw,80px);color:#e8c84a;text-shadow:0 0 40px rgba(232,200,74,0.6),0 0 80px rgba(232,200,74,0.3);line-height:1;}
+#pot-amount.pulse{animation:pot-pulse 0.5s ease;}
+@keyframes pot-pulse{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
+
+/* ── CHOICE LAYER ── */
+#choice-layer{
+  position:absolute;inset:0;z-index:25;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:flex-end;
+  padding:0 20px 60px;
+  pointer-events:none;
+  opacity:0;transition:opacity 0.4s;
+}
+#choice-layer.show{opacity:1;pointer-events:all;}
+
+#choice-prompt{
+  font-family:'DM Serif Display',serif;
+  font-size:clamp(18px,4vw,32px);
+  color:#fff;text-align:center;
+  margin-bottom:24px;
+  text-shadow:0 2px 12px rgba(0,0,0,0.8);
+}
+
+#choice-buttons{
+  display:flex;gap:12px;flex-wrap:wrap;justify-content:center;
+  max-width:700px;width:100%;
+}
+
+.choice-btn{
+  flex:1;min-width:140px;max-width:240px;
+  padding:16px 20px;
+  background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);
+  border:2px solid rgba(255,255,255,0.2);
+  border-radius:12px;
+  color:#fff;
+  font-family:'Syne',sans-serif;font-size:15px;font-weight:800;
+  cursor:pointer;
+  transition:all 0.2s cubic-bezier(0.34,1.56,0.64,1);
+  text-align:center;
+  line-height:1.3;
+}
+.choice-btn:hover,.choice-btn:active{
+  border-color:#e8c84a;
+  background:rgba(232,200,74,0.15);
+  transform:scale(1.06);
+  box-shadow:0 0 30px rgba(232,200,74,0.3);
+}
+.choice-btn .cb-icon{font-size:24px;display:block;margin-bottom:6px;}
+.choice-btn .cb-credit{font-size:10px;color:#e8c84a;font-family:'Share Tech Mono',monospace;margin-top:4px;letter-spacing:0.1em;}
+
+/* Choice countdown ring */
+#choice-timer-ring{
+  width:48px;height:48px;margin:0 auto 16px;
+  position:relative;
+}
+#choice-timer-ring svg{transform:rotate(-90deg);}
+#choice-timer-circle{
+  stroke:#e8c84a;stroke-width:3;fill:none;
+  stroke-dasharray:138;stroke-dashoffset:0;
+  transition:stroke-dashoffset 0.1s linear;
+}
+#choice-timer-num{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:'Share Tech Mono',monospace;font-size:16px;color:#e8c84a;
+}
+
+/* ── OUTCOME FLASH ── */
+#outcome-flash{
+  position:absolute;inset:0;z-index:30;
+  background:rgba(232,200,74,0);
+  pointer-events:none;
+  transition:background 0.1s;
+}
+#outcome-flash.flash-gold{animation:flash-gold 0.4s ease forwards;}
+#outcome-flash.flash-red{animation:flash-red 0.4s ease forwards;}
+@keyframes flash-gold{0%{background:rgba(232,200,74,0.6)}100%{background:rgba(232,200,74,0)}}
+@keyframes flash-red{0%{background:rgba(240,74,106,0.6)}100%{background:rgba(240,74,106,0)}}
+
+/* ── BRAND STAMP ── */
+#brand-stamp{
+  position:absolute;bottom:20px;right:20px;z-index:20;
+  opacity:0;transition:opacity 0.5s;
+  text-align:right;
+}
+#brand-stamp.show{opacity:1;}
+#bs-sf{font-family:'DM Serif Display',serif;font-size:18px;color:#e8c84a;letter-spacing:0.08em;}
+#bs-sub{font-family:'Share Tech Mono',monospace;font-size:9px;color:rgba(255,255,255,0.4);letter-spacing:0.2em;text-transform:uppercase;margin-top:2px;}
+
+/* ── FLOATING CREDIT POPUP ── */
+.fcredit{
+  position:fixed;
+  font-family:'Share Tech Mono',monospace;font-size:18px;font-weight:700;
+  color:#e8c84a;pointer-events:none;z-index:999;
+  animation:float-up 1.2s ease forwards;
+}
+@keyframes float-up{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-60px);opacity:0}}
+
+/* ── START / END SCREENS ── */
+#start-screen,#end-screen{
+  position:fixed;inset:0;z-index:100;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  background:#000;
+  padding:24px;
+  text-align:center;
+}
+#start-screen{background:radial-gradient(ellipse at 30% 20%,rgba(160,74,240,0.15) 0%,transparent 50%),radial-gradient(ellipse at 80% 80%,rgba(232,200,74,0.1) 0%,transparent 50%),#000;}
+#end-screen{display:none;background:radial-gradient(ellipse at 50% 30%,rgba(232,200,74,0.12) 0%,transparent 50%),#000;}
+
+.ss-eye{font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:0.3em;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:20px;}
+.ss-title{font-family:'DM Serif Display',serif;font-size:clamp(36px,10vw,80px);color:#fff;line-height:1;margin-bottom:14px;}
+.ss-title em{color:#e8c84a;font-style:italic;}
+.ss-title .red{color:#f04a6a;}
+.ss-sub{font-size:clamp(13px,2vw,18px);color:rgba(255,255,255,0.5);max-width:560px;line-height:1.7;margin-bottom:32px;font-weight:700;}
+.ss-warn{font-family:'Share Tech Mono',monospace;font-size:10px;color:rgba(255,255,255,0.25);letter-spacing:0.15em;margin-bottom:28px;}
+
+.start-btn{
+  padding:18px 48px;
+  background:#e8c84a;color:#0a0800;
+  font-family:'Syne',sans-serif;font-size:16px;font-weight:800;
+  letter-spacing:0.12em;text-transform:uppercase;
+  border:none;border-radius:8px;cursor:pointer;
+  box-shadow:0 8px 32px rgba(232,200,74,0.4);
+  transition:all 0.2s;
+}
+.start-btn:hover{transform:translateY(-3px);box-shadow:0 14px 40px rgba(232,200,74,0.6);}
+
+/* End screen stats */
+.end-stats{display:flex;gap:16px;margin:28px 0;flex-wrap:wrap;justify-content:center;}
+.end-stat{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:16px 24px;min-width:100px;}
+.end-stat-val{font-family:'DM Serif Display',serif;font-size:36px;margin-bottom:4px;}
+.end-stat-label{font-size:10px;color:rgba(255,255,255,0.4);letter-spacing:0.15em;text-transform:uppercase;font-family:'Share Tech Mono',monospace;}
+
+.end-path{font-size:14px;color:rgba(255,255,255,0.5);margin-bottom:24px;line-height:1.6;max-width:500px;font-weight:700;}
+
+.replay-btn{
+  padding:14px 36px;background:transparent;
+  border:2px solid #e8c84a;color:#e8c84a;
+  font-family:'Syne',sans-serif;font-size:13px;font-weight:800;
+  letter-spacing:0.12em;text-transform:uppercase;
+  border-radius:6px;cursor:pointer;margin:6px;
+  transition:all 0.2s;
+}
+.replay-btn:hover{background:rgba(232,200,74,0.1);}
+
+/* ── SF WATERMARK ── */
+#watermark{
+  position:absolute;bottom:12px;left:50%;transform:translateX(-50%);
+  z-index:20;
+  font-family:'DM Serif Display',serif;font-size:11px;
+  color:rgba(255,255,255,0.15);letter-spacing:0.15em;
+  white-space:nowrap;
+}
+</style>
+</head>
+<body>
+<div style="position:fixed;top:0;left:0;right:0;z-index:9999;display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:rgba(3,4,10,0.85);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,0.06);font-family:'DM Mono',monospace;">
+  <a href="empire.html" style="font-size:9px;letter-spacing:0.25em;color:rgba(255,255,255,0.35);text-decoration:none;text-transform:uppercase;transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.35)'">← Empire</a>
+  <span style="font-size:9px;letter-spacing:0.25em;color:rgba(255,255,255,0.2);text-transform:uppercase;">ShortFactory</span>
+</div>
+<style>body{padding-top:44px!important;}</style>
+
+
+<!-- START SCREEN -->
+<div id="start-screen">
+  <div class="ss-eye">ShortFactory · ADVERTainment · Interactive Experience</div>
+  <div class="ss-title">Adverts are<br><span class="red">dead.</span><br><em>Long live</em><br>ADVERTainment.</div>
+  <div class="ss-sub">A 3-minute interactive experience where your choices change the story, earn you real credits, and prove the future of advertising is yours to own.</div>
+  <div class="ss-warn">⚠ CONTAINS FLASHING IMAGERY · BEST WITH HEADPHONES · TAP CHOICES WHEN PROMPTED</div>
+  <button class="start-btn" onclick="startExperience()">▶ BEGIN EXPERIENCE</button>
+</div>
+
+<!-- END SCREEN -->
+<div id="end-screen">
+  <div class="ss-eye">ShortFactory · You just proved the concept</div>
+  <div class="ss-title">You <em>ate</em><br>his lunch.</div>
+  <div class="end-path" id="end-path-text">Your path through the experience</div>
+  <div class="end-stats">
+    <div class="end-stat"><div class="end-stat-val" style="color:#e8c84a" id="end-credits">0</div><div class="end-stat-label">Credits Earned</div></div>
+    <div class="end-stat"><div class="end-stat-val" style="color:#4af0a0" id="end-choices">0</div><div class="end-stat-label">Choices Made</div></div>
+    <div class="end-stat"><div class="end-stat-val" style="color:#4af0e8" id="end-outcome">—</div><div class="end-stat-label">Your Outcome</div></div>
+  </div>
+  <div style="font-size:13px;color:rgba(255,255,255,0.4);max-width:520px;line-height:1.7;margin-bottom:28px;font-weight:700;">
+    This experience — the choices, the tension, the credits — <em style="color:rgba(255,255,255,0.7)">IS</em> the ShortFactory pipeline.
+    Every user who plays this becomes a creator, a judge, and an advertiser simultaneously.
+    <br><br>
+    <span style="color:#e8c84a">dares4DOSH</span> — powered by ShortFactory — turns every interaction into income.
+    The old ad man is out. <em style="color:#e8c84a">You're in.</em>
+  </div>
+  <div>
+    <button class="replay-btn" onclick="replay()">↺ REPLAY</button>
+    <button class="replay-btn" onclick="window.location.href='shortfactory-adbuilder.html'" style="border-color:#4af0a0;color:#4af0a0;">🎬 BUILD YOUR OWN AD</button>
+    <button class="replay-btn" onclick="window.location.href='shortfactory-soundstudio.html'" style="border-color:#a04af0;color:#a04af0;">🎵 SOUND STUDIO</button>
+  </div>
+</div>
+
+<!-- MAIN STAGE -->
+<div id="stage" style="display:none;">
+  <div id="progress-bar"><div id="progress-fill"></div></div>
+
+  <!-- Media -->
+  <div id="media-layer">
+    <video id="vid-main" playsinline muted loop></video>
+    <video id="vid-bg" playsinline muted loop></video>
+    <img id="img-main" src="" alt="">
+    <img id="img-bg" src="" alt="">
+  </div>
+
+  <div id="tint"></div>
+  <div id="scanlines"></div>
+
+  <!-- UI -->
+  <div id="timer" class="show">0:00</div>
+  <div id="credit-counter">
+    <div id="credit-icon">⚡</div>
+    <div>
+      <div id="credit-num">0</div>
+      <div id="credit-label">CREDITS</div>
+    </div>
+  </div>
+
+  <!-- Text -->
+  <div id="text-layer">
+    <div class="scene-title" id="scene-title"></div>
+    <div class="scene-sub" id="scene-sub"></div>
+    <div class="scene-body" id="scene-body"></div>
+  </div>
+
+  <!-- Pot -->
+  <div id="pot-display">
+    <div id="pot-label">Creator Pot</div>
+    <div id="pot-amount">£0</div>
+  </div>
+
+  <!-- Choices -->
+  <div id="choice-layer">
+    <div id="choice-timer-ring">
+      <svg viewBox="0 0 48 48" width="48" height="48">
+        <circle cx="24" cy="24" r="22" stroke="rgba(255,255,255,0.1)" stroke-width="3" fill="none"/>
+        <circle id="choice-timer-circle" cx="24" cy="24" r="22"/>
+      </svg>
+      <div id="choice-timer-num">10</div>
+    </div>
+    <div id="choice-prompt"></div>
+    <div id="choice-buttons"></div>
+  </div>
+
+  <!-- Flash -->
+  <div id="outcome-flash"></div>
+
+  <!-- Brand stamp -->
+  <div id="brand-stamp">
+    <div id="bs-sf">ShortFactory</div>
+    <div id="bs-sub">shortfactory.shop</div>
+  </div>
+
+  <!-- Watermark -->
+  <div id="watermark">shortfactory.shop · ADVERTainment Pipeline · dares4DOSH</div>
+</div>
+
+<script>
+const BASE = 'http://s1061738678.websitehome.co.uk/Squidgames/';
+
+// ── ASSET MAP ──
+const A = {
+  // Videos
+  vAdvDead:  BASE+'adverts-are-dead.mp4',
+  vCash:     BASE+'cash.mp4',
+  vCashDiv:  BASE+'cashdevide.mp4',
+  vImagine:  BASE+'imagine.mp4',
+  vCashPot:  BASE+'cashpot-leaderboard.mp4',
+  vCashPotB: BASE+'cashpot-leaderboardb.mp4',
+  v2g:       BASE+'2g.mp4',
+  // Images
+  iSkull:    BASE+'skullboss.jpg',
+  iSkullBig: BASE+'skullboss.jpg',
+  iCrowd:    BASE+'crowd.jpeg',
+  iCard1:    BASE+'card1.png',
+  iCard2:    BASE+'card2.png',
+  iCardCash: BASE+'card7cash.png',
+  iCardGrok: BASE+'cardgrok.png',
+  iPot:      BASE+'pot-cash.png',
+  iAdTake:   BASE+'advertainment-hard-takeover.jpg',
+  iAdTake2:  BASE+'advertainment-hard-takeover2.jpg',
+  iAdTake3:  BASE+'advertainment-hard-takeover3.png',
+  iSFMobile: BASE+'sf-needs-u-mobile.png',
+  iAudience: BASE+'audience1.png',
+  iDebt:     BASE+'debt-girl-mobile.png',
+  iDebtMob:  BASE+'mobile-debtgirl.png',
+  iEnough:   BASE+'enough.png',
+  iGrokKid:  BASE+'grok_image_kid.jpg',
+  iGrok:     BASE+'grok_image_cfra5y.jpg',
+  iQ:        BASE+'q.png',
+  iR:        BASE+'r.png',
+  iT:        BASE+'t.png',
+  iU:        BASE+'u.png',
+  iV:        BASE+'v.png',
+  iW:        BASE+'w.png',
+  iX:        BASE+'x.png',
+  iZ:        BASE+'z.png',
+};
+
+// ── STATE ──
+let credits = 0;
+let potAmount = 0;
+let choicesMade = 0;
+let choiceLog = [];
+let currentPath = 'neutral'; // 'fighter' | 'builder' | 'neutral'
+let sceneIdx = 0;
+let choiceTimer = null;
+let choiceCountdown = 0;
+let globalTimer = null;
+let globalSeconds = 0;
+let exported = false;
+
+// ── SCENE DEFINITION ──
+// Each scene: { dur, media, tint, title, sub, body, pot, showBrand, choices? }
+// Branching: choice selects next scene by path
+const SCENES = [
+
+  // ══ ACT 1: THE PROVOCATION (0–35s) ══
+  {
+    id:'open',
+    dur:6000,
+    media:{type:'video', src:'vAdvDead'},
+    tint:'rgba(0,0,0,0.2)',
+    title:'', sub:'', body:'',
+    showBrand:false,
+    next:'question1',
+  },
+  {
+    id:'question1',
+    dur:5000,
+    media:{type:'img', src:'iAdTake'},
+    tint:'rgba(0,0,0,0.55)',
+    title:'Who put their hand<br>in <em>your</em> pocket?',
+    sub:'The old advertising model',
+    body:'',
+    showBrand:false,
+    next:'debt_setup',
+  },
+  {
+    id:'debt_setup',
+    dur:5000,
+    media:{type:'img', src:'iDebt'},
+    tint:'rgba(0,0,0,0.4)',
+    title:'You owe them<br><span class="red">everything.</span>',
+    sub:'Their platform. Their rules. Their cut.',
+    body:'',
+    showBrand:false,
+    next:'choice_1',
+  },
+
+  // ══ ACT 2: FIRST CHOICE (35s) ══
+  {
+    id:'choice_1',
+    dur:12000,
+    media:{type:'img', src:'iSkull'},
+    tint:'rgba(0,0,0,0.5)',
+    title:'You have two options.',
+    sub:'Choose wisely. This changes everything.',
+    body:'',
+    showBrand:false,
+    isChoice:true,
+    choicePrompt:'What do you do?',
+    choices:[
+      { icon:'🔥', label:'Fight the system', sub:'Take your power back', credit:25, path:'fighter', next:'fighter_1' },
+      { icon:'🏗️', label:'Build a new one', sub:'Create the future', credit:20, path:'builder', next:'builder_1' },
+    ],
+    choiceTimeout:'builder_1',
+    next:'fighter_1',
+  },
+
+  // ══ FIGHTER PATH ══
+  {
+    id:'fighter_1',
+    dur:5000,
+    media:{type:'video', src:'vCash'},
+    tint:'rgba(0,0,0,0.3)',
+    title:'The pot is <em>real.</em>',
+    sub:'And it has your name on it.',
+    body:'',
+    showPot:true, potVal:4000,
+    showBrand:false,
+    next:'fighter_2',
+  },
+  {
+    id:'fighter_2',
+    dur:5000,
+    media:{type:'img', src:'iCard1'},
+    tint:'rgba(0,0,0,0.45)',
+    title:'Every view.<br>Every vote.<br><em>Every credit.</em>',
+    sub:'Yours. Not theirs.',
+    body:'',
+    showBrand:false,
+    next:'act3_merge',
+  },
+
+  // ══ BUILDER PATH ══
+  {
+    id:'builder_1',
+    dur:5000,
+    media:{type:'video', src:'vImagine'},
+    tint:'rgba(0,0,0,0.35)',
+    title:'Imagine a platform<br>that pays <em>you</em>.',
+    sub:'Not the other way around.',
+    body:'',
+    showPot:true, potVal:4000,
+    showBrand:false,
+    next:'builder_2',
+  },
+  {
+    id:'builder_2',
+    dur:5000,
+    media:{type:'img', src:'iAdTake2'},
+    tint:'rgba(0,0,0,0.45)',
+    title:'You create.<br>They watch.<br><em>You earn.</em>',
+    sub:'The pipeline is already built.',
+    body:'',
+    showBrand:false,
+    next:'act3_merge',
+  },
+
+  // ══ ACT 3: THE GAME (merge) ══
+  {
+    id:'act3_merge',
+    dur:4000,
+    media:{type:'img', src:'iCrowd'},
+    tint:'rgba(0,0,0,0.5)',
+    title:'The <em>game</em><br>has changed.',
+    sub:'And you\'re already playing it.',
+    body:'',
+    showBrand:false,
+    next:'choice_2',
+  },
+
+  // ══ SECOND CHOICE ══
+  {
+    id:'choice_2',
+    dur:12000,
+    media:{type:'video', src:'vCashDiv'},
+    tint:'rgba(0,0,0,0.4)',
+    title:'The pot is splitting.',
+    sub:'Where does your cut go?',
+    body:'',
+    showPot:true, potVal:8500,
+    isChoice:true,
+    choicePrompt:'Your dares4DOSH reward — what do you do with it?',
+    choices:[
+      { icon:'💎', label:'Stack SFT tokens', sub:'Long game. Big wins.', credit:30, tag:'stacker', next:'act4_sf' },
+      { icon:'📣', label:'Dare someone else', sub:'Grow the community', credit:30, tag:'darer', next:'act4_dare' },
+    ],
+    choiceTimeout:'act4_sf',
+    next:'act4_sf',
+  },
+
+  // ══ ACT 4a: SF REVEAL ══
+  {
+    id:'act4_sf',
+    dur:5000,
+    media:{type:'img', src:'iAdTake3'},
+    tint:'rgba(0,0,0,0.35)',
+    title:'<em>ShortFactory.</em>',
+    sub:'The decentralised master of ADVERTainment.',
+    body:'',
+    showBrand:true,
+    showPot:true, potVal:12000,
+    next:'act4_dare_merge',
+  },
+
+  // ══ ACT 4b: DARE REVEAL ══
+  {
+    id:'act4_dare',
+    dur:5000,
+    media:{type:'img', src:'iCardCash'},
+    tint:'rgba(0,0,0,0.4)',
+    title:'dares4DOSH.',
+    sub:'Dare someone. They earn. You earn. Everyone earns.',
+    body:'',
+    showBrand:true,
+    showPot:true, potVal:12000,
+    next:'act4_dare_merge',
+  },
+
+  // ══ MERGE → PIPELINE REVEAL ══
+  {
+    id:'act4_dare_merge',
+    dur:6000,
+    media:{type:'img', src:'iSFMobile'},
+    tint:'rgba(0,0,0,0.3)',
+    title:'The pipeline<br>is <em>closed.</em>',
+    sub:'Creator → Judge → Advertiser → Creator',
+    body:'Entertainment. Advertising. Income. One loop.',
+    showBrand:true,
+    next:'choice_3',
+  },
+
+  // ══ THIRD CHOICE ══
+  {
+    id:'choice_3',
+    dur:12000,
+    media:{type:'video', src:'vCashPot'},
+    tint:'rgba(0,0,0,0.35)',
+    title:'The future is being built<br><em>right now.</em>',
+    sub:'One last question.',
+    showPot:true, potVal:21000,
+    isChoice:true,
+    choicePrompt:'Are you in?',
+    choices:[
+      { icon:'🚀', label:"I'm in. Let's go.", sub:'+50 credits. Now.', credit:50, tag:'in', next:'act5_in' },
+      { icon:'👀', label:'Show me more first', sub:'+20 credits to watch', credit:20, tag:'curious', next:'act5_curious' },
+    ],
+    choiceTimeout:'act5_in',
+    next:'act5_in',
+  },
+
+  // ══ ACT 5a: ALL IN ══
+  {
+    id:'act5_in',
+    dur:5000,
+    media:{type:'img', src:'iAdTake'},
+    tint:'rgba(0,0,0,0.3)',
+    title:'That\'s the <em>energy.</em>',
+    sub:'ADVERTainment is already here.',
+    body:'Your credits are real. Your voice is real. Your cut is real.',
+    showBrand:true,
+    next:'grok_tease',
+  },
+
+  // ══ ACT 5b: CURIOUS ══
+  {
+    id:'act5_curious',
+    dur:5000,
+    media:{type:'img', src:'iAudience'},
+    tint:'rgba(0,0,0,0.4)',
+    title:'The audience<br>IS the <em>advertiser.</em>',
+    sub:'Always has been. Now they get paid for it.',
+    body:'',
+    showBrand:true,
+    next:'grok_tease',
+  },
+
+  // ══ GROK / AI TEASE ══
+  {
+    id:'grok_tease',
+    dur:5000,
+    media:{type:'img', src:'iCardGrok'},
+    tint:'rgba(0,0,0,0.4)',
+    title:'Next:<br><em>Free AI animation.</em>',
+    sub:'Grok Imagine · Built into ShortFactory · Coming soon.',
+    body:'Your ad. Animated. Generated. Owned by you.',
+    showBrand:true,
+    next:'final_v2g',
+  },
+
+  // ══ FINAL: 2g video + manifesto ══
+  {
+    id:'final_v2g',
+    dur:6000,
+    media:{type:'video', src:'v2g'},
+    tint:'rgba(0,0,0,0.4)',
+    title:'Invisible.<br>User-driven.<br><em>Unstoppable.</em>',
+    sub:'The future of advertising is already dead. Long live ADVERTainment.',
+    body:'',
+    showBrand:true,
+    showPot:true, potVal:null,
+    next:'end',
+  },
+];
+
+// Build index
+const SCENE_MAP = {};
+SCENES.forEach(s => { SCENE_MAP[s.id] = s; });
+
+// ── MEDIA HELPERS ──
+const vidMain = document.getElementById('vid-main');
+const vidBg   = document.getElementById('vid-bg');
+const imgMain = document.getElementById('img-main');
+const imgBg   = document.getElementById('img-bg');
+
+function showMedia(scene) {
+  const m = scene.media;
+  const url = A[m.src] || '';
+
+  // Hide all
+  [vidMain,vidBg,imgMain,imgBg].forEach(el => el.classList.remove('vis'));
+
+  if (m.type === 'video') {
+    vidMain.src = url;
+    vidMain.load();
+    vidMain.play().catch(()=>{});
+    vidMain.classList.add('vis');
+  } else {
+    imgMain.src = url;
+    imgMain.classList.add('vis');
+  }
+  // Tint
+  document.getElementById('tint').style.background = scene.tint || 'rgba(0,0,0,0.4)';
+}
+
+function showText(scene) {
+  const title = document.getElementById('scene-title');
+  const sub   = document.getElementById('scene-sub');
+  const body  = document.getElementById('scene-body');
+
+  title.classList.remove('vis'); sub.classList.remove('vis'); body.classList.remove('vis');
+  title.innerHTML = scene.title || '';
+  sub.innerHTML   = scene.sub   || '';
+  body.innerHTML  = scene.body  || '';
+
+  setTimeout(() => {
+    if (scene.title) title.classList.add('vis');
+    if (scene.sub)   sub.classList.add('vis');
+    if (scene.body)  body.classList.add('vis');
+  }, 200);
+}
+
+function clearText() {
+  ['scene-title','scene-sub','scene-body'].forEach(id => {
+    document.getElementById(id).classList.remove('vis');
+  });
+}
+
+// ── POT ──
+let potInterval = null;
+function showPot(target) {
+  const el = document.getElementById('pot-display');
+  const amt = document.getElementById('pot-amount');
+  el.classList.add('show');
+  if (target == null) {
+    // Show final accumulated
+    amt.textContent = '£' + potAmount.toLocaleString();
+    return;
+  }
+  clearInterval(potInterval);
+  let cur = potAmount;
+  const step = Math.ceil((target - cur) / 40);
+  potInterval = setInterval(() => {
+    cur = Math.min(target, cur + step);
+    potAmount = cur;
+    amt.textContent = '£' + cur.toLocaleString();
+    amt.classList.add('pulse');
+    setTimeout(() => amt.classList.remove('pulse'), 400);
+    if (cur >= target) clearInterval(potInterval);
+  }, 60);
+}
+
+function hidePot() {
+  document.getElementById('pot-display').classList.remove('show');
+}
+
+// ── CREDITS ──
+function earn(amt) {
+  credits += amt;
+  const el = document.getElementById('credit-num');
+  el.textContent = credits;
+  el.classList.remove('pop');
+  void el.offsetWidth;
+  el.classList.add('pop');
+  // Float
+  const f = document.createElement('div');
+  f.className = 'fcredit';
+  f.textContent = '+' + amt + ' ⚡';
+  f.style.cssText = `left:${window.innerWidth-120}px;top:${40+Math.random()*30}px;`;
+  document.body.appendChild(f);
+  setTimeout(() => f.remove(), 1300);
+}
+
+// ── CHOICE HANDLER ──
+let choiceCountdownInterval = null;
+
+function showChoice(scene) {
+  const layer = document.getElementById('choice-layer');
+  const prompt = document.getElementById('choice-prompt');
+  const btns = document.getElementById('choice-buttons');
+
+  prompt.textContent = scene.choicePrompt;
+  btns.innerHTML = '';
+
+  scene.choices.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.innerHTML = `
+      <span class="cb-icon">${c.icon}</span>
+      <strong>${c.label}</strong><br>
+      <span style="font-size:12px;opacity:0.7;font-weight:600">${c.sub}</span>
+      <div class="cb-credit">+${c.credit} CREDITS</div>
+    `;
+    btn.onclick = () => makeChoice(c, scene);
+    btns.appendChild(btn);
+  });
+
+  layer.classList.add('show');
+
+  // Countdown ring
+  let t = 10;
+  document.getElementById('choice-timer-num').textContent = t;
+  document.getElementById('choice-timer-circle').style.strokeDashoffset = 0;
+  clearInterval(choiceCountdownInterval);
+  choiceCountdownInterval = setInterval(() => {
+    t--;
+    document.getElementById('choice-timer-num').textContent = t;
+    const pct = ((10-t)/10);
+    document.getElementById('choice-timer-circle').style.strokeDashoffset = 138 * pct;
+    if (t <= 0) {
+      clearInterval(choiceCountdownInterval);
+      // Auto-choose first option
+      makeChoice(scene.choices[0], scene);
+    }
+  }, 1000);
+}
+
+function makeChoice(choice, scene) {
+  clearInterval(choiceCountdownInterval);
+  document.getElementById('choice-layer').classList.remove('show');
+
+  choicesMade++;
+  choiceLog.push(choice.label);
+  if (choice.path) currentPath = choice.path;
+
+  earn(choice.credit);
+
+  // Flash
+  const flash = document.getElementById('outcome-flash');
+  flash.className = 'flash-gold';
+  void flash.offsetWidth;
+  flash.className = '';
+
+  // Brief outcome text
+  clearText();
+  const title = document.getElementById('scene-title');
+  title.innerHTML = `<em>${choice.icon}</em> ${choice.label}`;
+  title.classList.add('vis');
+  setTimeout(() => { title.classList.remove('vis'); }, 1200);
+
+  setTimeout(() => runScene(choice.next), 1400);
+}
+
+// ── SCENE RUNNER ──
+let sceneTimeout = null;
+
+function runScene(id) {
+  if (id === 'end') { endExperience(); return; }
+  const scene = SCENE_MAP[id];
+  if (!scene) { endExperience(); return; }
+
+  clearTimeout(sceneTimeout);
+  clearText();
+
+  // Media
+  showMedia(scene);
+  setTimeout(() => showText(scene), 400);
+
+  // Pot
+  if (scene.showPot) showPot(scene.potVal);
+  else hidePot();
+
+  // Brand stamp
+  document.getElementById('brand-stamp').classList.toggle('show', !!scene.showBrand);
+
+  // Choices or auto-advance
+  if (scene.isChoice) {
+    setTimeout(() => showChoice(scene), 1200);
+    // Auto-advance handled in countdown
+  } else {
+    earn(5); // passive credit for watching
+    sceneTimeout = setTimeout(() => runScene(scene.next), scene.dur);
+  }
+
+  // Progress
+  const ids = SCENES.map(s => s.id);
+  const pct = Math.min(98, (ids.indexOf(id) / ids.length) * 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+}
+
+// ── GLOBAL TIMER ──
+function startTimer() {
+  let s = 0;
+  document.getElementById('timer').classList.add('show');
+  document.getElementById('credit-counter').classList.add('show');
+  globalTimer = setInterval(() => {
+    s++;
+    const min = Math.floor(s/60);
+    const sec = s%60;
+    document.getElementById('timer').textContent = min+':'+(sec<10?'0':'')+sec;
+  }, 1000);
+}
+
+// ── START / END ──
+function startExperience() {
+  document.getElementById('start-screen').style.display = 'none';
+  document.getElementById('stage').style.display = 'flex';
+  earn(10); // just for showing up
+  startTimer();
+  runScene('open');
+}
+
+function endExperience() {
+  clearTimeout(sceneTimeout);
+  clearInterval(potInterval);
+  clearInterval(globalTimer);
+
+  document.getElementById('stage').style.display = 'none';
+  const endScreen = document.getElementById('end-screen');
+  endScreen.style.display = 'flex';
+
+  document.getElementById('end-credits').textContent = credits;
+  document.getElementById('end-choices').textContent = choicesMade;
+  document.getElementById('end-outcome').textContent =
+    currentPath === 'fighter' ? '🔥' : currentPath === 'builder' ? '🏗️' : '💎';
+
+  const pathDesc = {
+    fighter: 'You chose to fight the system — and took your share of the pot.',
+    builder: 'You chose to build something new — the pipeline is yours.',
+    neutral: 'You watched, judged, and earned — the audience is always in control.',
+  };
+  document.getElementById('end-path-text').textContent =
+    pathDesc[currentPath] + ' Choices made: ' + choiceLog.join(' → ');
+
+  document.getElementById('progress-fill').style.width = '100%';
+
+  // Save credits
+  try { localStorage.setItem('sf_credits', credits); } catch(e){}
+}
+
+function replay() {
+  credits = 0; potAmount = 0; choicesMade = 0; choiceLog = []; currentPath = 'neutral';
+  document.getElementById('end-screen').style.display = 'none';
+  document.getElementById('start-screen').style.display = 'flex';
+  document.getElementById('credit-num').textContent = '0';
+  document.getElementById('progress-fill').style.width = '0%';
+  clearInterval(globalTimer);
+}
+</script>
+</body>
+</html>

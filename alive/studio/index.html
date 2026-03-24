@@ -1,0 +1,2439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORTEX — Split Brain</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0a0a0a; color: #ccc; font-family: 'Segoe UI', Arial, sans-serif; height: 100vh; display: flex; }
+
+        /* LEFT: Chat */
+        .chat-col { flex: 1; display: flex; flex-direction: column; border-right: 1px solid #1a1a1a; }
+        .chat-header { text-align: center; padding: 0.4rem 0; border-bottom: 1px solid #1a1a1a; }
+        .brand { font-size: 1.2rem; font-weight: 700; letter-spacing: 0.15em; display: flex; align-items: center; justify-content: center; gap: 0.6rem; }
+        .brand .w { color: #fff; } .brand .g { color: #daa520; }
+        .hemi-link { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; cursor: pointer; padding: 0.15rem 0.5rem; border-radius: 4px; border: 1px solid transparent; transition: all 0.2s; text-transform: uppercase; }
+        .hemi-link.left { color: #4a8; }
+        .hemi-link.left:hover, .hemi-link.left.active { background: #1a2a1a; border-color: #4a8; color: #6fc; }
+        .hemi-link.right { color: #c44; }
+        .hemi-link.right:hover, .hemi-link.right.active { background: #2a1a1a; border-color: #c44; color: #f66; }
+        .hemi-link.cortex { color: #ccc; }
+        .hemi-link.cortex:hover, .hemi-link.cortex.active { background: #1a1a1a; border-color: #fff; color: #fff; }
+        .chat-mode-label { font-size: 0.5rem; color: #444; display: block; text-align: center; margin-top: 0.15rem; letter-spacing: 0.15em; }
+        .chat-area { flex: 1; overflow-y: auto; padding: 0.6rem; }
+        .msg { margin-bottom: 0.5rem; display: flex; gap: 0.4rem; align-items: flex-start; animation: fadeIn 0.2s; }
+        .msg.user { flex-direction: row-reverse; }
+        .avatar { width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; }
+        .msg.user .avatar { background: #1a3a1a; color: #6a6; }
+        .msg.bot .avatar { background: #2a1a0a; color: #daa520; }
+        .bubble { max-width: 80%; padding: 0.4rem 0.7rem; border-radius: 10px; font-size: 0.82rem; line-height: 1.4; }
+        .msg.user .bubble { background: #1a2a1a; color: #bdb; border-bottom-right-radius: 3px; }
+        .msg.user.question .bubble { background: #0a1a2a; color: #7cf; }
+        .msg.user.command .bubble { background: #2a1a0a; color: #fc6; }
+        .msg.user.statement .bubble { background: #1a2a1a; color: #bdb; }
+        .intent-tag { font-size: 0.5rem; padding: 1px 4px; border-radius: 3px; margin-right: 4px; font-weight: 600; vertical-align: middle; display: inline-block; margin-bottom: 1px; }
+        .intent-tag.question { background: #0a2a3a; color: #4cf; }
+        .intent-tag.command { background: #3a2a0a; color: #fa0; }
+        .intent-tag.statement { background: #1a2a1a; color: #5a5; }
+        /* Hemisphere colours */
+        .w-left { color: #4a8; font-weight: 600; }
+        .w-right { color: #c44; font-weight: 600; }
+        .w-cortex { color: #fff; font-weight: 600; }
+        /* POS colours (for "both" hemisphere words) */
+        .w-noun { color: #d4a06a; font-weight: 600; }
+        .w-verb { color: #7eb8c9; font-weight: 600; }
+        .w-adj  { color: #c49bd4; font-weight: 600; }
+        .w-adv  { color: #8fb89a; font-weight: 600; }
+        .w-both { color: #a0a0a0; font-weight: 600; }
+        /* POS underline indicators */
+        .w-pos-noun { border-bottom: 1px solid currentColor; padding-bottom: 1px; }
+        .w-pos-verb { border-bottom: 1px dashed currentColor; padding-bottom: 1px; }
+        .w-pos-adj  { border-bottom: 1px dotted currentColor; padding-bottom: 1px; }
+        /* Misspelling glow */
+        @keyframes misspellGlow {
+            0%, 100% { text-shadow: 0 0 4px rgba(255,255,255,0.3); }
+            50% { text-shadow: 0 0 8px rgba(255,255,255,0.8), 0 0 16px rgba(255,255,255,0.3); }
+        }
+        .w-unknown { color: #fff; font-style: italic; animation: misspellGlow 2s ease-in-out infinite; }
+        /* Self-modification quality badge */
+        .quality-badge { display: inline-block; font-size: 9px; padding: 1px 5px; border-radius: 8px; margin-left: 6px; opacity: 0.7; font-family: monospace; vertical-align: middle; }
+        .q-good { background: #1a3a1a; color: #6d6; border: 1px solid #2a4a2a; }
+        .q-mid  { background: #3a3a1a; color: #cc6; border: 1px solid #4a4a2a; }
+        .q-bad  { background: #3a1a1a; color: #f66; border: 1px solid #4a2a2a; }
+        .stage-badge { display: inline-block; font-size: 9px; padding: 1px 5px; border-radius: 8px; margin-left: 4px; opacity: 0.6; font-family: monospace; vertical-align: middle; background: #1a1a2a; color: #88f; border: 1px solid #2a2a4a; cursor: help; }
+        .wrong-btn { display: inline-block; font-size: 8px; padding: 1px 5px; border-radius: 8px; margin-left: 6px; font-family: monospace; vertical-align: middle; background: #2a1a1a; color: #a44; border: 1px solid #3a2020; cursor: pointer; opacity: 0.5; transition: all 0.2s; }
+        .wrong-btn:hover { opacity: 1; background: #3a1a1a; color: #f66; border-color: #f44; }
+        .correction-form { margin-top: 6px; padding: 6px 8px; background: #1a1010; border: 1px solid #3a2020; border-radius: 6px; animation: fadeIn 0.2s; }
+        .correction-form textarea { width: 100%; background: #111; border: 1px solid #333; color: #ddd; font-size: 0.75rem; padding: 4px 6px; border-radius: 4px; resize: vertical; min-height: 40px; font-family: inherit; }
+        .correction-form textarea:focus { outline: none; border-color: #f66; }
+        .correction-form .cf-actions { display: flex; gap: 6px; margin-top: 4px; align-items: center; }
+        .correction-form .cf-submit { font-size: 0.65rem; padding: 2px 10px; background: #3a1a1a; color: #f66; border: 1px solid #f44; border-radius: 4px; cursor: pointer; font-weight: 700; }
+        .correction-form .cf-submit:hover { background: #f44; color: #fff; }
+        .correction-form .cf-cancel { font-size: 0.65rem; padding: 2px 8px; background: none; color: #666; border: 1px solid #333; border-radius: 4px; cursor: pointer; }
+        .correction-form .cf-cancel:hover { color: #aaa; border-color: #666; }
+        .correction-sent { font-size: 0.65rem; color: #f66; margin-top: 4px; animation: fadeIn 0.2s; }
+        .gaps-link { display: block; text-align: center; font-size: 0.5rem; color: #555; letter-spacing: 0.15em; cursor: pointer; margin-top: 2px; transition: color 0.2s; }
+        .gaps-link:hover { color: #daa520; }
+        .gaps-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 999; overflow-y: auto; padding: 2rem; }
+        .gaps-overlay.show { display: block; }
+        .gaps-panel { max-width: 800px; margin: 0 auto; background: #111; border: 1px solid #2a2a2a; border-radius: 8px; padding: 1.2rem; }
+        .gaps-panel h2 { font-size: 1rem; color: #daa520; margin-bottom: 0.8rem; display: flex; align-items: center; justify-content: space-between; }
+        .gaps-panel h2 .close-btn { cursor: pointer; color: #666; font-size: 1.2rem; }
+        .gaps-panel h2 .close-btn:hover { color: #fff; }
+        .gaps-brain { margin-bottom: 1rem; }
+        .gaps-brain h3 { font-size: 0.75rem; color: #888; margin-bottom: 0.4rem; letter-spacing: 0.1em; }
+        .gaps-brain h3.left { color: #4a8; } .gaps-brain h3.right { color: #c44; } .gaps-brain h3.cortex { color: #fff; }
+        .gap-word { display: inline-block; padding: 2px 7px; margin: 2px; border-radius: 4px; font-size: 0.7rem; font-family: monospace; cursor: default; }
+        .gap-word.high { background: #3a1a1a; color: #f88; border: 1px solid #4a2a2a; }
+        .gap-word.med { background: #3a3a1a; color: #cc6; border: 1px solid #4a4a2a; }
+        .gap-word.low { background: #1a1a2a; color: #88c; border: 1px solid #2a2a3a; }
+        .gaps-summary { font-size: 0.7rem; color: #666; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #1a1a1a; }
+        .msg.bot .bubble { background: #1a1510; color: #ddd; border: 1px solid #2a2010; border-bottom-left-radius: 3px; }
+        .hemisphere-tag { font-size: 0.5rem; padding: 1px 4px; border-radius: 3px; margin-left: 4px; font-weight: 600; vertical-align: middle; }
+        .hemisphere-tag.left_only, .hemisphere-tag.agreement, .hemisphere-tag.left { background: #1a2a1a; color: #4a8; }
+        .hemisphere-tag.right_only, .hemisphere-tag.right { background: #2a1a1a; color: #a44; }
+        .hemisphere-tag.debate { background: #2a2a0a; color: #da4; }
+        .thinking { color: #555; font-size: 0.7rem; padding: 0.2rem; text-align: center; display: none; }
+        .thinking.show { display: block; }
+        .dots span { animation: blink 1.4s infinite; opacity: 0.2; }
+        .dots span:nth-child(2) { animation-delay: 0.2s; }
+        .dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes blink { 0%,80%,100%{opacity:0.2} 40%{opacity:1} }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+        /* === THINKING TICKER === */
+        .ticker-container { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; margin-top: 4px; }
+        .ticker-container.open { max-height: 500px; overflow-y: auto; }
+        .ticker-step { display: flex; align-items: flex-start; gap: 0.4rem; padding: 2px 0; opacity: 0; transform: translateY(3px); animation: tickerIn 0.3s forwards; border-left: 2px solid #222; padding-left: 8px; margin-left: 2px; }
+        @keyframes tickerIn { to { opacity: 1; transform: translateY(0); } }
+        .ticker-label { font-size: 0.5rem; font-weight: 700; letter-spacing: 0.06em; min-width: 90px; flex-shrink: 0; font-family: 'Consolas','Courier New',monospace; }
+        .ticker-text { font-size: 0.6rem; color: #777; font-family: 'Consolas','Courier New',monospace; line-height: 1.3; word-break: break-word; }
+        .ticker-step.stage-detect { border-left-color: #daa520; } .ticker-step.stage-detect .ticker-label { color: #daa520; }
+        .ticker-step.stage-equation { border-left-color: #daa520; } .ticker-step.stage-equation .ticker-label { color: #daa520; }
+        .ticker-step.stage-left { border-left-color: #4a8; } .ticker-step.stage-left .ticker-label { color: #4a8; }
+        .ticker-step.stage-right { border-left-color: #c44; } .ticker-step.stage-right .ticker-label { color: #c44; }
+        .ticker-step.stage-weights { border-left-color: #888; } .ticker-step.stage-weights .ticker-label { color: #888; }
+        .ticker-step.stage-agreement { border-left-color: #aaf; } .ticker-step.stage-agreement .ticker-label { color: #aaf; }
+        .ticker-step.stage-dictionary { border-left-color: #ccc; } .ticker-step.stage-dictionary .ticker-label { color: #ccc; }
+        .ticker-step.stage-synthesis { border-left-color: #fff; } .ticker-step.stage-synthesis .ticker-label { color: #fff; }
+        .ticker-step.stage-quality { border-left-color: #8a8; } .ticker-step.stage-quality .ticker-label { color: #8a8; }
+        .ticker-step.stage-learning { border-left-color: #f80; } .ticker-step.stage-learning .ticker-label { color: #f80; }
+        .ticker-step.stage-identity { border-left-color: #fff; } .ticker-step.stage-identity .ticker-label { color: #fff; }
+        .ticker-step.stage-source { border-left-color: #5af; } .ticker-step.stage-source .ticker-label { color: #5af; }
+        .ticker-step.stage-gauntlet { border-left-color: #f00; } .ticker-step.stage-gauntlet .ticker-label { color: #f00; }
+        /* Equation library rank badges */
+        .eq-locked { opacity: 0.4; }
+        .eq-locked:hover { opacity: 0.6; }
+        .rank-badge { display: inline-block; font-size: 0.45rem; padding: 1px 4px; border-radius: 3px; font-weight: 700; letter-spacing: 0.05em; font-family: monospace; }
+        .rank-badge.locked { background: #2a1a1a; color: #a44; border: 1px solid #3a2020; }
+        .rank-badge.unlocked { background: #1a2a1a; color: #5a5; border: 1px solid #2a3a2a; }
+        .eq-formula { font-size: 0.5rem; color: #888; font-family: 'Consolas','Courier New',monospace; margin-top: 2px; word-break: break-word; }
+        .eq-jobs { font-size: 0.45rem; color: #daa520; font-family: monospace; }
+        /* Request form */
+        .req-form { padding: 6px 8px; background: #0a0a1a; border: 1px solid #1a1a3a; border-radius: 6px; margin-top: 6px; }
+        .req-form input, .req-form textarea { width: 100%; background: #111; border: 1px solid #333; color: #ddd; font-size: 0.6rem; padding: 3px 6px; border-radius: 3px; margin-bottom: 4px; font-family: inherit; }
+        .req-form textarea { resize: vertical; min-height: 30px; }
+        .req-form input:focus, .req-form textarea:focus { outline: none; border-color: #5af; }
+        .req-item { padding: 4px 6px; background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 4px; margin-bottom: 3px; }
+        .req-vote-btn { font-size: 0.5rem; padding: 1px 6px; background: #1a1a2a; color: #5af; border: 1px solid #2a2a4a; border-radius: 3px; cursor: pointer; font-family: monospace; }
+        .req-vote-btn:hover { background: #2a2a4a; color: #8cf; }
+        /* === EQUATION FORGE === */
+        .eq-forge-overlay { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.92); z-index:1000; overflow-y:auto; padding:1.5rem; }
+        .eq-forge-overlay.show { display:flex; align-items:flex-start; justify-content:center; }
+        .eq-forge-panel { width:100%; max-width:720px; background:#111; border:1px solid #2a2a2a; border-radius:10px; padding:1rem 1.2rem; margin-top:2rem; }
+        .forge-title { font-size:0.85rem; font-weight:700; color:#daa520; letter-spacing:0.12em; text-align:center; margin-bottom:0.6rem; }
+        .forge-close { float:right; cursor:pointer; color:#555; font-size:1.2rem; line-height:1; }
+        .forge-close:hover { color:#fff; }
+        /* Live chain */
+        .eq-chain { display:flex; align-items:center; gap:6px; flex-wrap:wrap; justify-content:center; padding:10px 8px; background:#0a0a0a; border:1px solid #1a1a1a; border-radius:6px; margin-bottom:0.8rem; min-height:44px; }
+        .eq-dim-block { display:inline-flex; align-items:center; gap:3px; padding:4px 8px; border-radius:6px; font-weight:800; font-size:0.75rem; cursor:pointer; transition:all 0.2s; border:2px solid transparent; user-select:none; }
+        .eq-dim-block:hover { filter:brightness(1.3); transform:scale(1.05); }
+        .eq-dim-block.active { border-color:#fff; }
+        .eq-dim-block .dim-letter { font-size:0.9rem; }
+        .eq-dim-block .dim-val { font-size:0.65rem; opacity:0.8; }
+        .eq-chain-op { color:#555; font-size:0.7rem; font-weight:700; }
+        .eq-balance-block { display:inline-flex; align-items:center; gap:0; border-radius:6px; overflow:hidden; cursor:pointer; font-size:0.6rem; font-weight:800; height:28px; min-width:80px; }
+        .eq-balance-block .angel-part { background:#1a3a1a; color:#6f6; padding:2px 6px; height:100%; display:flex; align-items:center; transition:width 0.3s; }
+        .eq-balance-block .demon-part { background:#3a1a1a; color:#f66; padding:2px 6px; height:100%; display:flex; align-items:center; transition:width 0.3s; }
+        .eq-result-block { display:inline-flex; align-items:center; padding:4px 10px; border:2px dashed #333; border-radius:6px; font-size:0.6rem; color:#888; font-style:italic; max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        /* Forge controls grid */
+        .forge-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.6rem; margin-bottom:0.8rem; }
+        .forge-section { background:#0a0a0a; border:1px solid #1a1a1a; border-radius:6px; padding:8px 10px; }
+        .forge-section-title { font-size:0.5rem; color:#555; letter-spacing:0.12em; font-weight:700; margin-bottom:6px; text-transform:uppercase; }
+        .forge-dim-row { display:flex; align-items:center; gap:6px; margin-bottom:4px; }
+        .forge-dim-row .fdl { min-width:14px; font-weight:800; font-size:0.6rem; }
+        .forge-dim-row .fdn { font-size:0.5rem; color:#777; min-width:52px; }
+        .forge-dim-row input[type=range] { flex:1; height:6px; cursor:pointer; }
+        .forge-dim-row .fdv { min-width:26px; text-align:right; font-size:0.55rem; color:#888; font-family:monospace; }
+        /* Templates */
+        .forge-tpl-row { display:flex; gap:4px; flex-wrap:wrap; margin-bottom:8px; }
+        .forge-tpl-btn { font-size:0.5rem; padding:3px 8px; border-radius:12px; border:1px solid #333; background:#111; color:#888; cursor:pointer; font-weight:600; transition:all 0.2s; }
+        .forge-tpl-btn:hover { border-color:#daa520; color:#daa520; }
+        .forge-tpl-btn.active { background:#2a2a0a; border-color:#daa520; color:#daa520; }
+        /* Forge footer */
+        .forge-footer { border-top:1px solid #1a1a1a; padding-top:8px; }
+        .forge-footer input, .forge-footer textarea { width:100%; background:#0a0a0a; border:1px solid #222; color:#ddd; font-size:0.6rem; padding:4px 8px; border-radius:4px; margin-bottom:4px; box-sizing:border-box; font-family:inherit; }
+        .forge-footer input:focus, .forge-footer textarea:focus { outline:none; border-color:#daa520; }
+        .forge-formula-display { font-family:'Consolas','Courier New',monospace; font-size:0.6rem; color:#daa520; padding:6px 8px; background:#0a0a0a; border:1px solid #332200; border-radius:4px; margin-bottom:6px; word-break:break-word; min-height:20px; }
+        .forge-actions { display:flex; gap:8px; justify-content:center; margin-top:6px; }
+        .forge-actions button { padding:6px 18px; border-radius:5px; font-size:0.6rem; font-weight:700; cursor:pointer; border:none; transition:all 0.2s; }
+        .forge-btn-create { background:#daa520; color:#000; }
+        .forge-btn-create:hover { background:#e8b830; }
+        .forge-btn-test { background:#1a2a1a; color:#4a8; border:1px solid #2a4a2a !important; }
+        .forge-btn-test:hover { background:#2a4a2a; color:#6f6; }
+        .forge-btn-cancel { background:#1a1a1a; color:#666; border:1px solid #333 !important; }
+        .forge-btn-cancel:hover { color:#ccc; }
+        /* Dimension pips in leaderboard */
+        .eq-pips { display:inline-flex; gap:2px; margin-left:4px; vertical-align:middle; }
+        .eq-pip { width:5px; height:5px; border-radius:50%; display:inline-block; border:1px solid rgba(255,255,255,0.1); }
+        .ticker-toggle { display: inline-block; font-size: 0.45rem; color: #444; cursor: pointer; margin-left: 6px; border: 1px solid #333; padding: 1px 5px; border-radius: 3px; font-family: monospace; user-select: none; vertical-align: middle; }
+        .ticker-toggle:hover { color: #daa520; border-color: #daa520; }
+        .input-area { border-top: 1px solid #1a1a1a; padding: 0.4rem; background: #0d0d0d; }
+        .input-row { display: flex; gap: 0.3rem; }
+        #msg-input { flex: 1; background: #141414; border: 1px solid #2a2a2a; color: #eee; padding: 0.4rem 0.6rem; border-radius: 6px; font-size: 0.82rem; font-family: inherit; outline: none; resize: none; min-height: 34px; max-height: 200px; }
+        #msg-input:focus { border-color: #daa520; }
+        #send-btn { background: #daa520; color: #000; border: none; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 0.8rem; padding: 0 0.8rem; height: 34px; }
+        #send-btn:hover { background: #e8b830; }
+        .hint { font-size: 0.55rem; color: #333; margin-top: 0.2rem; display: flex; justify-content: space-between; }
+        .hint a { color: #444; cursor: pointer; text-decoration: none; }
+        .hint a:hover { color: #daa520; }
+
+        /* Soul Shape panel */
+        .soul-panel { text-align:center; padding:0.6rem; }
+        #soul-cv { display:block; margin:0 auto; }
+        #soul-emotion { font-size:0.62rem; letter-spacing:0.25em; color:#888; text-transform:uppercase; margin-top:0.3rem; transition:color 0.5s; }
+        #soul-genome-display { font-size:0.5rem; color:#2a2a2a; letter-spacing:0.15em; margin-top:0.2rem; }
+
+        /* RIGHT: Dashboard */
+        .dash-col { width: 380px; display: flex; flex-direction: column; overflow-y: auto; background: #0d0d0d; }
+        .dash-col::-webkit-scrollbar { width: 4px; }
+        .dash-col::-webkit-scrollbar-thumb { background: #222; }
+        .panel { border-bottom: 1px solid #1a1a1a; padding: 0.5rem 0.6rem; }
+        .panel-title { font-size: 0.65rem; color: #daa520; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.3rem; font-weight: 700; }
+
+        /* Split brain stats */
+        .brain-split { display: flex; gap: 0.5rem; }
+        .hemi-col { flex: 1; }
+        .hemi-label { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.2rem; padding-bottom: 0.15rem; border-bottom: 1px solid #1a1a1a; }
+        .hemi-label.left { color: #4a8; }
+        .hemi-label.right { color: #a44; }
+        .hemi-divider { width: 1px; background: #1a1a1a; }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.15rem 0.4rem; }
+        .stat-item { display: flex; justify-content: space-between; font-size: 0.68rem; }
+        .stat-item .label { color: #555; }
+        .stat-item .value { color: #eee; font-weight: 600; }
+        .stat-item .value.up { color: #4f4; }
+        .stat-item .value.down { color: #f44; }
+
+        /* Abilities */
+        .ability { display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.25rem; font-size: 0.7rem; }
+        .ability .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .ability .dot.on { background: #daa520; box-shadow: 0 0 4px #daa520; }
+        .ability .dot.off { background: #333; }
+        .ability .name { color: #aaa; flex: 1; }
+        .ability .name.on { color: #eee; }
+        .ability .pct { color: #666; font-size: 0.6rem; }
+
+        /* Activity feed */
+        .feed-item { font-size: 0.68rem; padding: 0.15rem 0; border-bottom: 1px solid #111; display: flex; gap: 0.3rem; }
+        .feed-item .time { color: #444; font-size: 0.6rem; min-width: 50px; }
+        .feed-item .word { color: #daa520; font-weight: 600; }
+        .feed-item .src { color: #555; font-size: 0.58rem; }
+        .feed-item .def { color: #888; }
+
+        /* Clusters */
+        .cluster { margin-bottom: 0.3rem; }
+        .cluster-name { color: #daa520; font-size: 0.7rem; font-weight: 600; }
+        .cluster-words { color: #777; font-size: 0.62rem; }
+
+        /* Sound bar */
+        .sound-bar { display: flex; gap: 2px; height: 14px; margin-top: 0.2rem; }
+        .sound-seg { flex: 1; border-radius: 2px; position: relative; min-width: 0; }
+        .sound-seg .fill { position: absolute; bottom: 0; left: 0; right: 0; border-radius: 2px; transition: height 0.3s; }
+        .sound-seg .lbl { position: absolute; bottom: -10px; left: 0; right: 0; text-align: center; font-size: 0.45rem; color: #555; }
+
+        /* Debates */
+        .debate-item { font-size: 0.65rem; padding: 0.3rem 0; border-bottom: 1px solid #151515; }
+        .debate-header { display: flex; justify-content: space-between; margin-bottom: 0.15rem; }
+        .debate-q { color: #888; font-style: italic; margin-bottom: 0.15rem; }
+        .debate-side { display: flex; gap: 0.3rem; font-size: 0.62rem; margin-bottom: 0.1rem; }
+        .debate-side .tag { font-weight: 700; min-width: 28px; }
+        .debate-side .tag.L { color: #4a8; }
+        .debate-side .tag.R { color: #a44; }
+        .debate-side .text { color: #777; }
+        .debate-result { font-size: 0.58rem; }
+        .debate-result .agree { color: #4a8; }
+        .debate-result .disagree { color: #da4; }
+        .debate-result .winner { color: #daa520; font-weight: 600; }
+
+        /* Delta flash */
+        @keyframes flash { 0%{opacity:1} 100%{opacity:0} }
+        .delta { font-size: 0.55rem; color: #4f4; margin-left: 0.15rem; animation: flash 2s forwards; }
+
+        /* Brain activity pulse */
+        @keyframes brainPulse {
+            0%, 100% { opacity: 0.15; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.1); }
+        }
+        @keyframes neuronFire {
+            0% { box-shadow: 0 0 2px currentColor; }
+            50% { box-shadow: 0 0 12px currentColor, 0 0 24px currentColor; }
+            100% { box-shadow: 0 0 2px currentColor; }
+        }
+        .activity-orb {
+            width: 8px; height: 8px; border-radius: 50%; display: inline-block;
+            margin-left: 6px; vertical-align: middle; opacity: 0.15;
+            transition: opacity 0.3s;
+        }
+        .activity-orb.left { background: #4a8; color: #4a8; }
+        .activity-orb.right { background: #c44; color: #c44; }
+        .activity-orb.cortex { background: #daa520; color: #daa520; }
+        .activity-orb.firing { animation: neuronFire 0.6s ease; opacity: 1; }
+        .activity-orb.active { animation: brainPulse 1.2s ease-in-out infinite; opacity: 1; }
+
+        /* Ramble thinking pulse */
+        @keyframes ramblePulse {
+            0%, 100% { text-shadow: none; }
+            50% { text-shadow: 0 0 8px #daa520, 0 0 16px rgba(218,165,32,0.4); }
+        }
+        .ramble-active-pulse { animation: ramblePulse 1.5s ease-in-out infinite; }
+
+        /* Hemisphere border glow when active */
+        @keyframes hemiGlow {
+            0%, 100% { border-color: #1a1a1a; }
+            50% { border-color: currentColor; }
+        }
+        .hemi-col.pulse-left { color: #4a8; }
+        .hemi-col.pulse-left .hemi-label { animation: hemiGlow 1.5s ease-in-out infinite; border-color: #4a8; }
+        .hemi-col.pulse-right { color: #c44; }
+        .hemi-col.pulse-right .hemi-label { animation: hemiGlow 1.5s ease-in-out infinite; border-color: #c44; }
+
+        /* Activity sparkline */
+        .activity-bar { display: flex; gap: 1px; height: 16px; align-items: flex-end; margin-top: 0.3rem; }
+        .activity-tick { width: 3px; min-height: 1px; border-radius: 1px; transition: height 0.2s; }
+        .activity-tick.left { background: #4a8; }
+        .activity-tick.right { background: #c44; }
+        .activity-tick.cortex { background: #daa520; }
+
+        /* Recent words split */
+        .words-split { display: flex; gap: 0.5rem; }
+        .words-col { flex: 1; }
+
+        /* Ramble — internal monologue */
+        .ramble-item { font-size: 0.63rem; padding: 0.3rem 0; border-bottom: 1px solid #151515; }
+        .ramble-q { color: #fff; font-weight: 600; margin-bottom: 0.15rem; }
+        .ramble-side { display: flex; gap: 0.3rem; font-size: 0.6rem; margin-bottom: 0.05rem; }
+        .ramble-side .angel { color: #4a8; font-weight: 700; min-width: 12px; }
+        .ramble-side .demon { color: #c44; font-weight: 700; min-width: 12px; }
+        .ramble-side .text { color: #666; }
+        .ramble-verdict { font-size: 0.55rem; color: #daa520; font-style: italic; }
+
+        /* Memory Banks */
+        .mem-emo { display: inline-flex; align-items: center; gap: 3px; padding: 2px 6px; border-radius: 4px; font-size: 0.58rem; font-weight: 700; background: #111; border: 1px solid #222; }
+        .mem-emo.happy { border-color: #2a4a2a; color: #4f4; }
+        .mem-emo.sad { border-color: #2a2a4a; color: #66f; }
+        .mem-emo.angry { border-color: #4a2a2a; color: #f44; }
+        .mem-emo.neutral { border-color: #333; color: #888; }
+        .mem-emo.cache { border-color: #4a4a2a; color: #daa520; }
+        .mem-emo .count { font-size: 0.7rem; }
+        .mem-backend { display: flex; align-items: center; gap: 6px; font-size: 0.55rem; color: #555; padding: 2px 0; }
+        .mem-backend .dot { width: 6px; height: 6px; border-radius: 50%; }
+        .mem-backend .dot.ok { background: #4f4; box-shadow: 0 0 4px #4f4; }
+        .mem-backend .dot.fail { background: #f44; box-shadow: 0 0 4px #f44; }
+        .mem-backend .name { color: #888; font-weight: 600; }
+        .mem-backend .lat { color: #daa520; }
+        .mem-item { display: flex; align-items: flex-start; gap: 4px; font-size: 0.58rem; padding: 3px 0; border-bottom: 1px solid #111; }
+        .mem-item .emo { min-width: 16px; text-align: center; }
+        .mem-item .time { color: #444; min-width: 32px; font-size: 0.52rem; }
+        .mem-item .content { flex: 1; color: #666; }
+        .mem-item .content b { color: #888; }
+        .mem-item .qual { font-size: 0.5rem; font-weight: 700; padding: 1px 3px; border-radius: 2px; }
+        .mem-item .qual.good { color: #4f4; }
+        .mem-item .qual.mid { color: #da4; }
+        .mem-item .qual.bad { color: #f44; }
+
+        /* Equation Library */
+        .eq-row { display: flex; align-items: center; gap: 5px; font-size: 0.55rem; padding: 4px 2px; border-bottom: 1px solid #111; cursor: pointer; transition: background 0.2s; }
+        .eq-row:hover { background: #151515; }
+        .eq-row .icon { min-width: 18px; height: 18px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.55rem; color: #000; }
+        .eq-row .name { color: #888; font-weight: 600; min-width: 60px; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .eq-row .bar-wrap { flex: 1; height: 10px; background: #111; border-radius: 2px; overflow: hidden; }
+        .eq-row .bar { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
+        .eq-row .pct { min-width: 32px; text-align: right; font-size: 0.52rem; font-weight: 700; }
+        .eq-row .uses { min-width: 28px; text-align: right; color: #444; font-size: 0.48rem; }
+        .eq-badge { font-size: 0.4rem; padding: 1px 3px; border-radius: 2px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .eq-badge.golden { background: #2a2a0a; color: #daa520; border: 1px solid #3a3a1a; }
+        .eq-badge.seed { background: #1a1a2a; color: #88f; border: 1px solid #2a2a3a; }
+        .eq-badge.mut { background: #1a2a1a; color: #4a8; border: 1px solid #2a3a2a; }
+        .eq-badge.user { background: #2a1a1a; color: #f84; border: 1px solid #3a2a2a; }
+        .strat-dim { display: inline-flex; align-items: center; gap: 2px; padding: 2px 5px; border-radius: 3px; font-size: 0.5rem; font-weight: 700; background: #111; border: 1px solid #222; color: #666; }
+        .strat-dim .val { color: #daa520; }
+        .strat-event { padding: 1px 0; border-bottom: 1px solid #0a0a0a; color: #444; }
+        .eq-detail-overlay { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.88); z-index:999; overflow-y:auto; padding:1.5rem; }
+        .eq-detail-overlay.show { display:block; }
+        .eq-detail-panel { max-width:520px; margin:0 auto; background:#111; border:1px solid #2a2a2a; border-radius:8px; padding:1rem; }
+        .aff-row { display:flex; align-items:center; gap:4px; font-size:0.55rem; padding:2px 0; }
+        .aff-row .dim-l { min-width:16px; font-weight:700; }
+        .aff-row .dim-bar { flex:1; height:8px; background:#0a0a0a; border-radius:2px; overflow:hidden; }
+        .aff-row .dim-fill { height:100%; border-radius:2px; }
+        .aff-row .dim-v { min-width:24px; text-align:right; color:#666; }
+        .mem-item .hemi-dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 3px; }
+    </style>
+</head>
+<body>
+    <!-- CHAT COLUMN -->
+    <div class="chat-col">
+        <div class="chat-header">
+            <div class="brand">
+                <span class="hemi-link left" onclick="setChatMode('left')" id="btn-left">LEFT</span>
+                <span class="hemi-link cortex active" onclick="setChatMode('cortex')" id="btn-cortex">CORTEX BRAIN</span>
+                <span class="hemi-link right" onclick="setChatMode('right')" id="btn-right">RIGHT</span>
+            </div>
+            <span class="chat-mode-label" id="mode-label">BOTH HEMISPHERES</span>
+            <span id="age-badge" style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:700;letter-spacing:1px;border:1px solid #333;color:#555;margin:0 4px;cursor:help;" title="Developmental age based on vocabulary, comprehension, wiring, curiosity">AGE: --</span>
+            <span id="stm-badge" style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:0.55rem;font-weight:700;letter-spacing:1px;border:1px solid #333;color:#555;margin:0 4px;cursor:help;" title="Short-term memory usage">
+                STM: <span id="stm-bar-wrap" style="display:inline-block;width:40px;height:8px;background:#111;border-radius:3px;overflow:hidden;vertical-align:middle;"><span id="stm-bar-fill" style="display:block;height:100%;width:0%;background:#0f8;border-radius:3px;transition:width 0.5s,background 0.5s;"></span></span> <span id="stm-pct">--%</span>
+            </span>
+            <a class="gaps-link" onclick="triggerSleep()" id="sleep-btn" style="color:#4af;margin:0 4px;">SLEEP</a>
+            <a class="gaps-link" onclick="showGaps()">KNOWLEDGE GAPS</a>
+            <a class="gaps-link" onclick="showMemoryArchive()" style="color:#4af;">ARCHIVE</a>
+        </div>
+        <div class="chat-area" id="chat-area">
+            <div class="msg bot">
+                <div class="avatar">C</div>
+                <div class="bubble">Alright. Type something. Both hemispheres are listening.</div>
+            </div>
+        </div>
+        <div class="thinking" id="thinking">synthesizing<span class="dots"><span>.</span><span>.</span><span>.</span></span></div>
+        <div class="input-area">
+            <div class="input-row">
+                <textarea id="msg-input" placeholder="Type something..." rows="1"></textarea>
+                <button id="send-btn" onclick="sendMsg()">Send</button>
+            </div>
+            <div class="hint">
+                <span>Enter = send | <a onclick="saveIPFS()">Save IPFS</a></span>
+                <a onclick="resetChat()">Reset</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- KNOWLEDGE GAPS OVERLAY -->
+    <div class="gaps-overlay" id="gaps-overlay" onclick="if(event.target===this)this.classList.remove('show')">
+        <div class="gaps-panel">
+            <h2>Knowledge Gaps <span class="close-btn" onclick="document.getElementById('gaps-overlay').classList.remove('show')">&times;</span></h2>
+            <div style="margin-bottom:10px;text-align:center;">
+                <button onclick="triggerSelfStudy()" id="selfStudyBtn" style="background:#1a2a1a;color:#0f8;border:1px solid #0f8;padding:6px 16px;border-radius:6px;cursor:pointer;font-family:monospace;font-size:0.75rem;letter-spacing:1px;">SELF-STUDY NOW</button>
+                <div id="selfStudyStatus" style="font-size:0.65rem;color:#555;margin-top:4px;"></div>
+            </div>
+            <div id="gaps-content"><div style="color:#555;font-size:0.7rem;">Loading...</div></div>
+        </div>
+    </div>
+
+    <!-- DASHBOARD COLUMN -->
+    <div class="dash-col" id="dashboard">
+        <!-- Split Brain Stats -->
+        <div class="panel">
+            <div class="panel-title">Split Brain Stats</div>
+            <div class="brain-split">
+                <div class="hemi-col">
+                    <div class="hemi-label left">LEFT — Morality <span class="activity-orb left" id="orb-left"></span></div>
+                    <div class="stat-grid" id="left-stats">
+                        <div class="stat-item"><span class="label">Nodes</span><span class="value" id="sl-nodes">-</span></div>
+                        <div class="stat-item"><span class="label">Defined</span><span class="value" id="sl-defined">-</span></div>
+                        <div class="stat-item"><span class="label">Conns</span><span class="value" id="sl-conns">-</span></div>
+                        <div class="stat-item"><span class="label">Msgs</span><span class="value" id="sl-msgs">-</span></div>
+                        <div class="stat-item"><span class="label">Auto</span><span class="value" id="sl-auto">-</span></div>
+                        <div class="stat-item"><span class="label">Deep</span><span class="value" id="sl-deep">-</span></div>
+                    </div>
+                </div>
+                <div class="hemi-divider"></div>
+                <div class="hemi-col">
+                    <div class="hemi-label right">RIGHT — Darkness <span class="activity-orb right" id="orb-right"></span></div>
+                    <div class="stat-grid" id="right-stats">
+                        <div class="stat-item"><span class="label">Nodes</span><span class="value" id="sr-nodes">-</span></div>
+                        <div class="stat-item"><span class="label">Defined</span><span class="value" id="sr-defined">-</span></div>
+                        <div class="stat-item"><span class="label">Conns</span><span class="value" id="sr-conns">-</span></div>
+                        <div class="stat-item"><span class="label">Msgs</span><span class="value" id="sr-msgs">-</span></div>
+                        <div class="stat-item"><span class="label">Auto</span><span class="value" id="sr-auto">-</span></div>
+                        <div class="stat-item"><span class="label">Deep</span><span class="value" id="sr-deep">-</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Brain Activity -->
+        <div class="panel">
+            <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center">
+                <span>Brain Activity <span class="activity-orb cortex" id="orb-cortex"></span></span>
+                <span id="activity-rate" style="font-size:0.55rem;color:#444">0 ops/s</span>
+            </div>
+            <div class="activity-bar" id="activity-bar"></div>
+        </div>
+
+        <!-- Sound -->
+        <div class="panel">
+            <div class="panel-title">Emotional State</div>
+            <div class="sound-bar" id="sound-bar"></div>
+        </div>
+
+        <!-- Soul Shape -->
+        <div class="panel soul-panel">
+            <div class="panel-title">Soul Shape · φ Genome</div>
+            <canvas id="soul-cv" width="160" height="160"></canvas>
+            <div id="soul-emotion">reading…</div>
+            <div id="soul-genome-display">[ — , — , — ]</div>
+        </div>
+
+        <!-- Abilities -->
+        <div class="panel">
+            <div class="panel-title">Abilities</div>
+            <div id="abilities-list"></div>
+        </div>
+
+        <!-- Ramble Mode — Internal Monologue -->
+        <div class="panel">
+            <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center">
+                <span>Internal Monologue</span>
+                <span id="ramble-status" style="font-size:0.55rem;color:#444">OFF</span>
+            </div>
+            <div style="margin-bottom:0.3rem">
+                <button onclick="toggleRamble()" id="ramble-btn" style="font-size:0.6rem;background:#222;color:#888;border:1px solid #333;padding:2px 8px;border-radius:3px;cursor:pointer">Start Ramble</button>
+            </div>
+            <div id="ramble-list"></div>
+        </div>
+
+        <!-- Debates -->
+        <div class="panel">
+            <div class="panel-title">Hemisphere Debates</div>
+            <div id="debates-list"></div>
+        </div>
+
+        <!-- Recent Learning — Split -->
+        <div class="panel">
+            <div class="panel-title">Recently Learned</div>
+            <div class="words-split">
+                <div class="words-col">
+                    <div class="hemi-label left" style="font-size:0.55rem">LEFT</div>
+                    <div id="recent-words-left"></div>
+                </div>
+                <div class="words-col">
+                    <div class="hemi-label right" style="font-size:0.55rem">RIGHT</div>
+                    <div id="recent-words-right"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Clusters -->
+        <div class="panel">
+            <div class="panel-title">Word Clusters</div>
+            <div id="clusters-list"></div>
+        </div>
+
+        <!-- Chat Log -->
+        <div class="panel">
+            <div class="panel-title">Recent Activity</div>
+            <div id="recent-chat"></div>
+        </div>
+
+        <!-- Memory Banks -->
+        <div class="panel">
+            <div class="panel-title">Memory <span id="mem-total" style="color:#555;font-size:0.55rem;font-weight:400;margin-left:6px">0 memories</span></div>
+            <div id="mem-emotions" style="display:flex;gap:8px;margin-bottom:6px;flex-wrap:wrap;"></div>
+            <div id="mem-backends" style="margin-bottom:6px;"></div>
+            <div id="mem-recent" style="max-height:220px;overflow-y:auto;"></div>
+        </div>
+
+        <!-- Equation Library -->
+        <div class="panel">
+            <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center">
+                <span>Equation Library <span id="strat-total" style="color:#555;font-size:0.55rem;font-weight:400;margin-left:4px">0</span></span>
+                <span style="display:flex;gap:6px">
+                    <span id="eq-golden-ct" style="font-size:0.45rem;color:#daa520">0 golden</span>
+                    <span id="eq-active-ct" style="font-size:0.45rem;color:#4a8">0 active</span>
+                </span>
+            </div>
+            <div id="eq-current" style="font-size:0.5rem;color:#666;padding:3px 0;border-bottom:1px solid #111;margin-bottom:4px"></div>
+            <div id="strat-leaderboard" style="margin-bottom:8px;max-height:260px;overflow-y:auto;"></div>
+            <div id="strat-dims" style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;"></div>
+            <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">
+                <button onclick="openForge()" style="font-size:0.5rem;background:#daa520;color:#000;border:none;padding:2px 8px;border-radius:3px;cursor:pointer;font-weight:700">+ New Equation</button>
+                <button onclick="triggerMutation()" style="font-size:0.5rem;background:#222;color:#888;border:1px solid #333;padding:2px 8px;border-radius:3px;cursor:pointer">Mutate Now</button>
+                <button onclick="toggleRequestPanel()" style="font-size:0.5rem;background:#0a0a2a;color:#5af;border:1px solid #1a1a4a;padding:2px 8px;border-radius:3px;cursor:pointer">Request Equation</button>
+            </div>
+            <div id="eq-form-box" style="display:none;margin-bottom:8px"></div>
+            <div id="eq-request-box" style="display:none;margin-bottom:8px">
+                <div class="req-form">
+                    <div style="font-size:0.55rem;color:#5af;margin-bottom:4px;font-weight:700">REQUEST NEW EQUATION</div>
+                    <input id="req-name" placeholder="Equation name" style="font-size:0.6rem;padding:3px 6px;background:#111;border:1px solid #333;color:#ddd;border-radius:3px;width:100%;margin-bottom:3px;box-sizing:border-box">
+                    <input id="req-formula" placeholder="Formula e.g. t(time)+S(SEARCH)+U(query)" style="font-size:0.6rem;padding:3px 6px;background:#111;border:1px solid #333;color:#daa520;border-radius:3px;width:100%;margin-bottom:3px;box-sizing:border-box;font-family:Consolas,monospace">
+                    <textarea id="req-desc" placeholder="What should this equation do?" style="font-size:0.6rem;padding:3px 6px;background:#111;border:1px solid #333;color:#ddd;border-radius:3px;width:100%;min-height:30px;resize:vertical;margin-bottom:4px;box-sizing:border-box"></textarea>
+                    <button onclick="submitRequest()" style="width:100%;padding:4px;background:#1a1a4a;color:#5af;border:1px solid #2a2a6a;border-radius:3px;font-size:0.55rem;font-weight:700;cursor:pointer">SUBMIT REQUEST</button>
+                    <div style="font-size:0.45rem;color:#555;margin-top:6px;font-weight:700">PENDING REQUESTS</div>
+                    <div id="req-list" style="max-height:150px;overflow-y:auto;margin-top:4px"></div>
+                </div>
+            </div>
+            <div id="strat-events" style="max-height:140px;overflow-y:auto;font-size:0.5rem;color:#555;"></div>
+        </div>
+
+        <!-- Equation Detail Overlay -->
+        <div class="eq-detail-overlay" id="eq-detail-overlay" onclick="if(event.target===this)this.classList.remove('show')">
+            <div class="eq-detail-panel">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.8rem">
+                    <span id="eq-detail-title" style="font-size:0.9rem;color:#daa520;font-weight:700">Equation</span>
+                    <span style="cursor:pointer;color:#666;font-size:1.2rem" onclick="document.getElementById('eq-detail-overlay').classList.remove('show')">&times;</span>
+                </div>
+                <div id="eq-detail-content"></div>
+            </div>
+        </div>
+
+        <!-- EQUATION FORGE OVERLAY -->
+        <div class="eq-forge-overlay" id="eq-forge-overlay" onclick="if(event.target===this)closeForge()">
+            <div class="eq-forge-panel">
+                <span class="forge-close" onclick="closeForge()">&times;</span>
+                <div class="forge-title">EQUATION FORGE</div>
+
+                <!-- Live visual chain -->
+                <div class="eq-chain" id="forge-chain"></div>
+
+                <!-- Controls grid -->
+                <div class="forge-grid">
+                    <!-- Left: Dimensions -->
+                    <div class="forge-section">
+                        <div class="forge-section-title">Dimensions</div>
+                        <div id="forge-dim-sliders"></div>
+                        <div class="forge-section-title" style="margin-top:8px">Templates</div>
+                        <div class="forge-tpl-row" id="forge-templates"></div>
+                    </div>
+                    <!-- Right: Hemisphere + Optional -->
+                    <div class="forge-section">
+                        <div class="forge-section-title">Hemisphere Balance</div>
+                        <div class="forge-dim-row">
+                            <span class="fdl" style="color:#4a8">A</span>
+                            <span class="fdn">Angel</span>
+                            <input type="range" id="forge-lw" min="0" max="100" value="50" style="accent-color:#4a8">
+                            <span class="fdv" id="forge-lw-v">0.50</span>
+                        </div>
+                        <div class="forge-dim-row">
+                            <span class="fdl" style="color:#c44">D</span>
+                            <span class="fdn">Demon</span>
+                            <input type="range" id="forge-rw" min="0" max="100" value="50" style="accent-color:#c44">
+                            <span class="fdv" id="forge-rw-v">0.50</span>
+                        </div>
+                        <div class="forge-dim-row">
+                            <span class="fdl" style="color:#daa520">S</span>
+                            <span class="fdn">Synth</span>
+                            <input type="range" id="forge-sb" min="0" max="100" value="30" style="accent-color:#daa520">
+                            <span class="fdv" id="forge-sb-v">0.30</span>
+                        </div>
+                        <div class="forge-section-title" style="margin-top:10px">Optional</div>
+                        <div class="forge-dim-row">
+                            <span class="fdn" style="min-width:36px">Timer</span>
+                            <input type="number" id="forge-timer" placeholder="secs" min="0" max="300" style="flex:1;background:#111;border:1px solid #333;color:#ddd;font-size:0.55rem;padding:2px 4px;border-radius:3px;width:60px">
+                        </div>
+                        <div class="forge-dim-row" style="margin-top:3px">
+                            <span class="fdn" style="min-width:36px">URL</span>
+                            <input type="text" id="forge-url" placeholder="https://..." style="flex:1;background:#111;border:1px solid #333;color:#5af;font-size:0.55rem;padding:2px 4px;border-radius:3px">
+                        </div>
+                        <div class="forge-section-title" style="margin-top:10px">Result Preview</div>
+                        <div id="forge-preview" style="font-size:0.55rem;color:#888;font-style:italic;min-height:18px;padding:4px;background:#0a0a0a;border-radius:3px">Drag sliders to shape Cortex thinking</div>
+                    </div>
+                </div>
+
+                <!-- Footer: name, desc, formula, buttons -->
+                <div class="forge-footer">
+                    <div class="forge-formula-display" id="forge-formula-display"></div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
+                        <input id="forge-name" placeholder="Equation name">
+                        <input id="forge-desc" placeholder="What does it do?">
+                    </div>
+                    <div class="forge-actions">
+                        <button class="forge-btn-create" id="forge-btn-save" onclick="forgeSubmit()">CREATE EQUATION</button>
+                        <button class="forge-btn-test" onclick="forgeTest()">TEST IT</button>
+                        <button class="forge-btn-cancel" onclick="closeForge()">CANCEL</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+// Lightweight CortexPlayer shim — reads sc_player credits from localStorage
+if (typeof window.CortexPlayer === 'undefined') {
+    var RANK_THRESHOLDS = [
+        {rank:'GIGACHAD',min:50000},{rank:'LEGENDARY',min:20000},{rank:'COMMANDER',min:10000},
+        {rank:'VETERAN',min:5000},{rank:'SERGEANT',min:3000},{rank:'CORPORAL',min:1000},
+        {rank:'PRIVATE',min:0}
+    ];
+    window.CortexPlayer = {
+        getStats: function() {
+            var p = null; try { p = JSON.parse(localStorage.getItem('sc_player')); } catch(e) {}
+            var credits = (p && p.credits) ? p.credits : 0;
+            var rank = 'PRIVATE';
+            for (var i = 0; i < RANK_THRESHOLDS.length; i++) {
+                if (credits >= RANK_THRESHOLDS[i].min) { rank = RANK_THRESHOLDS[i].rank; break; }
+            }
+            return { credits: credits, rank: rank };
+        }
+    };
+}
+
+var SERVER = location.hostname === 'localhost' || location.hostname === '127.0.0.1'
+    ? 'http://localhost:8643'
+    : location.pathname.replace(/\/index\.html$/, '').replace(/\/$/, '');
+var chatArea = document.getElementById('chat-area');
+var input = document.getElementById('msg-input');
+var thinkEl = document.getElementById('thinking');
+var prevStats = {};
+var chatMode = 'cortex'; // 'cortex' = both, 'left' = left only, 'right' = right only
+var chatEndpoints = { cortex: '/api/chat-cortex', left: '/api/chat-left', right: '/api/chat-right' };
+var modeLabels = { cortex: 'CORTEX MIND', left: 'LEFT HEMISPHERE — ANGEL', right: 'RIGHT HEMISPHERE — DEMON' };
+var rambleActive = false;
+var chatInFlight = false; // pause polling while chat is processing
+
+// --- Intent Detection ---
+function detectIntent(text) {
+    var t = text.trim().toLowerCase();
+    // Question: ends with ? or starts with question words
+    if (t.endsWith('?') || /^(who|what|when|where|why|how|is|are|do|does|can|could|would|should|will|which|have|has|did|was|were)\b/.test(t)) return 'question';
+    // Command: starts with imperative verbs
+    if (/^(do|make|create|build|show|tell|give|find|get|stop|start|run|go|set|put|delete|remove|add|change|update|fix|open|close|turn|send|save|load|reset|clear|explain|describe|list|write|read|play|think|learn|remember|forget|shut|be|act|try|help|search|fetch|move|copy|check|test|deploy|push|pull|download|upload|sort|filter|compare|generate|convert|translate|calculate|enable|disable|toggle|switch|pick|choose|select|define|summarize|summarise|combine|merge|split|connect|sync|backup|restore|log|track|monitor|watch|dont|never|always|keep|use|take)\b/.test(t)) return 'command';
+    return 'statement';
+}
+
+var intentLabels = { question: '?', command: '!', statement: '—' };
+var intentNames = { question: 'QUERY', command: 'CMD', statement: 'NOTE' };
+var lastUserMsg = '';
+var msgCounter = 0;
+
+function setChatMode(mode) {
+    chatMode = mode;
+    document.getElementById('btn-left').classList.toggle('active', mode === 'left');
+    document.getElementById('btn-cortex').classList.toggle('active', mode === 'cortex');
+    document.getElementById('btn-right').classList.toggle('active', mode === 'right');
+    document.getElementById('mode-label').textContent = modeLabels[mode];
+}
+
+// --- Session ID for playbook tracking ---
+var sessionId = sessionStorage.getItem('cortex_sid');
+if (!sessionId) { sessionId = Date.now().toString(36) + Math.random().toString(36).slice(2,8); sessionStorage.setItem('cortex_sid', sessionId); }
+
+// --- Chat ---
+async function sendMsg() {
+    var text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    input.style.height = 'auto';
+    var intent = detectIntent(text);
+    lastUserMsg = text;
+    addMsg('user', text, null, null, intent);
+    thinkEl.classList.add('show');
+    chatInFlight = true;
+    try {
+        var resp = await fetch(SERVER + chatEndpoints[chatMode], {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: text, intent: intent, session_id: sessionId,
+                rank: window.CortexPlayer ? CortexPlayer.getStats().rank : 'RECRUIT',
+                credits: window.CortexPlayer ? CortexPlayer.getStats().credits : 0 })
+        });
+        var data = await resp.json();
+        thinkEl.classList.remove('show');
+        var reply = data.ok ? data.reply : ('Error: ' + (data.error || '?'));
+        var thinkingLog = data.thinking_log || [];
+        var multiParts = (data.ok && data.multi_parts && data.multi_parts.length > 1) ? data.multi_parts : null;
+
+        if (reply && reply.length > 0) {
+            // Animate thinking ticker BEFORE showing the reply
+            if (thinkingLog.length > 0) {
+                await animateTicker(thinkingLog);
+            }
+            // Multi-part or single response
+            if (multiParts) {
+                for (var pi = 0; pi < multiParts.length; pi++) {
+                    addMsg('bot', multiParts[pi], data.hemisphere || chatMode, data.agreement, null,
+                        data.word_sources || {}, data.word_roles || {}, data.unknown_words || [],
+                        pi === 0 ? data.quality : null, pi === 0 ? data.playbook : null,
+                        pi === 0 ? data.strategy : null, pi === 0 ? thinkingLog : []);
+                    if (pi < multiParts.length - 1) await sleep(600);
+                }
+            } else {
+                addMsg('bot', reply, data.hemisphere || chatMode, data.agreement, null,
+                    data.word_sources || {}, data.word_roles || {}, data.unknown_words || [],
+                    data.quality, data.playbook, data.strategy, thinkingLog);
+            }
+        }
+    } catch (e) {
+        thinkEl.classList.remove('show');
+        addMsg('bot', 'Server dead. Python running?');
+    }
+    chatInFlight = false;
+    input.focus();
+    refreshDash();
+}
+
+function sleep(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
+
+function animateTicker(steps) {
+    return new Promise(function(resolve) {
+        var container = document.createElement('div');
+        container.className = 'ticker-container open';
+        container.id = 'live-ticker';
+        chatArea.appendChild(container);
+        chatArea.scrollTop = chatArea.scrollHeight;
+        var i = 0;
+        function showNext() {
+            if (i >= steps.length) {
+                setTimeout(function() {
+                    container.style.opacity = '0';
+                    container.style.transition = 'opacity 0.3s';
+                    setTimeout(function() {
+                        if (container.parentNode) container.parentNode.removeChild(container);
+                        resolve();
+                    }, 300);
+                }, 400);
+                return;
+            }
+            var step = steps[i];
+            var el = document.createElement('div');
+            el.className = 'ticker-step stage-' + (step.stage || 'detect');
+            el.innerHTML = '<span class="ticker-label">' + esc(step.label || step.stage || '?') + '</span>'
+                + '<span class="ticker-text">' + esc(step.text || '') + '</span>';
+            container.appendChild(el);
+            chatArea.scrollTop = chatArea.scrollHeight;
+            i++;
+            setTimeout(showNext, 250);
+        }
+        showNext();
+    });
+}
+
+function toggleTickerHistory(id, btn) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    if (el.classList.contains('open')) {
+        el.classList.remove('open');
+        btn.textContent = 'THINKING';
+    } else {
+        el.classList.add('open');
+        btn.textContent = 'HIDE';
+    }
+}
+
+function addMsg(who, text, hemisphere, agreement, intent, wordSources, wordRoles, unknownWords, quality, playbook, strategy, thinkingLog) {
+    var d = document.createElement('div');
+    d.className = 'msg ' + who;
+    var av = who === 'user' ? 'U' : 'C';
+    var tag = '';
+    // User messages: color by intent
+    if (who === 'user' && intent) {
+        d.className += ' ' + intent;
+        tag = '<span class="intent-tag ' + intent + '">' + intentNames[intent] + '</span>';
+    }
+    // Bot messages: hemisphere tag
+    if (who === 'bot' && hemisphere) {
+        var tagLabel = hemisphere === 'agreement' ? 'BOTH' :
+                       hemisphere === 'left_only' ? 'L' :
+                       hemisphere === 'right_only' ? 'R' :
+                       hemisphere === 'synthesis' ? 'SYN' :
+                       hemisphere === 'debate' ? 'DEBATE' : '';
+        if (tagLabel) {
+            tag = '<span class="hemisphere-tag ' + hemisphere + '">' + tagLabel;
+            if (agreement !== null && agreement !== undefined) tag += ' ' + Math.round(agreement * 100) + '%';
+            tag += '</span>';
+        }
+    }
+    // Bot messages: color words by hemisphere source + POS role + misspellings
+    var body = '';
+    if (who === 'bot' && wordSources && Object.keys(wordSources).length > 0) {
+        body = colorWords(text, wordSources, wordRoles || {}, unknownWords || []);
+    } else {
+        body = esc(text);
+    }
+    // Quality badge from self-modification engine
+    var qBadge = '';
+    if (who === 'bot' && quality && quality.total !== undefined) {
+        var pct = Math.round(quality.total * 100);
+        var cls = pct >= 60 ? 'q-good' : pct >= 35 ? 'q-mid' : 'q-bad';
+        qBadge = ' <span class="quality-badge ' + cls + '">' + pct + '%</span>';
+    }
+    // Stage badge from playbook engine
+    var sBadge = '';
+    if (who === 'bot' && playbook && playbook.stage !== undefined) {
+        var sn = playbook.stage_name || ('S' + playbook.stage);
+        var eq = playbook.equation || '';
+        sBadge = ' <span class="stage-badge" title="' + eq + '">' + sn + '</span>';
+    }
+    // Strategy badge from strategy engine
+    var stratBadge = '';
+    if (who === 'bot' && strategy && strategy.strategy_name) {
+        var stratColors = {
+            analytical: '#4af', creative: '#f4a', balanced: '#8a8',
+            empathetic: '#fa4', provocative: '#f44', scholarly: '#aaf', intuitive: '#4fa'
+        };
+        var sc = stratColors[strategy.strategy] || '#888';
+        var stratScore = strategy.scores ? Math.round((strategy.scores[strategy.strategy] || 0) * 100) : '';
+        stratBadge = ' <span style="font-size:0.5rem;font-weight:700;color:' + sc + ';background:#111;padding:1px 4px;border-radius:2px;border:1px solid ' + sc + '" title="' + strategy.dominant_dim + ' ' + (strategy.explored ? 'EXPLORE' : '') + '">' + strategy.strategy_icon + ' ' + strategy.strategy_name.toUpperCase() + (stratScore ? ' ' + stratScore : '') + '</span>';
+    }
+    // WRONG button on bot messages (for user correction)
+    var wrongBtn = '';
+    if (who === 'bot' && strategy && strategy.strategy) {
+        var mid = ++msgCounter;
+        wrongBtn = ' <span class="wrong-btn" onclick="showCorrectionForm(' + mid + ')" id="wb-' + mid + '">WRONG</span>';
+        // Store context on the element after render
+        setTimeout(function() {
+            var el = document.getElementById('wb-' + mid);
+            if (el) {
+                el.dataset.eqId = strategy.strategy;
+                el.dataset.userMsg = lastUserMsg;
+                el.dataset.wrongReply = text;
+                el.dataset.mid = mid;
+            }
+        }, 0);
+    }
+    // Thinking ticker toggle (collapsed history)
+    var tickerHtml = '';
+    if (who === 'bot' && thinkingLog && thinkingLog.length > 0) {
+        var tid = 'ticker-' + msgCounter;
+        var stepsHtml = '';
+        for (var ti = 0; ti < thinkingLog.length; ti++) {
+            var ts = thinkingLog[ti];
+            stepsHtml += '<div class="ticker-step stage-' + (ts.stage || 'detect') + '">'
+                + '<span class="ticker-label">' + esc(ts.label || ts.stage || '?') + '</span>'
+                + '<span class="ticker-text">' + esc(ts.text || '') + '</span></div>';
+        }
+        tickerHtml = ' <span class="ticker-toggle" onclick="toggleTickerHistory(\'' + tid + '\', this)">THINKING</span>'
+            + '<div class="ticker-container" id="' + tid + '">' + stepsHtml + '</div>';
+    }
+    d.innerHTML = '<div class="avatar">' + av + '</div><div class="bubble">' + tag + body + qBadge + sBadge + stratBadge + wrongBtn + tickerHtml + '<div id="cf-' + msgCounter + '"></div></div>';
+    chatArea.appendChild(d);
+    chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+function showCorrectionForm(mid) {
+    var wb = document.getElementById('wb-' + mid);
+    if (!wb) return;
+    var cf = document.getElementById('cf-' + mid);
+    if (!cf) return;
+    wb.style.display = 'none';
+    cf.innerHTML = '<div class="correction-form">' +
+        '<textarea id="ca-' + mid + '" placeholder="Type the correct answer..." rows="2"></textarea>' +
+        '<div class="cf-actions">' +
+        '<button class="cf-submit" onclick="submitCorrection(' + mid + ')">TEACH CORTEX</button>' +
+        '<button class="cf-cancel" onclick="cancelCorrection(' + mid + ')">Cancel</button>' +
+        '</div></div>';
+    var ta = document.getElementById('ca-' + mid);
+    if (ta) ta.focus();
+}
+
+function cancelCorrection(mid) {
+    var wb = document.getElementById('wb-' + mid);
+    var cf = document.getElementById('cf-' + mid);
+    if (wb) wb.style.display = '';
+    if (cf) cf.innerHTML = '';
+}
+
+async function submitCorrection(mid) {
+    var wb = document.getElementById('wb-' + mid);
+    var cf = document.getElementById('cf-' + mid);
+    var ta = document.getElementById('ca-' + mid);
+    if (!wb || !ta) return;
+    var correctAnswer = ta.value.trim();
+    if (!correctAnswer) { ta.style.borderColor = '#f44'; return; }
+    try {
+        var resp = await fetch(SERVER + '/api/equation-feedback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                equation_id: wb.dataset.eqId,
+                user_msg: wb.dataset.userMsg,
+                wrong_reply: wb.dataset.wrongReply,
+                correct_answer: correctAnswer
+            })
+        });
+        var data = await resp.json();
+        if (cf) cf.innerHTML = '<div class="correction-sent">Correction recorded — ' + (wb.dataset.eqId || 'equation') + ' penalised. Cortex will learn.</div>';
+    } catch(e) {
+        if (cf) cf.innerHTML = '<div class="correction-sent" style="color:#f44">Failed to send correction</div>';
+    }
+    refreshDash();
+}
+
+function colorWords(text, sources, roles, unknowns) {
+    roles = roles || {};
+    var unknownSet = {};
+    if (unknowns) { for (var u = 0; u < unknowns.length; u++) unknownSet[unknowns[u]] = true; }
+
+    return text.replace(/([a-zA-Z]+)/g, function(word) {
+        var key = word.toLowerCase();
+        var src = sources[key];
+        var pos = roles[key];
+
+        // Unknown word — glowing white misspelling
+        if (unknownSet[key]) return '<span class="w-unknown">' + esc(word) + '</span>';
+
+        // Determine colour class from hemisphere
+        var colorClass = '';
+        if (src === 'left') colorClass = 'w-left';
+        else if (src === 'right') colorClass = 'w-right';
+        else if (src === 'cortex') colorClass = 'w-cortex';
+        else if (src === 'both') {
+            // POS-based colour for words known by both hemispheres
+            if (pos === 'noun') colorClass = 'w-noun';
+            else if (pos === 'verb') colorClass = 'w-verb';
+            else if (pos === 'adj') colorClass = 'w-adj';
+            else if (pos === 'adv') colorClass = 'w-adv';
+            else colorClass = 'w-both';
+        }
+
+        if (!colorClass) return esc(word);
+
+        // Add POS underline indicator (subtle)
+        var posClass = '';
+        if (pos === 'noun') posClass = ' w-pos-noun';
+        else if (pos === 'verb') posClass = ' w-pos-verb';
+        else if (pos === 'adj') posClass = ' w-pos-adj';
+
+        return '<span class="' + colorClass + posClass + '">' + esc(word) + '</span>';
+    });
+}
+
+function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+input.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+});
+input.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+});
+
+// --- Dashboard ---
+function refreshDash() {
+    if (chatInFlight) return; // don't flood single-threaded server while it's thinking
+    fetch(SERVER + '/api/brain-live', { method: 'POST' })
+        .then(function(r) { return r.json(); })
+        .then(updateDash)
+        .catch(function() {});
+}
+
+function updateDash(data) {
+    var ls = data.stats || {};
+    var rs = data.right_stats || {};
+
+    // Left stats
+    updateStat('sl-nodes', ls.total_nodes);
+    updateStat('sl-defined', ls.defined);
+    updateStat('sl-conns', ls.connections);
+    updateStat('sl-msgs', ls.messages);
+    updateStat('sl-auto', ls.auto_learned);
+    updateStat('sl-deep', ls.understanding_deep);
+
+    // Right stats
+    updateStat('sr-nodes', rs.total_nodes);
+    updateStat('sr-defined', rs.defined);
+    updateStat('sr-conns', rs.connections);
+    updateStat('sr-msgs', rs.messages);
+    updateStat('sr-auto', rs.auto_learned);
+    updateStat('sr-deep', rs.understanding_deep);
+
+    // Sound bars
+    var soundBar = document.getElementById('sound-bar');
+    var colors = {happy:'#4f4',sad:'#66f',scared:'#f6f',whisper:'#888',angry:'#f44',serious:'#fd0',silly:'#f80'};
+    var sounds = ls.sound || {};
+    soundBar.innerHTML = '';
+    for (var sn in sounds) {
+        var pct = Math.round(sounds[sn] * 100);
+        var seg = document.createElement('div');
+        seg.className = 'sound-seg';
+        seg.innerHTML = '<div class="fill" style="height:' + pct + '%;background:' + (colors[sn]||'#555') + '"></div>'
+            + '<div class="lbl">' + sn.substring(0,3) + '</div>';
+        soundBar.appendChild(seg);
+    }
+
+    // Soul genome — left=PAST, cortex=PRESENT, right=FUTURE
+    var ln = ls.total_nodes || 1;
+    var rn = rs.total_nodes || 1;
+    var balance = Math.max(1, (ln + rn) * 0.5 - Math.abs(ln - rn) * 0.3);
+    var rawG = [ln, balance, rn];
+    var sumG = rawG.reduce(function(a,b){return a+b;}, 0);
+    var soulGenome = rawG.map(function(v){return v/sumG;});
+    // dominant sound → emotion name
+    var topSound = 'thinking', topVal = 0;
+    for (var sn2 in sounds) { if(sounds[sn2] > topVal){topVal=sounds[sn2];topSound=sn2;} }
+    var soundEmotionMap = {happy:'Joy',sad:'Grief',scared:'Fear',whisper:'Stillness',angry:'Rage',serious:'Gravity',silly:'Wonder'};
+    var soulEmoName = soundEmotionMap[topSound] || 'Processing';
+    updateSoulCanvas(soulGenome, soulEmoName);
+
+    // STM meter
+    var stm = data.stm || {};
+    var stmMax = stm.max || 200;
+    var stmTotal = (stm.left || 0) + (stm.right || 0) + (stm.cortex || 0);
+    var stmPct = Math.round(stmTotal / (stmMax * 3) * 100);
+    var stmFill = document.getElementById('stm-bar-fill');
+    var stmPctEl = document.getElementById('stm-pct');
+    var stmBadge = document.getElementById('stm-badge');
+    if (stmFill) {
+        stmFill.style.width = stmPct + '%';
+        stmFill.style.background = stmPct < 50 ? '#0f8' : (stmPct < 80 ? '#fc0' : '#f44');
+        if (stmPct >= 95) stmFill.style.animation = 'blink 0.5s infinite';
+        else stmFill.style.animation = '';
+    }
+    if (stmPctEl) stmPctEl.textContent = stmPct + '%';
+    if (stmBadge) {
+        var stmCol = stmPct < 50 ? '#0f8' : (stmPct < 80 ? '#fc0' : '#f44');
+        stmBadge.style.borderColor = stmCol;
+        stmBadge.style.color = stmCol;
+        stmBadge.title = 'LEFT: ' + (stm.left||0) + '/' + stmMax + ' | RIGHT: ' + (stm.right||0) + '/' + stmMax + ' | CORTEX: ' + (stm.cortex||0) + '/' + stmMax + (stmPct >= 90 ? ' — PURGE RECOMMENDED' : '');
+    }
+
+    // Age badge
+    var cs = data.cortex_stats || {};
+    var age = cs.age || {};
+    var ageBadge = document.getElementById('age-badge');
+    if (ageBadge && age.years) {
+        var yrs = age.years;
+        var stage = age.stage || '';
+        var col = yrs < 3 ? '#f88' : (yrs < 6 ? '#fc0' : (yrs < 13 ? '#4af' : (yrs < 18 ? '#0f8' : '#fff')));
+        ageBadge.style.color = col;
+        ageBadge.style.borderColor = col;
+        ageBadge.textContent = 'AGE: ' + yrs + 'yr — ' + stage.toUpperCase();
+        var f = age.factors || {};
+        ageBadge.title = 'Vocab: ' + (f.vocabulary||0).toLocaleString() + ' | Deep: ' + (f.deep_understanding||0).toLocaleString() + ' | Wiring: ' + (f.wiring_density||0) + 'x | Curiosity: ' + (f.curiosity||0).toLocaleString() + ' | Self-learned: ' + (f.self_learned||0).toLocaleString() + ' | Experience: ' + (f.experience||0).toLocaleString() + ' msgs';
+    }
+
+    // Abilities
+    var ab = data.abilities || {};
+    var abList = document.getElementById('abilities-list');
+    abList.innerHTML = '';
+    var unlocked = ab.unlocked_details || {};
+    var locked = ab.locked_progress || {};
+    for (var aid in unlocked) {
+        abList.innerHTML += '<div class="ability"><div class="dot on"></div><span class="name on">' + unlocked[aid] + '</span></div>';
+    }
+    var lockedArr = [];
+    for (var lid in locked) lockedArr.push([lid, locked[lid]]);
+    lockedArr.sort(function(a,b) { return b[1].pct - a[1].pct; });
+    for (var i = 0; i < lockedArr.length; i++) {
+        var l = lockedArr[i][1];
+        var reqStr = Object.keys(l.reqs).map(function(k){ return k + ':' + l.reqs[k]; }).join(' ');
+        abList.innerHTML += '<div class="ability"><div class="dot off"></div><span class="name">' + l.name + '</span><span class="pct">' + l.pct + '% ' + reqStr + '</span></div>';
+    }
+
+    // Ramble — internal monologue
+    var rambles = data.ramble || [];
+    var rmEl = document.getElementById('ramble-list');
+    var rmStatus = document.getElementById('ramble-status');
+    var rmBtn = document.getElementById('ramble-btn');
+    rambleActive = !!data.ramble_active;
+    rmStatus.textContent = rambleActive ? 'THINKING...' : 'OFF';
+    rmStatus.style.color = rambleActive ? '#daa520' : '#444';
+    rmBtn.textContent = rambleActive ? 'Stop Ramble' : 'Start Ramble';
+    rmBtn.style.color = rambleActive ? '#c44' : '#888';
+    rmEl.innerHTML = '';
+    for (var ri = rambles.length - 1; ri >= 0; ri--) {
+        var rm = rambles[ri];
+        var rhtml = '<div class="ramble-item">';
+        rhtml += '<div class="ramble-q">' + esc(rm.question || '') + '</div>';
+        if (rm.angel) rhtml += '<div class="ramble-side"><span class="angel">A:</span><span class="text">' + esc(rm.angel) + '</span></div>';
+        if (rm.demon) rhtml += '<div class="ramble-side"><span class="demon">D:</span><span class="text">' + esc(rm.demon) + '</span></div>';
+        rhtml += '<div class="ramble-verdict">' + esc(rm.verdict || '') + ' (' + Math.round((rm.agreement||0)*100) + '% agree)</div>';
+        rhtml += '</div>';
+        rmEl.innerHTML += rhtml;
+    }
+
+    // Debates
+    var debates = data.debates || [];
+    var dbEl = document.getElementById('debates-list');
+    dbEl.innerHTML = '';
+    if (debates.length === 0) {
+        dbEl.innerHTML = '<div style="font-size:0.62rem;color:#444">No debates yet — chat via Cortex Brain to trigger</div>';
+    }
+    for (var di = debates.length - 1; di >= 0; di--) {
+        var db = debates[di];
+        var html = '<div class="debate-item">';
+        html += '<div class="debate-q">"' + esc(db.user || '') + '"</div>';
+        if (db.left) html += '<div class="debate-side"><span class="tag L">L:</span><span class="text">' + esc(db.left) + '</span></div>';
+        if (db.right) html += '<div class="debate-side"><span class="tag R">R:</span><span class="text">' + esc(db.right) + '</span></div>';
+        html += '<div class="debate-result">';
+        if (db.type) html += '<span style="color:#555">[' + db.type + '] </span>';
+        if (db.agreement !== undefined && db.agreement !== null) {
+            var agPct = Math.round(db.agreement * 100);
+            html += agPct > 50
+                ? '<span class="agree">Agreement: ' + agPct + '%</span>'
+                : '<span class="disagree">Tension: ' + (100 - agPct) + '%</span>';
+        }
+        if (db.winner) html += ' <span class="winner">Winner: ' + db.winner + '</span>';
+        html += '</div></div>';
+        dbEl.innerHTML += html;
+    }
+
+    // Recent words — LEFT
+    var rwl = data.recent_words || [];
+    var rwlEl = document.getElementById('recent-words-left');
+    rwlEl.innerHTML = '';
+    for (var j = 0; j < Math.min(rwl.length, 6); j++) {
+        var w = rwl[j];
+        rwlEl.innerHTML += '<div class="feed-item"><span class="word">' + w.word + '</span>'
+            + '<span class="def">' + esc(w.means) + '</span></div>';
+    }
+
+    // Recent words — RIGHT
+    var rwr = data.right_recent_words || [];
+    var rwrEl = document.getElementById('recent-words-right');
+    rwrEl.innerHTML = '';
+    for (var j2 = 0; j2 < Math.min(rwr.length, 6); j2++) {
+        var w2 = rwr[j2];
+        rwrEl.innerHTML += '<div class="feed-item"><span class="word">' + w2.word + '</span>'
+            + '<span class="def">' + esc(w2.means) + '</span></div>';
+    }
+
+    // Clusters
+    var cls = data.clusters || {};
+    var clEl = document.getElementById('clusters-list');
+    clEl.innerHTML = '';
+    for (var cn in cls) {
+        clEl.innerHTML += '<div class="cluster"><span class="cluster-name">' + cn + '</span> '
+            + '<span class="cluster-words">' + cls[cn].join(', ') + '</span></div>';
+    }
+
+    // Recent chat
+    var rc = data.recent_chat || [];
+    var rcEl = document.getElementById('recent-chat');
+    rcEl.innerHTML = '';
+    for (var k = 0; k < rc.length; k++) {
+        var c = rc[k];
+        rcEl.innerHTML += '<div class="feed-item"><span class="time">' + (c.time||'').substring(11,16) + '</span>'
+            + '<span class="def"><b>U:</b> ' + esc(c.user) + ' <b>B:</b> ' + esc(c.response) + '</span></div>';
+    }
+
+    // Memory Banks
+    var mem = data.memory || {};
+    var memRecent = data.memory_recent || [];
+    var memEmEl = document.getElementById('mem-emotions');
+    var memBkEl = document.getElementById('mem-backends');
+    var memRcEl = document.getElementById('mem-recent');
+    var memTotEl = document.getElementById('mem-total');
+
+    if (mem && mem.backends) {
+        // Emotion counters + value distribution
+        var emoMap = { happy: '&#x1F60A;', sad: '&#x1F622;', angry: '&#x1F621;', neutral: '&#x2796;' };
+        var totalMem = 0;
+        memEmEl.innerHTML = '';
+        var backends = mem.backends || [];
+        for (var bi = 0; bi < backends.length; bi++) {
+            var bk = backends[bi];
+            var emos = bk.emotions || {};
+            for (var ek in emos) totalMem += emos[ek];
+            for (var em in emoMap) {
+                var cnt = emos[em] || 0;
+                memEmEl.innerHTML += '<div class="mem-emo ' + em + '">' + emoMap[em] + ' <span class="count">' + cnt + '</span></div>';
+            }
+        }
+        memEmEl.innerHTML += '<div class="mem-emo cache">&#x26A1; <span class="count">' + (mem.cache_size || 0) + '</span></div>';
+
+        // Value distribution (golden/good/meh/dogshit)
+        var vd = mem.value_distribution || {};
+        if (vd.golden !== undefined) {
+            memEmEl.innerHTML += '<span style="color:#333;margin:0 4px">|</span>'
+                + '<div class="mem-emo" style="border-color:#daa520;color:#daa520">&#x1F3C6; <span class="count">' + (vd.golden || 0) + '</span></div>'
+                + '<div class="mem-emo" style="border-color:#4a8;color:#4a8">&#x2705; <span class="count">' + (vd.good || 0) + '</span></div>'
+                + '<div class="mem-emo" style="border-color:#555;color:#555">&#x2796; <span class="count">' + (vd.meh || 0) + '</span></div>'
+                + '<div class="mem-emo" style="border-color:#4a2a2a;color:#8b4513">&#x1F4A9; <span class="count">' + (vd.dogshit || 0) + '</span></div>';
+        }
+        memTotEl.textContent = totalMem + ' memories' + (vd.avg_value ? ' (avg ' + Math.round(vd.avg_value * 100) + '%)' : '');
+
+        // Backend status
+        memBkEl.innerHTML = '';
+        for (var bj = 0; bj < backends.length; bj++) {
+            var b = backends[bj];
+            memBkEl.innerHTML += '<div class="mem-backend">'
+                + '<div class="dot ' + (b.connected ? 'ok' : 'fail') + '"></div>'
+                + '<span class="name">' + b.name + '</span>'
+                + '<span class="lat">' + b.avg_ms + 'ms</span>'
+                + '<span>' + b.writes + ' writes</span>'
+                + (b.failures > 0 ? '<span style="color:#f44">' + b.failures + ' fail</span>' : '')
+                + '</div>';
+        }
+    }
+
+    // Recent memories
+    memRcEl.innerHTML = '';
+    var emoIcons = { happy: '&#x1F60A;', sad: '&#x1F622;', angry: '&#x1F621;', neutral: '&#x2796;' };
+    var hemiColors = { left: '#4a8', cortex: '#daa520', right: '#c44', synthesis: '#fff', unknown: '#555' };
+    for (var mi = 0; mi < memRecent.length; mi++) {
+        var m = memRecent[mi];
+        var qPct = Math.round((m.quality || 0) * 100);
+        var qClass = qPct >= 60 ? 'good' : (qPct >= 35 ? 'mid' : 'bad');
+        var timeStr = (m.created_at || '').substring(11, 16);
+        var hColor = hemiColors[m.hemisphere] || '#555';
+        var valPct = Math.round((m.value || 0.5) * 100);
+        var valIcon = valPct >= 80 ? '&#x1F3C6;' : (valPct < 20 ? '&#x1F4A9;' : '');
+        memRcEl.innerHTML += '<div class="mem-item">'
+            + '<span class="emo">' + (emoIcons[m.emotion] || '&#x2796;') + '</span>'
+            + '<span class="time">' + timeStr + '</span>'
+            + '<span class="content"><b>U:</b> ' + esc((m.user_input || '').substring(0, 30)) + ' <b>B:</b> ' + esc((m.response || '').substring(0, 30)) + '</span>'
+            + '<span class="qual ' + qClass + '">' + qPct + '%</span>'
+            + (valIcon ? '<span style="font-size:0.55rem">' + valIcon + '</span>' : '')
+            + '<div class="hemi-dot" style="background:' + hColor + '"></div>'
+            + '</div>';
+    }
+
+    // Equation Library
+    var strat = data.strategy || {};
+    var stratLbEl = document.getElementById('strat-leaderboard');
+    var stratDimEl = document.getElementById('strat-dims');
+    var stratEvEl = document.getElementById('strat-events');
+    var stratTotEl = document.getElementById('strat-total');
+    var eqGoldenEl = document.getElementById('eq-golden-ct');
+    var eqActiveEl = document.getElementById('eq-active-ct');
+    var eqCurrentEl = document.getElementById('eq-current');
+    if (strat && strat.standings) {
+        stratTotEl.textContent = (strat.library_size || strat.standings.length) + ' equations | ' + strat.total_interactions + ' int (explore ' + Math.round((strat.explore_rate||0)*100) + '%)';
+        if (eqGoldenEl) eqGoldenEl.textContent = (strat.golden_count || 0) + ' golden';
+        if (eqActiveEl) eqActiveEl.textContent = (strat.active_count || strat.standings.length) + ' active';
+
+        // Current equation
+        if (eqCurrentEl && strat.last_strategy) {
+            var ls = strat.last_strategy;
+            eqCurrentEl.innerHTML = 'LAST: <span style="color:#daa520">' + esc(ls.strategy||'?') + '</span> | reward: ' + Math.round((ls.reward||0)*100) + '%';
+        }
+
+        var seedColors = { analytical:'#4af', creative:'#f4a', balanced:'#8a8', empathetic:'#fa4', provocative:'#f44', scholarly:'#aaf', intuitive:'#4fa' };
+        function eqColor(name) { return seedColors[name] || '#' + (Math.abs(hashStr(name)) % 0xFFFFFF).toString(16).padStart(6,'0'); }
+        function hashStr(s) { var h=0; for(var i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;} return h; }
+
+        stratLbEl.innerHTML = '';
+        var standings = strat.standings || [];
+        var userCredits = window.CortexPlayer ? CortexPlayer.getStats().credits : 0;
+        for (var si = 0; si < standings.length; si++) {
+            var s = standings[si];
+            var col = eqColor(s.name);
+            var barW = Math.round((s.success_rate || s.avg_confidence || 0) * 100);
+            var badge = '';
+            if (s.status === 'golden') badge = '<span class="eq-badge golden">GOLDEN</span>';
+            else if (s.source === 'seed') badge = '<span class="eq-badge seed">SEED</span>';
+            else if (s.source === 'mutation') badge = '<span class="eq-badge mut">MUT</span>';
+            else if (s.source === 'user') badge = '<span class="eq-badge user">USER</span>';
+
+            // Rank lock check
+            var minRank = s.min_rank || 0;
+            var isLocked = userCredits < minRank;
+            var lockIcon = '';
+            if (minRank > 0) {
+                var rankNames = {0:'RECRUIT',1000:'PRIVATE',3000:'CORPORAL',10000:'SERGEANT',20000:'VETERAN',50000:'COMMANDER',100000:'LEGENDARY',500000:'GIGACHAD'};
+                var unlockName = 'RECRUIT';
+                for (var rk in rankNames) { if (minRank >= parseInt(rk)) unlockName = rankNames[rk]; }
+                if (isLocked) {
+                    lockIcon = '<span class="rank-badge locked" title="Requires ' + unlockName + '">&#x1F512; ' + unlockName + '</span>';
+                } else {
+                    lockIcon = '<span class="rank-badge unlocked">&#x1F513;</span>';
+                }
+            }
+
+            // Jobs completed
+            var jobsHtml = (s.jobs_completed > 0) ? '<span class="eq-jobs">' + s.jobs_completed + ' jobs</span>' : '';
+
+            // Formula
+            var formulaStr = s.formula || '';
+
+            // Dimension pips — 7 tiny coloured dots showing fingerprint
+            var pipDims = ['F','C','E','T','S','D','H'];
+            var pipColors2 = { F:'#4af', C:'#f4a', E:'#fa4', T:'#aaf', S:'#8a8', D:'#f44', H:'#4fa' };
+            var pipsHtml = '<span class="eq-pips">';
+            for (var pi = 0; pi < pipDims.length; pi++) {
+                var pv = (s.affinity || {})[pipDims[pi]] || 0;
+                var filled = pv >= 0.2;
+                var pipOp = filled ? (0.3 + pv * 0.7).toFixed(2) : '0.15';
+                pipsHtml += '<span class="eq-pip" style="background:' + (filled ? pipColors2[pipDims[pi]] : '#222') + ';opacity:' + pipOp + '" title="' + pipDims[pi] + ':' + pv.toFixed(1) + '"></span>';
+            }
+            pipsHtml += '</span>';
+
+            stratLbEl.innerHTML += '<div class="eq-row' + (isLocked ? ' eq-locked' : '') + '" onclick="showEqDetail(\'' + s.name + '\')" title="' + esc(formulaStr) + '">'
+                + '<div class="icon" style="background:' + col + '">' + s.icon + '</div>'
+                + '<span class="name">' + esc(s.display) + '</span>'
+                + pipsHtml
+                + (badge ? badge : '')
+                + (lockIcon ? lockIcon : '')
+                + '<div class="bar-wrap"><div class="bar" style="width:' + barW + '%;background:' + col + '"></div></div>'
+                + '<span class="pct" style="color:' + col + '">' + barW + '%</span>'
+                + '<span class="uses">' + (s.uses||0) + 'u</span>'
+                + jobsHtml
+                + '</div>'
+                + (formulaStr ? '<div class="eq-formula" style="margin-left:30px">' + esc(formulaStr) + '</div>' : '');
+        }
+
+        // Problem dimensions
+        var dimDist = strat.dimension_distribution || {};
+        var dimColors = { F:'#4af', C:'#f4a', E:'#fa4', T:'#aaf', S:'#8a8', D:'#f44', H:'#4fa' };
+        stratDimEl.innerHTML = '';
+        for (var dk in dimDist) {
+            var dv = Math.round(dimDist[dk] * 100);
+            stratDimEl.innerHTML += '<div class="strat-dim"><span style="color:' + (dimColors[dk]||'#666') + '">' + dk + '</span> <span class="val">' + dv + '%</span></div>';
+        }
+
+        // Recent events
+        var evts = strat.recent_events || [];
+        stratEvEl.innerHTML = '';
+        for (var ei = evts.length - 1; ei >= Math.max(0, evts.length - 10); ei--) {
+            var ev = evts[ei];
+            var evTime = (ev.time || '').substring(11, 19);
+            var evTypeCol = ev.type === 'golden' ? '#daa520' : ev.type === 'dead' ? '#f44' : ev.type === 'mutation' ? '#4a8' : '#555';
+            stratEvEl.innerHTML += '<div class="strat-event" style="color:' + evTypeCol + '">' + evTime + ' [' + ev.type + '] ' + esc(ev.detail || '') + '</div>';
+        }
+    }
+
+    prevStats = ls;
+}
+
+function updateStat(id, val) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var prev = parseInt(el.textContent) || 0;
+    el.textContent = val || 0;
+    if (prev && val && val !== prev) {
+        var delta = val - prev;
+        var existing = el.parentElement.querySelector('.delta');
+        if (existing) existing.remove();
+        var d = document.createElement('span');
+        d.className = 'delta';
+        d.textContent = (delta > 0 ? '+' : '') + delta;
+        if (delta < 0) d.style.color = '#f44';
+        el.parentElement.appendChild(d);
+        el.classList.add(delta > 0 ? 'up' : 'down');
+        setTimeout(function() { el.classList.remove('up', 'down'); }, 2000);
+    }
+}
+
+async function saveIPFS() {
+    try {
+        var resp = await fetch(SERVER + '/api/brain-save', { method: 'POST' });
+        var data = await resp.json();
+        var msg = data.ok ? 'Saved — L:' + (data.left_cid||'?').substring(0,12) + ' R:' + (data.right_cid||'?').substring(0,12) : 'Save failed';
+        addMsg('bot', msg);
+    } catch(e) { addMsg('bot', 'IPFS error'); }
+}
+
+async function resetChat() {
+    try { await fetch(SERVER + '/api/chat-reset', { method: 'POST' }); } catch(e) {}
+    chatArea.innerHTML = '';
+    addMsg('bot', 'Fresh start. Both hemispheres reset.');
+}
+
+async function toggleRamble() {
+    var endpoint = rambleActive ? '/api/ramble-stop' : '/api/ramble-start';
+    try {
+        await fetch(SERVER + endpoint, { method: 'POST' });
+        refreshDash();
+    } catch(e) {}
+}
+
+async function showGaps() {
+    var overlay = document.getElementById('gaps-overlay');
+    var content = document.getElementById('gaps-content');
+    overlay.classList.add('show');
+    content.innerHTML = '<div style="color:#555;font-size:0.7rem;">Loading gaps...</div>';
+    try {
+        var resp = await fetch(SERVER + '/api/knowledge-gaps', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{}'
+        });
+        var data = await resp.json();
+        var html = '';
+        var brains = ['left', 'right', 'cortex'];
+        var colors = { left: 'left', right: 'right', cortex: 'cortex' };
+        for (var i = 0; i < brains.length; i++) {
+            var b = brains[i];
+            var bd = data[b];
+            if (!bd) continue;
+            var ubu = bd.undefined_but_used || [];
+            var sm = bd.summary || {};
+            html += '<div class="gaps-brain"><h3 class="' + colors[b] + '">' + b.toUpperCase() + ' — ' + ubu.length + ' undefined words used in conversation</h3>';
+            for (var j = 0; j < ubu.length && j < 50; j++) {
+                var w = ubu[j];
+                var cls = w.freq > 60 ? 'high' : (w.freq > 30 ? 'med' : 'low');
+                html += '<span class="gap-word ' + cls + '" title="freq=' + w.freq + ' bigrams=' + w.bigrams + '">' + w.word + '</span>';
+            }
+            html += '</div>';
+        }
+        var tn = data.top_needs || [];
+        if (tn.length) {
+            html += '<div class="gaps-summary">TOP NEEDS: ';
+            for (var k = 0; k < tn.length && k < 15; k++) {
+                html += '<strong>' + tn[k].word + '</strong> (' + tn[k].freq + ') ';
+            }
+            html += '</div>';
+        }
+        content.innerHTML = html || '<div style="color:#4a8;">No significant gaps detected.</div>';
+    } catch(e) {
+        content.innerHTML = '<div style="color:#f66;">Error loading gaps: ' + e.message + '</div>';
+    }
+}
+
+async function triggerSelfStudy() {
+    var btn = document.getElementById('selfStudyBtn');
+    var status = document.getElementById('selfStudyStatus');
+    btn.disabled = true;
+    btn.style.opacity = '0.5';
+    btn.textContent = 'STUDYING...';
+    status.textContent = 'All 3 brains are looking up their gaps on Wikipedia + DuckDuckGo...';
+    status.style.color = '#fc0';
+    try {
+        var resp = await fetch(SERVER + '/api/self-study', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ target: 'all', max_words: 15 })
+        });
+        var data = await resp.json();
+        var msg = data.status || 'Done';
+        var words = [];
+        for (var b in data.results) {
+            var r = data.results[b];
+            if (r.words) {
+                for (var i = 0; i < r.words.length; i++) {
+                    words.push(b.toUpperCase() + ': ' + r.words[i].word);
+                }
+            }
+        }
+        status.style.color = '#0f8';
+        status.innerHTML = msg + (words.length ? '<br><span style="color:#888;font-size:0.6rem;">' + words.join(', ') + '</span>' : '');
+        btn.textContent = 'SELF-STUDY NOW';
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        // Refresh gaps display
+        setTimeout(showGaps, 1000);
+    } catch(e) {
+        status.style.color = '#f66';
+        status.textContent = 'Error: ' + e.message;
+        btn.textContent = 'SELF-STUDY NOW';
+        btn.disabled = false;
+        btn.style.opacity = '1';
+    }
+}
+
+async function triggerSleep() {
+    if (!confirm('SLEEP MODE\n\nThis will:\n1. Archive all conversation memories to IPFS\n2. Clear short-term memory (fresh head)\n3. Ramble + debate logs archived too\n\nProceed?')) return;
+    var btn = document.getElementById('sleep-btn');
+    btn.textContent = 'SLEEPING...';
+    btn.style.color = '#fc0';
+    try {
+        var resp = await fetch(SERVER + '/api/sleep', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{}'
+        });
+        var data = await resp.json();
+        if (data.ok) {
+            btn.textContent = 'AWAKE';
+            btn.style.color = '#0f8';
+            var msg = 'Archived ' + data.archived + ' memories';
+            if (data.cid) msg += '\nIPFS: ' + data.cid;
+            msg += '\nMind is clear. Ready for a new day.';
+            alert(msg);
+            setTimeout(function() { btn.textContent = 'SLEEP'; btn.style.color = '#4af'; }, 3000);
+        } else {
+            alert('Sleep failed: ' + JSON.stringify(data));
+            btn.textContent = 'SLEEP';
+            btn.style.color = '#4af';
+        }
+    } catch(e) {
+        alert('Sleep error: ' + e.message);
+        btn.textContent = 'SLEEP';
+        btn.style.color = '#4af';
+    }
+}
+
+async function showMemoryArchive() {
+    var overlay = document.getElementById('gaps-overlay');
+    var content = document.getElementById('gaps-content');
+    overlay.classList.add('show');
+    content.innerHTML = '<div style="color:#555;font-size:0.7rem;">Loading memory archive...</div>';
+    try {
+        var resp = await fetch(SERVER + '/api/memory-archive', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{}'
+        });
+        var data = await resp.json();
+        var archives = data.archives || [];
+        if (!archives.length) {
+            content.innerHTML = '<div style="color:#555;">No memory archives yet. Hit SLEEP to create the first one.</div>';
+            return;
+        }
+        var html = '<div class="gaps-brain"><h3 style="color:#4af;">MEMORY ARCHIVE — ' + archives.length + ' days</h3>';
+        for (var i = archives.length - 1; i >= 0; i--) {
+            var a = archives[i];
+            var kb = Math.round((a.size_bytes || 0) / 1024);
+            html += '<div style="display:flex;justify-content:space-between;padding:4px 6px;margin:2px 0;background:#111;border-radius:4px;font-size:0.65rem;">';
+            html += '<span style="color:#fc0;">' + a.date + '</span>';
+            html += '<span style="color:#888;">L:' + (a.left||0) + ' R:' + (a.right||0) + ' C:' + (a.cortex||0) + ' = ' + a.entries + ' entries</span>';
+            html += '<span style="color:#555;">' + kb + 'KB</span>';
+            if (a.cid) html += '<a style="color:#4af;cursor:pointer;text-decoration:none;" onclick="recallArchive(\'' + a.cid + '\',\'' + a.date + '\')" title="Search this day">RECALL</a>';
+            html += '</div>';
+        }
+        html += '</div>';
+        content.innerHTML = html;
+    } catch(e) {
+        content.innerHTML = '<div style="color:#f66;">Error: ' + e.message + '</div>';
+    }
+}
+
+async function recallArchive(cid, date) {
+    var search = prompt('Search memories from ' + date + ':\n(leave blank for summary)');
+    if (search === null) return;
+    var content = document.getElementById('gaps-content');
+    content.innerHTML = '<div style="color:#555;font-size:0.7rem;">Fetching from IPFS...</div>';
+    try {
+        var resp = await fetch(SERVER + '/api/memory-archive-recall', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cid: cid, search: search })
+        });
+        var data = await resp.json();
+        if (data.error) { content.innerHTML = '<div style="color:#f66;">' + data.error + '</div>'; return; }
+        var html = '<div class="gaps-brain"><h3 style="color:#4af;">MEMORIES — ' + (data.date||date) + (search ? ' (search: "' + search + '")' : '') + '</h3>';
+        if (data.results) {
+            for (var i = 0; i < data.results.length; i++) {
+                var r = data.results[i];
+                var bc = r.brain === 'left' ? '#4f4' : (r.brain === 'right' ? '#f44' : '#fff');
+                html += '<div style="padding:4px;margin:3px 0;background:#0a0a0a;border-radius:4px;border-left:2px solid ' + bc + ';font-size:0.6rem;">';
+                html += '<div style="color:#888;">' + (r.time||'') + ' <span style="color:' + bc + ';">[' + (r.brain||'').toUpperCase() + ']</span></div>';
+                html += '<div style="color:#fc0;">Q: ' + (r.user||'').substring(0,120) + '</div>';
+                html += '<div style="color:#ccc;">A: ' + (r.response||'').substring(0,200) + '</div>';
+                html += '</div>';
+            }
+            if (!data.results.length) html += '<div style="color:#555;">No matches found.</div>';
+        } else {
+            html += '<div style="color:#888;">L: ' + (data.left_entries||0) + ' entries | R: ' + (data.right_entries||0) + ' | C: ' + (data.cortex_entries||0) + '</div>';
+            html += '<div style="color:#555;margin-top:4px;">Ramble: ' + (data.ramble_entries||0) + ' | Debate: ' + (data.debate_entries||0) + '</div>';
+        }
+        html += '</div>';
+        content.innerHTML = html;
+    } catch(e) {
+        content.innerHTML = '<div style="color:#f66;">Error: ' + e.message + '</div>';
+    }
+}
+
+// --- Brain Activity Tracking ---
+var activityHistory = []; // last 60 ticks of activity
+var MAX_TICKS = 60;
+var prevLeftNodes = 0, prevRightNodes = 0, prevLeftConns = 0, prevRightConns = 0;
+var prevLeftMsgs = 0, prevRightMsgs = 0;
+var pollInterval = 3000;
+var pollTimer = null;
+
+function trackActivity(data) {
+    var ls = data.stats || {};
+    var rs = data.right_stats || {};
+    var orbL = document.getElementById('orb-left');
+    var orbR = document.getElementById('orb-right');
+    var orbC = document.getElementById('orb-cortex');
+    var leftCol = orbL ? orbL.closest('.hemi-col') : null;
+    var rightCol = orbR ? orbR.closest('.hemi-col') : null;
+
+    // Detect changes since last poll
+    var leftDelta = 0, rightDelta = 0;
+    if (prevLeftNodes) {
+        leftDelta += Math.abs((ls.total_nodes || 0) - prevLeftNodes);
+        leftDelta += Math.abs((ls.connections || 0) - prevLeftConns);
+        leftDelta += Math.abs((ls.messages || 0) - prevLeftMsgs);
+    }
+    if (prevRightNodes) {
+        rightDelta += Math.abs((rs.total_nodes || 0) - prevRightNodes);
+        rightDelta += Math.abs((rs.connections || 0) - prevRightConns);
+        rightDelta += Math.abs((rs.messages || 0) - prevRightMsgs);
+    }
+    prevLeftNodes = ls.total_nodes || 0;
+    prevLeftConns = ls.connections || 0;
+    prevLeftMsgs = ls.messages || 0;
+    prevRightNodes = rs.total_nodes || 0;
+    prevRightConns = rs.connections || 0;
+    prevRightMsgs = rs.messages || 0;
+
+    // Fire orbs on change
+    if (leftDelta > 0) fireOrb(orbL, leftCol, 'pulse-left');
+    if (rightDelta > 0) fireOrb(orbR, rightCol, 'pulse-right');
+
+    // Cortex orb pulses during ramble or when both hemispheres active
+    var isThinking = !!data.ramble_active || (leftDelta > 0 && rightDelta > 0);
+    if (isThinking) {
+        if (orbC) orbC.classList.add('active');
+    } else {
+        if (orbC) orbC.classList.remove('active');
+        if (leftDelta === 0 && orbL) orbL.classList.remove('active', 'firing');
+        if (rightDelta === 0 && orbR) orbR.classList.remove('active', 'firing');
+    }
+
+    // Ramble pulse on status text
+    var rmStatus = document.getElementById('ramble-status');
+    if (rmStatus) {
+        if (data.ramble_active) rmStatus.classList.add('ramble-active-pulse');
+        else rmStatus.classList.remove('ramble-active-pulse');
+    }
+
+    // Push activity tick
+    activityHistory.push({ l: leftDelta, r: rightDelta, t: Date.now() });
+    if (activityHistory.length > MAX_TICKS) activityHistory.shift();
+
+    // Render sparkline
+    renderActivityBar();
+
+    // Show ops/sec
+    var recent = activityHistory.filter(function(a) { return Date.now() - a.t < 10000; });
+    var totalOps = 0;
+    for (var i = 0; i < recent.length; i++) totalOps += recent[i].l + recent[i].r;
+    var opsPerSec = (totalOps / 10).toFixed(1);
+    var rateEl = document.getElementById('activity-rate');
+    if (rateEl) {
+        rateEl.textContent = opsPerSec + ' ops/s';
+        rateEl.style.color = opsPerSec > 5 ? '#daa520' : opsPerSec > 0 ? '#666' : '#333';
+    }
+
+    // Speed up polling when brain is active
+    var newInterval = (data.ramble_active || leftDelta > 0 || rightDelta > 0) ? 2000 : 5000;
+    if (newInterval !== pollInterval) {
+        pollInterval = newInterval;
+        clearInterval(pollTimer);
+        pollTimer = setInterval(refreshDash, pollInterval);
+    }
+}
+
+function fireOrb(orb, col, pulseClass) {
+    if (!orb) return;
+    orb.classList.remove('firing');
+    void orb.offsetWidth; // force reflow
+    orb.classList.add('firing');
+    orb.classList.add('active');
+    if (col) {
+        col.classList.add(pulseClass);
+        setTimeout(function() { col.classList.remove(pulseClass); }, 1500);
+    }
+}
+
+function renderActivityBar() {
+    var bar = document.getElementById('activity-bar');
+    if (!bar) return;
+    bar.innerHTML = '';
+    for (var i = 0; i < activityHistory.length; i++) {
+        var a = activityHistory[i];
+        var total = a.l + a.r;
+        if (total === 0) {
+            var tick = document.createElement('div');
+            tick.className = 'activity-tick cortex';
+            tick.style.height = '1px';
+            tick.style.opacity = '0.2';
+            bar.appendChild(tick);
+        } else {
+            // Show which hemisphere was more active
+            var h = Math.min(total * 2, 16);
+            var tick = document.createElement('div');
+            tick.className = 'activity-tick ' + (a.l > a.r ? 'left' : a.r > a.l ? 'right' : 'cortex');
+            tick.style.height = h + 'px';
+            bar.appendChild(tick);
+        }
+    }
+    // Fill remaining with empty ticks
+    for (var j = activityHistory.length; j < MAX_TICKS; j++) {
+        var empty = document.createElement('div');
+        empty.className = 'activity-tick cortex';
+        empty.style.height = '1px';
+        empty.style.opacity = '0.1';
+        bar.appendChild(empty);
+    }
+}
+
+// Wrap updateDash to include activity tracking
+var _origUpdateDash = updateDash;
+updateDash = function(data) {
+    _origUpdateDash(data);
+    trackActivity(data);
+};
+
+// ─── Equation Library Functions ───────────────────────
+var dimColors = { F:'#4af', C:'#f4a', E:'#fa4', T:'#aaf', S:'#8a8', D:'#f44', H:'#4fa' };
+var dimNames = { F:'Factual', C:'Creative', E:'Emotional', T:'Technical', S:'Social', D:'Debate', H:'Humor' };
+
+function showEqDetail(eqId) {
+    var overlay = document.getElementById('eq-detail-overlay');
+    var content = document.getElementById('eq-detail-content');
+    var title = document.getElementById('eq-detail-title');
+    overlay.classList.add('show');
+    content.innerHTML = '<div style="color:#555">Loading...</div>';
+    fetch(SERVER + '/api/equation-detail', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({id: eqId})
+    }).then(function(r){return r.json()}).then(function(eq) {
+        if (eq.error) { content.innerHTML = '<div style="color:#f44">' + eq.error + '</div>'; return; }
+        title.textContent = eq.name + ' (' + eq.id + ')';
+        // Human-readable formula display
+        var formulaDisplay = eq.formula || '';
+        var html = '';
+        if (formulaDisplay) {
+            html += '<div style="font-family:Consolas,monospace;font-size:0.7rem;color:#daa520;padding:8px;background:#0a0a0a;border:1px solid #332200;border-radius:4px;margin-bottom:8px;word-break:break-word">'
+                + esc(formulaDisplay) + '</div>';
+        }
+        html += '<div style="color:#888;font-size:0.6rem;margin-bottom:8px">' + esc(eq.desc||'') + '</div>';
+        var statusCol = eq.status === 'golden' ? '#daa520' : eq.status === 'dead' ? '#f44' : '#4a8';
+        html += '<div style="font-size:0.6rem;margin-bottom:8px">'
+            + 'Status: <b style="color:' + statusCol + '">' + (eq.status||'active').toUpperCase() + '</b>'
+            + ' | Uses: ' + (eq.uses||0) + ' | Wins: ' + (eq.wins||0)
+            + ' | Rate: <b>' + Math.round((eq.success_rate||0)*100) + '%</b>'
+            + ' | Streak: ' + (eq.streak||0) + ' | Source: ' + (eq.source||'?')
+            + ' | Jobs: <b style="color:#daa520">' + (eq.jobs_completed||0) + '</b>'
+            + '</div>';
+        // Rank requirement
+        if (eq.min_rank > 0) {
+            html += '<div style="font-size:0.55rem;margin-bottom:6px;padding:4px 6px;background:#1a1a2a;border:1px solid #2a2a4a;border-radius:3px">'
+                + 'Requires rank: <b style="color:#5af">' + esc(eq.unlock_rank||'?') + '</b> (' + (eq.min_rank||0) + '+ credits)</div>';
+        }
+        // Creator info
+        if (eq.creator) {
+            html += '<div style="font-size:0.5rem;color:#555;margin-bottom:6px">Created by: ' + esc(eq.creator.rank||'?') + ' (' + (eq.creator.credits||0) + ' credits) — ' + esc(eq.creator.timestamp||'') + '</div>';
+        }
+        // Affinity bars
+        html += '<div style="margin-bottom:8px">';
+        var dims = ['F','C','E','T','S','D','H'];
+        for (var i = 0; i < dims.length; i++) {
+            var d = dims[i];
+            var v = (eq.affinity || {})[d] || 0;
+            var w = Math.round(v * 100);
+            html += '<div class="aff-row"><span class="dim-l" style="color:' + dimColors[d] + '">' + d + '</span>'
+                + '<div class="dim-bar"><div class="dim-fill" style="width:' + w + '%;background:' + dimColors[d] + '"></div></div>'
+                + '<span class="dim-v">' + v.toFixed(2) + '</span></div>';
+        }
+        html += '</div>';
+        // Formula
+        var parts = [];
+        for (var i = 0; i < dims.length; i++) {
+            var v = (eq.affinity||{})[dims[i]];
+            if (v !== undefined) parts.push((+v).toFixed(1) + dims[i]);
+        }
+        html += '<div style="font-family:monospace;font-size:0.6rem;color:#daa520;margin-bottom:8px;padding:6px;background:#0a0a0a;border-radius:4px">'
+            + parts.join(' + ') + ' &rarr; L:' + (eq.left_weight||0.5).toFixed(2) + ' R:' + (eq.right_weight||0.5).toFixed(2)
+            + ' SB:' + (eq.synthesis_bias||0).toFixed(2) + '</div>';
+        // Buttons (active only)
+        if (eq.status === 'active') {
+            html += '<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">'
+                + '<button onclick="document.getElementById(\'eq-detail-overlay\').classList.remove(\'show\');openForge(\'' + eq.id + '\')" style="font-size:0.55rem;background:#2a2a0a;color:#daa520;border:1px solid #daa520;padding:3px 10px;border-radius:3px;cursor:pointer;font-weight:700">EDIT IN FORGE</button>'
+                + '<button onclick="overrideEq(\'' + eq.id + '\')" style="font-size:0.55rem;background:#333;color:#daa520;border:1px solid #555;padding:3px 8px;border-radius:3px;cursor:pointer">Force Use Next</button>'
+                + (eq.can_delete !== false ? '<button onclick="deleteEq(\'' + eq.id + '\')" style="font-size:0.55rem;background:#331111;color:#f44;border:1px solid #552222;padding:3px 8px;border-radius:3px;cursor:pointer">Delete</button>' : '')
+                + '</div>';
+        } else if (eq.status === 'golden') {
+            html += '<div style="font-size:0.5rem;color:#daa520;margin-top:8px;padding:6px;background:#1a1a0a;border:1px solid #332200;border-radius:4px">GOLDEN — Read-only. This equation has proven itself.</div>';
+        }
+        content.innerHTML = html;
+    }).catch(function(e) {
+        content.innerHTML = '<div style="color:#f44">Error: ' + e.message + '</div>';
+    });
+}
+
+function overrideEq(eqId) {
+    fetch(SERVER + '/api/strategy-override', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({equation_id: eqId})
+    }).then(function(){ document.getElementById('eq-detail-overlay').classList.remove('show'); });
+}
+
+function deleteEq(eqId) {
+    if (!confirm('Kill equation ' + eqId + '?')) return;
+    fetch(SERVER + '/api/equation-delete', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({id: eqId})
+    }).then(function(){
+        document.getElementById('eq-detail-overlay').classList.remove('show');
+        refreshDash();
+    });
+}
+
+function triggerMutation() {
+    fetch(SERVER + '/api/equation-mutate', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: '{}'
+    }).then(function(r){return r.json()}).then(function(d) {
+        if (d.events && d.events.length > 0) {
+            alert('Bred ' + d.events.length + ' mutation(s):\n' + d.events.map(function(e){return e.detail}).join('\n'));
+        } else {
+            alert('No mutations (library may be at capacity)');
+        }
+        refreshDash();
+    });
+}
+
+function toggleEqForm() {
+    var box = document.getElementById('eq-form-box');
+    if (box.style.display === 'none') {
+        box.style.display = 'block';
+        var dims = ['F','C','E','T','S','D','H'];
+        var html = '<div style="background:#0d0d0d;padding:8px;border:1px solid #222;border-radius:4px">'
+            + '<div style="font-size:0.55rem;color:#daa520;margin-bottom:6px;font-weight:700">CREATE NEW EQUATION</div>'
+            + '<input id="eq-new-name" placeholder="Name" style="width:100%;padding:4px;background:#141414;border:1px solid #2a2a2a;color:#eee;font-size:0.6rem;border-radius:3px;margin-bottom:4px;box-sizing:border-box">'
+            + '<input id="eq-new-desc" placeholder="Description" style="width:100%;padding:4px;background:#141414;border:1px solid #2a2a2a;color:#eee;font-size:0.6rem;border-radius:3px;margin-bottom:4px;box-sizing:border-box">'
+            + '<input id="eq-new-formula" placeholder="Formula e.g. t(time)+S(SEARCH)+U(query)" style="width:100%;padding:4px;background:#141414;border:1px solid #2a2a2a;color:#daa520;font-size:0.6rem;border-radius:3px;margin-bottom:6px;box-sizing:border-box;font-family:Consolas,monospace">'
+            + '<div style="font-size:0.5rem;color:#666;margin-bottom:4px">Affinity (0.0 - 1.0):</div>';
+        for (var i = 0; i < dims.length; i++) {
+            html += '<div style="display:flex;align-items:center;gap:4px;margin-bottom:2px">'
+                + '<span style="min-width:14px;font-size:0.55rem;color:' + dimColors[dims[i]] + ';font-weight:700">' + dims[i] + '</span>'
+                + '<input type="range" id="eq-aff-' + dims[i] + '" min="0" max="100" value="50" style="flex:1;height:8px;accent-color:' + dimColors[dims[i]] + '">'
+                + '<span id="eq-aff-v-' + dims[i] + '" style="min-width:24px;font-size:0.5rem;color:#666;text-align:right">0.50</span>'
+                + '</div>';
+        }
+        html += '<div style="display:flex;gap:8px;margin-top:6px;margin-bottom:6px">'
+            + '<div style="flex:1"><div style="font-size:0.45rem;color:#555">LEFT</div><input type="range" id="eq-new-lw" min="0" max="100" value="50" style="width:100%;accent-color:#4f4"><span id="eq-lw-v" style="font-size:0.45rem;color:#666">0.50</span></div>'
+            + '<div style="flex:1"><div style="font-size:0.45rem;color:#555">RIGHT</div><input type="range" id="eq-new-rw" min="0" max="100" value="50" style="width:100%;accent-color:#f44"><span id="eq-rw-v" style="font-size:0.45rem;color:#666">0.50</span></div>'
+            + '<div style="flex:1"><div style="font-size:0.45rem;color:#555">SYNTH</div><input type="range" id="eq-new-sb" min="0" max="100" value="30" style="width:100%;accent-color:#daa520"><span id="eq-sb-v" style="font-size:0.45rem;color:#666">0.30</span></div>'
+            + '</div>';
+        html += '<button onclick="submitNewEq()" style="width:100%;padding:5px;background:#daa520;color:#000;border:none;border-radius:3px;font-size:0.55rem;font-weight:700;cursor:pointer">CREATE EQUATION</button>';
+        html += '</div>';
+        box.innerHTML = html;
+        // Wire up sliders
+        for (var i = 0; i < dims.length; i++) {
+            (function(d) {
+                var sl = document.getElementById('eq-aff-' + d);
+                var vl = document.getElementById('eq-aff-v-' + d);
+                if (sl) sl.oninput = function() { vl.textContent = (this.value/100).toFixed(2); };
+            })(dims[i]);
+        }
+        ['lw','rw','sb'].forEach(function(k) {
+            var sl = document.getElementById('eq-new-' + k);
+            var vl = document.getElementById('eq-' + k + '-v');
+            if (sl) sl.oninput = function() { vl.textContent = (this.value/100).toFixed(2); };
+        });
+    } else {
+        box.style.display = 'none';
+    }
+}
+
+function submitNewEq() {
+    var name = document.getElementById('eq-new-name').value.trim();
+    var desc = document.getElementById('eq-new-desc').value.trim();
+    if (!name) { alert('Name required'); return; }
+    var dims = ['F','C','E','T','S','D','H'];
+    var affinity = {};
+    for (var i = 0; i < dims.length; i++) {
+        var sl = document.getElementById('eq-aff-' + dims[i]);
+        affinity[dims[i]] = sl ? sl.value / 100 : 0.5;
+    }
+    var weights = {
+        left: (document.getElementById('eq-new-lw').value || 50) / 100,
+        right: (document.getElementById('eq-new-rw').value || 50) / 100,
+        synthesis: (document.getElementById('eq-new-sb').value || 30) / 100
+    };
+    var playerStats = window.CortexPlayer ? CortexPlayer.getStats() : {credits: 0, rank: 'RECRUIT'};
+    var formulaInput = document.getElementById('eq-new-formula');
+    var formula = formulaInput ? formulaInput.value.trim() : '';
+    fetch(SERVER + '/api/equation-create', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({name: name, desc: desc, affinity: affinity, weights: weights, formula: formula,
+            credits: playerStats.credits, rank: playerStats.rank, session_id: sessionId})
+    }).then(function(r){return r.json()}).then(function(d) {
+        if (d.ok) {
+            document.getElementById('eq-form-box').style.display = 'none';
+            refreshDash();
+        } else {
+            alert(d.error || 'Failed');
+        }
+    });
+}
+
+// ─── Equation Request System ───────────────────────
+
+function toggleRequestPanel() {
+    var box = document.getElementById('eq-request-box');
+    if (!box) return;
+    if (box.style.display === 'none') {
+        box.style.display = 'block';
+        loadRequests();
+    } else {
+        box.style.display = 'none';
+    }
+}
+
+function loadRequests() {
+    var list = document.getElementById('req-list');
+    if (!list) return;
+    list.innerHTML = '<div style="color:#555;font-size:0.5rem">Loading...</div>';
+    fetch(SERVER + '/api/equation-requests', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({status:'pending'})
+    }).then(function(r){return r.json()}).then(function(d) {
+        if (!d.ok || !d.requests.length) {
+            list.innerHTML = '<div style="color:#555;font-size:0.5rem">No pending requests</div>';
+            return;
+        }
+        var html = '';
+        for (var i = 0; i < d.requests.length; i++) {
+            var r = d.requests[i];
+            var submitter = r.submitted_by || {};
+            html += '<div class="req-item">'
+                + '<div style="font-size:0.6rem;color:#ccc;font-weight:700">' + esc(r.name) + '</div>'
+                + (r.formula ? '<div style="font-size:0.5rem;color:#daa520;font-family:Consolas,monospace">' + esc(r.formula) + '</div>' : '')
+                + (r.desc ? '<div style="font-size:0.5rem;color:#777">' + esc(r.desc) + '</div>' : '')
+                + '<div style="display:flex;gap:6px;align-items:center;margin-top:3px">'
+                + '<span class="req-vote-btn" onclick="voteRequest(\'' + r.id + '\')">&#x25B2; ' + (r.votes||0) + '</span>'
+                + '<span style="font-size:0.45rem;color:#555">by ' + esc(submitter.rank||'?') + '</span>'
+                + '<span style="font-size:0.45rem;color:#444">' + esc(r.created||'') + '</span>'
+                + '</div></div>';
+        }
+        list.innerHTML = html;
+    }).catch(function() {
+        list.innerHTML = '<div style="color:#f44;font-size:0.5rem">Failed to load</div>';
+    });
+}
+
+function submitRequest() {
+    var name = document.getElementById('req-name').value.trim();
+    var formula = document.getElementById('req-formula').value.trim();
+    var desc = document.getElementById('req-desc').value.trim();
+    if (!name) { alert('Name required'); return; }
+    var playerStats = window.CortexPlayer ? CortexPlayer.getStats() : {credits: 0, rank: 'RECRUIT'};
+    fetch(SERVER + '/api/equation-request', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({name: name, formula: formula, desc: desc,
+            credits: playerStats.credits, rank: playerStats.rank, session_id: sessionId})
+    }).then(function(r){return r.json()}).then(function(d) {
+        if (d.ok) {
+            document.getElementById('req-name').value = '';
+            document.getElementById('req-formula').value = '';
+            document.getElementById('req-desc').value = '';
+            loadRequests();
+        } else {
+            alert(d.error || 'Failed');
+        }
+    });
+}
+
+function voteRequest(reqId) {
+    fetch(SERVER + '/api/equation-request-vote', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({id: reqId})
+    }).then(function(r){return r.json()}).then(function(d) {
+        if (d.ok) {
+            loadRequests();
+        } else {
+            alert(d.error || 'Already voted');
+        }
+    });
+}
+
+// ─── EQUATION FORGE ─────────────────────────────────
+
+var forgeState = {
+    editing: null, // null = new, string = editing eq id
+    dims: { F:0.5, C:0.5, E:0.5, T:0.5, S:0.5, D:0.5, H:0.5 },
+    lw: 0.5, rw: 0.5, sb: 0.3,
+    timer: 0, url: ''
+};
+
+var FORGE_TEMPLATES = {
+    'Analytical':   { dims:{F:0.9,C:0.1,E:0.1,T:0.8,S:0.2,D:0.4,H:0.0}, lw:0.3, rw:0.7, sb:0.1 },
+    'Creative':     { dims:{F:0.2,C:0.9,E:0.5,T:0.1,S:0.4,D:0.2,H:0.4}, lw:0.6, rw:0.4, sb:0.3 },
+    'Empathetic':   { dims:{F:0.2,C:0.3,E:0.9,T:0.0,S:0.7,D:0.1,H:0.1}, lw:0.85,rw:0.15,sb:0.2 },
+    'Scholar':      { dims:{F:0.8,C:0.4,E:0.2,T:0.7,S:0.3,D:0.6,H:0.1}, lw:0.4, rw:0.6, sb:0.2 },
+    'Provocative':  { dims:{F:0.3,C:0.6,E:0.4,T:0.2,S:0.5,D:0.9,H:0.6}, lw:0.2, rw:0.8, sb:0.4 },
+    'Phone Agent':  { dims:{F:0.4,C:0.2,E:0.8,T:0.2,S:0.9,D:0.6,H:0.3}, lw:0.7, rw:0.3, sb:0.5 },
+    'Data Sorter':  { dims:{F:0.9,C:0.1,E:0.0,T:0.9,S:0.1,D:0.3,H:0.0}, lw:0.2, rw:0.8, sb:0.1 },
+    'Gauntlet':     { dims:{F:0.2,C:0.0,E:0.0,T:0.3,S:0.0,D:0.9,H:0.8}, lw:0.05,rw:0.95,sb:0.0 }
+};
+
+var FORGE_PREVIEWS = {
+    'Analytical':  'Precise, data-driven answers. No fluff.',
+    'Creative':    'Storytelling, original ideas, colourful thinking.',
+    'Empathetic':  'Compassionate listener. Feelings first.',
+    'Scholar':     'Deep research mode. Cites sources, compares angles.',
+    'Provocative': 'Challenges everything. Devil\'s advocate on steroids.',
+    'Phone Agent': 'De-escalates angry callers. Calm + solution-focused.',
+    'Data Sorter': 'Sorts junk into priority-first organised info.',
+    'Gauntlet':    'Prove yourself. Short, dismissive, demon mode. Drop value or leave.'
+};
+
+function openForge(eqId) {
+    var overlay = document.getElementById('eq-forge-overlay');
+    // Reset state
+    forgeState.editing = eqId || null;
+    forgeState.dims = { F:0.5, C:0.5, E:0.5, T:0.5, S:0.5, D:0.5, H:0.5 };
+    forgeState.lw = 0.5; forgeState.rw = 0.5; forgeState.sb = 0.3;
+    forgeState.timer = 0; forgeState.url = '';
+    document.getElementById('forge-name').value = '';
+    document.getElementById('forge-desc').value = '';
+    document.getElementById('forge-timer').value = '';
+    document.getElementById('forge-url').value = '';
+    document.getElementById('forge-btn-save').textContent = eqId ? 'SAVE CHANGES' : 'CREATE EQUATION';
+
+    if (eqId) {
+        // Load existing equation data
+        fetch(SERVER + '/api/equation-detail', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({id: eqId})
+        }).then(function(r){return r.json()}).then(function(eq) {
+            if (eq.error) return;
+            document.getElementById('forge-name').value = eq.name || '';
+            document.getElementById('forge-desc').value = eq.desc || '';
+            var aff = eq.affinity || {};
+            var ds = ['F','C','E','T','S','D','H'];
+            for (var i = 0; i < ds.length; i++) {
+                forgeState.dims[ds[i]] = aff[ds[i]] || 0;
+            }
+            forgeState.lw = eq.left_weight || 0.5;
+            forgeState.rw = eq.right_weight || 0.5;
+            forgeState.sb = eq.synthesis_bias || 0.3;
+            forgePopulateSliders();
+            forgeUpdateChain();
+            forgeUpdateFormula();
+        });
+    }
+
+    // Build dimension sliders
+    forgePopulateSliders();
+    // Build templates
+    var tplEl = document.getElementById('forge-templates');
+    var tplHtml = '';
+    for (var t in FORGE_TEMPLATES) {
+        tplHtml += '<span class="forge-tpl-btn" onclick="forgeApplyTemplate(\'' + t + '\')">' + t + '</span>';
+    }
+    tplEl.innerHTML = tplHtml;
+    // Wire hemisphere sliders
+    ['lw','rw','sb'].forEach(function(k) {
+        var sl = document.getElementById('forge-' + k);
+        var vl = document.getElementById('forge-' + k + '-v');
+        sl.value = Math.round(forgeState[k] * 100);
+        vl.textContent = forgeState[k].toFixed(2);
+        sl.oninput = function() {
+            forgeState[k] = this.value / 100;
+            vl.textContent = (this.value / 100).toFixed(2);
+            forgeUpdateChain();
+            forgeUpdateFormula();
+        };
+    });
+    // Wire name/timer/url inputs to update chain + formula live
+    document.getElementById('forge-name').oninput = function() { forgeUpdateChain(); };
+    document.getElementById('forge-timer').oninput = function() { forgeUpdateFormula(); };
+    document.getElementById('forge-url').oninput = function() { forgeUpdateFormula(); };
+    forgeUpdateChain();
+    forgeUpdateFormula();
+    overlay.classList.add('show');
+}
+
+function closeForge() {
+    document.getElementById('eq-forge-overlay').classList.remove('show');
+}
+
+function forgePopulateSliders() {
+    var container = document.getElementById('forge-dim-sliders');
+    var ds = ['F','C','E','T','S','D','H'];
+    var html = '';
+    for (var i = 0; i < ds.length; i++) {
+        var d = ds[i];
+        var col = dimColors[d];
+        var val = forgeState.dims[d];
+        html += '<div class="forge-dim-row">'
+            + '<span class="fdl" style="color:' + col + '">' + d + '</span>'
+            + '<span class="fdn">' + dimNames[d] + '</span>'
+            + '<input type="range" id="forge-d-' + d + '" min="0" max="100" value="' + Math.round(val * 100) + '" style="accent-color:' + col + '" data-dim="' + d + '">'
+            + '<span class="fdv" id="forge-dv-' + d + '">' + val.toFixed(2) + '</span>'
+            + '</div>';
+    }
+    container.innerHTML = html;
+    // Wire dimension sliders
+    for (var i = 0; i < ds.length; i++) {
+        (function(d) {
+            var sl = document.getElementById('forge-d-' + d);
+            var vl = document.getElementById('forge-dv-' + d);
+            sl.oninput = function() {
+                var v = this.value / 100;
+                forgeState.dims[d] = v;
+                vl.textContent = v.toFixed(2);
+                forgeUpdateChain();
+                forgeUpdateFormula();
+            };
+        })(ds[i]);
+    }
+}
+
+function forgeUpdateChain() {
+    var chainEl = document.getElementById('forge-chain');
+    var ds = ['F','C','E','T','S','D','H'];
+    var html = '';
+    var first = true;
+    for (var i = 0; i < ds.length; i++) {
+        var d = ds[i];
+        var v = forgeState.dims[d];
+        if (v < 0.15) continue; // hide near-zero dims
+        if (!first) html += '<span class="eq-chain-op">+</span>';
+        first = false;
+        var col = dimColors[d];
+        var size = 0.65 + v * 0.4; // scale 0.65-1.05
+        var opacity = 0.4 + v * 0.6; // 0.4-1.0
+        html += '<span class="eq-dim-block" style="background:' + col + '22;color:' + col + ';font-size:' + size.toFixed(2) + 'rem;opacity:' + opacity.toFixed(2) + ';border-color:' + col + '44" onclick="forgeHighlightDim(\'' + d + '\')">'
+            + '<span class="dim-letter">' + d + '</span>'
+            + '<span class="dim-val">' + v.toFixed(1) + '</span>'
+            + '</span>';
+    }
+    // Arrow
+    html += '<span class="eq-chain-op" style="font-size:0.9rem">&rarr;</span>';
+    // Balance block
+    var lw = forgeState.lw;
+    var rw = forgeState.rw;
+    var total = lw + rw;
+    var aPct = total > 0 ? Math.round(lw / total * 100) : 50;
+    var dPct = 100 - aPct;
+    html += '<span class="eq-balance-block">'
+        + '<span class="angel-part" style="width:' + aPct + '%">' + aPct + '%</span>'
+        + '<span class="demon-part" style="width:' + dPct + '%">' + dPct + '%</span>'
+        + '</span>';
+    // Equals
+    html += '<span class="eq-chain-op" style="font-size:0.9rem">=</span>';
+    // Result preview
+    var nameInput = document.getElementById('forge-name');
+    var preview = nameInput && nameInput.value ? nameInput.value : 'Result';
+    html += '<span class="eq-result-block">' + esc(preview) + '</span>';
+    chainEl.innerHTML = html;
+}
+
+function forgeUpdateFormula() {
+    var ds = ['F','C','E','T','S','D','H'];
+    var parts = [];
+    for (var i = 0; i < ds.length; i++) {
+        var d = ds[i];
+        var v = forgeState.dims[d];
+        if (v >= 0.15) {
+            parts.push(d + '(' + dimNames[d].toLowerCase() + ':' + v.toFixed(1) + ')');
+        }
+    }
+    var formula = parts.length ? parts.join(' + ') : 'balanced';
+    var lw = forgeState.lw, rw = forgeState.rw;
+    var total = lw + rw;
+    if (total > 0) {
+        formula += ' \u2192 Angel:' + Math.round(lw/total*100) + '% Demon:' + Math.round(rw/total*100) + '%';
+    }
+    // Optional
+    var timer = document.getElementById('forge-timer').value;
+    var url = document.getElementById('forge-url').value.trim();
+    if (timer && parseInt(timer) > 0) formula = 't(' + timer + ') + ' + formula;
+    if (url) formula += ' + S(SEARCH:' + url + ')';
+
+    document.getElementById('forge-formula-display').textContent = formula;
+
+    // Update preview
+    var previewEl = document.getElementById('forge-preview');
+    var dominant = '';
+    var maxV = 0;
+    for (var i = 0; i < ds.length; i++) {
+        if (forgeState.dims[ds[i]] > maxV) { maxV = forgeState.dims[ds[i]]; dominant = ds[i]; }
+    }
+    var descMap = {
+        F: 'Facts + evidence focused',
+        C: 'Imaginative + original',
+        E: 'Empathy + feelings driven',
+        T: 'Logic + engineering mode',
+        S: 'People + persuasion focused',
+        D: 'Challenge + debate mode',
+        H: 'Humour + banter mode'
+    };
+    var angelRatio = total > 0 ? lw/total : 0.5;
+    var moralNote = angelRatio > 0.6 ? ' with moral compass' : angelRatio < 0.4 ? ' with ruthless logic' : ' with balanced judgement';
+    previewEl.textContent = (descMap[dominant] || 'Balanced') + moralNote;
+}
+
+function forgeHighlightDim(d) {
+    var sl = document.getElementById('forge-d-' + d);
+    if (sl) { sl.focus(); sl.style.outline = '2px solid ' + dimColors[d]; setTimeout(function(){ sl.style.outline = 'none'; }, 1000); }
+}
+
+function forgeApplyTemplate(name) {
+    var tpl = FORGE_TEMPLATES[name];
+    if (!tpl) return;
+    var ds = ['F','C','E','T','S','D','H'];
+    for (var i = 0; i < ds.length; i++) {
+        forgeState.dims[ds[i]] = tpl.dims[ds[i]] || 0;
+        var sl = document.getElementById('forge-d-' + ds[i]);
+        var vl = document.getElementById('forge-dv-' + ds[i]);
+        if (sl) sl.value = Math.round(forgeState.dims[ds[i]] * 100);
+        if (vl) vl.textContent = forgeState.dims[ds[i]].toFixed(2);
+    }
+    forgeState.lw = tpl.lw; forgeState.rw = tpl.rw; forgeState.sb = tpl.sb;
+    document.getElementById('forge-lw').value = Math.round(tpl.lw * 100);
+    document.getElementById('forge-lw-v').textContent = tpl.lw.toFixed(2);
+    document.getElementById('forge-rw').value = Math.round(tpl.rw * 100);
+    document.getElementById('forge-rw-v').textContent = tpl.rw.toFixed(2);
+    document.getElementById('forge-sb').value = Math.round(tpl.sb * 100);
+    document.getElementById('forge-sb-v').textContent = tpl.sb.toFixed(2);
+    // Highlight active template
+    var btns = document.querySelectorAll('.forge-tpl-btn');
+    for (var b = 0; b < btns.length; b++) {
+        btns[b].classList.toggle('active', btns[b].textContent === name);
+    }
+    // Set preview
+    if (FORGE_PREVIEWS[name]) {
+        document.getElementById('forge-preview').textContent = FORGE_PREVIEWS[name];
+    }
+    forgeUpdateChain();
+    forgeUpdateFormula();
+}
+
+function forgeSubmit() {
+    var name = document.getElementById('forge-name').value.trim();
+    var desc = document.getElementById('forge-desc').value.trim();
+    if (!name) { alert('Name required'); return; }
+    var affinity = {};
+    var ds = ['F','C','E','T','S','D','H'];
+    for (var i = 0; i < ds.length; i++) affinity[ds[i]] = forgeState.dims[ds[i]];
+    var weights = { left: forgeState.lw, right: forgeState.rw, synthesis: forgeState.sb };
+    var formula = document.getElementById('forge-formula-display').textContent;
+    var playerStats = window.CortexPlayer ? CortexPlayer.getStats() : {credits: 0, rank: 'RECRUIT'};
+
+    if (forgeState.editing) {
+        // Edit existing equation
+        fetch(SERVER + '/api/equation-edit', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({id: forgeState.editing, changes: {
+                affinity: affinity,
+                left_weight: forgeState.lw,
+                right_weight: forgeState.rw,
+                synthesis_bias: forgeState.sb,
+                desc: desc,
+                formula: formula
+            }})
+        }).then(function(r){return r.json()}).then(function(d) {
+            if (d.ok) { closeForge(); refreshDash(); }
+            else alert(d.error || 'Failed to save');
+        });
+    } else {
+        // Create new equation
+        fetch(SERVER + '/api/equation-create', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({name: name, desc: desc, affinity: affinity, weights: weights, formula: formula,
+                credits: playerStats.credits, rank: playerStats.rank, session_id: sessionId})
+        }).then(function(r){return r.json()}).then(function(d) {
+            if (d.ok) { closeForge(); refreshDash(); }
+            else alert(d.error || 'Failed');
+        });
+    }
+}
+
+function forgeTest() {
+    var name = document.getElementById('forge-name').value.trim() || 'Forge Test';
+    var affinity = {};
+    var ds = ['F','C','E','T','S','D','H'];
+    for (var i = 0; i < ds.length; i++) affinity[ds[i]] = forgeState.dims[ds[i]];
+    // Override next equation
+    fetch(SERVER + '/api/strategy-override', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+            equation_override: {
+                affinity: affinity,
+                left_weight: forgeState.lw,
+                right_weight: forgeState.rw,
+                synthesis_bias: forgeState.sb
+            }
+        })
+    }).then(function() {
+        closeForge();
+        document.getElementById('msg-input').focus();
+        document.getElementById('msg-input').placeholder = 'Test your equation — type anything...';
+    });
+}
+
+// Auto-refresh — adaptive speed
+refreshDash();
+pollTimer = setInterval(refreshDash, pollInterval);
+input.focus();
+
+// ── SOUL CANVAS ──────────────────────────────────────────────
+(function(){
+  var PHI = 1.6180339887;
+  var cv = document.getElementById('soul-cv');
+  if(!cv) return;
+  var ctx = cv.getContext('2d');
+  var S = 160, cx = S/2, cy = S/2, R = S*0.37;
+  var sin60 = Math.sin(Math.PI/3);
+
+  // live genome — updated from updateDash
+  window._soulGenome = [0.33, 0.34, 0.33];
+  window._soulEmotion = 'Processing';
+  window._soulEmoCol = [100, 160, 220];
+
+  window.updateSoulCanvas = function(genome, emoName) {
+    window._soulGenome = genome;
+    window._soulEmotion = emoName;
+    // left=green, balanced=white, right=red
+    var lr = genome[0], cr = genome[1], rr = genome[2];
+    var r = Math.round(cr*80 + rr*200);
+    var g = Math.round(lr*180 + cr*180);
+    var b = Math.round(cr*200 + lr*80);
+    window._soulEmoCol = [Math.min(255,r), Math.min(255,g), Math.min(255,b)];
+    var el = document.getElementById('soul-emotion');
+    var gd = document.getElementById('soul-genome-display');
+    if(el) { el.textContent = emoName; el.style.color = 'rgb('+window._soulEmoCol.join(',')+')'; }
+    if(gd) gd.textContent = '[' + genome.map(function(v){return v.toFixed(2);}).join(', ') + ']';
+  };
+
+  // base equilateral vertices: past=210, present=90, future=330
+  function bv(deg, r) {
+    var a = (deg-90)*Math.PI/180;
+    return {x: cx+r*Math.cos(a), y: cy+r*Math.sin(a)};
+  }
+  var BASE = [bv(210,R), bv(90,R), bv(330,R)];
+
+  var T = 0, last = 0;
+  function frame(ts) {
+    var dt = ts - last; last = ts;
+    T += dt*0.001;
+    var g = window._soulGenome;
+    var col = window._soulEmoCol;
+    var SCALE = 1.85;
+    var tv = BASE.map(function(v,i){
+      var t = Math.min(1, g[i]*SCALE);
+      return {x: cx+(v.x-cx)*t, y: cy+(v.y-cy)*t};
+    });
+    var c = {x:(tv[0].x+tv[1].x+tv[2].x)/3, y:(tv[0].y+tv[1].y+tv[2].y)/3};
+    var breath = 0.8+0.2*Math.sin(T*(1/PHI)*Math.PI*2);
+    var r=col[0], g2=col[1], b=col[2];
+
+    ctx.clearRect(0,0,S,S);
+
+    // outer guide
+    ctx.beginPath();
+    BASE.forEach(function(v,i){i===0?ctx.moveTo(v.x,v.y):ctx.lineTo(v.x,v.y);});
+    ctx.closePath();
+    ctx.strokeStyle='rgba(255,255,255,0.05)'; ctx.lineWidth=0.6; ctx.stroke();
+
+    // fill
+    ctx.beginPath();
+    tv.forEach(function(v,i){i===0?ctx.moveTo(v.x,v.y):ctx.lineTo(v.x,v.y);});
+    ctx.closePath();
+    var grd=ctx.createRadialGradient(c.x,c.y,0,c.x,c.y,R*0.6);
+    grd.addColorStop(0,'rgba('+r+','+g2+','+b+','+(0.18*breath)+')');
+    grd.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=grd; ctx.fill();
+
+    // stroke
+    ctx.beginPath();
+    tv.forEach(function(v,i){i===0?ctx.moveTo(v.x,v.y):ctx.lineTo(v.x,v.y);});
+    ctx.closePath();
+    ctx.strokeStyle='rgba('+r+','+g2+','+b+','+(0.75*breath)+')';
+    ctx.lineWidth=1.2; ctx.stroke();
+
+    // vertex dots
+    var vcols=['#daa520','#ffffff','#60a5fa'];
+    tv.forEach(function(v,i){
+      ctx.beginPath(); ctx.arc(v.x,v.y,2.5*breath,0,Math.PI*2);
+      ctx.fillStyle=vcols[i]; ctx.fill();
+    });
+
+    // singularity at centroid
+    var sp=0.5+0.5*Math.sin(T*PHI*2);
+    var sg=ctx.createRadialGradient(c.x,c.y,0,c.x,c.y,10*sp);
+    sg.addColorStop(0,'rgba('+r+','+g2+','+b+','+(0.9*sp)+')');
+    sg.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.beginPath(); ctx.arc(c.x,c.y,10*sp,0,Math.PI*2);
+    ctx.fillStyle=sg; ctx.fill();
+    ctx.beginPath(); ctx.arc(c.x,c.y,1.8,0,Math.PI*2);
+    ctx.fillStyle='#fff'; ctx.fill();
+
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

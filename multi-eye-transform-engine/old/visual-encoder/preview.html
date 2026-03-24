@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>3D Idea Graph</title>
+  <style>
+    body { margin: 0; overflow: hidden; background: black; }
+    #ui {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 10;
+    }
+    input, button {
+      padding: 8px;
+      margin: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="ui">
+  <input id="word" placeholder="add concept">
+  <button onclick="addWord()">ADD</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.158/build/three.min.js"></script>
+
+<script>
+let scene, camera, renderer;
+let nodes = [];
+let links = [];
+
+init();
+animate();
+
+function init() {
+  scene = new THREE.Scene();
+
+  camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 2000);
+  camera.position.z = 300;
+
+  renderer = new THREE.WebGLRenderer();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
+}
+
+// 🔢 hash
+function hash(word) {
+  let h = 0;
+  for (let i = 0; i < word.length; i++) {
+    h += word.charCodeAt(i) * (i + 1);
+  }
+  return h;
+}
+
+// 🧠 signature vector
+function signature(word) {
+  const base = hash(word);
+  const vec = [];
+
+  for (let i = 0; i < 10; i++) {
+    vec.push(((base * (i + 5)) % 100) / 100);
+  }
+
+  return vec;
+}
+
+// 📏 similarity
+function similarity(a, b) {
+  let sum = 0;
+  for (let i = 0; i < a.length; i++) {
+    sum += Math.abs(a[i] - b[i]);
+  }
+  return 1 / (1 + sum);
+}
+
+// 🎨 generate 3D shape (your “multi-eye” idea)
+function generateShape(word) {
+  const base = hash(word);
+
+  const geometry = new THREE.BufferGeometry();
+  const vertices = [];
+
+  const rings = 10;
+  const segments = 20;
+
+  for (let i = 0; i < rings; i++) {
+    const phi = (i / rings) * Math.PI;
+
+    for (let j = 0; j < segments; j++) {
+      const theta = (j / segments) * Math.PI * 2;
+
+      const radius = 20 + ((base * (i + j + 1)) % 30);
+
+      const x = radius * Math.sin(phi) * Math.cos(theta);
+      const y = radius * Math.sin(phi) * Math.sin(theta);
+      const z = radius * Math.cos(phi);
+
+      vertices.push(x, y, z);
+    }
+  }
+
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+
+  const material = new THREE.PointsMaterial({ size: 2 });
+  return new THREE.Points(geometry, material);
+}
+
+// ➕ add node
+function addWord() {
+  const word = document.getElementById("word").value;
+  if (!word) return;
+
+  const node = {
+    word,
+    sig: signature(word),
+    mesh: generateShape(word),
+    position: new THREE.Vector3(
+      (Math.random() - 0.5) * 200,
+      (Math.random() - 0.5) * 200,
+      (Math.random() - 0.5) * 200
+    ),
+    velocity: new THREE.Vector3()
+  };
+
+  node.mesh.position.copy(node.position);
+  scene.add(node.mesh);
+
+  nodes.push(node);
+
+  // connect
+  nodes.forEach(other => {
+    if (other === node) return;
+
+    const sim = similarity(node.sig, other.sig);
+
+    if (sim > 0.7) {
+      const material = new THREE.LineBasicMaterial({ color: 0x00ff00 });
+
+      const points = [
+        node.mesh.position,
+        other.mesh.position
+      ];
+
+      const geometry = new THREE.BufferGeometry().setFromPoints(points);
+      const line = new THREE.Line(geometry, material);
+
+      scene.add(line);
+
+      links.push({ a: node, b: other, line });
+    }
+  });
+}
+
+// 🧲 physics
+function update() {
+  nodes.forEach(n1 => {
+    nodes.forEach(n2 => {
+      if (n1 === n2) return;
+
+      const dir = new THREE.Vector3().subVectors(n1.position, n2.position);
+      const dist = dir.length() + 0.1;
+
+      const force = 50 / dist;
+
+      dir.normalize().multiplyScalar(force);
+
+      n1.velocity.add(dir);
+    });
+  });
+
+  links.forEach(l => {
+    const dir = new THREE.Vector3().subVectors(l.b.position, l.a.position);
+
+    l.a.velocity.add(dir.clone().multiplyScalar(0.001));
+    l.b.velocity.add(dir.clone().multiplyScalar(-0.001));
+
+    // update line
+    const positions = l.line.geometry.attributes.position.array;
+
+    positions[0] = l.a.position.x;
+    positions[1] = l.a.position.y;
+    positions[2] = l.a.position.z;
+
+    positions[3] = l.b.position.x;
+    positions[4] = l.b.position.y;
+    positions[5] = l.b.position.z;
+
+    l.line.geometry.attributes.position.needsUpdate = true;
+  });
+
+  nodes.forEach(n => {
+    n.position.add(n.velocity);
+    n.velocity.multiplyScalar(0.9);
+
+    n.mesh.position.copy(n.position);
+    n.mesh.rotation.y += 0.01;
+  });
+}
+
+// 🎬 loop
+function animate() {
+  requestAnimationFrame(animate);
+
+  update();
+
+  scene.rotation.y += 0.001;
+
+  renderer.render(scene, camera);
+}
+</script>
+
+</body>
+</html>

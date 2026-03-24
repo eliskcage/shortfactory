@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Geometric Painter — GPO Layer Builder</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#0a0a0a; color:#ccc; font-family:monospace; display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+
+#topbar {
+  display:flex; align-items:center; gap:10px; padding:8px 14px;
+  background:#0d0d0d; border-bottom:1px solid #1a1a1a; flex-shrink:0;
+}
+#topbar h1 { font-size:12px; color:#00ccff; letter-spacing:3px; text-transform:uppercase; }
+#topbar .sep { color:#333; }
+
+#main { display:flex; flex:1; overflow:hidden; }
+
+/* LEFT — layer stack */
+#layers {
+  width:220px; background:#0d0d0d; border-right:1px solid #1a1a1a;
+  display:flex; flex-direction:column; overflow:hidden; flex-shrink:0;
+}
+#layers h2 { font-size:10px; color:#555; letter-spacing:2px; padding:10px 12px; border-bottom:1px solid #1a1a1a; }
+#layer-list { flex:1; overflow-y:auto; padding:6px; }
+.layer-item {
+  background:#131313; border:1px solid #222; padding:8px 10px; margin-bottom:4px;
+  cursor:pointer; transition:border-color 0.15s; position:relative;
+}
+.layer-item:hover { border-color:#333; }
+.layer-item.selected { border-color:#00ccff; }
+.layer-item .lname { font-size:10px; color:#aaa; }
+.layer-item .lswatch { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:6px; }
+.layer-item .ldelete { position:absolute; right:6px; top:6px; color:#444; cursor:pointer; font-size:10px; }
+.layer-item .ldelete:hover { color:#ff4466; }
+#add-layer { margin:8px; background:transparent; border:1px dashed #222; color:#444;
+  padding:8px; cursor:pointer; font-size:10px; letter-spacing:2px; transition:all 0.2s; }
+#add-layer:hover { border-color:#00ccff; color:#00ccff; }
+
+/* CENTRE — canvas */
+#centre { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; background:#080808; }
+#canvas-wrap { position:relative; }
+canvas#target { position:absolute; top:0; left:0; opacity:0.25; pointer-events:none; }
+canvas#render { display:block; }
+#drop-overlay {
+  position:absolute; inset:0; display:none; align-items:center; justify-content:center;
+  background:rgba(0,204,255,0.08); border:2px dashed #00ccff; pointer-events:none;
+  font-size:13px; color:#00ccff; letter-spacing:3px; text-transform:uppercase;
+}
+#canvas-wrap.dragover #drop-overlay { display:flex; }
+#status { position:absolute; bottom:12px; left:50%; transform:translateX(-50%);
+  font-size:10px; color:#444; letter-spacing:2px; white-space:nowrap; }
+#play-controls {
+  position:absolute; bottom:40px; left:50%; transform:translateX(-50%);
+  display:flex; gap:8px;
+}
+.pbtn { background:rgba(0,204,255,0.08); border:1px solid rgba(0,204,255,0.2);
+  color:#00ccff; padding:5px 14px; cursor:pointer; font-size:10px; letter-spacing:2px; transition:all 0.2s; }
+.pbtn:hover { background:rgba(0,204,255,0.2); }
+.pbtn.active { background:rgba(0,204,255,0.3); }
+
+/* RIGHT — controls */
+#controls {
+  width:260px; background:#0d0d0d; border-left:1px solid #1a1a1a;
+  display:flex; flex-direction:column; overflow-y:auto; flex-shrink:0; padding:12px;
+}
+#controls h2 { font-size:10px; color:#555; letter-spacing:2px; margin-bottom:10px; }
+.ctrl-group { margin-bottom:14px; border-bottom:1px solid #1a1a1a; padding-bottom:12px; }
+.ctrl-group h3 { font-size:9px; color:#444; letter-spacing:2px; margin-bottom:8px; text-transform:uppercase; }
+.ctrl-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+.ctrl-row label { font-size:10px; color:#666; width:90px; flex-shrink:0; }
+.ctrl-row input[type=range] { flex:1; accent-color:#00ccff; }
+.ctrl-row .val { font-size:10px; color:#00ccff; width:36px; text-align:right; }
+.ctrl-row input[type=color] { width:36px; height:22px; border:1px solid #333; background:none; cursor:pointer; }
+.ctrl-row select { flex:1; background:#111; border:1px solid #333; color:#aaa; font-size:10px; padding:2px; }
+
+#prompt-box { width:100%; background:#111; border:1px solid #333; color:#ccc; font-size:10px;
+  padding:6px; resize:none; height:52px; font-family:monospace; }
+#gen-btn { width:100%; background:rgba(0,204,255,0.1); border:1px solid #00ccff40;
+  color:#00ccff; padding:7px; cursor:pointer; font-size:10px; letter-spacing:2px;
+  margin-top:6px; transition:all 0.2s; }
+#gen-btn:hover { background:rgba(0,204,255,0.25); }
+#gen-btn:disabled { opacity:0.4; cursor:default; }
+#score-box { font-size:10px; color:#555; margin-top:8px; line-height:1.8; }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <h1>Geometric Painter</h1>
+  <span class="sep">|</span>
+  <span style="font-size:10px;color:#444">GPO layer stack → any image → 1 frame = animation</span>
+</div>
+
+<div id="main">
+
+  <!-- LEFT: layer list -->
+  <div id="layers">
+    <h2>LAYERS</h2>
+    <div id="layer-list"></div>
+    <button id="add-layer" onclick="addLayer()">+ ADD GPO LAYER</button>
+  </div>
+
+  <!-- CENTRE: canvas -->
+  <div id="centre">
+    <div id="canvas-wrap">
+      <canvas id="target"></canvas>
+      <canvas id="render"></canvas>
+      <div id="drop-overlay">DROP .OBJ — CONVERT TO GPO</div>
+    </div>
+    <div id="play-controls">
+      <button class="pbtn" onclick="togglePlay()" id="playbtn">PLAY</button>
+      <button class="pbtn" onclick="toggleTarget()" id="tgtbtn">SHOW TARGET</button>
+      <button class="pbtn" onclick="exportFrame()">CAPTURE</button>
+      <button class="pbtn" onclick="autoScore()">AUTO-FIT</button>
+      <button class="pbtn" onclick="document.getElementById('obj-input').click()">LOAD OBJ</button>
+      <input type="file" id="obj-input" accept=".obj" style="display:none" onchange="loadOBJFile(this)">
+    </div>
+    <div id="status">idle</div>
+  </div>
+
+  <!-- RIGHT: controls -->
+  <div id="controls">
+    <h2>GENERATE TARGET</h2>
+    <div class="ctrl-group">
+      <textarea id="prompt-box" placeholder="Mona Lisa, Van Gogh starry night, portrait of a warrior..."></textarea>
+      <button id="gen-btn" onclick="generateImage()">GENERATE VIA GROK</button>
+      <div id="score-box">No target loaded.</div>
+    </div>
+
+    <h2>SELECTED LAYER</h2>
+    <div id="layer-controls">
+      <div style="font-size:10px;color:#444;padding:10px 0">Select a layer to edit</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─── CONFIG ────────────────────────────────────────────────────────────────
+const PROXY = 'https://api.shortfactory.shop/grok';
+
+const CW = 540, CH = 540; // canvas size
+
+const render = document.getElementById('render');
+const target = document.getElementById('target');
+const rctx   = render.getContext('2d');
+const tctx   = target.getContext('2d');
+render.width = target.width  = CW;
+render.height= target.height = CH;
+
+let layers   = [];
+let selected = null;
+let playing  = false;
+let showTarget = false;
+let animT    = 0;
+let targetImageData = null;
+let rafId    = null;
+
+// ─── GPO MATH ────────────────────────────────────────────────────────────
+function dot(a, b) { return a.reduce((s,x,i) => s + x * b[i], 0); }
+function norm(v)   { const m = Math.sqrt(v.reduce((s,x)=>s+x*x,0)); return v.map(x=>x/(m||1)); }
+
+function rotateND(verts, i, j, theta) {
+  const c = Math.cos(theta), s = Math.sin(theta);
+  return verts.map(v => {
+    const nv = [...v];
+    nv[i] =  v[i]*c - v[j]*s;
+    nv[j] =  v[i]*s + v[j]*c;
+    return nv;
+  });
+}
+
+function hypercubeVerts(N) {
+  return Array.from({length: 1<<N}, (_,i) =>
+    Array.from({length:N}, (_,d) => (i>>d&1) ? 1 : -1));
+}
+function hypercubeEdges(N) {
+  const e=[], c=1<<N;
+  for(let i=0;i<c;i++) for(let d=0;d<N;d++){const j=i^(1<<d);if(j>i)e.push([i,j]);}
+  return e;
+}
+
+// Polygon GPO — simpler shape for painting
+function polyVerts(sides, N) {
+  const verts = [];
+  for (let i = 0; i < sides; i++) {
+    const a = (i / sides) * Math.PI * 2;
+    const v = Array(N).fill(0);
+    v[0] = Math.cos(a);
+    v[1] = Math.sin(a);
+    if (N > 2) v[2] = Math.sin(a * 0.5) * 0.3;
+    if (N > 3) v[3] = Math.cos(a * 0.7) * 0.2;
+    verts.push(v);
+  }
+  return verts;
+}
+
+// Sphere-approximation: fibonacci lattice in N-dim
+function sphereVerts(count, N) {
+  const verts = [];
+  const golden = (1 + Math.sqrt(5)) / 2;
+  for (let i = 0; i < count; i++) {
+    const v = Array.from({length: N}, (_, d) =>
+      Math.cos((i + 0.5) * Math.PI / count * (d + 1) + d * 1.2) *
+      Math.sin((i + 0.5) / count * Math.PI * golden * (d + 1)));
+    verts.push(norm(v));
+  }
+  return verts;
+}
+
+// ─── LAYER CLASS ────────────────────────────────────────────────────────
+let _lid = 0;
+class Layer {
+  constructor(opts = {}) {
+    this.id       = _lid++;
+    this.name     = opts.name     || 'Layer ' + this.id;
+    this.shape    = opts.shape    || 'hypercube'; // hypercube | poly | sphere | torus
+    this.dim      = opts.dim      || 4;
+    this.sides    = opts.sides    || 6;
+    this.color    = opts.color    || randomColor();
+    this.alpha    = opts.alpha    != null ? opts.alpha : 0.6;
+    this.scale    = opts.scale    || 0.3;
+    this.ox       = opts.ox       != null ? opts.ox : 0.5; // 0-1 of canvas
+    this.oy       = opts.oy       != null ? opts.oy : 0.5;
+    this.speed    = opts.speed    || 0.2;
+    this.basisPh  = opts.basisPh  || Math.random() * Math.PI * 2;
+    this.rotPhase = Array.from({length:28}, () => Math.random() * Math.PI * 2);
+    this.fill     = opts.fill     != null ? opts.fill : true;
+    this.stroke   = opts.stroke   != null ? opts.stroke : false;
+    this.lineW    = opts.lineW    || 1;
+    this.blendMode= opts.blendMode|| 'source-over';
+    this.colorBot = opts.colorBot || darken(opts.color || randomColor(), 0.5);
+    // Helix-specific
+    this.helixTurns      = opts.helixTurns      || 7;
+    this.helixPpt        = opts.helixPpt        || 18;
+    this.helixRungSpacing= opts.helixRungSpacing|| 3;
+    this.colorB          = opts.colorB          || '#ffaa00';
+    this.rungColor       = opts.rungColor       || '#cccccc';
+  }
+
+  getVerts() {
+    if (this.shape === 'hypercube') return hypercubeVerts(Math.min(this.dim, 6));
+    if (this.shape === 'poly')      return polyVerts(this.sides, Math.min(this.dim, 6));
+    if (this.shape === 'sphere')    return sphereVerts(32, Math.min(this.dim, 6));
+    if (this.shape === 'torus')     return torusVerts(Math.min(this.dim, 6));
+    if (this.shape === 'helix')     return helixVerts(this.helixTurns, this.helixPpt, Math.min(this.dim, 6));
+    return hypercubeVerts(4);
+  }
+
+  project(t) {
+    const N  = Math.min(this.dim, 6);
+    let verts = this.getVerts();
+
+    // Rotate in all hyperplanes
+    let ai = 0;
+    for (let i = 0; i < N; i++) for (let j = i+1; j < N; j++) {
+      const rate = this.speed * (0.3 + (i * 0.2 + j * 0.15));
+      verts = rotateND(verts, i, j, t * rate + this.rotPhase[ai++ % 28]);
+    }
+
+    // Basis plane (the "execution angle")
+    const ph = t * 0.11 + this.basisPh;
+    const b1 = norm(Array.from({length:N}, (_,d) => Math.cos(ph + d * 1.618)));
+    let   b2 = norm(Array.from({length:N}, (_,d) => Math.sin(ph * 1.3 + d * 1.2)));
+    const dd = dot(b1, b2);
+    const b2g = norm(b2.map((x,i) => x - dd * b1[i]));
+
+    // b3 for depth
+    const b3 = norm(b1.map((_,i) => b1[i]*0.4 - b2g[i]*0.6 + (i===2?1:0)));
+
+    const sc = this.scale * Math.min(CW, CH);
+    const ox = this.ox * CW, oy = this.oy * CH;
+
+    return verts.map(v => ({
+      x:   ox + dot(v, b1)  * sc,
+      y:   oy + dot(v, b2g) * sc,
+      dep: dot(v, b3)
+    }));
+  }
+
+  // Compute real T (projected twist) from geometry, then W = L - T
+  computeLTW() {
+    const L = this.helixTurns; // topological invariant — constant
+    if (!this._ptsA || !this._ptsB) return { L, T: L, W: 0 };
+    const pA = this._ptsA, pB = this._ptsB;
+    let totalAngle = 0;
+    for (let i = 0; i < pA.length - 1; i++) {
+      // midpoint of rung
+      const cx = (pA[i].x + pB[i].x) / 2;
+      const cy = (pA[i].y + pB[i].y) / 2;
+      const a1 = Math.atan2(pA[i].y   - cy, pA[i].x   - cx);
+      const a2 = Math.atan2(pA[i+1].y - (pA[i+1].y+pB[i+1].y)/2,
+                             pA[i+1].x - (pA[i+1].x+pB[i+1].x)/2);
+      let da = a2 - a1;
+      if (da >  Math.PI) da -= 2 * Math.PI;
+      if (da < -Math.PI) da += 2 * Math.PI;
+      totalAngle += da;
+    }
+    const T = totalAngle / (2 * Math.PI);
+    const W = L - T;
+    return { L, T: +T.toFixed(2), W: +W.toFixed(2) };
+  }
+
+  projectHelix(t) {
+    const total = this.helixTurns * this.helixPpt;
+    const sc    = this.scale * Math.min(CW, CH);
+    const ox    = this.ox * CW, oy = this.oy * CH;
+    const spin  = t * this.speed * 0.4 + this.basisPh;
+    const tilt  = Math.sin(t * this.speed * 0.15 + this.rotPhase[0]) * 0.25;
+    // stretch: oscillates between tight (0.7) and loose (1.8) slowly
+    const stretch = 1.2 + Math.sin(t * this.speed * 0.08 + this.rotPhase[1]) * 0.6;
+
+    const pts = [];
+    for (let strand = 0; strand < 2; strand++) {
+      const off = strand * Math.PI;
+      for (let i = 0; i < total; i++) {
+        const u = (i / total) * this.helixTurns * Math.PI * 2;
+        const z = (i / (total - 1)) * 2 - 1;
+        const rx = Math.cos(u + off + spin);
+        const ry = Math.sin(u + off + spin);
+        pts.push({
+          x:   ox + rx * sc,
+          y:   oy + (z * stretch + ry * tilt) * sc,
+          dep: ry,
+          isEnd: (i === 0 || i === total - 1)
+        });
+      }
+    }
+    return pts;
+  }
+
+  projectOBJ(t) {
+    if (!this._objVerts) return [];
+    const N = this.dim;
+    // Rotate in all hyperplanes — this IS the GPO execution
+    let verts = this._objVerts.map(v => [...v]);
+    let ai = 0;
+    for (let i = 0; i < N; i++) for (let j = i+1; j < N; j++) {
+      const rate = this.speed * (0.25 + (i*0.18 + j*0.12));
+      verts = rotateND(verts, i, j, t * rate + this.rotPhase[ai++ % 28]);
+    }
+    const sc = this.scale * Math.min(CW, CH);
+    const ox = this.ox * CW, oy = this.oy * CH;
+    const ph = t * 0.09 + this.basisPh;
+    const b1 = norm(Array.from({length:N}, (_,d) => Math.cos(ph + d*1.618)));
+    let   b2 = norm(Array.from({length:N}, (_,d) => Math.sin(ph*1.3 + d*1.2)));
+    const dd = dot(b1,b2);
+    const b2g = norm(b2.map((x,i) => x - dd*b1[i]));
+    const b3 = norm(b1.map((_,i) => b1[i]*0.4 - b2g[i]*0.6 + (i===2?1:0)));
+    return verts.map(v => ({ x: ox+dot(v,b1)*sc, y: oy+dot(v,b2g)*sc, dep: dot(v,b3) }));
+  }
+
+  draw(ctx, t) {
+    const pts  = this.shape === 'helix' ? this.projectHelix(t)
+               : this.shape === 'obj'   ? this.projectOBJ(t)
+               : this.project(t);
+    const deps = pts.map(p => p.dep);
+    const maxD = Math.max(...deps.map(Math.abs)) || 1;
+
+    ctx.save();
+    ctx.globalAlpha      = this.alpha;
+    ctx.globalCompositeOperation = this.blendMode;
+
+    if (this.shape === 'sphere') {
+      // Draw as filled circles (depth-sorted)
+      const sorted = [...pts].sort((a,b) => a.dep - b.dep);
+      for (const p of sorted) {
+        const dv  = (p.dep / maxD + 1) / 2;
+        const r   = 2 + dv * 5;
+        const col = lerpColor(this.colorBot, this.color, dv);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r, 0, Math.PI*2);
+        ctx.fillStyle = col;
+        ctx.shadowColor = this.color;
+        ctx.shadowBlur  = 4 * dv;
+        ctx.fill();
+      }
+    } else if (this.shape === 'poly') {
+      // Draw as filled/stroked polygon
+      if (pts.length < 2) { ctx.restore(); return; }
+      const dAvg = deps.reduce((s,d)=>s+d,0) / deps.length / maxD;
+      const dv   = (dAvg + 1) / 2;
+      const col  = lerpColor(this.colorBot, this.color, dv);
+
+      // Create gradient fill from top to bottom of shape
+      const ys = pts.map(p=>p.y);
+      const minY = Math.min(...ys), maxY = Math.max(...ys);
+      const grd  = ctx.createLinearGradient(0, minY, 0, maxY);
+      grd.addColorStop(0, hexAlpha(this.color,   1));
+      grd.addColorStop(1, hexAlpha(this.colorBot, 1));
+
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+      ctx.closePath();
+      if (this.fill) { ctx.fillStyle = grd; ctx.shadowColor = this.color; ctx.shadowBlur = 8; ctx.fill(); }
+      if (this.stroke) { ctx.strokeStyle = col; ctx.lineWidth = this.lineW; ctx.stroke(); }
+
+    } else if (this.shape === 'helix') {
+      const total  = this.helixTurns * this.helixPpt;
+      // Cache strand points for L/T/W computation
+      this._ptsA = pts.slice(0, total);
+      this._ptsB = pts.slice(total, total * 2);
+      const maxD   = Math.max(...deps.map(Math.abs)) || 1;
+
+      // helper: draw one edge with depth-colour gradient
+      const drawHEdge = (ai, bi, colTop, colBot, lineW) => {
+        const dv = ((deps[ai] + deps[bi]) / 2 / maxD + 1) / 2;
+        const grd = ctx.createLinearGradient(pts[ai].x, pts[ai].y, pts[bi].x, pts[bi].y);
+        grd.addColorStop(0, hexAlpha(colTop, 0.5 + dv * 0.5));
+        grd.addColorStop(1, hexAlpha(colBot,  0.3 + dv * 0.4));
+        ctx.beginPath();
+        ctx.moveTo(pts[ai].x, pts[ai].y);
+        ctx.lineTo(pts[bi].x, pts[bi].y);
+        ctx.strokeStyle = grd;
+        ctx.lineWidth   = lineW * (0.4 + dv * 0.8);
+        ctx.shadowColor = colTop;
+        ctx.shadowBlur  = dv > 0.55 ? 7 * dv : 0;
+        ctx.stroke();
+      };
+
+      // Build depth-sorted draw order for rungs + strand edges
+      const rs = Math.max(1, this.helixRungSpacing);
+      const colBotA = darken(this.color,  0.35);
+      const colBotB = darken(this.colorB, 0.35);
+      const colBotR = '#444444';
+
+      // Collect all segments with avg depth for painter sort
+      const segments = [];
+      for (let i = 0; i < total - 1; i++) {
+        segments.push({ type:'A', i, avgDep:(deps[i]+deps[i+1])/2 });
+      }
+      for (let i = 0; i < total - 1; i++) {
+        segments.push({ type:'B', i, avgDep:(deps[total+i]+deps[total+i+1])/2 });
+      }
+      for (let i = 0; i < total; i += rs) {
+        segments.push({ type:'R', i, avgDep:(deps[i]+deps[total+i])/2 });
+      }
+      segments.sort((a,b) => a.avgDep - b.avgDep);
+
+      for (const seg of segments) {
+        if (seg.type === 'A') {
+          drawHEdge(seg.i, seg.i+1, this.color, colBotA, this.lineW * 1.8);
+        } else if (seg.type === 'B') {
+          drawHEdge(total+seg.i, total+seg.i+1, this.colorB, colBotB, this.lineW * 1.8);
+        } else {
+          // Rung
+          drawHEdge(seg.i, total+seg.i, this.rungColor, colBotR, this.lineW * 2.2);
+          // Nodes at rung ends
+          const dvA = (deps[seg.i]       / maxD + 1) / 2;
+          const dvB = (deps[total+seg.i] / maxD + 1) / 2;
+          const isEndA = pts[seg.i] && pts[seg.i].isEnd;
+          const isEndB = pts[total+seg.i] && pts[total+seg.i].isEnd;
+          const rA  = isEndA ? (1.5 + dvA * 3.5) * 8 : (1.5 + dvA * 3.5);
+          const rB  = isEndB ? (1.5 + dvB * 3.5) * 8 : (1.5 + dvB * 3.5);
+          // Strand A node
+          ctx.beginPath(); ctx.arc(pts[seg.i].x, pts[seg.i].y, rA, 0, Math.PI*2);
+          const gA = ctx.createRadialGradient(pts[seg.i].x, pts[seg.i].y, 0, pts[seg.i].x, pts[seg.i].y, rA);
+          gA.addColorStop(0, hexAlpha(this.color, isEndA ? 1 : 0.95));
+          gA.addColorStop(0.4, hexAlpha(this.color, isEndA ? 0.6 : 0.3));
+          gA.addColorStop(1, hexAlpha(this.color, 0));
+          ctx.fillStyle = gA; ctx.shadowColor = this.color; ctx.shadowBlur = isEndA ? 30 : 10 * dvA;
+          ctx.fill();
+          // Strand B node
+          ctx.beginPath(); ctx.arc(pts[total+seg.i].x, pts[total+seg.i].y, rB, 0, Math.PI*2);
+          const gB = ctx.createRadialGradient(pts[total+seg.i].x, pts[total+seg.i].y, 0, pts[total+seg.i].x, pts[total+seg.i].y, rB);
+          gB.addColorStop(0, hexAlpha(this.colorB, isEndB ? 1 : 0.95));
+          gB.addColorStop(0.4, hexAlpha(this.colorB, isEndB ? 0.6 : 0.3));
+          gB.addColorStop(1, hexAlpha(this.colorB, 0));
+          ctx.fillStyle = gB; ctx.shadowColor = this.colorB; ctx.shadowBlur = isEndB ? 30 : 10 * dvB;
+          ctx.fill();
+        }
+      }
+
+      ctx.shadowBlur = 0;
+
+    } else {
+      // Hypercube / torus / OBJ: draw edges with depth gradient
+      const edges = this.shape === 'hypercube' ? hypercubeEdges(Math.min(this.dim, 6))
+                  : this.shape === 'obj'        ? (this._objEdges || [])
+                  : polyEdges(pts.length);
+
+      const sortedEdges = [...edges].sort((a,b) =>
+        (deps[a[0]]+deps[a[1]]) - (deps[b[0]]+deps[b[1]]));
+
+      for (const [a,b] of sortedEdges) {
+        const dv = ((deps[a]+deps[b]) / 2 / maxD + 1) / 2;
+        const col = lerpColor(this.colorBot, this.color, dv);
+
+        const xs = [pts[a].x, pts[b].x], ys = [pts[a].y, pts[b].y];
+        const grd = ctx.createLinearGradient(xs[0], ys[0], xs[1], ys[1]);
+        grd.addColorStop(0, hexAlpha(this.color,   dv));
+        grd.addColorStop(1, hexAlpha(this.colorBot, dv * 0.6));
+
+        ctx.beginPath();
+        ctx.moveTo(pts[a].x, pts[a].y);
+        ctx.lineTo(pts[b].x, pts[b].y);
+        ctx.strokeStyle = grd;
+        ctx.lineWidth   = 0.5 + dv * 2;
+        ctx.shadowColor = this.color;
+        ctx.shadowBlur  = dv > 0.6 ? 6 : 0;
+        ctx.stroke();
+      }
+
+      // Vertices
+      for (const p of pts) {
+        const dv = (p.dep / maxD + 1) / 2;
+        if (dv < 0.2) continue;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 1 + dv * 3, 0, Math.PI*2);
+        ctx.fillStyle = hexAlpha(this.color, dv);
+        ctx.shadowColor = this.color; ctx.shadowBlur = 4;
+        ctx.fill();
+      }
+    }
+
+    ctx.shadowBlur = 0;
+    ctx.restore();
+  }
+}
+
+// Torus vertices in N-dim
+function torusVerts(N) {
+  const verts = [];
+  const R = 0.7, r = 0.3;
+  for (let i = 0; i < 24; i++) for (let j = 0; j < 16; j++) {
+    const u = (i/24)*Math.PI*2, v2 = (j/16)*Math.PI*2;
+    const vv = Array(N).fill(0);
+    vv[0] = (R + r*Math.cos(v2)) * Math.cos(u);
+    vv[1] = (R + r*Math.cos(v2)) * Math.sin(u);
+    vv[2] = r * Math.sin(v2);
+    if (N>3) vv[3] = Math.sin(u*0.5)*0.2;
+    verts.push(vv);
+  }
+  return verts;
+}
+function polyEdges(n) {
+  const e=[];
+  for(let i=0;i<n;i++) e.push([i,(i+1)%n]);
+  return e;
+}
+
+// Double helix: strand A (0..total-1) + strand B (total..2*total-1) offset by PI
+// Embedded in N-dim with higher harmonics so rotation is a true GPO
+function helixVerts(turns, ppt, N) {
+  const verts = [];
+  const total = turns * ppt;
+  for (let strand = 0; strand < 2; strand++) {
+    const off = strand * Math.PI;
+    for (let i = 0; i < total; i++) {
+      const t = (i / total) * turns * Math.PI * 2;
+      const z = (i / (total - 1)) * 2 - 1;
+      const v = Array(N).fill(0);
+      v[0] = Math.cos(t + off);
+      v[1] = Math.sin(t + off);
+      if (N > 2) v[2] = z;
+      if (N > 3) v[3] = Math.cos(t * 2 + off) * 0.28;
+      if (N > 4) v[4] = Math.sin(t * 1.5 + off) * 0.22;
+      if (N > 5) v[5] = Math.cos(t * 3 + off) * 0.16;
+      verts.push(v);
+    }
+  }
+  return verts;
+}
+
+// ─── COLOUR HELPERS ──────────────────────────────────────────────────────
+function hexAlpha(hex, a) {
+  if (!hex || hex.length < 7) return `rgba(128,128,128,${a})`;
+  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${Math.max(0,Math.min(1,a))})`;
+}
+function lerpColor(a, b, t) {
+  if(!a||!b||a.length<7||b.length<7) return '#888888';
+  const r=Math.round(parseInt(a.slice(1,3),16)*(1-t)+parseInt(b.slice(1,3),16)*t);
+  const g=Math.round(parseInt(a.slice(3,5),16)*(1-t)+parseInt(b.slice(3,5),16)*t);
+  const bv=Math.round(parseInt(a.slice(5,7),16)*(1-t)+parseInt(b.slice(5,7),16)*t);
+  return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${bv.toString(16).padStart(2,'0')}`;
+}
+function darken(hex, amt) {
+  if (!hex || hex.length < 7) return '#111111';
+  const r=Math.max(0,Math.round(parseInt(hex.slice(1,3),16)*amt));
+  const g=Math.max(0,Math.round(parseInt(hex.slice(3,5),16)*amt));
+  const b=Math.max(0,Math.round(parseInt(hex.slice(5,7),16)*amt));
+  return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+}
+const PALETTE = ['#00ccff','#ff4466','#44ff99','#ffcc00','#aa44ff','#ff8844','#44ccff','#ff44cc'];
+let _pi = 0;
+function randomColor() { return PALETTE[_pi++ % PALETTE.length]; }
+
+// ─── RENDER LOOP ──────────────────────────────────────────────────────────
+function renderFrame(t) {
+  rctx.clearRect(0, 0, CW, CH);
+  rctx.fillStyle = '#080808';
+  rctx.fillRect(0, 0, CW, CH);
+
+  for (const layer of layers) {
+    layer.draw(rctx, t);
+  }
+
+  // Draw L/T/W meters for any helix layer
+  const helixLayer = layers.find(l => l.shape === 'helix');
+  if (helixLayer) drawLTWMeters(rctx, helixLayer);
+}
+
+// ─── L / T / W TOPOLOGY METERS ──────────────────────────────────────────────
+function drawLTWMeters(ctx, layer) {
+  const ltw = layer.computeLTW();
+  const { L, T, W } = ltw;
+
+  const mx = 14, my = CH - 130;
+  const barW = 18, barH = 90, gap = 28;
+
+  // Background panel
+  ctx.save();
+  ctx.globalAlpha = 0.82;
+  ctx.fillStyle = '#0a0a0a';
+  roundRect(ctx, mx - 8, my - 22, gap * 3 + 22, barH + 46, 4);
+  ctx.fill();
+  ctx.strokeStyle = '#222';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  const entries = [
+    { label: 'L', val: L,   max: Math.max(Math.abs(L), 1),   color: '#ffd700', fixed: true },
+    { label: 'T', val: T,   max: Math.max(Math.abs(L), 1),   color: '#00ccff', fixed: false },
+    { label: 'W', val: W,   max: Math.max(Math.abs(L), 1),   color: '#ff6600', fixed: false },
+  ];
+
+  entries.forEach((e, i) => {
+    const bx = mx + i * gap;
+    const frac = Math.min(1, Math.abs(e.val) / e.max);
+    const filled = frac * barH;
+    const negative = e.val < 0;
+
+    // Bar background
+    ctx.fillStyle = '#1a1a1a';
+    roundRect(ctx, bx, my, barW, barH, 3);
+    ctx.fill();
+
+    // Bar fill — from bottom
+    const grd = ctx.createLinearGradient(bx, my + barH, bx, my + barH - filled);
+    grd.addColorStop(0, hexAlpha(e.color, 0.9));
+    grd.addColorStop(1, hexAlpha(e.color, 0.4));
+    ctx.fillStyle = grd;
+    ctx.shadowColor = e.color;
+    ctx.shadowBlur  = negative ? 0 : 8;
+    roundRect(ctx, bx, my + barH - filled, barW, filled, negative ? 0 : 3);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Tick marks at 25% intervals
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 0.5;
+    for (let tick = 1; tick < 4; tick++) {
+      const ty = my + barH - barH * (tick / 4);
+      ctx.beginPath(); ctx.moveTo(bx, ty); ctx.lineTo(bx + barW, ty); ctx.stroke();
+    }
+
+    // Label
+    ctx.font = 'bold 11px monospace';
+    ctx.fillStyle = e.color;
+    ctx.textAlign = 'center';
+    ctx.shadowColor = e.color; ctx.shadowBlur = 4;
+    ctx.fillText(e.label, bx + barW/2, my - 8);
+    ctx.shadowBlur = 0;
+
+    // Value
+    ctx.font = '9px monospace';
+    ctx.fillStyle = negative ? '#ff4444' : e.color;
+    ctx.fillText((e.val > 0 ? '+' : '') + e.val.toFixed(1), bx + barW/2, my + barH + 12);
+  });
+
+  // Equation line
+  ctx.font = '9px monospace';
+  ctx.textAlign = 'left';
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.fillText('L = T + W', mx, my + barH + 28);
+
+  // Delta line — show supercoiling direction
+  const supercoiled = Math.abs(W) > 0.5;
+  if (supercoiled) {
+    ctx.fillStyle = W > 0 ? '#ff6600' : '#00ccff';
+    ctx.fillText(W > 0 ? '(+) overwound' : '(-) underwound', mx, my + barH + 40);
+  }
+
+  ctx.restore();
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  if (h < 0) { y += h; h = -h; }
+  if (h === 0) return;
+  r = Math.min(r, h/2, w/2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.arcTo(x + w, y, x + w, y + r, r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+  ctx.lineTo(x + r, y + h);
+  ctx.arcTo(x, y + h, x, y + h - r, r);
+  ctx.lineTo(x, y + r);
+  ctx.arcTo(x, y, x + r, y, r);
+  ctx.closePath();
+}
+
+function loop() {
+  if (!playing) return;
+  animT += 0.008;
+  renderFrame(animT);
+  updateScore();
+  rafId = requestAnimationFrame(loop);
+}
+
+function togglePlay() {
+  playing = !playing;
+  document.getElementById('playbtn').classList.toggle('active', playing);
+  document.getElementById('playbtn').textContent = playing ? 'PAUSE' : 'PLAY';
+  if (playing) loop();
+}
+
+function toggleTarget() {
+  showTarget = !showTarget;
+  target.style.opacity = showTarget ? '0.35' : '0';
+  document.getElementById('tgtbtn').classList.toggle('active', showTarget);
+}
+
+// Render one still frame on demand
+function renderStill() {
+  renderFrame(animT);
+  updateScore();
+}
+
+// ─── LAYER MANAGEMENT ────────────────────────────────────────────────────
+function addLayer(opts) {
+  const l = new Layer(opts || {});
+  layers.push(l);
+  selectLayer(l);
+  redrawLayerList();
+  renderStill();
+  return l;
+}
+
+function removeLayer(id, e) {
+  e && e.stopPropagation();
+  layers = layers.filter(l => l.id !== id);
+  if (selected && selected.id === id) {
+    selected = layers[layers.length - 1] || null;
+  }
+  redrawLayerList();
+  if (selected) buildControls(selected);
+  else document.getElementById('layer-controls').innerHTML = '<div style="font-size:10px;color:#444;padding:10px 0">Select a layer to edit</div>';
+  renderStill();
+}
+
+function selectLayer(l) {
+  selected = l;
+  redrawLayerList();
+  buildControls(l);
+}
+
+function redrawLayerList() {
+  const el = document.getElementById('layer-list');
+  el.innerHTML = '';
+  for (const l of [...layers].reverse()) {
+    const div = document.createElement('div');
+    div.className = 'layer-item' + (selected && selected.id === l.id ? ' selected' : '');
+    div.innerHTML = `<span class="lswatch" style="background:${l.color}"></span>
+      <span class="lname">${l.name}</span>
+      <span class="ldelete" onclick="removeLayer(${l.id},event)">x</span>`;
+    div.addEventListener('click', () => selectLayer(l));
+    el.appendChild(div);
+  }
+}
+
+// ─── LAYER CONTROLS ──────────────────────────────────────────────────────
+function buildControls(l) {
+  const el = document.getElementById('layer-controls');
+  el.innerHTML = `
+    <div class="ctrl-group">
+      <h3>Shape</h3>
+      <div class="ctrl-row">
+        <label>Type</label>
+        <select onchange="upd(${l.id},'shape',this.value);renderStill()">
+          ${['hypercube','poly','sphere','torus','helix'].map(s=>`<option value="${s}" ${l.shape===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+      <div class="ctrl-row">
+        <label>Dim</label>
+        <input type="range" min="3" max="6" step="1" value="${l.dim}"
+          oninput="upd(${l.id},'dim',+this.value);this.nextSibling.textContent=this.value;renderStill()">
+        <span class="val">${l.dim}D</span>
+      </div>
+      <div class="ctrl-row">
+        <label>Sides</label>
+        <input type="range" min="3" max="24" step="1" value="${l.sides}"
+          oninput="upd(${l.id},'sides',+this.value);this.nextSibling.textContent=this.value;renderStill()">
+        <span class="val">${l.sides}</span>
+      </div>
+      <div class="ctrl-row" id="hx-turns-row">
+        <label>Turns</label>
+        <input type="range" min="2" max="14" step="1" value="${l.helixTurns}"
+          oninput="upd(${l.id},'helixTurns',+this.value);this.nextSibling.textContent=this.value;renderStill()">
+        <span class="val">${l.helixTurns}</span>
+      </div>
+      <div class="ctrl-row">
+        <label>Pts/Turn</label>
+        <input type="range" min="6" max="36" step="2" value="${l.helixPpt}"
+          oninput="upd(${l.id},'helixPpt',+this.value);this.nextSibling.textContent=this.value;renderStill()">
+        <span class="val">${l.helixPpt}</span>
+      </div>
+      <div class="ctrl-row">
+        <label>Rung Gap</label>
+        <input type="range" min="1" max="8" step="1" value="${l.helixRungSpacing}"
+          oninput="upd(${l.id},'helixRungSpacing',+this.value);this.nextSibling.textContent=this.value;renderStill()">
+        <span class="val">${l.helixRungSpacing}</span>
+      </div>
+      <div class="ctrl-row">
+        <label>Strand B Col</label>
+        <input type="color" value="${l.colorB}"
+          oninput="upd(${l.id},'colorB',this.value);renderStill()">
+      </div>
+      <div class="ctrl-row">
+        <label>Rung Col</label>
+        <input type="color" value="${l.rungColor}"
+          oninput="upd(${l.id},'rungColor',this.value);renderStill()">
+      </div>
+    </div>
+    <div class="ctrl-group">
+      <h3>Position & Scale</h3>
+      <div class="ctrl-row">
+        <label>X</label>
+        <input type="range" min="0" max="1" step="0.01" value="${l.ox}"
+          oninput="upd(${l.id},'ox',+this.value);this.nextSibling.textContent=(+this.value*100|0)+'%';renderStill()">
+        <span class="val">${(l.ox*100)|0}%</span>
+      </div>
+      <div class="ctrl-row">
+        <label>Y</label>
+        <input type="range" min="0" max="1" step="0.01" value="${l.oy}"
+          oninput="upd(${l.id},'oy',+this.value);this.nextSibling.textContent=(+this.value*100|0)+'%';renderStill()">
+        <span class="val">${(l.oy*100)|0}%</span>
+      </div>
+      <div class="ctrl-row">
+        <label>Scale</label>
+        <input type="range" min="0.05" max="1.2" step="0.01" value="${l.scale}"
+          oninput="upd(${l.id},'scale',+this.value);this.nextSibling.textContent=(+this.value).toFixed(2);renderStill()">
+        <span class="val">${l.scale.toFixed(2)}</span>
+      </div>
+    </div>
+    <div class="ctrl-group">
+      <h3>Color</h3>
+      <div class="ctrl-row">
+        <label>Top Color</label>
+        <input type="color" value="${l.color}"
+          oninput="upd(${l.id},'color',this.value);renderStill()">
+      </div>
+      <div class="ctrl-row">
+        <label>Bot Color</label>
+        <input type="color" value="${l.colorBot}"
+          oninput="upd(${l.id},'colorBot',this.value);renderStill()">
+      </div>
+      <div class="ctrl-row">
+        <label>Alpha</label>
+        <input type="range" min="0.02" max="1" step="0.01" value="${l.alpha}"
+          oninput="upd(${l.id},'alpha',+this.value);this.nextSibling.textContent=(+this.value).toFixed(2);renderStill()">
+        <span class="val">${l.alpha.toFixed(2)}</span>
+      </div>
+      <div class="ctrl-row">
+        <label>Blend</label>
+        <select onchange="upd(${l.id},'blendMode',this.value);renderStill()">
+          ${['source-over','screen','multiply','overlay','color-dodge','lighter','difference'].map(m=>
+            `<option value="${m}" ${l.blendMode===m?'selected':''}>${m}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="ctrl-group">
+      <h3>Animation</h3>
+      <div class="ctrl-row">
+        <label>Speed</label>
+        <input type="range" min="0" max="2" step="0.01" value="${l.speed}"
+          oninput="upd(${l.id},'speed',+this.value);this.nextSibling.textContent=(+this.value).toFixed(2)">
+        <span class="val">${l.speed.toFixed(2)}</span>
+      </div>
+      <div class="ctrl-row">
+        <label>Basis Phase</label>
+        <input type="range" min="0" max="6.28" step="0.01" value="${l.basisPh}"
+          oninput="upd(${l.id},'basisPh',+this.value);this.nextSibling.textContent=(+this.value).toFixed(2);renderStill()">
+        <span class="val">${l.basisPh.toFixed(2)}</span>
+      </div>
+    </div>
+    <div class="ctrl-group">
+      <h3>Draw Mode</h3>
+      <div class="ctrl-row">
+        <label>Fill</label>
+        <input type="checkbox" ${l.fill?'checked':''} onchange="upd(${l.id},'fill',this.checked);renderStill()">
+      </div>
+      <div class="ctrl-row">
+        <label>Stroke</label>
+        <input type="checkbox" ${l.stroke?'checked':''} onchange="upd(${l.id},'stroke',this.checked);renderStill()">
+      </div>
+      <div class="ctrl-row">
+        <label>Line Width</label>
+        <input type="range" min="0.5" max="5" step="0.5" value="${l.lineW}"
+          oninput="upd(${l.id},'lineW',+this.value);this.nextSibling.textContent=this.value;renderStill()">
+        <span class="val">${l.lineW}</span>
+      </div>
+    </div>
+    <button class="pbtn" onclick="duplicateLayer(${l.id})" style="width:100%;margin-top:4px">DUPLICATE LAYER</button>
+    <button class="pbtn" onclick="randomiseLayer(${l.id})" style="width:100%;margin-top:4px">RANDOMISE</button>
+  `;
+}
+
+function upd(id, key, val) {
+  const l = layers.find(x => x.id === id);
+  if (l) l[key] = val;
+}
+
+function duplicateLayer(id) {
+  const src = layers.find(l => l.id === id);
+  if (!src) return;
+  const l = new Layer({...src, name: src.name + ' copy', basisPh: src.basisPh + 0.5});
+  l.rotPhase = [...src.rotPhase];
+  layers.push(l);
+  selectLayer(l);
+  redrawLayerList();
+  renderStill();
+}
+
+function randomiseLayer(id) {
+  const l = layers.find(x => x.id === id);
+  if (!l) return;
+  l.basisPh = Math.random() * Math.PI * 2;
+  l.rotPhase = Array.from({length:28}, () => Math.random() * Math.PI * 2);
+  l.ox = 0.2 + Math.random() * 0.6;
+  l.oy = 0.2 + Math.random() * 0.6;
+  l.scale = 0.1 + Math.random() * 0.5;
+  buildControls(l);
+  renderStill();
+}
+
+// ─── AUTO-FIT — score current render vs target, nudge toward it ───────────
+function pixelScore() {
+  if (!targetImageData) return null;
+  const rdata = rctx.getImageData(0, 0, CW, CH).data;
+  const tdata = targetImageData.data;
+  let diff = 0;
+  const step = 16; // sample every 16th pixel for speed
+  for (let i = 0; i < rdata.length; i += step * 4) {
+    diff += Math.abs(rdata[i]   - tdata[i]);
+    diff += Math.abs(rdata[i+1] - tdata[i+1]);
+    diff += Math.abs(rdata[i+2] - tdata[i+2]);
+  }
+  return 1 - diff / (rdata.length / step * 0.75 * 255);
+}
+
+function updateScore() {
+  if (!targetImageData) return;
+  const s = pixelScore();
+  document.getElementById('score-box').innerHTML =
+    `Match: <span style="color:#00ccff">${(s*100).toFixed(1)}%</span><br>
+     Layers: ${layers.length} &nbsp; T: ${animT.toFixed(2)}`;
+}
+
+// Auto-fit: mutate worst-scoring param, keep if better
+let autoFitting = false;
+async function autoScore() {
+  if (!targetImageData || layers.length === 0) {
+    setStatus('Load a target image first'); return;
+  }
+  if (autoFitting) { autoFitting = false; setStatus('Auto-fit stopped'); return; }
+  autoFitting = true;
+  setStatus('Auto-fitting...');
+  document.querySelector('[onclick="autoScore()"]').classList.add('active');
+
+  const KEYS = ['ox','oy','scale','basisPh','alpha','speed'];
+  const DELTAS = [0.05, 0.05, 0.04, 0.2, 0.08, 0.1];
+
+  for (let iter = 0; iter < 800 && autoFitting; iter++) {
+    renderFrame(animT);
+    const scoreBefore = pixelScore();
+
+    // Pick random layer and random param
+    const l   = layers[Math.floor(Math.random() * layers.length)];
+    const ki  = Math.floor(Math.random() * KEYS.length);
+    const key = KEYS[ki];
+    const delta = (Math.random() - 0.5) * 2 * DELTAS[ki];
+    const old = l[key];
+    l[key] = old + delta;
+
+    // Clamp
+    if (key === 'ox' || key === 'oy') l[key] = Math.max(0, Math.min(1, l[key]));
+    if (key === 'scale') l[key] = Math.max(0.05, Math.min(1.2, l[key]));
+    if (key === 'alpha') l[key] = Math.max(0.05, Math.min(1, l[key]));
+    if (key === 'speed') l[key] = Math.max(0, Math.min(2, l[key]));
+
+    renderFrame(animT);
+    const scoreAfter = pixelScore();
+
+    if (scoreAfter < scoreBefore) l[key] = old; // revert
+
+    if (iter % 50 === 0) {
+      setStatus(`Auto-fit ${iter}/800 — match ${(Math.max(scoreBefore,scoreAfter)*100).toFixed(1)}%`);
+      await sleep(1);
+    }
+  }
+  autoFitting = false;
+  setStatus('Auto-fit done');
+  document.querySelector('[onclick="autoScore()"]').classList.remove('active');
+  if (selected) buildControls(selected);
+  renderStill();
+}
+
+// ─── GROK IMAGE GENERATION ───────────────────────────────────────────────
+async function generateImage() {
+  const prompt = document.getElementById('prompt-box').value.trim();
+  if (!prompt) return;
+  const btn = document.getElementById('gen-btn');
+  btn.disabled = true;
+  btn.textContent = 'GENERATING...';
+  setStatus('Calling Grok image API...');
+
+  try {
+    const res = await fetch('https://www.shortfactory.shop/img-proxy.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt })
+    });
+    const json = await res.json();
+    if (!json.data || !json.data[0]) throw new Error(json.error?.message || 'No image returned');
+
+    const img = new Image();
+    img.onload = () => {
+      // Draw to target canvas, save pixel data
+      tctx.clearRect(0,0,CW,CH);
+      tctx.drawImage(img, 0, 0, CW, CH);
+      targetImageData = tctx.getImageData(0, 0, CW, CH);
+      target.style.opacity = showTarget ? '0.35' : '0';
+
+      // Auto-build initial layer set from dominant colors
+      autoSeedLayers();
+      setStatus('Target loaded. ' + layers.length + ' seed layers built.');
+      document.getElementById('score-box').innerHTML =
+        `Target loaded. Hit <b style="color:#00ccff">AUTO-FIT</b> to match.`;
+    };
+    img.src = 'data:image/png;base64,' + json.data[0].b64_json;
+  } catch(e) {
+    setStatus('Error: ' + e.message);
+    document.getElementById('score-box').innerHTML = `<span style="color:#ff4466">${e.message}</span>`;
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'GENERATE VIA GROK';
+}
+
+// Seed layers from dominant colors in target image
+function autoSeedLayers() {
+  if (!targetImageData) return;
+  layers = [];
+  _pi = 0;
+
+  const data = targetImageData.data;
+  // Sample 9 grid positions
+  const positions = [];
+  for (let gy = 0; gy < 3; gy++) for (let gx = 0; gx < 3; gx++) {
+    const px = Math.floor((gx + 0.5) / 3 * CW);
+    const py = Math.floor((gy + 0.5) / 3 * CH);
+    const idx = (py * CW + px) * 4;
+    const r = data[idx], g = data[idx+1], b = data[idx+2];
+    const hex = '#' + [r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');
+    positions.push({ ox: (gx+0.5)/3, oy: (gy+0.5)/3, color: hex });
+  }
+
+  const shapes = ['poly','sphere','hypercube','poly','sphere'];
+  const dims   = [4, 3, 4, 5, 4];
+  const sides  = [6, 8, 4, 12, 5];
+
+  for (let i = 0; i < 5; i++) {
+    const p = positions[i * 2] || positions[0];
+    addLayer({
+      name: 'Layer ' + (i+1),
+      shape: shapes[i], dim: dims[i], sides: sides[i],
+      color: p.color,
+      colorBot: darken(p.color, 0.3),
+      ox: p.ox, oy: p.oy,
+      scale: 0.15 + i * 0.05,
+      alpha: 0.5 - i * 0.05,
+      speed: 0.1 + i * 0.05,
+      basisPh: i * 1.2,
+      fill: true, stroke: false,
+      blendMode: i === 0 ? 'source-over' : 'screen'
+    });
+  }
+
+  redrawLayerList();
+  renderStill();
+}
+
+// ─── EXPORT ──────────────────────────────────────────────────────────────
+function exportFrame() {
+  renderFrame(animT);
+  const a = document.createElement('a');
+  a.download = 'geom-frame-' + Date.now() + '.png';
+  a.href = render.toDataURL('image/png');
+  a.click();
+}
+
+// ─── UTILS ───────────────────────────────────────────────────────────────
+function setStatus(msg) {
+  document.getElementById('status').textContent = msg;
+}
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ─── OBJ IMPORT → GPO CONVERSION ────────────────────────────────────────────
+
+function parseOBJ(text) {
+  const rawVerts = [], faces = [];
+  for (const line of text.split('\n')) {
+    const p = line.trim().split(/\s+/);
+    if (p[0] === 'v')  rawVerts.push([+p[1], +p[2], +p[3]]);
+    if (p[0] === 'f')  {
+      // face indices are 1-based, may have v/vt/vn format
+      const idx = p.slice(1).map(s => parseInt(s.split('/')[0]) - 1);
+      for (let i = 1; i < idx.length - 1; i++) {
+        faces.push([idx[0], idx[i], idx[i+1]]);
+      }
+    }
+  }
+
+  // Subsample if massive — keep max 3000 verts evenly spaced
+  const MAX_V = 3000;
+  let verts = rawVerts;
+  if (rawVerts.length > MAX_V) {
+    const step = Math.ceil(rawVerts.length / MAX_V);
+    verts = rawVerts.filter((_, i) => i % step === 0);
+    setStatus('OBJ: subsampled to ' + verts.length + ' verts');
+  }
+
+  // Normalise to [-1, 1]
+  let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity,minZ=Infinity,maxZ=-Infinity;
+  for (const [x,y,z] of verts) {
+    if(x<minX)minX=x; if(x>maxX)maxX=x;
+    if(y<minY)minY=y; if(y>maxY)maxY=y;
+    if(z<minZ)minZ=z; if(z>maxZ)maxZ=z;
+  }
+  const cx=(minX+maxX)/2, cy=(minY+maxY)/2, cz=(minZ+maxZ)/2;
+  const sc=Math.max(maxX-minX, maxY-minY, maxZ-minZ)/2 || 1;
+  const normVerts = verts.map(([x,y,z]) => [(x-cx)/sc, (y-cy)/sc, (z-cz)/sc]);
+
+  // Build edge set from faces (deduplicated)
+  const edgeSet = new Set();
+  const addEdge = (a,b) => {
+    // remap to subsampled indices — use closest in original
+    const key = Math.min(a,b)+'_'+Math.max(a,b);
+    edgeSet.add(key);
+  };
+  // For subsampled: just connect consecutive verts as wireframe approximation
+  // Plus every face edge from full face list where both verts survived subsample
+  const step = rawVerts.length > MAX_V ? Math.ceil(rawVerts.length / MAX_V) : 1;
+  const indexMap = new Map();
+  rawVerts.forEach((_, ri) => {
+    if (ri % step === 0) indexMap.set(ri, Math.floor(ri / step));
+  });
+  for (const [a,b,c] of faces) {
+    const ma=indexMap.get(a), mb=indexMap.get(b), mc=indexMap.get(c);
+    if (ma!=null&&mb!=null) addEdge(ma,mb);
+    if (mb!=null&&mc!=null) addEdge(mb,mc);
+    if (ma!=null&&mc!=null) addEdge(ma,mc);
+  }
+  // Fallback: connect each vert to next 2 (gives wireframe even if no faces)
+  if (edgeSet.size < 10) {
+    for (let i = 0; i < normVerts.length - 1; i++) addEdge(i, i+1);
+  }
+
+  const edges = [...edgeSet].map(k => k.split('_').map(Number));
+
+  return { verts: normVerts, edges };
+}
+
+// Embed 3D OBJ verts into N-dimensional GPO space
+// Extra dims = harmonics of existing coords — makes rotation genuinely N-dimensional
+function embedToNDim(verts3d, N) {
+  return verts3d.map(([x,y,z]) => {
+    const v = Array(N).fill(0);
+    v[0] = x; v[1] = y;
+    if (N > 2) v[2] = z;
+    if (N > 3) v[3] = (x*x - y*y) * 0.4;          // x²-y² harmonic
+    if (N > 4) v[4] = (x*z + y*z) * 0.3;           // xz+yz coupling
+    if (N > 5) v[5] = (x*y*z) * 0.25;              // xyz product
+    return v;
+  });
+}
+
+function loadOBJFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  setStatus('Parsing ' + file.name + '...');
+  const reader = new FileReader();
+  reader.onload = e => importOBJText(e.target.result, file.name);
+  reader.readAsText(file);
+}
+
+function importOBJText(text, name) {
+  const { verts, edges } = parseOBJ(text);
+  if (!verts.length) { setStatus('No vertices found in OBJ'); return; }
+
+  const N = 5;
+  const ndVerts = embedToNDim(verts, N);
+
+  // Compute condensed equation stats
+  const coeffCount = (N+1)*(N+2)/2; // quadratic polynomial in N dims
+  const compression = ((verts.length * 3 * 4) / (coeffCount * 4)).toFixed(0);
+
+  const l = new Layer({
+    name: (name || 'OBJ').replace('.obj',''),
+    shape: 'obj',
+    dim: N,
+    color: randomColor(),
+    colorBot: '#112233',
+    ox: 0.5, oy: 0.5,
+    scale: 0.4,
+    alpha: 0.85,
+    speed: 0.12,
+    basisPh: 0,
+    fill: false, stroke: true, lineW: 0.8,
+    blendMode: 'source-over'
+  });
+  l._objVerts = ndVerts;
+  l._objEdges = edges;
+  l._objStats = { origVerts: verts.length, edges: edges.length, N, coeffCount, compression };
+
+  layers.push(l);
+  selectLayer(l);
+  redrawLayerList();
+  renderStill();
+  setStatus(`OBJ loaded: ${verts.length} verts, ${edges.length} edges → ${N}D GPO (${compression}x compressed equation)`);
+}
+
+// Drag-drop on canvas
+const canvasWrap = document.getElementById('canvas-wrap');
+canvasWrap.addEventListener('dragover', e => { e.preventDefault(); canvasWrap.classList.add('dragover'); });
+canvasWrap.addEventListener('dragleave', () => canvasWrap.classList.remove('dragover'));
+canvasWrap.addEventListener('drop', e => {
+  e.preventDefault();
+  canvasWrap.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (!file || !file.name.endsWith('.obj')) { setStatus('Drop a .obj file'); return; }
+  setStatus('Parsing ' + file.name + '...');
+  const reader = new FileReader();
+  reader.onload = ev => importOBJText(ev.target.result, file.name);
+  reader.readAsText(file);
+});
+
+// ─── BOOT ────────────────────────────────────────────────────────────────
+// Double helix front and centre
+addLayer({ name: 'DNA Helix', shape: 'helix', dim: 5,
+  color: '#00ccff', colorBot: '#003366', colorB: '#ff6600', rungColor: '#dddddd',
+  ox: 0.5, oy: 0.5, scale: 0.42, alpha: 0.92,
+  helixTurns: 8, helixPpt: 20, helixRungSpacing: 3,
+  lineW: 1.2, speed: 0.18, basisPh: 0,
+  fill: false, stroke: true, blendMode: 'source-over' });
+// Outer hypercube halo
+addLayer({ name: 'Halo Cube', shape: 'hypercube', dim: 4,
+  color: '#4400ff', colorBot: '#110033',
+  ox: 0.5, oy: 0.5, scale: 0.48, alpha: 0.25, speed: 0.08,
+  fill: false, stroke: true, lineW: 0.5, blendMode: 'screen' });
+// Sphere nebula behind
+addLayer({ name: 'Nebula', shape: 'sphere', dim: 5,
+  color: '#aa00ff', colorBot: '#220033',
+  ox: 0.5, oy: 0.5, scale: 0.55, alpha: 0.18, speed: 0.06,
+  blendMode: 'screen' });
+renderStill();
+togglePlay();
+</script>
+</body>
+</html>

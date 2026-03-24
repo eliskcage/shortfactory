@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>▲ SHAPE SCANNER v2</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#000; overflow:hidden; font-family:'Courier New',monospace; }
+#cam-v { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; }
+#ov { position:fixed; inset:0; width:100%; height:100%; pointer-events:none; }
+#status {
+  position:fixed; top:16px; left:50%; transform:translateX(-50%);
+  font-size:9px; letter-spacing:.3em; color:rgba(255,199,44,.8);
+  text-align:center; pointer-events:none; text-shadow:0 0 6px #000;
+  white-space:nowrap;
+}
+#dir {
+  position:fixed; top:34px; left:50%; transform:translateX(-50%);
+  font-size:18px; color:rgba(255,199,44,.9);
+  text-align:center; pointer-events:none; text-shadow:0 0 12px #FFC72C;
+  opacity:0; transition:opacity .1s;
+}
+#dir.show { opacity:1; }
+#result-wrap {
+  position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+  pointer-events:none; opacity:0; transition:opacity .5s;
+}
+#result-wrap.show { opacity:1; }
+#result-canvas { border:2px solid rgba(255,199,44,.3); border-radius:4px; }
+#result-code {
+  position:fixed; bottom:40px; left:50%; transform:translateX(-50%);
+  font-size:18px; letter-spacing:.4em; color:#FFC72C;
+  text-shadow:0 0 20px #FFC72C; text-align:center; opacity:0; transition:opacity .5s;
+}
+#result-code.show { opacity:1; }
+#v1-link {
+  position:fixed; bottom:10px; right:10px;
+  font-size:7px; letter-spacing:.2em; color:rgba(255,255,255,.12); text-decoration:none; z-index:10;
+}
+#v1-link:hover { color:rgba(255,255,255,.4); }
+#reset-btn {
+  position:fixed; bottom:10px; left:10px;
+  font-size:7px; letter-spacing:.2em; color:rgba(255,255,255,.15);
+  background:none; border:none; cursor:pointer; display:none;
+}
+</style>
+</head>
+<body>
+<video id="cam-v" autoplay playsinline muted></video>
+<canvas id="ov"></canvas>
+<div id="status">▲ POINT AT QR BEACON</div>
+<div id="dir"></div>
+<div id="result-wrap"><canvas id="result-canvas" width="240" height="240"></canvas></div>
+<div id="result-code"></div>
+<a id="v1-link" href="shape-handshake.html">← v1</a>
+<button id="reset-btn" onclick="resetScan()">↺ SCAN AGAIN</button>
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script>
+'use strict';
+
+function djb2(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h)^s.charCodeAt(i);return(h>>>0).toString(16).toUpperCase().padStart(8,'0');}
+
+const video   = document.getElementById('cam-v');
+const ov      = document.getElementById('ov');
+const octx    = ov.getContext('2d');
+const statusEl = document.getElementById('status');
+const dirEl    = document.getElementById('dir');
+
+function resizeOv(){ ov.width=window.innerWidth; ov.height=window.innerHeight; }
+resizeOv(); window.addEventListener('resize', resizeOv);
+
+// ── Audio: stereo pan + pitch alignment guide ──
+// Pan = left/right offset from screen centre
+// Pitch: 220Hz (far) → 880Hz (centred)
+// When locked: ascending triad
+let audioCtx = null;
+let lastBeep = 0;
+
+function getAC() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function beep(freq, pan, dur, vol) {
+  try {
+    const ac = getAC();
+    const osc  = ac.createOscillator();
+    const pn   = ac.createStereoPanner();
+    const gain = ac.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    pn.pan.value = Math.max(-1, Math.min(1, pan));
+    gain.gain.setValueAtTime(vol, ac.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
+    osc.connect(pn).connect(gain).connect(ac.destination);
+    osc.start(); osc.stop(ac.currentTime + dur);
+  } catch(_){}
+}
+
+function alignmentBeep(offsetX, offsetY, qrW) {
+  const now = Date.now();
+  if (now - lastBeep < 180) return; // throttle
+  lastBeep = now;
+  const dist = Math.sqrt(offsetX*offsetX + offsetY*offsetY);
+  if (dist < 25) return; // centred — silent = success signal
+  const freq = 220 + Math.max(0, 1 - dist/150) * 660; // 220–880
+  const pan  = offsetX / (ov.width * 0.4);
+  const vol  = qrW > 40 ? 0.15 : 0.07;
+  beep(freq, pan, 0.09, vol);
+}
+
+function lockChime() {
+  [523.25, 659.25, 783.99].forEach((f,i) =>
+    setTimeout(() => beep(f, 0, 0.35, 0.3), i*110));
+}
+
+// ── Direction hint text ──
+function showDir(offsetX, offsetY, dist) {
+  if (dist < 35) { dirEl.classList.remove('show'); return; }
+  const absX=Math.abs(offsetX), absY=Math.abs(offsetY);
+  let arrow = '';
+  if (absX > absY) { arrow = offsetX < 0 ? '→' : '←'; }
+  else             { arrow = offsetY < 0 ? '↓' : '↑'; }
+  dirEl.textContent = arrow;
+  dirEl.classList.add('show');
+}
+
+// ── Shape drawing for result screen ──
+// Line-count colours: tri=3→blue, circle=1→red, square=4→green, compound=2→green
+const LINE_COUNTS = [3,1,4,2];
+const LINE_COLORS = ['#FF3333','#33FF66','#3399FF','#33FF66'];
+const TYPE_NAMES  = ['TRIANGLE','CIRCLE','SQUARE','COMPOUND'];
+
+function codeToShape(hex3) {
+  const n=parseInt(hex3,16), b=n.toString(2).padStart(12,'0');
+  return { type:parseInt(b.slice(0,2),2), size:0.3+parseInt(b.slice(2,4),2)*0.18 };
+}
+
+function drawResult(canvas, shape, code) {
+  const ctx = canvas.getContext('2d');
+  const S=canvas.width, cx=S/2, cy=S/2, r=S*0.36;
+  const col = LINE_COLORS[LINE_COUNTS[shape.type]-1];
+  ctx.clearRect(0,0,S,S);
+
+  // Fill faint
+  ctx.save();
+  ctx.fillStyle = col + '22';
+  ctx.strokeStyle = '#FFC72C';
+  ctx.shadowColor = '#FFC72C';
+  ctx.shadowBlur = 24;
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  if (shape.type===0){ ctx.moveTo(cx,cy-r); ctx.lineTo(cx-r*0.866,cy+r*0.5); ctx.lineTo(cx+r*0.866,cy+r*0.5); ctx.closePath(); }
+  else if (shape.type===1){ ctx.arc(cx,cy,r,0,Math.PI*2); }
+  else { const s=r*0.85; ctx.rect(cx-s,cy-s,s*2,s*2); }
+  ctx.fill(); ctx.stroke();
+  ctx.restore();
+
+  // Type label
+  ctx.fillStyle = col;
+  ctx.font = '8px Courier New';
+  ctx.letterSpacing = '0.2em';
+  ctx.textAlign = 'center';
+  ctx.fillText(TYPE_NAMES[shape.type] + ' · ' + code.toUpperCase(), cx, cy+r+22);
+}
+
+// ── Scan state ──
+const scanCv  = document.createElement('canvas');
+const scanCtx = scanCv.getContext('2d', {willReadFrequently:true});
+let locked=false, lockCode=null, lockStable=0;
+
+function resetScan() {
+  locked=false; lockCode=null; lockStable=0;
+  document.getElementById('result-wrap').classList.remove('show');
+  document.getElementById('result-code').classList.remove('show');
+  document.getElementById('reset-btn').style.display='none';
+  statusEl.textContent='▲ POINT AT QR BEACON';
+  dirEl.classList.remove('show');
+}
+
+// ── Main scan loop ──
+function scan() {
+  if (!video.videoWidth) { requestAnimationFrame(scan); return; }
+
+  const VW=video.videoWidth, VH=video.videoHeight;
+  scanCv.width=VW; scanCv.height=VH;
+  scanCtx.drawImage(video,0,0,VW,VH);
+  const imgData = scanCtx.getImageData(0,0,VW,VH);
+  const code = jsQR(imgData.data, VW, VH, {inversionAttempts:'dontInvert'});
+
+  const OW=ov.width, OH=ov.height;
+  octx.clearRect(0,0,OW,OH);
+
+  if (code && code.data.startsWith('SF:')) {
+    const parts = code.data.split(':');
+    const hex   = (parts[1]||'').toUpperCase().replace(/[^A-F0-9]/g,'').slice(0,3);
+    if (!hex || hex.length < 3) { requestAnimationFrame(scan); return; }
+
+    // Scale QR corners to overlay coords
+    const sx=OW/VW, sy=OH/VH;
+    const pts = [code.location.topLeftCorner, code.location.topRightCorner,
+                 code.location.bottomRightCorner, code.location.bottomLeftCorner]
+               .map(p=>({x:p.x*sx, y:p.y*sy}));
+
+    // Draw QR outline
+    octx.beginPath();
+    octx.moveTo(pts[0].x, pts[0].y);
+    pts.forEach(p=>octx.lineTo(p.x,p.y));
+    octx.closePath();
+    octx.strokeStyle = locked ? '#FFC72C' : 'rgba(255,199,44,0.55)';
+    octx.lineWidth   = locked ? 3 : 1.5;
+    octx.shadowColor = '#FFC72C';
+    octx.shadowBlur  = locked ? 12 : 6;
+    octx.stroke();
+
+    // Crosshair at QR centre
+    const qrCx = pts.reduce((s,p)=>s+p.x,0)/4;
+    const qrCy = pts.reduce((s,p)=>s+p.y,0)/4;
+    const qrW  = Math.hypot(pts[1].x-pts[0].x, pts[1].y-pts[0].y);
+    octx.beginPath();
+    octx.strokeStyle = 'rgba(255,199,44,0.3)'; octx.lineWidth=1; octx.shadowBlur=0;
+    octx.moveTo(qrCx-12,qrCy); octx.lineTo(qrCx+12,qrCy);
+    octx.moveTo(qrCx,qrCy-12); octx.lineTo(qrCx,qrCy+12);
+    octx.stroke();
+
+    if (!locked) {
+      const offX = qrCx-OW/2, offY = qrCy-OH/2;
+      const dist = Math.sqrt(offX*offX+offY*offY);
+      // Audio alignment
+      alignmentBeep(offX, offY, qrW);
+      // Direction arrow
+      showDir(offX, offY, dist);
+
+      if (hex===lockCode) { lockStable++; } else { lockCode=hex; lockStable=1; }
+
+      // Lock condition: stable + big enough + roughly centred
+      if (lockStable >= 8 && qrW > 35) {
+        locked = true;
+        dirEl.classList.remove('show');
+        lockChime();
+
+        const shape = codeToShape(hex);
+        statusEl.textContent = '▲ LOCKED · '+hex+' · '+TYPE_NAMES[shape.type];
+
+        // Draw result
+        const rc=document.getElementById('result-canvas');
+        drawResult(rc, shape, hex);
+        document.getElementById('result-wrap').classList.add('show');
+        document.getElementById('result-code').textContent = hex;
+        document.getElementById('result-code').classList.add('show');
+        document.getElementById('reset-btn').style.display='block';
+
+        // Store genome
+        localStorage.setItem('sf_genome_code', hex);
+
+        // POST to pair.php
+        const token = djb2(navigator.userAgent+hex+Date.now()).slice(0,8);
+        fetch('/soul/pair.php',{method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({th:token,lid:'qr_'+hex,did:djb2(navigator.userAgent),vis:hex,sc:hex})
+        }).catch(()=>{});
+      } else {
+        statusEl.textContent = lockStable > 2 ? '▲ HOLD STILL...' : '▲ SCANNING...';
+      }
+    }
+  } else {
+    lockStable=0;
+    if (!locked) {
+      statusEl.textContent='▲ POINT AT QR BEACON';
+      dirEl.classList.remove('show');
+    }
+  }
+
+  requestAnimationFrame(scan);
+}
+
+// ── Start camera ──
+(async()=>{
+  try {
+    // Try back camera (pointing at laptop screen)
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:{ideal:'environment'}, width:{ideal:1280}}, audio:false
+    });
+    video.srcObject = stream;
+    await video.play();
+    requestAnimationFrame(scan);
+  } catch(e) {
+    // Fallback to any camera
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({video:true,audio:false});
+      video.srcObject = stream;
+      await video.play();
+      requestAnimationFrame(scan);
+    } catch(e2) { statusEl.textContent='NO CAMERA'; }
+  }
+})();
+</script>
+</body>
+</html>

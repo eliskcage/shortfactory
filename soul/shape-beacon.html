@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>▲ SHAPE BEACON</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#05050d; min-height:100vh; overflow:hidden;
+  font-family:'Courier New',monospace;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+}
+#beacon-canvas { display:block; }
+#status {
+  position:fixed; top:16px; left:50%; transform:translateX(-50%);
+  font-size:8px; letter-spacing:0.3em; color:rgba(255,199,44,0.5);
+  white-space:nowrap;
+}
+#code-display {
+  position:fixed; bottom:16px; left:50%; transform:translateX(-50%);
+  font-size:11px; letter-spacing:0.4em; color:rgba(255,199,44,0.3);
+}
+#their-shape-wrap {
+  position:fixed; bottom:50px; right:16px;
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+}
+#their-canvas { border:1px solid rgba(255,199,44,0.1); }
+#their-lbl {
+  font-size:6px; letter-spacing:0.2em; color:rgba(255,199,44,0.25);
+}
+/* Flash overlay for beacon */
+#flash {
+  position:fixed; inset:0; background:#fff;
+  opacity:0; pointer-events:none;
+  transition:opacity 0.05s linear; z-index:10;
+}
+/* Laptop camera feed (reading phone) */
+#cam-wrap {
+  position:fixed; top:16px; right:16px;
+  width:80px; height:80px;
+  clip-path:polygon(50% 0%, 0% 100%, 100% 100%);
+  overflow:hidden;
+  border:none;
+}
+#cam-v { width:100%; height:100%; object-fit:cover; }
+#cam-status {
+  position:fixed; top:110px; right:16px;
+  font-size:6px; letter-spacing:0.15em;
+  color:rgba(255,199,44,0.3); text-align:center; width:80px;
+}
+/* Agreement panel */
+#agree-panel {
+  position:fixed; inset:0; background:rgba(0,0,0,0.9);
+  display:none; flex-direction:column; align-items:center; justify-content:center;
+  gap:14px; z-index:20;
+}
+#agree-panel.show { display:flex; }
+#agree-title { font-size:10px; letter-spacing:0.4em; color:#FFC72C; text-shadow:0 0 16px #FFC72C; }
+#agree-token { font-size:20px; letter-spacing:0.4em; color:#FFC72C; }
+#agree-sub { font-size:7px; letter-spacing:0.2em; color:rgba(255,199,44,0.4); }
+</style>
+</head>
+<body>
+
+<canvas id="beacon-canvas"></canvas>
+<div id="flash"></div>
+<div id="status">▲ BROADCASTING SHAPE</div>
+<a href="shape-qr-beacon.html" style="position:fixed;bottom:10px;right:10px;font-size:7px;letter-spacing:.2em;color:rgba(255,255,255,.12);text-decoration:none;">v2 →</a>
+<div id="code-display">—</div>
+
+<!-- Laptop camera reading phone -->
+<div id="cam-wrap"><video id="cam-v" autoplay playsinline muted></video></div>
+<div id="cam-status">READING PHONE</div>
+
+<!-- What we read from phone -->
+<div id="their-shape-wrap">
+  <canvas id="their-canvas" width="80" height="80"></canvas>
+  <div id="their-lbl">PHONE SHAPE</div>
+</div>
+
+<!-- Agreement panel -->
+<div id="agree-panel">
+  <div id="agree-title">▲ SHAPES AGREED</div>
+  <canvas id="agree-canvas" width="200" height="200"></canvas>
+  <div id="agree-token">—</div>
+  <div id="agree-sub">SHARED GENOME · SCREENSHOT TO KEEP</div>
+</div>
+
+<script>
+'use strict';
+
+function djb2(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h)^s.charCodeAt(i);return(h>>>0).toString(16).toUpperCase().padStart(8,'0');}
+
+// ── My visual code (laptop side) ──
+let myCode = sessionStorage.getItem('sf_laptop_code');
+if (!myCode) {
+  myCode = djb2(Date.now()+navigator.userAgent+Math.random()).slice(0,3);
+  sessionStorage.setItem('sf_laptop_code', myCode);
+}
+document.getElementById('code-display').textContent = '▲ ' + myCode;
+
+// Register with server
+fetch('/soul/visual.php', { method:'POST', headers:{'Content-Type':'application/json'},
+  body: JSON.stringify({ code: myCode, ts: Date.now() }) }).catch(()=>{});
+
+// ── Shape parameters from 12-bit code ──
+function codeToShape(hex3) {
+  const n = parseInt(hex3, 16);
+  const bits = n.toString(2).padStart(12,'0');
+  return {
+    type:     parseInt(bits.slice(0,2), 2),   // 0=tri 1=circle 2=square 3=compound
+    size:     0.3 + parseInt(bits.slice(2,4), 2) * 0.18, // 0.3–0.84
+    rotation: parseInt(bits.slice(4,7), 2) * 45,          // 0–315°
+    colorIdx: parseInt(bits.slice(7,9), 2),                // 0–3
+    variant:  parseInt(bits.slice(9,12), 2),               // 0–7
+  };
+}
+
+const COLORS = ['#FFC72C','#ffffff','#50C8FF','#FF6464'];
+let myShape = codeToShape(myCode);
+
+// ── Clip-path by shape type ──
+const CLIP_PATHS = [
+  'polygon(50% 0%, 0% 100%, 100% 100%)',   // 0 triangle
+  'ellipse(50% 50% at 50% 50%)',             // 1 circle
+  'polygon(0 0, 100% 0, 100% 100%, 0 100%)',// 2 square
+  'ellipse(50% 50% at 50% 50%)',             // 3 compound
+];
+function updateCamClipPath(type) {
+  document.getElementById('cam-wrap').style.clipPath = CLIP_PATHS[type] || CLIP_PATHS[0];
+}
+updateCamClipPath(myShape.type); // init from random code
+
+// ── Poll server for last phone-confirmed shape ──
+let lastShapeAt = 0;
+setInterval(async () => {
+  try {
+    const r = await fetch('/soul/data/last_shape.json?_=' + Date.now());
+    if (!r.ok) return;
+    const d = await r.json();
+    if (!d.sc || d.at <= lastShapeAt) return;
+    lastShapeAt = d.at;
+    // Override beacon shape with phone-confirmed genome (gold)
+    const confirmed = codeToShape(d.sc);
+    confirmed.colorIdx = 0; // gold
+    myShape = confirmed;
+    updateCamClipPath(myShape.type);
+    const typeName = ['TRIANGLE','CIRCLE','SQUARE','COMPOUND'][myShape.type] || '?';
+    document.getElementById('status').textContent = '▲ PHONE SHAPE: ' + typeName + ' · ' + d.sc.toUpperCase();
+    document.getElementById('cam-status').textContent = 'SHAPE: ' + d.sc.toUpperCase();
+  } catch(_) {}
+}, 3000);
+
+// ── Draw shape on canvas ──
+// solid=true: filled high-contrast version for camera readability
+function drawShape(ctx, shape, S, bright, solid) {
+  const col = COLORS[shape.colorIdx];
+  const cx = S/2, cy = S/2, r = S * shape.size * 0.45;
+  const alpha = bright ? 1.0 : 0.15;
+  ctx.clearRect(0,0,S,S);
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(shape.rotation * Math.PI / 180);
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = col;
+  ctx.fillStyle   = col;
+  ctx.shadowColor = col;
+  ctx.shadowBlur  = bright ? (solid ? 40 : 24) : 4;
+  ctx.lineWidth   = solid ? Math.max(6, S*0.04) : (bright ? 3 : 1.5);
+
+  if (shape.type === 0) {
+    ctx.beginPath();
+    ctx.moveTo(0, -r); ctx.lineTo(-r*0.866, r*0.5); ctx.lineTo(r*0.866, r*0.5);
+    ctx.closePath();
+    if (solid) { ctx.fill(); } else { ctx.stroke(); }
+    if (!solid) {
+      for (let i=1; i<3+shape.variant%3; i++) {
+        const sc = 1 - i*0.25;
+        ctx.beginPath(); ctx.globalAlpha = alpha*(1-i*0.25);
+        ctx.moveTo(0,-r*sc); ctx.lineTo(-r*0.866*sc,r*0.5*sc); ctx.lineTo(r*0.866*sc,r*0.5*sc);
+        ctx.closePath(); ctx.stroke();
+      }
+    }
+  } else if (shape.type === 1) {
+    ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2);
+    if (solid) { ctx.fill(); } else { ctx.stroke(); ctx.globalAlpha=alpha*0.5; ctx.beginPath(); ctx.arc(0,0,r*0.65,0,Math.PI*2); ctx.stroke(); }
+  } else if (shape.type === 2) {
+    if (solid) { ctx.fillRect(-r*0.75,-r*0.75,r*1.5,r*1.5); }
+    else { ctx.strokeRect(-r*0.75,-r*0.75,r*1.5,r*1.5); ctx.globalAlpha=alpha*0.5; ctx.strokeRect(-r*0.45,-r*0.45,r*0.9,r*0.9); }
+  } else {
+    ctx.beginPath(); ctx.arc(0,0,r*0.4,0,Math.PI*2);
+    if (solid) { ctx.fill(); }
+    ctx.globalAlpha=alpha*0.8;
+    ctx.beginPath(); ctx.moveTo(0,-r); ctx.lineTo(-r*0.866,r*0.5); ctx.lineTo(r*0.866,r*0.5); ctx.closePath();
+    if (solid) ctx.fill(); else ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// ── Resize beacon canvas to fill window ──
+const bCanvas = document.getElementById('beacon-canvas');
+function resize() {
+  bCanvas.width  = window.innerWidth;
+  bCanvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+const bCtx = bCanvas.getContext('2d');
+
+let beaconBright = false;
+let goldMode = false, goldPulse = 0, goldRings = [], agreedShapes = null;
+
+function renderBeacon() {
+  const W = bCanvas.width, H = bCanvas.height, S = Math.min(W, H) * 0.8;
+
+  if (!goldMode) {
+    bCtx.fillStyle = '#000000';
+    bCtx.fillRect(0,0,W,H);
+    drawShape(bCtx, myShape, S, true, true); // solid fill for camera visibility
+    myShape.rotation = (myShape.rotation + 0.15) % 360;
+  } else {
+    // Gold mode — shape solved
+    goldPulse = (goldPulse + 0.04) % (Math.PI * 2);
+    const glow = 0.7 + 0.3 * Math.sin(goldPulse);
+
+    // Deep gold background
+    bCtx.fillStyle = '#040300';
+    bCtx.fillRect(0,0,W,H);
+
+    // Radial gold wash
+    const grad = bCtx.createRadialGradient(W/2,H/2,0,W/2,H/2,S*0.7);
+    grad.addColorStop(0, `rgba(255,199,44,${0.08*glow})`);
+    grad.addColorStop(1, 'rgba(255,199,44,0)');
+    bCtx.fillStyle = grad;
+    bCtx.fillRect(0,0,W,H);
+
+    // Expanding rings
+    goldRings = goldRings.map(r => ({...r, radius: r.radius+2.5, alpha: r.alpha-0.012}))
+                         .filter(r => r.alpha > 0);
+    if (Math.random() < 0.04) goldRings.push({radius: S*0.3, alpha: 0.5});
+    goldRings.forEach(r => {
+      bCtx.beginPath();
+      bCtx.arc(W/2, H/2, r.radius, 0, Math.PI*2);
+      bCtx.strokeStyle = `rgba(255,199,44,${r.alpha})`;
+      bCtx.lineWidth = 1.5;
+      bCtx.stroke();
+    });
+
+    // Draw both shapes merged, blazing gold
+    if (agreedShapes) {
+      const tmp1 = {...agreedShapes.s1, colorIdx:0, rotation:(agreedShapes.s1.rotation+goldPulse*15)%360};
+      const tmp2 = {...agreedShapes.s2, colorIdx:0, size:agreedShapes.s2.size*0.7, rotation:(agreedShapes.s2.rotation+90+goldPulse*-10)%360};
+      bCtx.save();
+      bCtx.translate(W/2-S/2, H/2-S/2);
+      drawShape(bCtx, tmp1, S, true, false);
+      bCtx.globalAlpha = 0.55 * glow;
+      drawShape(bCtx, tmp2, S, true, false);
+      bCtx.globalAlpha = 1;
+      bCtx.restore();
+    }
+
+    myShape.rotation = (myShape.rotation + 0.4) % 360;
+  }
+
+  requestAnimationFrame(renderBeacon);
+}
+renderBeacon();
+
+// ── Beacon flash protocol (same as soul-detector) ──
+const bits12 = parseInt(myCode,16).toString(2).padStart(12,'0').split('').map(Number);
+const flash  = document.getElementById('flash');
+
+function setFlash(on) {
+  if (goldMode) { beaconBright = false; flash.style.opacity = '0'; return; }
+  beaconBright = on;
+  flash.style.opacity = on ? '0.40' : '0';
+}
+
+function cycle() {
+  let t = 0;
+  for (let i=0;i<3;i++) { setTimeout(()=>setFlash(true),t+i*240); setTimeout(()=>setFlash(false),t+i*240+120); }
+  t += 3*240+100;
+  bits12.forEach((b,i) => setTimeout(()=>setFlash(b===1), t+i*400));
+  t += 12*400+60;
+  setTimeout(()=>setFlash(false), t); t += 600;
+  setTimeout(cycle, t);
+}
+setTimeout(cycle, 1500);
+
+// ── Start laptop camera to read phone ──
+let theirCode = null;
+(async function startCam() {
+  try {
+    const s = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'user' }, audio:false });
+    document.getElementById('cam-v').srcObject = s;
+    await document.getElementById('cam-v').play();
+    startReading();
+    document.getElementById('cam-status').textContent = 'SCANNING PHONE';
+  } catch(e) {
+    document.getElementById('cam-status').textContent = 'NO CAMERA';
+  }
+})();
+
+// ── Read phone shape from laptop camera ──
+const rCanvas = document.createElement('canvas'); rCanvas.width=80; rCanvas.height=80;
+const rCtx = rCanvas.getContext('2d',{willReadFrequently:true});
+const HISTORY=80, bright2=new Array(HISTORY).fill(0);
+let bIdx2=0, bMean2=0, syncSpikes2=[], phase2='WATCH', bitsRead2=[], bitStart2=0, bitSamples2=[], bitIdx2=0;
+const BIT_MS=400, SAMPLE_MS=50;
+
+function startReading() { setInterval(sample, SAMPLE_MS); }
+
+function sample() {
+  const v = document.getElementById('cam-v');
+  if (!v.videoWidth) return;
+  rCtx.drawImage(v,0,0,v.videoWidth,v.videoHeight,0,0,80,80);
+  const d = rCtx.getImageData(0,0,80,80).data;
+  let luma=0;
+  for(let i=0;i<d.length;i+=4) luma+=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2];
+  luma/=(80*80);
+  bright2[bIdx2%HISTORY]=luma; bIdx2++;
+  const w=Math.min(bIdx2,40); let s=0;
+  for(let i=0;i<w;i++) s+=bright2[(bIdx2-1-i+HISTORY)%HISTORY];
+  bMean2=s/w;
+  const delta=(luma-bMean2)/(bMean2+1);
+  const spike=delta>0.04;
+  const now=Date.now();
+
+  if (phase2==='WATCH') {
+    if (spike) {
+      const gap2 = syncSpikes2.length ? now-syncSpikes2[syncSpikes2.length-1] : 0;
+      if (!syncSpikes2.length) { syncSpikes2.push(now); }
+      else if (gap2 > 400) { syncSpikes2=[now]; }
+      else if (gap2 >= 150) { syncSpikes2.push(now); }
+    }
+    syncSpikes2=syncSpikes2.filter(t=>now-t<1200);
+    if (syncSpikes2.length>=3) { syncSpikes2=[]; phase2='READING'; bitsRead2=[]; bitIdx2=0; bitStart2=now; bitSamples2=[]; document.getElementById('cam-status').textContent='READING...'; }
+  } else if (phase2==='READING') {
+    const elapsed=now-bitStart2, thisIdx=Math.floor(elapsed/BIT_MS);
+    if (thisIdx>bitIdx2) {
+      if (bitSamples2.length) { const avg=bitSamples2.reduce((a,b)=>a+b,0)/bitSamples2.length; bitsRead2.push(avg>bMean2*1.02?1:0); }
+      bitSamples2=[]; bitIdx2=thisIdx;
+    }
+    bitSamples2.push(luma);
+    if (bitsRead2.length>=12) commitReading2();
+  }
+}
+
+function commitReading2() {
+  phase2='DONE';
+  const hex=parseInt(bitsRead2.slice(0,12).join(''),2).toString(16).toUpperCase().padStart(3,'0');
+  theirCode=hex;
+  const shape=codeToShape(hex);
+  const tc=document.getElementById('their-canvas');
+  const ttx=tc.getContext('2d');
+  drawShape(ttx, shape, 80, true);
+  document.getElementById('cam-status').textContent='READ: '+hex;
+  document.getElementById('status').textContent='▲ PHONE SHAPE READ · AGREEING...';
+  // Both sides now have each other's code → shared token
+  if (window._phoneConfirmed) agreeShapes();
+}
+
+// Phone can POST its code to confirm
+function agreeShapes() {
+  // Match phone token order: djb2(phoneCode + laptopCode) = djb2(theirCode + myCode)
+  const shared = djb2(theirCode + myCode);
+  const s1 = codeToShape(myCode), s2 = codeToShape(theirCode);
+
+  // ── Go golden ──
+  goldMode = true;
+  agreedShapes = {s1, s2};
+  setFlash(false); // stop flashing
+
+  const panel = document.getElementById('agree-panel');
+  document.getElementById('agree-token').textContent = shared;
+  const ac = document.getElementById('agree-canvas');
+  const ax = ac.getContext('2d');
+  drawShape(ax,{...s1,size:0.5,colorIdx:0},200,true);
+  ax.globalAlpha=0.5;
+  drawShape(ax,{...s2,size:0.35,rotation:s2.rotation+90,colorIdx:0},200,true);
+  ax.globalAlpha=1;
+  panel.classList.add('show');
+
+  fetch('/soul/pair.php',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({th:shared,lid:'apex',did:'laptop',vis:theirCode+'_'+myCode})}).catch(()=>{});
+}
+
+// Poll for phone confirmation
+setInterval(async ()=>{
+  if (theirCode && !window._phoneConfirmed) {
+    try {
+      const r = await fetch('/soul/visual.php?_='+Date.now());
+      const d = await r.json();
+      if (d.codes && d.codes.includes(theirCode.toLowerCase())) {
+        window._phoneConfirmed=true;
+        if (theirCode) agreeShapes();
+      }
+    } catch(_){}
+  }
+}, 2000);
+</script>
+</body>
+</html>

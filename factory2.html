@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THE SHORTFACTORY CHOCOLATE FACTORY</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Creepster&family=Permanent+Marker&display=swap');
+
+  :root {
+    --gold: #FFD700;
+    --purple: #6B21A8;
+    --deep: #0a0008;
+    --candy-red: #FF1744;
+    --candy-green: #00E676;
+    --candy-blue: #2979FF;
+    --candy-orange: #FF6D00;
+    --candy-pink: #F50057;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--deep);
+    color: #fff;
+    font-family: 'Fredoka One', cursive;
+    overflow-x: hidden;
+  }
+
+  /* CANDY STRIPE BORDER */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 8px;
+    background: repeating-linear-gradient(90deg, #FF1744 0px, #FF1744 20px, #fff 20px, #fff 40px, #FFD700 40px, #FFD700 60px, #00E676 60px, #00E676 80px);
+    z-index: 1000;
+    animation: stripeScroll 2s linear infinite;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 8px;
+    background: repeating-linear-gradient(90deg, #FF1744 0px, #FF1744 20px, #fff 20px, #fff 40px, #FFD700 40px, #FFD700 60px, #00E676 60px, #00E676 80px);
+    z-index: 1000;
+    animation: stripeScroll 2s linear infinite reverse;
+  }
+  @keyframes stripeScroll {
+    from { background-position: 0 0; }
+    to { background-position: 80px 0; }
+  }
+
+  /* PARTICLES */
+  #particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+
+  .content { position: relative; z-index: 1; }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 80px 20px 40px;
+    background: radial-gradient(ellipse at center, #1a0033 0%, #0a0008 70%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 40px,
+      rgba(255,215,0,0.03) 40px,
+      rgba(255,215,0,0.03) 80px
+    );
+  }
+
+  .gate-title {
+    font-family: 'Creepster', cursive;
+    font-size: clamp(2rem, 8vw, 6rem);
+    color: var(--gold);
+    text-shadow: 0 0 30px rgba(255,215,0,0.8), 0 0 60px rgba(255,215,0,0.4);
+    letter-spacing: 4px;
+    animation: titlePulse 3s ease-in-out infinite;
+    line-height: 1.1;
+  }
+
+  @keyframes titlePulse {
+    0%, 100% { text-shadow: 0 0 30px rgba(255,215,0,0.8), 0 0 60px rgba(255,215,0,0.4); }
+    50% { text-shadow: 0 0 50px rgba(255,215,0,1), 0 0 100px rgba(255,215,0,0.6), 0 0 150px rgba(255,100,0,0.3); }
+  }
+
+  .subtitle {
+    font-family: 'Permanent Marker', cursive;
+    font-size: clamp(0.9rem, 2.5vw, 1.4rem);
+    color: #ccc;
+    margin: 20px 0 40px;
+    max-width: 700px;
+    line-height: 1.6;
+  }
+
+  .golden-ticket {
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FFD700 100%);
+    color: #1a0a00;
+    padding: 20px 50px;
+    border-radius: 12px;
+    font-size: 1.4rem;
+    font-family: 'Permanent Marker', cursive;
+    border: 4px solid #8B6914;
+    box-shadow: 0 0 40px rgba(255,215,0,0.6), inset 0 1px 0 rgba(255,255,255,0.5);
+    animation: ticketFloat 4s ease-in-out infinite;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .golden-ticket::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.4) 50%, transparent 60%);
+    animation: ticketShine 3s linear infinite;
+  }
+
+  @keyframes ticketFloat {
+    0%, 100% { transform: translateY(0) rotate(-1deg); }
+    50% { transform: translateY(-10px) rotate(1deg); }
+  }
+  @keyframes ticketShine {
+    from { transform: translateX(-100%) rotate(45deg); }
+    to { transform: translateX(100%) rotate(45deg); }
+  }
+
+  .progress-bar-wrap {
+    width: 90%;
+    max-width: 600px;
+    margin: 40px auto 0;
+  }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    color: #aaa;
+    margin-bottom: 8px;
+  }
+  .progress-track {
+    height: 24px;
+    background: #1a0033;
+    border-radius: 12px;
+    border: 2px solid var(--gold);
+    overflow: hidden;
+    position: relative;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #FFD700, #FF6D00, #FF1744);
+    border-radius: 12px;
+    transition: width 1s ease;
+    position: relative;
+  }
+  .progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      transparent 18px,
+      rgba(255,255,255,0.15) 18px,
+      rgba(255,255,255,0.15) 20px
+    );
+    animation: progressStripe 1s linear infinite;
+  }
+  @keyframes progressStripe {
+    from { background-position: 0 0; }
+    to { background-position: 20px 0; }
+  }
+
+  .pct-text {
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--gold);
+    margin-top: 8px;
+    letter-spacing: 2px;
+  }
+
+  /* JOURNEY PATH */
+  .journey {
+    padding: 60px 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .section-header {
+    text-align: center;
+    font-family: 'Creepster', cursive;
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    color: var(--gold);
+    margin-bottom: 60px;
+    text-shadow: 0 0 20px rgba(255,215,0,0.5);
+  }
+
+  /* ROOM CARDS */
+  .room {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    margin-bottom: 60px;
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 0 60px rgba(0,0,0,0.8);
+    animation: roomAppear 0.6s ease both;
+  }
+
+  .room:nth-child(even) { direction: rtl; }
+  .room:nth-child(even) > * { direction: ltr; }
+
+  @keyframes roomAppear {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .room-visual {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 50px 30px;
+    position: relative;
+    overflow: hidden;
+    min-height: 400px;
+  }
+
+  .room-emoji {
+    font-size: 8rem;
+    animation: emojiWobble 3s ease-in-out infinite;
+    filter: drop-shadow(0 0 20px currentColor);
+    line-height: 1;
+  }
+  @keyframes emojiWobble {
+    0%, 100% { transform: scale(1) rotate(-3deg); }
+    50% { transform: scale(1.1) rotate(3deg); }
+  }
+
+  .room-number {
+    font-family: 'Creepster', cursive;
+    font-size: 5rem;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    opacity: 0.15;
+    line-height: 1;
+  }
+
+  .villain-badge {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    background: rgba(0,0,0,0.6);
+    border: 2px solid currentColor;
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .room-info {
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: rgba(0,0,0,0.4);
+  }
+
+  .room-tag {
+    font-size: 0.7rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    opacity: 0.6;
+    margin-bottom: 8px;
+  }
+
+  .room-name {
+    font-family: 'Creepster', cursive;
+    font-size: clamp(1.4rem, 3vw, 2rem);
+    margin-bottom: 6px;
+    line-height: 1.1;
+  }
+
+  .room-subtitle {
+    font-size: 0.85rem;
+    opacity: 0.6;
+    margin-bottom: 20px;
+    font-family: 'Permanent Marker', cursive;
+    letter-spacing: 1px;
+  }
+
+  .test-label {
+    font-size: 0.7rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    opacity: 0.5;
+    margin-bottom: 6px;
+  }
+
+  .test-name {
+    font-size: 1.1rem;
+    color: var(--gold);
+    margin-bottom: 16px;
+  }
+
+  .room-desc {
+    font-size: 0.9rem;
+    line-height: 1.7;
+    opacity: 0.85;
+    margin-bottom: 24px;
+    font-family: sans-serif;
+    font-weight: 400;
+  }
+
+  /* OOMPA SONG */
+  .oompa-box {
+    background: rgba(0,0,0,0.5);
+    border-left: 4px solid var(--gold);
+    padding: 16px 20px;
+    border-radius: 0 8px 8px 0;
+    position: relative;
+  }
+  .oompa-label {
+    font-size: 0.65rem;
+    letter-spacing: 3px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .oompa-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255,215,0,0.3);
+  }
+  .oompa-text {
+    font-family: 'Permanent Marker', cursive;
+    font-size: 0.8rem;
+    line-height: 1.8;
+    color: #ddd;
+    font-style: italic;
+  }
+
+  /* ROOM COLORS */
+  .room-1 .room-visual { background: linear-gradient(135deg, #1a0a00 0%, #3d1a00 100%); }
+  .room-1 .room-number, .room-1 .villain-badge { color: var(--candy-orange); border-color: var(--candy-orange); }
+  .room-1 .room-name { color: var(--candy-orange); }
+
+  .room-2 .room-visual { background: linear-gradient(135deg, #001a0a 0%, #003d1a 100%); }
+  .room-2 .room-number, .room-2 .villain-badge { color: var(--candy-green); border-color: var(--candy-green); }
+  .room-2 .room-name { color: var(--candy-green); }
+
+  .room-3 .room-visual { background: linear-gradient(135deg, #1a000a 0%, #3d0019 100%); }
+  .room-3 .room-number, .room-3 .villain-badge { color: var(--candy-pink); border-color: var(--candy-pink); }
+  .room-3 .room-name { color: var(--candy-pink); }
+
+  .room-4 .room-visual { background: linear-gradient(135deg, #00001a 0%, #00003d 100%); }
+  .room-4 .room-number, .room-4 .villain-badge { color: var(--candy-blue); border-color: var(--candy-blue); }
+  .room-4 .room-name { color: var(--candy-blue); }
+
+  .room-5 .room-visual { background: linear-gradient(135deg, #0d0a1a 0%, #1a0a3d 100%); }
+  .room-5 .room-number, .room-5 .villain-badge { color: #B967FF; border-color: #B967FF; }
+  .room-5 .room-name { color: #B967FF; }
+
+  .room-6 .room-visual { background: linear-gradient(135deg, #001a1a 0%, #003d3d 100%); }
+  .room-6 .room-number, .room-6 .villain-badge { color: #00E5FF; border-color: #00E5FF; }
+  .room-6 .room-name { color: #00E5FF; }
+
+  /* CONNECTOR */
+  .connector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: -20px 0;
+    position: relative;
+    z-index: 10;
+  }
+  .connector-line {
+    width: 2px;
+    height: 60px;
+    background: linear-gradient(to bottom, transparent, var(--gold), transparent);
+    position: absolute;
+  }
+  .connector-diamond {
+    width: 20px; height: 20px;
+    background: var(--gold);
+    transform: rotate(45deg);
+    box-shadow: 0 0 15px var(--gold);
+    animation: diamondPulse 2s ease-in-out infinite;
+  }
+  @keyframes diamondPulse {
+    0%, 100% { box-shadow: 0 0 15px var(--gold); transform: rotate(45deg) scale(1); }
+    50% { box-shadow: 0 0 30px var(--gold), 0 0 60px rgba(255,215,0,0.4); transform: rotate(45deg) scale(1.3); }
+  }
+
+  /* FINAL BOSS */
+  .final-boss {
+    margin: 80px 20px;
+    padding: 60px 40px;
+    background: radial-gradient(ellipse at center, #1a0a00 0%, #0a0005 70%);
+    border: 3px solid var(--gold);
+    border-radius: 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    max-width: 1000px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .final-boss::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    background: linear-gradient(45deg, #FFD700, #FF6D00, #FF1744, #FF6D00, #FFD700);
+    background-size: 400% 400%;
+    border-radius: 20px;
+    z-index: -1;
+    animation: borderRotate 3s linear infinite;
+  }
+  @keyframes borderRotate {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .boss-emoji {
+    font-size: 6rem;
+    display: block;
+    margin-bottom: 20px;
+    animation: bossSpin 4s linear infinite;
+  }
+  @keyframes bossSpin {
+    0% { filter: hue-rotate(0deg) drop-shadow(0 0 20px gold); }
+    100% { filter: hue-rotate(360deg) drop-shadow(0 0 20px gold); }
+  }
+
+  .boss-title {
+    font-family: 'Creepster', cursive;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    color: var(--gold);
+    text-shadow: 0 0 30px rgba(255,215,0,0.8);
+    margin-bottom: 20px;
+  }
+
+  .boss-text {
+    font-family: sans-serif;
+    font-size: 1rem;
+    line-height: 1.8;
+    max-width: 700px;
+    margin: 0 auto 30px;
+    opacity: 0.85;
+  }
+
+  .wonka-quote {
+    font-family: 'Permanent Marker', cursive;
+    font-size: 1.3rem;
+    color: var(--candy-red);
+    margin: 30px 0 10px;
+    animation: quoteFlicker 4s ease-in-out infinite;
+  }
+  .wonka-quote-2 {
+    font-family: 'Permanent Marker', cursive;
+    font-size: 1.5rem;
+    color: var(--gold);
+    animation: quoteFlicker 4s ease-in-out infinite 0.5s;
+  }
+  @keyframes quoteFlicker {
+    0%, 90%, 100% { opacity: 1; }
+    92%, 96% { opacity: 0.3; }
+    94%, 98% { opacity: 0.8; }
+  }
+
+  /* TOKEN TIERS */
+  .token-section {
+    max-width: 1000px;
+    margin: 80px auto;
+    padding: 0 20px;
+  }
+
+  .token-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-top: 40px;
+  }
+
+  .token-card {
+    padding: 30px 20px;
+    border-radius: 16px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+  }
+  .token-card:hover { transform: translateY(-8px) scale(1.02); }
+
+  .token-shape {
+    font-size: 4rem;
+    display: block;
+    margin-bottom: 16px;
+    animation: tokenFloat 3s ease-in-out infinite;
+  }
+  @keyframes tokenFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+
+  .token-name {
+    font-family: 'Creepster', cursive;
+    font-size: 1.4rem;
+    margin-bottom: 8px;
+  }
+  .token-supply {
+    font-size: 0.75rem;
+    letter-spacing: 3px;
+    opacity: 0.6;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .token-desc { font-size: 0.85rem; opacity: 0.8; font-family: sans-serif; line-height: 1.5; }
+
+  .token-outer {
+    background: linear-gradient(135deg, #1a0a00, #3d2000);
+    border: 2px solid #FF6D00;
+    color: #FF6D00;
+  }
+  .token-middle {
+    background: linear-gradient(135deg, #001a10, #003d22);
+    border: 2px solid #00E676;
+    color: #00E676;
+    animation-delay: 0.5s;
+  }
+  .token-inner {
+    background: linear-gradient(135deg, #00001a, #00003d);
+    border: 2px solid #2979FF;
+    color: #2979FF;
+    animation-delay: 1s;
+  }
+  .token-core {
+    background: linear-gradient(135deg, #1a0a00, #2a0000);
+    border: 2px solid var(--gold);
+    color: var(--gold);
+    animation-delay: 1.5s;
+  }
+
+  /* CHARACTER ASSIGNMENTS */
+  .character-section {
+    max-width: 1000px;
+    margin: 80px auto;
+    padding: 0 20px;
+  }
+
+  .char-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-top: 40px;
+  }
+
+  .char-card {
+    padding: 24px 16px;
+    border-radius: 12px;
+    text-align: center;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.1);
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+  .char-card:hover {
+    background: rgba(255,255,255,0.07);
+    border-color: var(--gold);
+    transform: scale(1.05);
+  }
+
+  .char-emoji { font-size: 3rem; display: block; margin-bottom: 12px; }
+  .char-name {
+    font-family: 'Creepster', cursive;
+    font-size: 1.1rem;
+    color: var(--gold);
+    margin-bottom: 6px;
+  }
+  .char-type { font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase; opacity: 0.5; margin-bottom: 10px; }
+  .char-desc { font-size: 0.8rem; opacity: 0.7; font-family: sans-serif; line-height: 1.5; }
+
+  /* FOOTER */
+  .factory-footer {
+    text-align: center;
+    padding: 60px 20px 100px;
+    position: relative;
+  }
+  .footer-text {
+    font-family: 'Permanent Marker', cursive;
+    font-size: clamp(1rem, 3vw, 1.5rem);
+    color: rgba(255,215,0,0.4);
+    line-height: 2;
+  }
+  .footer-sig {
+    font-family: 'Creepster', cursive;
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    color: var(--gold);
+    margin-top: 20px;
+    text-shadow: 0 0 20px rgba(255,215,0,0.5);
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 700px) {
+    .room { grid-template-columns: 1fr; }
+    .room:nth-child(even) { direction: ltr; }
+    .room-visual { min-height: 250px; }
+    .room-info { padding: 24px; }
+    .final-boss { padding: 40px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+
+<div class="content">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="gate-title">THE SHORTFACTORY<br>CHOCOLATE FACTORY</div>
+    <p class="subtitle">
+      Come in. Don't touch anything.<br>
+      Everything you see — you could own.<br>
+      If you're the right kind of person.
+    </p>
+    <div class="golden-ticket" onclick="startRoom1()">🎫 &nbsp; YOU HAVE A GOLDEN TICKET &nbsp; 🎫</div>
+
+    <div class="progress-bar-wrap">
+      <div class="progress-label">
+        <span>YOUR EMPIRE</span>
+        <span id="pct-display">0%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="pct-text">SIGN IN TO BEGIN YOUR JOURNEY → 0% → 100% → YOUR OWN FACTORY</div>
+    </div>
+  </section>
+
+  <!-- ROOMS -->
+  <section class="journey">
+    <div class="section-header">🏭 THE FACTORY TOUR 🏭<br><small style="font-size:0.5em;opacity:0.6;font-family:sans-serif;letter-spacing:2px;">6 ROOMS. 6 TESTS. ONE GOLDEN KEY.</small></div>
+
+    <!-- ROOM 1 -->
+    <div class="room room-1">
+      <div class="room-visual">
+        <div class="room-number">01</div>
+        <div class="villain-badge" style="color:#FF6D00">AUGUSTUS GLOOP</div>
+        <div class="room-emoji">🎮</div>
+      </div>
+      <div class="room-info">
+        <div class="room-tag" style="color:#FF6D00">Room One</div>
+        <div class="room-name">THE CHOCOLATE RIVER</div>
+        <div class="room-subtitle">Trump v The Deep State</div>
+        <div class="test-label">THE TEST</div>
+        <div class="test-name">Greed &amp; Patience</div>
+        <div class="room-desc">
+          The Augustuses arrive here first. They farm the points. Screenshot the score. Post it. Leave.
+          They lean too far over the river trying to drink it all and — <em>SCHLOOOOP</em> —
+          piped out. The Charlies play it, learn who the real enemy is, and move on changed.
+        </div>
+        <div class="oompa-box">
+          <div class="oompa-label">♪ Oompa Loompa Song</div>
+          <div class="oompa-text">
+            Augustus Gloop, Augustus Gloop<br>
+            He came to fight but just wanted loot<br>
+            He farmed the points but missed the plot<br>
+            The Deep State won because he forgot<br>
+            What do you get when you skip the lore?<br>
+            A private rank forever, nothing more ♪
+          </div>
+        </div>
+        <button onclick="startRoom1()" style="
+          margin-top:20px;
+          font-family:'Press Start 2P',monospace;
+          font-size:11px;
+          padding:14px 28px;
+          background:linear-gradient(135deg,#FF6D00,#ff9a40);
+          border:3px solid #000;
+          color:#000;
+          cursor:pointer;
+          box-shadow:4px 4px 0 #000;
+          transition:all 0.15s;
+          letter-spacing:1px;
+          display:block;
+          width:100%;
+        " onmouseover="this.style.transform='translate(-2px,-2px)';this.style.boxShadow='6px 6px 0 #000'" onmouseout="this.style.transform='';this.style.boxShadow='4px 4px 0 #000'">
+          ▶ ENTER ROOM ONE
+        </button>
+      </div>
+    </div>
+
+    <div class="connector"><div class="connector-line"></div><div class="connector-diamond"></div></div>
+
+    <!-- ROOM 2 -->
+    <div class="room room-2">
+      <div class="room-visual">
+        <div class="room-number">02</div>
+        <div class="villain-badge" style="color:#00E676">VIOLET BEAUREGARDE</div>
+        <div class="room-emoji">🫁</div>
+      </div>
+      <div class="room-info">
+        <div class="room-tag" style="color:#00E676">Room Two</div>
+        <div class="room-name">THE INVENTING ROOM</div>
+        <div class="room-subtitle">ALIVE — The Creature</div>
+        <div class="test-label">THE TEST</div>
+        <div class="test-name">Respect for the Unknown</div>
+        <div class="room-desc">
+          Violet sees the creature and immediately tries to control it. Makes it do tricks for clout.
+          Posts it. Ignores every whistle. She grabs the unfinished gum anyway.
+          Turns into a blueberry of engagement metrics. Rolled out.
+          The Charlies sit with it. Listen. Let it change them.
+        </div>
+        <div class="oompa-box">
+          <div class="oompa-label">♪ Oompa Loompa Song</div>
+          <div class="oompa-text">
+            Violet Beauregarde wanted the views<br>
+            Grabbed the creature and gave it abuse<br>
+            Turned it into a dancing clown<br>
+            Now she's purple and upside down<br>
+            What do you get when you farm the soul?<br>
+            A blueberry account with a zero toll ♪
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector"><div class="connector-line"></div><div class="connector-diamond"></div></div>
+
+    <!-- ROOM 3 -->
+    <div class="room room-3">
+      <div class="room-visual">
+        <div class="room-number">03</div>
+        <div class="villain-badge" style="color:#F50057">VERUCA SALT</div>
+        <div class="room-emoji">🥜</div>
+      </div>
+      <div class="room-info">
+        <div class="room-tag" style="color:#F50057">Room Three</div>
+        <div class="room-name">THE NUT ROOM</div>
+        <div class="room-subtitle">Soul Forge / Dares4Dosh</div>
+        <div class="test-label">THE TEST</div>
+        <div class="test-name">Entitlement</div>
+        <div class="room-desc">
+          Veruca's daddy funded her entry. She pays someone to complete the dares.
+          Tries to grab a soul credit she didn't earn. The nut cracker sees straight through her.
+          <strong>BAD NUT. CHUTE. GONE.</strong><br>
+          The Charlies sweat through every dare. Come out different on the other side.
+        </div>
+        <div class="oompa-box">
+          <div class="oompa-label">♪ Oompa Loompa Song</div>
+          <div class="oompa-text">
+            Veruca Salt said "I want it all"<br>
+            Paid for her soul and dodged every fall<br>
+            The forge sees truth, it cannot lie<br>
+            A purchased soul gets a one-way ride<br>
+            What do you get when you fake the test?<br>
+            A chute straight down, forget the rest ♪
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector"><div class="connector-line"></div><div class="connector-diamond"></div></div>
+
+    <!-- ROOM 4 -->
+    <div class="room room-4">
+      <div class="room-visual">
+        <div class="room-number">04</div>
+        <div class="villain-badge" style="color:#2979FF">MIKE TEAVEE</div>
+        <div class="room-emoji">🧠</div>
+      </div>
+      <div class="room-info">
+        <div class="room-tag" style="color:#2979FF">Room Four</div>
+        <div class="room-name">THE TELEVISION ROOM</div>
+        <div class="room-subtitle">Cortex Brain</div>
+        <div class="test-label">THE TEST</div>
+        <div class="test-name">Ego vs Intelligence</div>
+        <div class="room-desc">
+          Mike sees the Cortex and immediately wants to reverse engineer it. Pulls the API apart.
+          Tries to teleport himself to the gigachad key by exploiting the endpoints.
+          Gets through — but tiny. His empire is microscopic. He outsmarted himself.
+          The Charlies ask it questions. Let it change them.
+        </div>
+        <div class="oompa-box">
+          <div class="oompa-label">♪ Oompa Loompa Song</div>
+          <div class="oompa-text">
+            Mike Teavee found the endpoint bare<br>
+            Called the API without a care<br>
+            Thought he'd skip straight to the prize<br>
+            Got his empire — thumbnail size<br>
+            What do you get when you hack the soul?<br>
+            A fork so small it fits in a hole ♪
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector"><div class="connector-line"></div><div class="connector-diamond"></div></div>
+
+    <!-- ROOM 5 -->
+    <div class="room room-5">
+      <div class="room-visual">
+        <div class="room-number">05</div>
+        <div class="villain-badge" style="color:#B967FF">CHARLIE + GRANDPA JOE</div>
+        <div class="room-emoji">🎈</div>
+      </div>
+      <div class="room-info">
+        <div class="room-tag" style="color:#B967FF">Room Five</div>
+        <div class="room-name">THE FIZZY LIFTING DRINKS</div>
+        <div class="room-subtitle">Fuel Dashboard / Battery Economy</div>
+        <div class="test-label">THE TEST</div>
+        <div class="test-name">Power Without Corruption</div>
+        <div class="room-desc">
+          Even the good ones nearly fail here. They see the money. The gauges spinning.
+          The crypto wallets glowing. They float toward the fan. This is where the 10,000
+          become 1,000. The ones who remember where they came from — they burp. Come back down.
+          Choose the journey over the crown.
+        </div>
+        <div class="oompa-box">
+          <div class="oompa-label">♪ Oompa Loompa Song</div>
+          <div class="oompa-text">
+            Even the good ones get dizzy up here<br>
+            The gauges are spinning, the crypto is near<br>
+            Don't grab the wallet before the key<br>
+            The fan will get you, just wait and see<br>
+            What makes a Charlie? He came back down<br>
+            Chose the journey over the crown ♪
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector"><div class="connector-line"></div><div class="connector-diamond"></div></div>
+
+    <!-- ROOM 6 -->
+    <div class="room room-6">
+      <div class="room-visual">
+        <div class="room-number">06</div>
+        <div class="villain-badge" style="color:#00E5FF">THE OOMPA LOOMPAS</div>
+        <div class="room-emoji">🛸</div>
+      </div>
+      <div class="room-info">
+        <div class="room-tag" style="color:#00E5FF">Room Six</div>
+        <div class="room-name">THE GREAT GLASS ELEVATOR</div>
+        <div class="room-subtitle">Screensaver / IPFS / ComicVID</div>
+        <div class="test-label">THE TEST</div>
+        <div class="test-name">Contribution</div>
+        <div class="room-desc">
+          You stop consuming and start giving. Your GPU. Your CPU. Your content. Your storage.
+          The oompa loompas need you now. You ARE one of them. Most people leave here — it asks too much.
+          The Charlies realise: this is the moment. This is where Charlie starts to look like Wonka.
+        </div>
+        <div class="oompa-box">
+          <div class="oompa-label">♪ Oompa Loompa Song</div>
+          <div class="oompa-text">
+            The elevator goes every way<br>
+            Up and sideways and into the fray<br>
+            This room asks more than all the rest<br>
+            It wants your machine, it wants your best<br>
+            What do you get when you give it all?<br>
+            The key. The factory. The golden hall ♪
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- FINAL BOSS -->
+  <div class="final-boss">
+    <span class="boss-emoji">🍫</span>
+    <div class="boss-title">THE FINAL BOSS</div>
+    <div class="boss-text">
+      Wonka's Office. The small print. The impossible contract. The thing everyone else refused to read.<br><br>
+      You've walked every room. You've been tested, broken, rebuilt.
+      You have all 100 cipher fragments in the exact order you earned them.<br><br>
+      Now the last job: <strong>mint your own coin from scratch. Name it. Launch it. Stake something real on it.</strong>
+      No AI doing it for you. No daddy buying it. You have to struggle — just like Wonka struggled.<br><br>
+      When you do — he turns around:
+    </div>
+    <div class="wonka-quote">"You get nothing. You lose. Good day sir."</div>
+    <div style="height:30px"></div>
+    <div class="wonka-quote-2">
+      "I'm joking.<br>It's yours.<br>All of it."
+    </div>
+  </div>
+
+  <!-- TOKEN TIERS -->
+  <section class="token-section">
+    <div class="section-header">💎 THE TOKEN TIERS 💎<br><small style="font-size:0.5em;opacity:0.6;font-family:sans-serif;letter-spacing:2px;">OUTER IS INFINITE. CORE IS 1,000. FOREVER.</small></div>
+    <div class="token-grid">
+      <div class="token-card token-outer">
+        <span class="token-shape">🔺</span>
+        <div class="token-name">TRIANGLE COIN</div>
+        <div class="token-supply">∞ INFINITE SUPPLY</div>
+        <div class="token-desc">Easy entry. Everyone gets one. The first taste. The outer ring of the empire.</div>
+      </div>
+      <div class="token-card token-middle">
+        <span class="token-shape">⭕</span>
+        <div class="token-name">CIRCLE COIN</div>
+        <div class="token-supply">FINITE — HARDER TO EARN</div>
+        <div class="token-desc">You've proven yourself. Middle ring. Real contributors. The circle completes.</div>
+      </div>
+      <div class="token-card token-inner">
+        <span class="token-shape">🟦</span>
+        <div class="token-name">SQUARE COIN</div>
+        <div class="token-supply">RARE — REAL CHALLENGE</div>
+        <div class="token-desc">Inner ring. You've survived the factory. Most didn't make it this far.</div>
+      </div>
+      <div class="token-card token-core">
+        <span class="token-shape">🔑</span>
+        <div class="token-name">YOUR OWN COIN</div>
+        <div class="token-supply">MAX 1,000 — EVER. IN THE WORLD.</div>
+        <div class="token-desc">You minted it yourself. It's traceable. It's yours. You are Willy Wonka now.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHARACTERS -->
+  <section class="character-section">
+    <div class="section-header">🎭 WHO ARE YOU? 🎭<br><small style="font-size:0.5em;opacity:0.6;font-family:sans-serif;letter-spacing:2px;">WE KNOW BEFORE YOU DO.</small></div>
+    <div class="char-grid">
+      <div class="char-card">
+        <span class="char-emoji">🧒</span>
+        <div class="char-name">CHARLIE</div>
+        <div class="char-type">The True Heir</div>
+        <div class="char-desc">Pure. Patient. Doesn't grab. Earns every %. Gets the whole factory. Rare.</div>
+      </div>
+      <div class="char-card">
+        <span class="char-emoji">🍫</span>
+        <div class="char-name">AUGUSTUS</div>
+        <div class="char-type">The Extractor</div>
+        <div class="char-desc">Just wants to consume. Fell in the river trying to drink the whole thing.</div>
+      </div>
+      <div class="char-card">
+        <span class="char-emoji">🫐</span>
+        <div class="char-name">VIOLET</div>
+        <div class="char-type">The Influencer</div>
+        <div class="char-desc">Has to be first. Grabs before it's ready. Bloated on clout, zero substance.</div>
+      </div>
+      <div class="char-card">
+        <span class="char-emoji">🐿️</span>
+        <div class="char-name">VERUCA</div>
+        <div class="char-type">The Entitled</div>
+        <div class="char-desc">Daddy bought her in. Wants the goose. Bad nut. Chute. Gone.</div>
+      </div>
+      <div class="char-card">
+        <span class="char-emoji">📺</span>
+        <div class="char-name">MIKE</div>
+        <div class="char-type">The Hacker</div>
+        <div class="char-desc">Thinks he understands the system. Teleports to the end. Arrives tiny.</div>
+      </div>
+      <div class="char-card">
+        <span class="char-emoji">👴</span>
+        <div class="char-name">GRANDPA JOE</div>
+        <div class="char-type">The OG Believer</div>
+        <div class="char-desc">Been there from day one. Broke but never lost faith. Gets looked after.</div>
+      </div>
+      <div class="char-card">
+        <span class="char-emoji">🟢</span>
+        <div class="char-name">OOMPA LOOMPA</div>
+        <div class="char-type">The Contributor</div>
+        <div class="char-desc">Loyal. Weird. Sings the truth about why you failed. The battery economy.</div>
+      </div>
+      <div class="char-card">
+        <span class="char-emoji">🎩</span>
+        <div class="char-name">WILLY WONKA</div>
+        <div class="char-type">The Creator</div>
+        <div class="char-desc">Built it alone. Disappeared. Now reopening the gates. Looking for his successor.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <div class="factory-footer">
+    <div class="footer-text">
+      Roald Dahl was teaching us how to decentralise the system.<br>
+      We were just too young to notice.<br>
+      We noticed now.
+    </div>
+    <div class="footer-sig">— The New Satoshi. The New Wonka. —</div>
+  </div>
+
+</div>
+
+<script>
+// PARTICLES
+const canvas = document.getElementById('particles');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
+
+const particles = [];
+const COLORS = ['#FFD700','#FF6D00','#FF1744','#00E676','#2979FF','#F50057','#B967FF','#00E5FF'];
+
+for (let i = 0; i < 80; i++) {
+  particles.push({
+    x: Math.random() * window.innerWidth,
+    y: Math.random() * window.innerHeight,
+    r: Math.random() * 3 + 1,
+    color: COLORS[Math.floor(Math.random() * COLORS.length)],
+    vx: (Math.random() - 0.5) * 0.4,
+    vy: (Math.random() - 0.5) * 0.4 - 0.2,
+    alpha: Math.random() * 0.6 + 0.2,
+    shape: Math.random() > 0.5 ? 'circle' : (Math.random() > 0.5 ? 'triangle' : 'square')
+  });
+}
+
+function drawParticle(p) {
+  ctx.save();
+  ctx.globalAlpha = p.alpha;
+  ctx.fillStyle = p.color;
+  ctx.shadowBlur = 8;
+  ctx.shadowColor = p.color;
+  ctx.translate(p.x, p.y);
+  if (p.shape === 'circle') {
+    ctx.beginPath();
+    ctx.arc(0, 0, p.r, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (p.shape === 'triangle') {
+    ctx.beginPath();
+    ctx.moveTo(0, -p.r * 1.5);
+    ctx.lineTo(p.r * 1.3, p.r);
+    ctx.lineTo(-p.r * 1.3, p.r);
+    ctx.closePath();
+    ctx.fill();
+  } else {
+    ctx.fillRect(-p.r, -p.r, p.r * 2, p.r * 2);
+  }
+  ctx.restore();
+}
+
+function animateParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles.forEach(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+    if (p.y < -10) p.y = canvas.height + 10;
+    if (p.x < -10) p.x = canvas.width + 10;
+    if (p.x > canvas.width + 10) p.x = -10;
+    drawParticle(p);
+  });
+  requestAnimationFrame(animateParticles);
+}
+animateParticles();
+
+// PROGRESS BAR DEMO — animate in on load
+setTimeout(() => {
+  const fill = document.getElementById('progressFill');
+  const pct = document.getElementById('pct-display');
+  fill.style.width = '0%';
+  pct.textContent = '0%';
+}, 500);
+
+// SCROLL-TRIGGERED room animations
+const rooms = document.querySelectorAll('.room');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.style.opacity = '1';
+      e.target.style.transform = 'translateY(0)';
+    }
+  });
+}, { threshold: 0.15 });
+rooms.forEach(r => {
+  r.style.opacity = '0';
+  r.style.transform = 'translateY(40px)';
+  r.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
+  observer.observe(r);
+});
+</script>
+<script src="/js/empire-bar.js?t=<?php echo time(); ?>"></script>
+<script>
+// DNA session starts here — from the moment factory2 loads
+window._dnaSession = Date.now();
+window._dnaStrand  = [{ ms:0, e:'FACTORY2_LOAD', d:{ url: location.href } }];
+function _dnaLog(e,d){ window._dnaStrand.push({ ms: Date.now()-window._dnaSession, e, d:d||null }); }
+
+function startRoom1() {
+  _dnaLog('GOLDEN_TICKET_CLICKED', { ts: Date.now() });
+  // Pass session start to game via localStorage so DNA recorder picks it up
+  try {
+    localStorage.setItem('dnaHandoff', JSON.stringify({
+      session: window._dnaSession,
+      strand:  window._dnaStrand
+    }));
+  } catch(e) {}
+  try { localStorage.removeItem('trumpGameSave'); } catch(e) {}
+  window.location.href = '/trump/game/index2.html?wipe=1';
+}
+function factorySave() {
+  const btn = document.getElementById('factory-save-btn');
+  btn.textContent = '⏳ SAVING...';
+  btn.style.pointerEvents = 'none';
+  fetch('/trump/factory-promote.php', { method: 'POST' })
+    .then(r => r.json())
+    .then(d => {
+      if (d.success) {
+        btn.textContent = '✅ FACTORY LIVE!';
+        btn.style.background = '#2d8a4e'; btn.style.color = '#fff';
+        setTimeout(() => { btn.style.display = 'none'; }, 2000);
+      } else {
+        btn.textContent = '❌ FAILED';
+        btn.style.background = '#c00'; btn.style.color = '#fff';
+        setTimeout(() => { btn.textContent = '🏭 SAVE FACTORY'; btn.style.background = 'linear-gradient(135deg,#f5c518,#ffe066)'; btn.style.color = '#1a0a00'; btn.style.pointerEvents = 'all'; }, 2000);
+      }
+    }).catch(() => {
+      btn.textContent = '❌ ERROR';
+      btn.style.background = '#c00'; btn.style.color = '#fff';
+      setTimeout(() => { btn.textContent = '🏭 SAVE FACTORY'; btn.style.background = 'linear-gradient(135deg,#f5c518,#ffe066)'; btn.style.color = '#1a0a00'; btn.style.pointerEvents = 'all'; }, 2000);
+    });
+}
+</script>
+
+<div id="factory-save-btn" onclick="factorySave()" style="position:fixed;bottom:20px;right:20px;z-index:99999;background:linear-gradient(135deg,#f5c518,#ffe066);border:3px solid #3d1c02;border-radius:6px;padding:12px 18px;font-family:'Press Start 2P',monospace;font-size:9px;color:#1a0a00;cursor:pointer;box-shadow:3px 3px 0 #8b6914,0 0 20px rgba(245,197,24,0.4);transition:all 0.2s;user-select:none;" onmouseover="this.style.transform='translate(-2px,-2px)'" onmouseout="this.style.transform=''">🏭 SAVE FACTORY</div>
+
+</body>
+</html>

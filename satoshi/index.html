@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Satoshi Shape · Proof of Separation · shortfactory.shop</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#fff; font-family:'Courier New',monospace; color:#111; display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+
+#scene-wrap { flex:1 1 auto; position:relative; min-height:0; background:#fff; }
+#scene { display:block; width:100%; height:100%; }
+
+#creature-label {
+  position:absolute; top:14px; left:0; right:0; text-align:center;
+  font-size:10px; letter-spacing:4px; color:#ccc; text-transform:uppercase; pointer-events:none;
+}
+#merge-eq {
+  position:absolute; bottom:14px; left:0; right:0; text-align:center;
+  font-size:11px; letter-spacing:2px; color:#bbb; pointer-events:none;
+}
+
+/* ── GENOME PANELS ── */
+.panels {
+  flex:0 0 auto; display:flex;
+  border-top:2px solid #111; height:220px;
+}
+.panel { flex:1; display:flex; flex-direction:column; border-right:1px solid #eee; overflow:hidden; }
+.panel:last-child { border-right:none; }
+.panel-head {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:8px 14px; border-bottom:1px solid #eee; flex-shrink:0;
+}
+.panel-head span { font-size:9px; letter-spacing:4px; text-transform:uppercase; color:#888; }
+.panel-head strong { font-size:13px; letter-spacing:1px; }
+.swap-btn {
+  background:none; border:1px solid #ccc; padding:3px 10px;
+  font-family:'Courier New'; font-size:9px; letter-spacing:2px; text-transform:uppercase;
+  cursor:pointer; color:#888; transition:all 0.15s;
+}
+.swap-btn:hover { border-color:#111; color:#111; }
+pre {
+  font-size:10px; line-height:1.75; padding:10px 14px;
+  overflow-y:auto; flex:1; color:#444;
+}
+.jk { color:#888; }
+.jn { color:#0055cc; }
+.js { color:#007700; }
+
+/* center merge panel */
+.merge-panel {
+  width:110px; flex:none; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:8px;
+  border-right:1px solid #eee; padding:12px;
+}
+.file-line { font-size:9px; letter-spacing:1px; color:#aaa; text-align:center; line-height:1.6; }
+.file-line b { color:#111; font-size:10px; }
+.plus-sign { font-size:20px; color:#ccc; }
+.eq-sign { font-size:14px; color:#ccc; }
+.result-name { font-size:11px; font-weight:900; letter-spacing:2px; text-align:center; }
+</style>
+</head>
+<body>
+
+<div id="scene-wrap">
+  <canvas id="scene"></canvas>
+  <div id="creature-label">satoshi shape · proof of separation</div>
+  <div id="merge-eq" id="merge-eq"></div>
+</div>
+
+<div class="panels">
+
+  <!-- SHAPE GENOME -->
+  <div class="panel">
+    <div class="panel-head">
+      <div><span>Shape Genome</span><br><strong id="shape-name">CAT</strong></div>
+      <button class="swap-btn" id="swap-shape">swap →</button>
+    </div>
+    <pre id="shape-json"></pre>
+  </div>
+
+  <!-- MERGE INDICATOR -->
+  <div class="merge-panel">
+    <div class="file-line"><b id="sf-name">cat-shape.json</b></div>
+    <div class="plus-sign">+</div>
+    <div class="file-line"><b id="bf-name">walk-behavior.json</b></div>
+    <div class="eq-sign">=</div>
+    <div class="result-name" id="result-name">WALKING CAT</div>
+  </div>
+
+  <!-- BEHAVIOR GENOME -->
+  <div class="panel">
+    <div class="panel-head">
+      <div><span>Behavior Genome</span><br><strong id="behav-name">WALK</strong></div>
+      <button class="swap-btn" id="swap-behav">swap →</button>
+    </div>
+    <pre id="behav-json"></pre>
+  </div>
+
+</div>
+
+<script data-cfasync="false">
+(function(){
+  var s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/three@0.152.0/build/three.min.js';
+  s.onload = init;
+  document.head.appendChild(s);
+})();
+
+// ── SHAPE GENOMES ────────────────────────────────────────────────────────────
+const SHAPES = {
+  cat: { id:'cat', label:'CAT',
+    bodyRx:0.74, bodyRy:0.50, bodyRz:0.52,
+    headR:0.41,  headOffset:0.72,
+    earH:0.33,   earR:0.13, earUpright:true,
+    legW:0.080,  legL:0.60,
+    tailN:5, tailLen:1.40, tailBase:0.068,
+    neckTilt:-0.30
+  },
+  dog: { id:'dog', label:'DOG',
+    bodyRx:0.96, bodyRy:0.44, bodyRz:0.54,
+    headR:0.45,  headOffset:0.65,
+    earH:0.30,   earR:0.17, earUpright:false,
+    legW:0.096,  legL:0.66,
+    tailN:3, tailLen:0.65, tailBase:0.058,
+    neckTilt:-0.18
+  }
+};
+
+// ── BEHAVIOR GENOMES ─────────────────────────────────────────────────────────
+const BEHAVIORS = {
+  walk: { id:'walk', label:'WALK',
+    walkSpeed:1.15, walkVel:0.90, walkAmp:0.60,
+    walkLift:0.07,  bobAmp:0.026,
+    tailFreq:0.55,  tailAmp:0.20,
+    headNod:0.035,
+    breathFreq:0,   breathAmp:0, headTilt:0
+  },
+  sleep: { id:'sleep', label:'SLEEP',
+    walkSpeed:0, walkVel:0, walkAmp:0,
+    walkLift:0,  bobAmp:0,
+    tailFreq:0.20, tailAmp:0.05,
+    headNod:0,
+    breathFreq:0.28, breathAmp:0.034, headTilt:0.40
+  }
+};
+
+const SHAPE_ORDER  = ['cat','dog'];
+const BEHAV_ORDER  = ['walk','sleep'];
+let shapeIdx = 0, behavIdx = 0;
+
+function colorJSON(obj) {
+  const s = JSON.stringify(obj, null, 2);
+  return s
+    .replace(/("[\w]+")\s*:/g, '<span class="jk">$1</span>:')
+    .replace(/:\s*([\d.\-]+)/g, (m, n) => ': <span class="jn">'+n+'</span>')
+    .replace(/:\s*"([^"]+)"/g, ': <span class="js">"$1"</span>')
+    .replace(/:\s*(true|false)/g, (m, b) => ': <span class="jn">'+b+'</span>');
+}
+
+function updatePanels() {
+  const S = SHAPES[SHAPE_ORDER[shapeIdx]];
+  const B = BEHAVIORS[BEHAV_ORDER[behavIdx]];
+  document.getElementById('shape-name').textContent = S.label;
+  document.getElementById('behav-name').textContent  = B.label;
+  document.getElementById('shape-json').innerHTML   = colorJSON(S);
+  document.getElementById('behav-json').innerHTML   = colorJSON(B);
+  document.getElementById('sf-name').textContent    = S.id + '-shape.json';
+  document.getElementById('bf-name').textContent    = B.id + '-behavior.json';
+  document.getElementById('result-name').textContent= B.label+'ING\n'+S.label;
+  document.getElementById('merge-eq').textContent   = S.label + ' + ' + B.label + ' → ' + B.label.toLowerCase() + 'ing ' + S.label.toLowerCase();
+}
+
+// ── THREE.JS ─────────────────────────────────────────────────────────────────
+function init() {
+  const wrap   = document.getElementById('scene-wrap');
+  const canvas = document.getElementById('scene');
+  let W = wrap.clientWidth, H = wrap.clientHeight;
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xffffff);
+
+  const camera = new THREE.PerspectiveCamera(34, W/H, 0.1, 100);
+  camera.position.set(7, 3.0, 0);
+  camera.lookAt(0, 1.0, 0);
+
+  const renderer = new THREE.WebGLRenderer({ antialias:true, canvas });
+  renderer.setSize(W, H);
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+
+  window.addEventListener('resize', () => {
+    W = wrap.clientWidth; H = wrap.clientHeight;
+    camera.aspect = W/H; camera.updateProjectionMatrix();
+    renderer.setSize(W, H);
+  });
+
+  // Lighting
+  scene.add(new THREE.AmbientLight(0xffffff, 0.30));
+  const sun = new THREE.DirectionalLight(0xffffff, 0.95);
+  sun.position.set(4, 7, 3); scene.add(sun);
+  const fill = new THREE.DirectionalLight(0xaabbff, 0.18);
+  fill.position.set(-5, 2, -4); scene.add(fill);
+  const rim = new THREE.DirectionalLight(0xffffff, 0.22);
+  rim.position.set(-2, -1, -6); scene.add(rim);
+
+  const mat    = new THREE.MeshPhongMaterial({ color:0x0c0c0c, flatShading:true, shininess:5 });
+  const eyeMat = new THREE.MeshBasicMaterial({ color:0xd4a200 });
+  const mk  = geo => new THREE.Mesh(geo, mat);
+  const mke = geo => new THREE.Mesh(geo, eyeMat);
+
+  // Ground
+  const gnd = new THREE.Mesh(
+    new THREE.PlaneGeometry(60, 20),
+    new THREE.MeshBasicMaterial({ color:0xf6f6f6 })
+  );
+  gnd.rotation.x = -Math.PI/2;
+  scene.add(gnd);
+
+  // ── BUILD creature from SHAPE genome ──────────────────────────────────────
+  function buildCreature(S) {
+    const group = new THREE.Group();
+    group.rotation.y = -Math.PI/2; // cat faces -Z world, camera sees side
+
+    const BY  = 0.62;
+    const HBY = S.bodyRy*0.35 + BY + S.headR;
+
+    // Body
+    const bodyGrp = new THREE.Group();
+    bodyGrp.position.y = BY;
+    const bodyMesh = mk(new THREE.SphereGeometry(1, 6, 4));
+    bodyMesh.scale.set(S.bodyRx, S.bodyRy, S.bodyRz);
+    bodyGrp.add(bodyMesh);
+    group.add(bodyGrp);
+
+    // Head
+    const headGrp = new THREE.Group();
+    headGrp.position.set(S.bodyRx + S.headR*S.headOffset, HBY, 0);
+    headGrp.add(mk(new THREE.SphereGeometry(S.headR, 5, 4)));
+
+    // Ears
+    if (S.earUpright) {
+      const eL = mk(new THREE.ConeGeometry(S.earR, S.earH, 3));
+      const eR = mk(new THREE.ConeGeometry(S.earR, S.earH, 3));
+      eL.position.set(S.headR*0.06,  S.headR*0.78,  S.headR*0.52);
+      eR.position.set(S.headR*0.06,  S.headR*0.78, -S.headR*0.52);
+      eL.rotation.x = 0.18; eR.rotation.x = -0.18;
+      headGrp.add(eL, eR);
+    } else {
+      // floppy dog ears — hang down from sides
+      const eL = mk(new THREE.CylinderGeometry(S.earR*0.45, S.earR*0.75, S.earH, 4));
+      const eR = mk(new THREE.CylinderGeometry(S.earR*0.45, S.earR*0.75, S.earH, 4));
+      eL.position.set(-S.headR*0.10, -S.headR*0.25,  S.headR*0.78);
+      eR.position.set(-S.headR*0.10, -S.headR*0.25, -S.headR*0.78);
+      eL.rotation.z =  0.28; eR.rotation.z = 0.28;
+      headGrp.add(eL, eR);
+    }
+
+    // Eyes
+    const eyeL = mke(new THREE.SphereGeometry(0.048, 4, 3));
+    const eyeR = mke(new THREE.SphereGeometry(0.048, 4, 3));
+    eyeL.position.set(S.headR*0.86, S.headR*0.05,  S.headR*0.50);
+    eyeR.position.set(S.headR*0.86, S.headR*0.05, -S.headR*0.50);
+    headGrp.add(eyeL, eyeR);
+    group.add(headGrp);
+
+    // Neck
+    const neck = mk(new THREE.CylinderGeometry(0.12, 0.19, 0.27, 4));
+    neck.rotation.z = S.neckTilt;
+    neck.position.set(S.bodyRx*0.76, S.bodyRy*0.35+BY+0.07, 0);
+    group.add(neck);
+
+    // Legs
+    function makeLeg() {
+      const g = new THREE.Group();
+      const up  = mk(new THREE.CylinderGeometry(S.legW,       S.legW*0.86, S.legL*0.52, 4));
+      const lo  = mk(new THREE.CylinderGeometry(S.legW*0.82,  S.legW*0.65, S.legL*0.50, 4));
+      const paw = mk(new THREE.SphereGeometry(S.legW*1.45, 4, 3));
+      up.position.y  = -S.legL*0.26;
+      lo.position.y  = -S.legL*0.77;
+      paw.position.y = -S.legL;
+      paw.scale.set(1.55, 0.50, 1.1);
+      g.add(up, lo, paw);
+      return g;
+    }
+    const LFX = S.bodyRx*0.60, LBX = -S.bodyRx*0.52, LY = BY, LZ = S.bodyRz*0.68;
+    const legFL = new THREE.Group(), legFR = new THREE.Group();
+    const legBL = new THREE.Group(), legBR = new THREE.Group();
+    legFL.add(makeLeg()); legFR.add(makeLeg());
+    legBL.add(makeLeg()); legBR.add(makeLeg());
+    legFL.position.set(LFX, LY,  LZ);
+    legFR.position.set(LFX, LY, -LZ);
+    legBL.position.set(LBX, LY,  LZ);
+    legBR.position.set(LBX, LY, -LZ);
+    group.add(legFL, legFR, legBL, legBR);
+
+    // Tail
+    const tPivots = [];
+    const tSegL = S.tailLen / S.tailN;
+    let tPar = group;
+    for (let i = 0; i < S.tailN; i++) {
+      const piv = new THREE.Group();
+      const r0  = S.tailBase - i*(S.tailBase/S.tailN*0.7);
+      const seg = mk(new THREE.CylinderGeometry(Math.max(r0,0.012), Math.max(r0*0.80,0.010), tSegL, 4));
+      seg.position.y = tSegL*0.5;
+      piv.add(seg);
+      if (i === 0) { piv.position.set(-S.bodyRx*0.88, 0.68, 0); piv.rotation.z = 0.20; }
+      else         { piv.position.y = tSegL; }
+      tPar.add(piv); tPar = piv; tPivots.push(piv);
+    }
+
+    return { group, bodyGrp, headGrp, legFL, legFR, legBL, legBR, tPivots, BY, HBY, LY, LFX, LBX, LZ };
+  }
+
+  // ── ANIMATE creature from BEHAVIOR genome ─────────────────────────────────
+  function animateCreature(parts, B, t) {
+    const { bodyGrp, headGrp, legFL, legFR, legBL, legBR, tPivots, BY, HBY, LY } = parts;
+
+    if (B.walkSpeed > 0) {
+      const wp = t * B.walkSpeed * Math.PI * 2;
+      parts.group.position.z = -5 + (t * B.walkVel) % 10;
+
+      const bob = Math.abs(Math.sin(wp)) * B.bobAmp;
+      bodyGrp.position.y = BY + bob;
+      headGrp.position.y = HBY + bob;
+
+      // Diagonal gait
+      legFL.rotation.z =  Math.sin(wp)           * B.walkAmp;
+      legBR.rotation.z =  Math.sin(wp)           * B.walkAmp;
+      legFR.rotation.z =  Math.sin(wp + Math.PI) * B.walkAmp;
+      legBL.rotation.z =  Math.sin(wp + Math.PI) * B.walkAmp;
+
+      legFL.position.y = LY + Math.max(0, Math.sin(wp))           * B.walkLift;
+      legBR.position.y = LY + Math.max(0, Math.sin(wp))           * B.walkLift * 0.7;
+      legFR.position.y = LY + Math.max(0, Math.sin(wp + Math.PI)) * B.walkLift;
+      legBL.position.y = LY + Math.max(0, Math.sin(wp + Math.PI)) * B.walkLift * 0.7;
+
+      headGrp.rotation.z = Math.sin(wp * 2) * B.headNod;
+
+    } else {
+      // Sleep: breathe, head droops
+      const br = Math.sin(t * B.breathFreq * Math.PI * 2);
+      bodyGrp.scale.y = 1 + br * B.breathAmp;
+      headGrp.position.y = HBY + br * 0.022;
+      headGrp.rotation.z += (B.headTilt - headGrp.rotation.z) * 0.02;
+      legFL.rotation.z *= 0.97; legFR.rotation.z *= 0.97;
+      legBL.rotation.z *= 0.97; legBR.rotation.z *= 0.97;
+    }
+
+    // Tail — always alive
+    tPivots.forEach((p, i) => {
+      p.rotation.z = Math.sin(t*B.tailFreq*Math.PI*2 + i*0.9) * B.tailAmp * (1 - i*0.08);
+      if (i === 0) p.rotation.y = -0.18 + Math.sin(t*B.tailFreq*0.5*Math.PI*2) * 0.22;
+    });
+  }
+
+  // ── STATE ─────────────────────────────────────────────────────────────────
+  let currentParts = null;
+  let transitioning = false;
+
+  function buildActive() {
+    const S = SHAPES[SHAPE_ORDER[shapeIdx]];
+    if (currentParts) scene.remove(currentParts.group);
+    currentParts = buildCreature(S);
+    currentParts.group.position.z = -5;
+    scene.add(currentParts.group);
+    updatePanels();
+  }
+
+  buildActive();
+
+  document.getElementById('swap-shape').addEventListener('click', () => {
+    shapeIdx = (shapeIdx + 1) % SHAPE_ORDER.length;
+    buildActive();
+  });
+  document.getElementById('swap-behav').addEventListener('click', () => {
+    behavIdx = (behavIdx + 1) % BEHAV_ORDER.length;
+    updatePanels();
+  });
+
+  // ── RENDER LOOP ───────────────────────────────────────────────────────────
+  let t = 0;
+  (function loop() {
+    requestAnimationFrame(loop);
+    t += 0.016;
+
+    const B = BEHAVIORS[BEHAV_ORDER[behavIdx]];
+    if (currentParts) animateCreature(currentParts, B, t);
+
+    // Camera follows from side
+    if (currentParts) {
+      const tz = currentParts.group.position.z + 1.0;
+      camera.position.z += (tz - camera.position.z) * 0.05;
+      camera.lookAt(0, 1.0, camera.position.z - 2.5);
+    }
+
+    renderer.render(scene, camera);
+  })();
+
+  updatePanels();
+}
+</script>
+</body>
+</html>

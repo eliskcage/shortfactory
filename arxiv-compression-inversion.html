@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>arXiv — Gravity as Information Compression: The Compression-Inversion Principle</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Computer Modern', 'Latin Modern', Georgia, serif;
+    font-size: 11pt;
+    line-height: 1.75;
+    color: #111;
+    background: #fff;
+    padding: 60px 100px;
+    max-width: 860px;
+    margin: 0 auto;
+  }
+  h1.title {
+    font-size: 17pt;
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 12px;
+    line-height: 1.4;
+  }
+  .authors {
+    text-align: center;
+    font-size: 11pt;
+    margin-bottom: 4px;
+    color: #333;
+  }
+  .affiliation {
+    text-align: center;
+    font-size: 10pt;
+    color: #666;
+    margin-bottom: 4px;
+  }
+  .date {
+    text-align: center;
+    font-size: 10pt;
+    color: #888;
+    margin-bottom: 24px;
+  }
+  .arxiv-id {
+    text-align: center;
+    font-family: monospace;
+    font-size: 9pt;
+    color: #888;
+    margin-bottom: 30px;
+  }
+  .abstract-section {
+    margin: 0 40px 30px 40px;
+  }
+  .abstract-section h2 {
+    font-size: 10pt;
+    text-align: center;
+    font-variant: small-caps;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+  }
+  .abstract-section p {
+    font-size: 10pt;
+    text-align: justify;
+  }
+  h2.section {
+    font-size: 12pt;
+    margin-top: 32px;
+    margin-bottom: 10px;
+    font-weight: bold;
+  }
+  h3.subsection {
+    font-size: 11pt;
+    margin-top: 20px;
+    margin-bottom: 8px;
+    font-style: italic;
+    font-weight: bold;
+  }
+  p {
+    text-align: justify;
+    margin-bottom: 10px;
+  }
+  .equation {
+    font-family: 'Courier New', monospace;
+    background: #f9f9f9;
+    border: none;
+    padding: 10px 20px;
+    margin: 14px 40px;
+    font-size: 11pt;
+    text-align: center;
+  }
+  .eq-label {
+    float: right;
+    color: #666;
+    font-family: serif;
+  }
+  .definition {
+    border-left: 3px solid #aaa;
+    padding: 10px 16px;
+    margin: 14px 0;
+    background: #fafafa;
+    font-size: 10.5pt;
+  }
+  table {
+    border-collapse: collapse;
+    width: 90%;
+    margin: 16px auto;
+    font-size: 10pt;
+  }
+  th, td {
+    border: 1px solid #ccc;
+    padding: 6px 12px;
+    text-align: left;
+  }
+  th { background: #f0f0f0; font-weight: bold; }
+  .references {
+    font-size: 10pt;
+    margin-top: 30px;
+  }
+  .references p {
+    padding-left: 28px;
+    text-indent: -28px;
+    margin-bottom: 6px;
+  }
+  .divider {
+    border: none;
+    border-top: 1px solid #ccc;
+    margin: 30px 0;
+  }
+  sup { font-size: 8pt; }
+  .symbol-large {
+    text-align: center;
+    font-family: monospace;
+    font-size: 22pt;
+    letter-spacing: 8px;
+    margin: 16px 0;
+    color: #111;
+  }
+  .note {
+    font-size: 9pt;
+    color: #555;
+    font-style: italic;
+  }
+  @media print {
+    body { padding: 40px 60px; }
+  }
+</style>
+</head>
+<body>
+
+<h1 class="title">Gravity as Information Compression:<br>
+The Compression-Inversion Principle and its<br>
+Cosmological and Antigravitational Implications</h1>
+
+<p class="authors">Daniel Chipchase</p>
+<p class="affiliation">Independent Researcher, Somerset, United Kingdom</p>
+<p class="date">22 March 2026</p>
+<p class="arxiv-id">Preprint — submitted for arXiv:gr-qc · hep-th</p>
+
+<hr class="divider">
+
+<div class="abstract-section">
+  <h2>Abstract</h2>
+  <p>We propose a model — the Compression-Inversion Principle (CIP) — in which gravitational attraction emerges from information density differentials between spatial regions, operationalised via the Bekenstein saturation fraction as a dimensionless information density ρ ∈ [0,1]. Under CIP, regions of higher ρ exert an attractive force on lower-ρ neighbours through a compression operation structurally equivalent to Newtonian gravitation for ρ ≪ 1. The novel contribution of this work is the inversion mechanism: when ρ approaches unity — the Singularity Threshold, equivalent to saturation of the Bekenstein bound — the compression operation inverts, producing a repulsive burst whose magnitude scales with pre-inversion density. We demonstrate that this two-rule system produces spontaneous gravitational clustering, compression events, inversion bursts, and oscillatory cosmological behaviour in a working computational simulation without additional programming of emergent phenomena. CIP offers a mechanistic account of: (1) why spacetime curves around mass; (2) a natural antigravity mechanism requiring no exotic matter; (3) a cyclic cosmology in which the Big Bang is an inversion event; (4) a resolution of the black hole information paradox via a perspective reinterpretation of the event horizon. We derive one primary falsifiable prediction: Hawking radiation carries non-random, structured informational content detectable as statistical deviation from a thermal spectrum. We situate CIP within existing entropic gravity frameworks (Verlinde 2011), the holographic principle (Bekenstein 1973, Hawking 1975), and Loop Quantum Cosmology bounce models, identifying both convergences and distinctions.</p>
+</div>
+
+<hr class="divider">
+
+<h2 class="section">1. Introduction</h2>
+
+<p>General relativity describes gravity as the curvature of a four-dimensional spacetime manifold induced by mass-energy distributions [1]. While extraordinarily predictive, it provides no mechanism for <em>why</em> mass curves spacetime. The unification of gravity with quantum mechanics — the central unsolved problem of theoretical physics — has resisted resolution for a century. Separately, the holographic principle [2,3] establishes that the information content of a bounded region scales with surface area rather than volume, but offers no engine that performs the encoding.</p>
+
+<p>A parallel line of inquiry has proposed that gravity may be entropic in origin. Verlinde [4] demonstrated that Newtonian gravity and the Einstein equations can be derived from entropic force arguments applied to holographic screens, treating gravity not as a fundamental force but as an emergent thermodynamic phenomenon. This approach has attracted significant interest but has not yet provided a mechanistic account of the transition from compression to any repulsive regime.</p>
+
+<p>The present work proposes a complementary model. We define information density ρ as the Bekenstein saturation fraction of a spatial region and identify the gravitational attractive force with the compression gradient between regions of differing ρ. The central novel contribution is the inversion mechanism: as ρ → 1 (Bekenstein saturation), we predict an inversion of the compression operation, producing a repulsive force — antigravity — proportional to the pre-inversion density. We demonstrate this mechanism in a working computational simulation and derive testable predictions distinguishing CIP from standard general relativity.</p>
+
+<div style="border:1px solid #1a1a1a;border-left:3px solid #7b0000;background:#050505;padding:18px 22px;margin:24px 0;font-family:'Courier New',monospace;">
+<div style="font-size:8pt;color:#7b0000;letter-spacing:0.4em;margin-bottom:14px;text-transform:uppercase;">&#9619; CLASSIFIED &middot; RANK REQUIRED &middot; CIP THEORY &#9619;</div>
+<pre style="font-size:8.5pt;color:#555;line-height:1.7;white-space:pre-wrap;word-break:break-all;margin:0;">'ul'j{"P[RNYS%qwp~x%rubxSv{snq+ {}
+45CXB[AiS$QKJLbP|2c2?XB[A6BP%bM]1^Iw/=HJII#0IF7R45COY`A{F53A#?MP746A9CIE*<olZ`An@2->A5C=/F[LF99oRZS%28ApCEI&6.H6W
+y4.J:>466C?+?A3CC-8[Ly0l{qTt\k[AiSw)uj|SZIE*<[qRRKLF99ZcUS_IE ^aP{8&B76=R6<S~/J6<BP0B4LF99n]]a
+t9GA H2>8[LA2B</BAP3A(<F>+G+<BP-B/=F6=F+<B^IE*<paWRo<HP.85AFF-G+<BPV_A0C>:?'A=@8R13S49@2BH2><1;a
+y8I'?G:9AA|CD>H..H6cR959?IE*<[#Rp^!mPo242DF6F+<BX<[^s3sr#K?<@)C42bC(dA<IEA441nP<;1T&YIE'@9E=R6<SC2B!:=?W
+&;:6@6lAjq^I7';CE/FA0C>:E'@G:9AAT;C+I+AMYWROhoP.80<H6=R+;J6<F+<BP,H4@HPQ40A=8<486HJR`Ajq^enAL868B62GP>;'L7@7C.2H6I6;0@6W
+
+&fo(yx!A_S]VRd{'}x~ps|sj~Au!!u{dm(yx!t
+n=8It#;;PfR+;J6<F+<BP/I';HP99A.SF8<82FD+?ApCEI&6.H6WRq?9]k404mP/A66F6IH06J6<F'L7@7C42GD/7AACP<;1id^
+m448S68844MPfR42G:.H#9S:8I'?G:9AA:C>/A6BAP0E1:Sr3:An5?1R+;J6<F+<B^I!1L=?0?#AC?I9+2@5IE'>I:<8&Z
+vJ-?'fS#/61:DC/F56C?I__Lw@>RtA5E/RNjSy8I'?G:9AATu:1Rc.B8RRNjSuBC#;G:9AAT82<>A2B6<:;US]gRuBF?+E1BB5I__LF6:8#Aa
+%ABA?I=/F[L7@7C42GDIG1D5C.R*6;9VE*<S?/<)56@?E5gS:8I'?HP+GA@5E?E#A=@8`AzCP/K62F?+?A6BA?GA;96.8&Z
+
+'ul'j{"P]RNYSrusdwSxx~f SqwvAq*uw'At##r-pz
+xG/A6L<@<<<<BPfR22FD:8%A=G/R$<I?.44FS:8R+;:@<@#A=@8R)2C>/G4FaPwB6L5P:;;@=4+?A/5C<<'?a
+v3E'D5=6R2.F2.B:L8:=F19J6.`AuB79E/.H:9AA=5C+71ESC/F19J6.R865P3A82FD3B0LDC9770=?1R5AFF-G7?95Iz#D?:8:A?553466C?W
+
+&fo(yx!AaS]VRuq'%jtmqS!{weuv%r"o 
+$C/7+0H:9AA]mPq498=?1R4.8:+G+<BP-44?=6=R0<B]<401C>IF6?I4>H428P3A(<F>+G+<BPV_A19G3466C?I94<AP>;'?A26R5=94>E7:a
+!<8&67E3B0LejI%'=I==<82S49E427E3B0LH@I:4.J:>LA;92<Rc2?68F62=?IF#AIC+G+<BPV_A@=?1H..F:>LA.J@37#;76W
+#428:-G+<BP\lAp5C5R';9C1LA2EF+G+<BP99A@H2>8ADS5/I+.H6=R(?C>I_RLCG/EA9C?1R$.G66<02a
+
+$nuuu#~IjAY`Pm{to)$|{pz
+v@8F%6CF=A'@GPfR%<AA<85@=@8R1=9C+G+<BP>;#AS>97'9GP3G5LCH8R%<AA<85@=@8R2?C4/F5Z
+&6-H4@=@8R13SC2BA.DA6<'1SE9R52@7VE'=F6=80A=?1R5FGE/@OLv@8F%6CF=A'@GPfR5A5368A.HE<4%ACCIB(LG669N0C>:E'@G:9AO
+
+ xs}{pzSiI_NLv wum"'yx!
+h?5G3G;LpP3A(<F>+G+<BP.80@=ECR&6:7/E';H:+?OLvyyR428F-85LH@I!'DH@8R(<FP<;1hoaW
+s6LF99oRfS:8I'?G:9AA=F@.H%2GP+A66;C+I+AM^It+4Sr+A)LpP3A82FD3B0ZSt+E-L9?/E)FSmIE'@=5?4.LA@780AI>W
+w82BEI;1?=K9AAiSA/E5=94><82S39H015CC`At5H5<04SC+7+.H:9AA@HC?66BF6.`A!K@IE799DWRt2@7VF7@H23A+;;P-B5:C=9:+05=IB50==646<F^</pre>
+<div style="font-size:7pt;color:#1a1a1a;margin-top:12px;letter-spacing:0.25em;">[ copy &middot; paste into descrambler &middot; unlocks at rank ]</div>
+</div>
+
+<hr class="divider">
+
+<div class="references">
+  <h2 class="section">References</h2>
+  <p>[1] Einstein, A. (1915). Die Feldgleichungen der Gravitation. <em>Sitzungsberichte der Preussischen Akademie der Wissenschaften</em>.</p>
+  <p>[2] Bekenstein, J.D. (1973). Black holes and entropy. <em>Physical Review D</em>, 7(8), 2333.</p>
+  <p>[3] Hawking, S.W. (1975). Particle creation by black holes. <em>Communications in Mathematical Physics</em>, 43(3), 199–220.</p>
+  <p>[4] Verlinde, E. (2011). On the origin of gravity and the laws of Newton. <em>Journal of High Energy Physics</em>, 2011(4), 29.</p>
+  <p>[5] Bojowald, M. (2001). Absence of a singularity in loop quantum cosmology. <em>Physical Review Letters</em>, 86(23), 5227.</p>
+  <p>[6] Riess, A.G. et al. (1998). Observational evidence from supernovae for an accelerating universe. <em>The Astronomical Journal</em>, 116(3), 1009.</p>
+  <p>[7] Perlmutter, S. et al. (1999). Measurements of Ω and Λ from 42 high-redshift supernovae. <em>The Astrophysical Journal</em>, 517(2), 565.</p>
+  <p>[8] Almheiri, A., Marolf, D., Polchinski, J., & Sully, J. (2013). Black holes: complementarity or firewalls? <em>Journal of High Energy Physics</em>, 2013(2), 62.</p>
+  <p>[9] Hawking, S.W. (1976). Breakdown of predictability in gravitational collapse. <em>Physical Review D</em>, 14(10), 2460.</p>
+  <p>[10] Hawking, S.W. (1974). Black hole explosions? <em>Nature</em>, 248(5443), 30–31.</p>
+  <p>[11] Page, D.N. (1993). Information in black hole radiation. <em>Physical Review Letters</em>, 71(23), 3743.</p>
+  <p>[12] Mathur, S.D. (2009). The information paradox: a pedagogical introduction. <em>Classical and Quantum Gravity</em>, 26(22), 224001.</p>
+  <p>[13] 't Hooft, G. (1993). Dimensional reduction in quantum gravity. <em>arXiv:gr-qc/9310026</em>.</p>
+  <p>[14] Penrose, R. (2010). <em>Cycles of Time: An Extraordinary New View of the Universe</em>. Bodley Head, London.</p>
+</div>
+
+<hr class="divider">
+
+<p class="note">Computational simulation (Exhibit A): https://www.shortfactory.shop/computanium-gravity.html<br>
+Patent filing (prior art): https://www.shortfactory.shop/patent-compression-inversion.html<br>
+Correspondence: Daniel Chipchase, Somerset, United Kingdom<br>
+Submitted: 22 March 2026</p>
+
+</body>
+</html>

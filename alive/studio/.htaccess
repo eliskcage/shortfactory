@@ -1,0 +1,10 @@
+RewriteEngine On
+
+# Extensionless → .php if file exists (and not already .php to prevent loop)
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteCond %{REQUEST_URI} !\.php$
+RewriteRule ^(.*)$ $1.php [L]
+
+# Proxy only non-.php api requests to local brain on port 8643
+RewriteCond %{REQUEST_URI} !\.php$
+RewriteRule ^api/(.*)$ http://127.0.0.1:8643/api/$1 [P,L]

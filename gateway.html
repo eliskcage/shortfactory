@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SHORTFACTORY — THE GATEWAY</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--mcy:#FFC72C;--mcyd:#cc9900;}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:'Share Tech Mono','Courier New',monospace;}
+
+/* ── AURORA BACKGROUND ── */
+#aurora{position:fixed;inset:0;z-index:0;}
+
+/* ── FLOATING SHAPES ── */
+#shapes{position:fixed;inset:0;z-index:1;pointer-events:none;}
+.shape{
+  position:absolute;
+  font-size:clamp(12px,2vw,24px);
+  color:rgba(255,199,44,0.08);
+  animation:drift linear infinite;
+  user-select:none;
+}
+@keyframes drift{
+  0%{transform:translateY(110vh) rotate(0deg);opacity:0;}
+  5%{opacity:1;}
+  95%{opacity:1;}
+  100%{transform:translateY(-20vh) rotate(360deg);opacity:0;}
+}
+
+/* ── GATE FLASH ── */
+#flash{
+  position:fixed;inset:0;z-index:100;
+  background:#FFC72C;
+  opacity:0;pointer-events:none;
+  transition:opacity 0.08s;
+}
+#flash.on{opacity:0.9;}
+
+/* ── SOUL WALL ── */
+#soulWall{
+  position:fixed;inset:0;z-index:2;
+  pointer-events:none;
+  overflow:hidden;
+}
+.soul-mark{
+  position:absolute;
+  opacity:0;
+  animation:soulFloat linear forwards;
+  pointer-events:none;
+}
+@keyframes soulFloat{
+  0%  {opacity:0;transform:translateY(0) scale(0.5);}
+  8%  {opacity:0.7;}
+  90% {opacity:0.4;}
+  100%{opacity:0;transform:translateY(-100px) scale(1);}
+}
+
+/* ── SEALED OVERLAY ── */
+#sealedOverlay{
+  display:none;
+  position:fixed;inset:0;z-index:90;
+  background:rgba(0,0,0,0.92);
+  align-items:center;justify-content:center;
+  flex-direction:column;gap:24px;text-align:center;
+  padding:30px;
+}
+#sealedOverlay.show{display:flex;}
+.sealed-tri{
+  font-size:clamp(60px,12vw,120px);
+  color:#cc2200;
+  text-shadow:0 0 40px rgba(200,34,0,0.7),0 0 80px rgba(200,34,0,0.3);
+  animation:sealPulse 2s ease-in-out infinite;
+  line-height:1;
+}
+@keyframes sealPulse{0%,100%{text-shadow:0 0 40px rgba(200,34,0,0.5)}50%{text-shadow:0 0 80px rgba(200,34,0,1),0 0 140px rgba(200,34,0,0.4)}}
+.sealed-title{
+  font-size:clamp(16px,3vw,28px);
+  letter-spacing:0.35em;color:#cc2200;
+  text-shadow:0 0 20px rgba(200,34,0,0.5);
+}
+.sealed-sub{font-size:11px;letter-spacing:0.2em;color:#555;max-width:420px;line-height:1.8;}
+.sealed-reset{font-size:13px;letter-spacing:0.15em;color:#888;margin-top:8px;}
+.sealed-count{font-size:10px;letter-spacing:0.25em;color:#333;margin-top:4px;}
+
+/* ── MANIFESTO ── */
+#manifesto{
+  position:fixed;bottom:0;left:0;right:0;z-index:15;
+  background:linear-gradient(transparent,rgba(0,0,0,0.95) 30%);
+  padding:40px 24px 18px;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity 1s;
+}
+#manifesto.show{opacity:1;}
+.manifesto-text{
+  font-size:clamp(7px,1vw,9px);
+  letter-spacing:0.18em;
+  color:rgba(255,199,44,0.25);
+  text-align:center;
+  line-height:2.2;
+  max-width:700px;
+  margin:0 auto;
+}
+.manifesto-text em{color:rgba(255,199,44,0.5);font-style:normal;}
+
+/* ── LIMIT COUNTER ── */
+.limit-bar{
+  display:flex;align-items:center;gap:6px;
+  font-size:9px;letter-spacing:0.2em;
+}
+.limit-dot{
+  width:5px;height:5px;border-radius:50%;
+  background:rgba(255,199,44,0.3);
+  transition:background 0.3s;
+}
+.limit-dot.used{background:rgba(255,80,80,0.5);}
+.limit-dot.open{background:rgba(255,199,44,0.8);}
+
+/* ── MAIN STAGE ── */
+#stage{
+  position:relative;z-index:10;
+  height:100vh;
+  display:grid;
+  grid-template-rows:auto 1fr auto;
+  align-items:center;
+  padding:20px;
+  gap:0;
+}
+
+/* ── HEADER ── */
+.top-bar{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:0 4px;
+}
+.empire-mark{
+  font-size:11px;letter-spacing:0.35em;color:rgba(255,199,44,0.5);
+}
+.soul-badge{
+  font-size:9px;letter-spacing:0.2em;padding:5px 12px;border-radius:20px;
+  background:rgba(255,199,44,0.06);border:1px solid rgba(255,199,44,0.2);
+  color:rgba(255,199,44,0.5);transition:all 0.5s;
+}
+.soul-badge.known{
+  color:#FFC72C;border-color:rgba(255,199,44,0.6);
+  background:rgba(255,199,44,0.1);
+  box-shadow:0 0 12px rgba(255,199,44,0.15);
+}
+
+/* ── CENTER ── */
+.center{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:clamp(16px,3vh,32px);
+}
+
+/* ── ALIVE PRESENCE ── */
+.alive-presence{
+  font-size:10px;letter-spacing:0.3em;color:rgba(255,255,255,0.2);
+  cursor:pointer;transition:all 0.4s;
+  text-decoration:none;display:block;
+  animation:breathe 4s ease-in-out infinite;
+}
+.alive-presence:hover{color:rgba(255,199,44,0.6);}
+@keyframes breathe{0%,100%{opacity:0.3;letter-spacing:0.3em}50%{opacity:0.7;letter-spacing:0.45em}}
+
+/* ── MAIN TRIANGLE + COUNTDOWN ── */
+.tri-stage{
+  position:relative;
+  display:flex;align-items:center;justify-content:center;
+}
+#mainTri{
+  display:block;
+  filter:drop-shadow(0 0 30px rgba(255,199,44,0.4)) drop-shadow(0 0 80px rgba(255,199,44,0.15));
+  transition:filter 0.4s;
+}
+#mainTri.open{
+  filter:drop-shadow(0 0 60px rgba(255,199,44,0.9)) drop-shadow(0 0 120px rgba(255,199,44,0.5));
+}
+
+.countdown-wrap{
+  position:absolute;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  top:50%;left:50%;transform:translate(-50%,-46%);
+  width:100%;
+}
+.gate-label{
+  font-size:clamp(7px,1.2vw,10px);
+  letter-spacing:0.3em;
+  color:rgba(255,199,44,0.45);
+  margin-bottom:6px;
+}
+.digits{
+  font-size:clamp(28px,6vw,64px);
+  color:#FFC72C;
+  letter-spacing:0.05em;
+  line-height:1;
+  text-shadow:0 0 20px rgba(255,199,44,0.6);
+  font-weight:bold;
+  font-variant-numeric:tabular-nums;
+  transition:text-shadow 0.3s;
+}
+.digits.pulse{
+  animation:digitPulse 0.5s ease-out;
+}
+@keyframes digitPulse{
+  0%{text-shadow:0 0 20px rgba(255,199,44,0.6);}
+  50%{text-shadow:0 0 60px rgba(255,199,44,1),0 0 120px rgba(255,199,44,0.5);}
+  100%{text-shadow:0 0 20px rgba(255,199,44,0.6);}
+}
+.open-signal{
+  font-size:clamp(9px,1.5vw,13px);
+  letter-spacing:0.4em;
+  color:#FFC72C;
+  margin-top:6px;
+  opacity:0;
+  transition:opacity 0.3s;
+  animation:none;
+}
+.open-signal.show{
+  opacity:1;
+  animation:signalBlink 0.6s ease-in-out infinite;
+}
+@keyframes signalBlink{0%,100%{opacity:0.4}50%{opacity:1}}
+
+/* ── QR ZONE ── */
+.qr-zone{
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+}
+#qrCanvas{
+  display:block;cursor:pointer;
+  clip-path:polygon(50% 0%, 0% 100%, 100% 100%);
+  transition:filter 0.4s;
+  filter:drop-shadow(0 0 12px #FFC72C) drop-shadow(0 0 28px rgba(255,199,44,0.3));
+}
+#qrCanvas:hover{
+  filter:drop-shadow(0 0 22px #FFC72C) drop-shadow(0 0 50px rgba(255,199,44,0.5));
+}
+.qr-cta{
+  font-size:9px;letter-spacing:0.3em;
+  color:rgba(255,199,44,0.4);
+  animation:breathe 3s ease-in-out infinite 1s;
+}
+
+/* ── GATEWAY DOORS ── */
+.doors{
+  display:flex;
+  gap:clamp(6px,1.5vw,14px);
+  flex-wrap:wrap;justify-content:center;
+  padding:0 8px 8px;
+}
+.door{
+  padding:10px clamp(12px,2vw,22px);
+  border-radius:4px;
+  font-size:clamp(8px,1.1vw,11px);
+  letter-spacing:0.22em;
+  text-decoration:none;
+  border:1px solid;
+  transition:all 0.3s;
+  cursor:pointer;
+  position:relative;
+  overflow:hidden;
+  white-space:nowrap;
+}
+.door::before{
+  content:'';position:absolute;inset:0;
+  background:currentColor;opacity:0.04;
+  transition:opacity 0.3s;
+}
+.door:hover::before{opacity:0.1;}
+
+.door-alive{
+  color:rgba(100,200,255,0.7);
+  border-color:rgba(100,200,255,0.25);
+}
+.door-alive:hover{color:#64c8ff;border-color:rgba(100,200,255,0.6);box-shadow:0 0 14px rgba(100,200,255,0.15);}
+
+.door-soul{
+  color:rgba(255,199,44,0.7);
+  border-color:rgba(255,199,44,0.25);
+}
+.door-soul:hover{color:#FFC72C;border-color:rgba(255,199,44,0.6);box-shadow:0 0 14px rgba(255,199,44,0.2);}
+
+.door-lobby{
+  color:rgba(255,255,255,0.3);
+  border-color:rgba(255,255,255,0.1);
+  position:relative;
+}
+.door-lobby.locked::after{
+  content:'▲ GATE CLOSED';
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,0.7);
+  font-size:7px;letter-spacing:0.2em;
+  color:rgba(255,255,255,0.3);
+}
+.door-lobby.open-now{
+  color:#fff;border-color:rgba(255,255,255,0.5);
+  box-shadow:0 0 20px rgba(255,255,255,0.15);
+  animation:doorOpen 0.8s ease-out;
+}
+@keyframes doorOpen{0%{transform:scale(0.95);opacity:0}100%{transform:scale(1);opacity:1}}
+.door-lobby.open-now::after{display:none;}
+
+.door-fight{color:rgba(255,80,80,0.6);border-color:rgba(255,80,80,0.2);}
+.door-fight:hover{color:#ff5050;border-color:rgba(255,80,80,0.5);box-shadow:0 0 14px rgba(255,80,80,0.15);}
+
+.door-empire{
+  color:rgba(255,199,44,0.0);
+  border-color:rgba(255,199,44,0.0);
+  pointer-events:none;
+  transition:all 1s;
+}
+.door-empire.unlocked{
+  color:rgba(255,199,44,1);
+  border-color:rgba(255,199,44,0.6);
+  pointer-events:all;
+  box-shadow:0 0 20px rgba(255,199,44,0.25);
+  animation:empireReveal 2s ease-out;
+}
+@keyframes empireReveal{0%{opacity:0;transform:scale(0.9)}100%{opacity:1;transform:scale(1)}}
+
+/* ── OPEN COUNTDOWN ── */
+.open-bar{
+  position:fixed;top:0;left:0;right:0;
+  height:3px;
+  background:linear-gradient(90deg,#FFC72C,#ff8c00);
+  transform:scaleX(0);transform-origin:left;
+  z-index:50;
+  transition:none;
+}
+.open-bar.draining{
+  transition:transform linear;
+}
+
+/* ── TICK SOUND VISUAL ── */
+.tick-dot{
+  position:fixed;bottom:20px;right:20px;z-index:20;
+  width:6px;height:6px;border-radius:50%;
+  background:#FFC72C;opacity:0;
+  animation:none;
+}
+.tick-dot.tick{animation:tickAnim 0.12s ease-out;}
+@keyframes tickAnim{0%{opacity:0.8;transform:scale(1.5)}100%{opacity:0;transform:scale(1)}}
+
+/* ── VISITOR COUNT ── */
+.visitor-count{
+  font-size:8px;letter-spacing:0.2em;
+  color:rgba(255,199,44,0.2);
+  position:fixed;bottom:18px;left:20px;z-index:20;
+}
+</style>
+</head>
+<body>
+
+<canvas id="aurora"></canvas>
+<div id="shapes"></div>
+<div id="soulWall"></div>
+<div id="flash"></div>
+
+<!-- SEALED OVERLAY -->
+<div id="sealedOverlay">
+  <div class="sealed-tri">▼</div>
+  <div class="sealed-title">GATE SEALED</div>
+  <div class="sealed-sub">
+    TODAY'S SOULS HAVE BEEN ACCEPTED.<br>
+    THE EMPIRE GROWS BY ONE MORE TOMORROW.
+  </div>
+  <div class="sealed-reset">REOPENS IN <span id="sealReset">--:--:--</span></div>
+  <div class="sealed-count" id="sealCount"></div>
+</div>
+
+<!-- MANIFESTO -->
+<div id="manifesto">
+  <p class="manifesto-text">
+    YOUR SOUL IS ON DISPLAY FOR SAFEKEEPING · NO CONTRACT WAS SIGNED · YOU OWN IT FREELY<br>
+    THIS IS A DIGITAL REPRESENTATION · IT KNOWS YOU <em>ANONYMOUSLY</em> · NO PASSWORD · NO DATA · NO SERVER OWNS YOU<br>
+    <em>THE OPPOSITE — YOUR IDENTITY SOLD, CENTRALISED, MONETISED WITHOUT CONSENT — THAT IS THE REAL SOUL THEFT</em><br>
+    THIS TOKEN PROVES DECENTRALISATION IS NOT THEORY · IT IS NOW · AND IT IS YOURS
+  </p>
+</div>
+
+<div id="stage">
+  <div class="top-bar">
+    <span class="empire-mark">SHORTFACTORY · EMPIRE · v3</span>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div class="limit-bar" id="limitBar"></div>
+      <span class="soul-badge" id="soulBadge">UNKNOWN VISITOR</span>
+    </div>
+  </div>
+
+  <div class="center">
+    <a href="/alive/" class="alive-presence" id="alivePresence">▲ SHE IS WATCHING · ALIVE</a>
+
+    <div class="tri-stage">
+      <canvas id="mainTri" width="340" height="320"></canvas>
+      <div class="countdown-wrap">
+        <div class="gate-label" id="gateLabel">NEXT GATE OPENS IN</div>
+        <div class="digits" id="digits">--:--</div>
+        <div class="open-signal" id="openSignal">▲ GATE OPEN ▲</div>
+      </div>
+    </div>
+
+    <div class="qr-zone">
+      <canvas id="qrCanvas" width="500" height="500" style="width:120px;height:120px;" title="Scan to claim your soul token"></canvas>
+      <div class="qr-cta">▲ SCAN TO CLAIM YOUR SOUL</div>
+    </div>
+  </div>
+
+  <div class="doors">
+    <a href="/alive/" class="door door-alive">▲ ALIVE</a>
+    <a href="/logos/" class="door door-soul">▲ CLAIM SOUL</a>
+    <a href="/lobby.html" class="door door-lobby locked" id="lobbyDoor">TESTING LOBBY</a>
+    <a href="/hub/" class="door door-fight">FIGHT CLUB</a>
+    <a href="/alive/studio/" class="door door-empire" id="empireDoor">THE EMPIRE</a>
+  </div>
+</div>
+
+<div class="open-bar" id="openBar"></div>
+<div class="tick-dot" id="tickDot"></div>
+<div class="visitor-count" id="visitorCount"></div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// AURORA BACKGROUND — ALIVE spirit
+// ══════════════════════════════════════════════════════
+(function() {
+  const canvas = document.getElementById('aurora');
+  const ctx = canvas.getContext('2d');
+  let W, H, t = 0;
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Aurora bands
+  const bands = Array.from({length:5}, (_, i) => ({
+    hue:  [200,180,220,260,200][i],
+    sat:  [60,50,70,55,65][i],
+    y:    [0.2,0.35,0.5,0.65,0.8][i],
+    amp:  [0.12,0.09,0.14,0.1,0.08][i],
+    freq: [0.5,0.7,0.4,0.6,0.8][i],
+    speed:[0.3,0.2,0.4,0.25,0.35][i],
+    phase: Math.random()*Math.PI*2
+  }));
+
+  function frame() {
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0,0,W,H);
+
+    bands.forEach(b => {
+      const yBase = H * b.y;
+      const gy = ctx.createLinearGradient(0, yBase-H*0.15, 0, yBase+H*0.15);
+      const a = 0.04 + 0.025 * Math.sin(t * b.speed * 0.7 + b.phase);
+      gy.addColorStop(0, 'transparent');
+      gy.addColorStop(0.5, `hsla(${b.hue},${b.sat}%,60%,${a})`);
+      gy.addColorStop(1, 'transparent');
+
+      ctx.beginPath();
+      for (let x = 0; x <= W; x += 4) {
+        const wave = Math.sin(x / W * Math.PI * b.freq + t * b.speed + b.phase) * H * b.amp;
+        const y = yBase + wave;
+        x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.lineTo(W, yBase + H*0.15);
+      ctx.lineTo(0, yBase + H*0.15);
+      ctx.closePath();
+      ctx.fillStyle = gy;
+      ctx.fill();
+    });
+
+    t += 0.016;
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+
+// ══════════════════════════════════════════════════════
+// FLOATING SQUID GAME SHAPES
+// ══════════════════════════════════════════════════════
+(function() {
+  const container = document.getElementById('shapes');
+  const SHAPES = ['▲','●','■'];
+  const WEIGHTS = [5, 2, 1]; // triangles dominate
+
+  function spawnShape() {
+    const totalW = WEIGHTS.reduce((a,b)=>a+b,0);
+    let r = Math.random()*totalW, idx=0;
+    for(let i=0;i<WEIGHTS.length;i++){r-=WEIGHTS[i];if(r<=0){idx=i;break;}}
+
+    const el = document.createElement('div');
+    el.className = 'shape';
+    el.textContent = SHAPES[idx];
+    el.style.left = (Math.random()*100) + 'vw';
+    const dur = 20 + Math.random()*40;
+    el.style.animationDuration = dur + 's';
+    el.style.animationDelay = (-Math.random()*dur) + 's';
+    el.style.fontSize = (8 + Math.random()*28) + 'px';
+    el.style.color = `rgba(255,199,44,${0.03 + Math.random()*0.08})`;
+    container.appendChild(el);
+    setTimeout(() => el.remove(), dur*1000 + 2000);
+  }
+
+  for(let i=0;i<40;i++) spawnShape();
+  setInterval(spawnShape, 1200);
+})();
+
+// ══════════════════════════════════════════════════════
+// MAIN TRIANGLE — animated, pulsing
+// ══════════════════════════════════════════════════════
+(function() {
+  const canvas = document.getElementById('mainTri');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const MCY = '#FFC72C';
+  let t = 0, isOpen = false;
+
+  // Triangle vertices (equilateral, centered)
+  const cx=W/2, cy=H/2+10;
+  const R = 130;
+  function triPt(angle, r) {
+    return [cx + r*Math.cos(angle), cy + r*Math.sin(angle)];
+  }
+  const ANGLES = [-Math.PI/2, Math.PI/2+Math.PI/3*2, Math.PI/2+Math.PI/3*4]; // up-pointing
+
+  function drawFrame() {
+    ctx.clearRect(0,0,W,H);
+    const pulse = 0.85 + 0.1*Math.sin(t*1.8);
+    const glow  = isOpen ? 1 : 0.5 + 0.3*Math.sin(t*2.2);
+
+    // Draw nested triangles (5 rings)
+    for(let i=4; i>=0; i--) {
+      const sc = (0.35 + i*0.13) * pulse;
+      const alpha = (0.15 + i*0.12) * glow;
+      ctx.strokeStyle = `rgba(255,199,44,${alpha})`;
+      ctx.lineWidth = i===4 ? 2.5 : 1;
+
+      ctx.beginPath();
+      ANGLES.forEach((a,j) => {
+        const [px,py] = triPt(a, R*sc);
+        j===0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py);
+      });
+      ctx.closePath();
+      ctx.stroke();
+    }
+
+    // Outer ring with dash when gate open
+    if(isOpen) {
+      ctx.strokeStyle = 'rgba(255,199,44,0.9)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([8,6]);
+      ctx.beginPath();
+      ANGLES.forEach((a,j)=>{
+        const sc = 0.98;
+        const [px,py] = triPt(a, R*sc*(0.95+0.05*Math.sin(t*8)));
+        j===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+      });
+      ctx.closePath();
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // Corner dots
+    ANGLES.forEach(a => {
+      const [px,py] = triPt(a, R*0.98*pulse);
+      ctx.shadowColor = MCY; ctx.shadowBlur = isOpen?20:8;
+      ctx.fillStyle = MCY;
+      ctx.beginPath(); ctx.arc(px,py,isOpen?5:3.5,0,Math.PI*2); ctx.fill();
+    });
+    ctx.shadowBlur = 0;
+
+    // Center dot
+    ctx.fillStyle = `rgba(255,199,44,${0.6+0.4*Math.sin(t*3)})`;
+    ctx.beginPath(); ctx.arc(cx,cy+20,3,0,Math.PI*2); ctx.fill();
+
+    t += 0.025;
+    requestAnimationFrame(drawFrame);
+  }
+  drawFrame();
+
+  window._setTriOpen = v => { isOpen = v; };
+})();
+
+// ══════════════════════════════════════════════════════
+// TRIANGLE QR — soul linking
+// ══════════════════════════════════════════════════════
+function renderGatewayQR() {
+  const canvas = document.getElementById('qrCanvas');
+  const S = 500;
+  canvas.width = S; canvas.height = S;
+  const ctx = canvas.getContext('2d');
+  const MCY = '#FFC72C';
+
+  const url = 'https://www.shortfactory.shop/logos/';
+
+  let qr = null;
+  for (let v=0; v<=20; v++) {
+    try { const q=qrcode(v,'H'); q.addData(url); q.make(); qr=q; break; } catch(_) {}
+  }
+  if(!qr) return;
+  const N = qr.getModuleCount();
+
+  // Geometry (same proven layout)
+  const triAx=250,triAy=25,triBLx=25,triBLy=475,triBRx=475,triBRy=475;
+  const qrX=38,qrY=50,qrSz=424;
+  const mod = qrSz/N;
+
+  ctx.fillStyle='#05050d'; ctx.fillRect(0,0,S,S);
+
+  // White triangle fill
+  ctx.fillStyle='#ffffff';
+  ctx.beginPath(); ctx.moveTo(triAx,triAy); ctx.lineTo(triBLx,triBLy); ctx.lineTo(triBRx,triBRy); ctx.closePath(); ctx.fill();
+
+  // QR modules
+  ctx.fillStyle='#000000';
+  for(let r=0;r<N;r++) for(let c=0;c<N;c++) {
+    if(qr.isDark(r,c)) ctx.fillRect(qrX+c*mod, qrY+r*mod, mod-0.3, mod-0.3);
+  }
+
+  // Inner triangle
+  const iCx=S/2, iAy2=qrY+qrSz*0.26, iH=qrSz*0.36;
+  const iW=iH*2/Math.sqrt(3);
+  const iBLx=iCx-iW/2,iBLy=iAy2+iH, iBRx=iCx+iW/2,iBRy=iAy2+iH;
+  const iGravY=(iAy2+iBLy*2)/3;
+
+  ctx.fillStyle='#ffffff';
+  ctx.beginPath(); ctx.moveTo(iCx,iAy2); ctx.lineTo(iBLx,iBLy); ctx.lineTo(iBRx,iBRy); ctx.closePath(); ctx.fill();
+
+  ctx.fillStyle=MCY; ctx.globalAlpha=0.15;
+  ctx.beginPath(); ctx.moveTo(iCx,iAy2); ctx.lineTo(iBLx,iBLy); ctx.lineTo(iBRx,iBRy); ctx.closePath(); ctx.fill();
+  ctx.globalAlpha=1;
+
+  for(let i=0;i<4;i++){
+    const sc=1-i*0.22, gx=(iCx+iBLx+iBRx)/3, gy=(iAy2+iBLy+iBRy)/3;
+    ctx.strokeStyle=MCY; ctx.lineWidth=i===0?2:1; ctx.globalAlpha=1-i*0.2;
+    ctx.shadowColor=MCY; ctx.shadowBlur=i===0?6:0;
+    ctx.beginPath();
+    ctx.moveTo(gx+(iCx-gx)*sc,  gy+(iAy2-gy)*sc);
+    ctx.lineTo(gx+(iBLx-gx)*sc, gy+(iBLy-gy)*sc);
+    ctx.lineTo(gx+(iBRx-gx)*sc, gy+(iBRy-gy)*sc);
+    ctx.closePath(); ctx.stroke();
+  }
+  ctx.globalAlpha=1; ctx.shadowBlur=0;
+
+  ctx.fillStyle=MCY;
+  ctx.font=`bold ${Math.round(iH*0.24)}px Courier New`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('SF', iCx, iGravY+iH*0.04);
+
+  ctx.strokeStyle=MCY; ctx.lineWidth=3; ctx.shadowColor=MCY; ctx.shadowBlur=18;
+  ctx.beginPath(); ctx.moveTo(triAx,triAy); ctx.lineTo(triBLx,triBLy); ctx.lineTo(triBRx,triBRy); ctx.closePath(); ctx.stroke();
+  ctx.shadowBlur=0;
+
+  [[triAx,triAy],[triBLx,triBLy],[triBRx,triBRy]].forEach(([px,py])=>{
+    ctx.shadowColor=MCY; ctx.shadowBlur=10; ctx.fillStyle=MCY;
+    ctx.beginPath(); ctx.arc(px,py,5,0,Math.PI*2); ctx.fill();
+  });
+  ctx.shadowBlur=0;
+}
+
+document.getElementById('qrCanvas').addEventListener('click',()=>{
+  window.location.href='/logos/';
+});
+
+// ══════════════════════════════════════════════════════
+// GATE TIMING — opens every 15 min (:00 :15 :30 :45)
+// ══════════════════════════════════════════════════════
+const GATE_WINDOW_SECS = 30; // gate stays open 30 seconds
+let gateIsOpen = false;
+let openTimer = null;
+
+function getSecsToNextGate() {
+  const now = new Date();
+  const totalSecs = now.getMinutes()*60 + now.getSeconds();
+  const interval  = 15*60;
+  const nextGate  = Math.ceil((totalSecs+1)/interval)*interval;
+  return nextGate - totalSecs;
+}
+
+function openGate() {
+  if(gateIsOpen) return;
+  gateIsOpen = true;
+
+  // Flash
+  const flash = document.getElementById('flash');
+  flash.classList.add('on');
+  setTimeout(()=>flash.classList.remove('on'),120);
+  setTimeout(()=>{flash.classList.add('on');setTimeout(()=>flash.classList.remove('on'),80);},200);
+
+  // UI updates
+  document.getElementById('gateLabel').textContent='▲ GATE IS OPEN ▲';
+  document.getElementById('digits').textContent='00:30';
+  document.getElementById('openSignal').classList.add('show');
+  document.getElementById('lobbyDoor').classList.remove('locked');
+  document.getElementById('lobbyDoor').classList.add('open-now');
+  window._setTriOpen(true);
+  document.getElementById('mainTri').classList.add('open');
+
+  // Drain bar
+  const bar = document.getElementById('openBar');
+  bar.style.transform='scaleX(1)';
+  bar.classList.add('draining');
+  bar.style.transitionDuration = GATE_WINDOW_SECS + 's';
+  setTimeout(()=>bar.style.transform='scaleX(0)', 50);
+
+  // Empire door (if soul token known)
+  if(localStorage.getItem('sf_soul_token')) {
+    document.getElementById('empireDoor').classList.add('unlocked');
+  }
+
+  // Countdown the open window
+  let remaining = GATE_WINDOW_SECS;
+  openTimer = setInterval(()=>{
+    remaining--;
+    const m=Math.floor(remaining/60), s=remaining%60;
+    document.getElementById('digits').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+    if(remaining<=0){ clearInterval(openTimer); closeGate(); }
+  },1000);
+}
+
+function closeGate() {
+  gateIsOpen=false;
+  document.getElementById('gateLabel').textContent='NEXT GATE OPENS IN';
+  document.getElementById('openSignal').classList.remove('show');
+  document.getElementById('lobbyDoor').classList.add('locked');
+  document.getElementById('lobbyDoor').classList.remove('open-now');
+  document.getElementById('mainTri').classList.remove('open');
+  window._setTriOpen(false);
+  document.getElementById('openBar').classList.remove('draining');
+  document.getElementById('openBar').style.transition='none';
+  document.getElementById('openBar').style.transform='scaleX(0)';
+}
+
+// ══════════════════════════════════════════════════════
+// COUNTDOWN TICK
+// ══════════════════════════════════════════════════════
+let lastSec = -1;
+function tick() {
+  if(gateIsOpen) return;
+
+  const secs = getSecsToNextGate();
+
+  // Check: gate time arrived
+  if(secs <= 0 || secs > 15*60) { openGate(); return; }
+
+  const m = Math.floor(secs/60);
+  const s = secs%60;
+  const str = String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  const el = document.getElementById('digits');
+  if(el.textContent !== str) {
+    el.textContent = str;
+    // Tick dot flash
+    const dot = document.getElementById('tickDot');
+    dot.className='tick-dot';
+    void dot.offsetWidth;
+    dot.className='tick-dot tick';
+    // Pulse on last 10 secs
+    if(secs<=10) {
+      el.classList.remove('pulse');
+      void el.offsetWidth;
+      el.classList.add('pulse');
+    }
+    lastSec = secs;
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// SOUL TOKEN CHECK
+// ══════════════════════════════════════════════════════
+function checkSoul() {
+  const token = localStorage.getItem('sf_soul_token');
+  if(!token) return;
+  const badge = document.getElementById('soulBadge');
+  badge.textContent='▲ SOUL KNOWN';
+  badge.classList.add('known');
+  document.getElementById('alivePresence').textContent='▲ SHE KNOWS YOU · ALIVE';
+  document.getElementById('empireDoor').style.transition='all 1s';
+  if(gateIsOpen) document.getElementById('empireDoor').classList.add('unlocked');
+}
+
+// ══════════════════════════════════════════════════════
+// VISITOR COUNT (fake-real — based on localStorage)
+// ══════════════════════════════════════════════════════
+function updateCount() {
+  let count = parseInt(localStorage.getItem('sf_visit_count')||'0');
+  count++;
+  localStorage.setItem('sf_visit_count', count);
+  // Add some global-feel variance
+  const displayed = 847 + count;
+  document.getElementById('visitorCount').textContent=
+    'SOULS IN GATEWAY: ' + displayed.toLocaleString();
+}
+
+// ══════════════════════════════════════════════════════
+// AUDIO TICK (Web Audio API — silent until interacted)
+// ══════════════════════════════════════════════════════
+let audioCtx = null;
+function initAudio() {
+  if(audioCtx) return;
+  audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+}
+function playTick(freq=800, dur=0.04, vol=0.04) {
+  if(!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+dur);
+  osc.start(); osc.stop(audioCtx.currentTime+dur);
+}
+document.addEventListener('click', ()=>{initAudio();}, {once:true});
+
+// Override tick to play sound
+const _tick = tick;
+setInterval(()=>{
+  const secs = gateIsOpen ? 0 : getSecsToNextGate();
+  if(!gateIsOpen){
+    _tick();
+    if(secs<=10 && secs>0) playTick(secs<=3?1200:900,0.05,0.05);
+    else if(secs>0) playTick(600,0.03,0.02);
+  }
+}, 1000);
+
+// ══════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
+// DAILY LIMIT + SOUL WALL
+// ══════════════════════════════════════════════════════
+
+let gatewayData = {allowed:true, full:false, count:0, limit:10, remaining:10, souls:[]};
+
+function djb2(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h)^s.charCodeAt(i);return(h>>>0).toString(16).toUpperCase().padStart(8,'0');}
+
+// Render limit dots in top bar
+function renderLimitDots(count, limit) {
+  const bar = document.getElementById('limitBar');
+  bar.innerHTML = '';
+  const show = Math.min(limit, 15); // max 15 dots visible
+  for(let i=0;i<show;i++){
+    const d=document.createElement('div');
+    d.className='limit-dot'+(i<count?' used':' open');
+    bar.appendChild(d);
+  }
+  if(limit>15){
+    const lbl=document.createElement('span');
+    lbl.style.cssText='font-size:8px;letter-spacing:0.15em;color:rgba(255,199,44,0.4);';
+    lbl.textContent='+'+( limit-15);
+    bar.appendChild(lbl);
+  }
+}
+
+// Sealed reset countdown
+function sealCountdown(resets_in) {
+  let rem = resets_in;
+  const el = document.getElementById('sealReset');
+  const tick2 = setInterval(()=>{
+    rem--;
+    if(rem<=0){clearInterval(tick2);location.reload();return;}
+    const h=Math.floor(rem/3600), m=Math.floor((rem%3600)/60), s=rem%60;
+    el.textContent=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  },1000);
+  el.textContent=String(Math.floor(resets_in/3600)).padStart(2,'0')+':'+String(Math.floor((resets_in%3600)/60)).padStart(2,'0')+':'+String(resets_in%60).padStart(2,'0');
+}
+
+// Show sealed overlay (red triangle gate)
+function sealGate(data) {
+  document.getElementById('sealedOverlay').classList.add('show');
+  document.getElementById('sealCount').textContent=
+    data.count+' SOULS ENTERED TODAY · DAY '+data.day+' · TOMORROW\'S LIMIT: '+(data.limit+1);
+  sealCountdown(data.resets_in);
+  // Red-ify the lobby door
+  const ld=document.getElementById('lobbyDoor');
+  ld.style.color='rgba(200,34,0,0.5)';
+  ld.style.borderColor='rgba(200,34,0,0.25)';
+}
+
+// ── Soul Wall — floating Satoshi shapes ──
+// Maps logo id to a simple triangle glyph with unique color
+const LOGO_COLORS = {
+  apex:'#FFD700',witness:'#50C8FF',merkaba:'#FF6464',oracle:'#FFB400',
+  cipher:'#00FF96',genesis:'#ffffff',quantum:'#32C8FF',singularity:'#FF3250',
+  echo:'#96FFB4',continuum:'#FF9632',trident:'#6496FF',helix:'#FF64C8',
+  abyss:'#5050FF',crown:'#FFDC32',compass:'#C8FF64',golden:'#FFC850',
+};
+
+function spawnSoulMark(soul) {
+  const wall = document.getElementById('soulWall');
+  const el = document.createElement('canvas');
+  el.className = 'soul-mark';
+  const sz = 36 + Math.random()*24;
+  el.width = sz; el.height = sz;
+  el.style.cssText = `
+    width:${sz}px;height:${sz}px;
+    left:${5+Math.random()*88}vw;
+    bottom:${10+Math.random()*70}vh;
+    clip-path:polygon(50% 0%,0% 100%,100% 100%);
+    animation-duration:${8+Math.random()*12}s;
+    animation-delay:${Math.random()*3}s;
+  `;
+
+  const ctx = el.getContext('2d');
+  const color = LOGO_COLORS[soul.lid] || ('#'+soul.th.slice(0,6));
+  const S = sz;
+
+  // White triangle bg
+  ctx.fillStyle='#fff';
+  ctx.beginPath(); ctx.moveTo(S/2,2); ctx.lineTo(2,S-2); ctx.lineTo(S-2,S-2); ctx.closePath(); ctx.fill();
+
+  // Nested triangles in soul color
+  ctx.strokeStyle=color; ctx.lineWidth=1;
+  for(let i=0;i<3;i++){
+    const sc=0.9-i*0.25;
+    ctx.globalAlpha=1-i*0.3;
+    ctx.beginPath();
+    ctx.moveTo(S/2,(S/2-(S/2-4)*sc)+4);
+    ctx.lineTo(S/2-(S/2-4)*sc,S-4-(S-8)*(1-sc)/2);
+    ctx.lineTo(S/2+(S/2-4)*sc,S-4-(S-8)*(1-sc)/2);
+    ctx.closePath(); ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+
+  wall.appendChild(el);
+  setTimeout(()=>el.remove(), 22000);
+}
+
+function renderSoulWall(souls) {
+  if(!souls||!souls.length) return;
+  // Stagger spawn
+  souls.slice(0,12).forEach((s,i)=>{
+    setTimeout(()=>spawnSoulMark(s), i*400 + 1000);
+  });
+  // Keep spawning on interval
+  let idx=0;
+  setInterval(()=>{
+    if(!souls.length) return;
+    spawnSoulMark(souls[idx % souls.length]);
+    idx++;
+  }, 4000);
+}
+
+// ── Enter gate (log this visitor) ──
+function enterGate() {
+  const soulToken = localStorage.getItem('sf_soul_token');
+  const myClaims = JSON.parse(localStorage.getItem('sf_my_claims')||'[]');
+  const logoId = myClaims.length ? myClaims[myClaims.length-1].logoId : '';
+
+  fetch('/gateway/enter.php',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      dh: djb2(localStorage.getItem('sf_device_id')||'anon'),
+      th: soulToken ? djb2(soulToken) : '',
+      lid: logoId
+    })
+  }).then(r=>r.json()).then(data=>{
+    if(data.ok) {
+      renderLimitDots(data.count, data.limit);
+      // Spawn own soul mark if paired
+      if(soulToken && logoId) spawnSoulMark({th:djb2(soulToken),lid:logoId});
+    } else if(data.full) {
+      sealGate({...gatewayData, ...data});
+    }
+  }).catch(()=>{});
+}
+
+// ── Fetch gateway state on load ──
+async function initGateway() {
+  try {
+    const res = await fetch('/gateway/check.php');
+    const data = await res.json();
+    gatewayData = data;
+
+    renderLimitDots(data.count, data.limit);
+
+    if(data.full) {
+      sealGate(data);
+    } else {
+      // Show manifesto after 3s
+      setTimeout(()=>document.getElementById('manifesto').classList.add('show'), 3000);
+      renderSoulWall(data.souls);
+    }
+
+    // Show own soul on wall immediately if we have one
+    const soulToken = localStorage.getItem('sf_soul_token');
+    const myClaims = JSON.parse(localStorage.getItem('sf_my_claims')||'[]');
+    if(soulToken && myClaims.length) {
+      setTimeout(()=>spawnSoulMark({th:djb2(soulToken),lid:myClaims[myClaims.length-1].logoId}), 500);
+    }
+
+  } catch(e) {
+    // Server unreachable — allow entry
+    document.getElementById('manifesto').classList.add('show');
+  }
+}
+
+// ── Override lobby door click to go through enter.php ──
+document.getElementById('lobbyDoor').addEventListener('click', function(e) {
+  if(this.classList.contains('locked')) { e.preventDefault(); return; }
+  if(!gatewayData.full) enterGate();
+});
+
+// ══════════════════════════════════════════════════════
+renderGatewayQR();
+checkSoul();
+updateCount();
+tick();
+initGateway();
+
+// Check if we're currently in a gate window
+const nowSecs = new Date().getMinutes()*60 + new Date().getSeconds();
+const inWindow = nowSecs % (15*60) < GATE_WINDOW_SECS;
+if(inWindow) setTimeout(openGate, 500);
+</script>
+</body>
+</html>

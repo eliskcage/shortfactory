@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>End of Presidency</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    html, body {
+      height: 100%;
+      background: #000;
+    }
+    
+    body {
+      font-family: Georgia, serif;
+      overflow-x: hidden;
+      transition: background 1s ease;
+    }
+    
+    /* PHONE FRAME */
+    .phone-frame {
+      width: 100%;
+      max-width: 375px;
+      min-height: 100vh;
+      margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+      transition: background 1s ease;
+    }
+    
+    @media (min-width: 500px) {
+      .phone-frame {
+        min-height: 700px;
+        height: 90vh;
+        max-height: 800px;
+        margin: 20px auto;
+        border-radius: 24px;
+        box-shadow: 0 0 60px rgba(0,0,0,0.8);
+      }
+    }
+
+    /* THEMES */
+    .phone-frame.saint {
+      --bg: linear-gradient(180deg, #0a1628 0%, #1a3a5c 30%, #c9a227 70%, #fff8e7 100%);
+      --glow: #c9a227;
+      --text: #fff8e7;
+      --bar-bg: rgba(201, 162, 39, 0.2);
+      --bar-fill: linear-gradient(90deg, #c9a227, #fff8e7);
+    }
+    .phone-frame.peaceful {
+      --bg: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      --glow: #4da6ff;
+      --text: #a8d8ff;
+      --bar-bg: rgba(77, 166, 255, 0.15);
+      --bar-fill: linear-gradient(90deg, #1e90ff, #87ceeb);
+    }
+    .phone-frame.aggressive {
+      --bg: linear-gradient(180deg, #1a0a0a 0%, #2d1515 50%, #4a1a1a 100%);
+      --glow: #ff4444;
+      --text: #ff6b6b;
+      --bar-bg: rgba(255, 68, 68, 0.2);
+      --bar-fill: linear-gradient(90deg, #8b0000, #ff4444);
+    }
+    .phone-frame.tyrant {
+      --bg: linear-gradient(180deg, #0d0d0d 0%, #1a1a1a 50%, #0d0d0d 100%);
+      --glow: #333;
+      --text: #555;
+      --bar-bg: rgba(50, 50, 50, 0.5);
+      --bar-fill: linear-gradient(90deg, #333, #555);
+    }
+    .phone-frame.old {
+      --bg: linear-gradient(180deg, #1a1a2e 0%, #2d2d5a 30%, #4a3f6b 70%, #1a1a2e 100%);
+      --glow: #9d8cff;
+      --text: #d4c4ff;
+      --bar-bg: rgba(157, 140, 255, 0.15);
+      --bar-fill: linear-gradient(90deg, #6b5b95, #d4c4ff);
+    }
+
+    .phone-frame { background: var(--bg); color: var(--text); }
+
+    /* VIDEO */
+    .video-container {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4/3;
+      background: #000;
+      overflow: hidden;
+    }
+    .video-container video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .video-gradient {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60%;
+      background: linear-gradient(transparent, rgba(0,0,0,0.8));
+      pointer-events: none;
+    }
+
+    /* CONTENT */
+    .content {
+      padding: 24px 20px 80px;
+      max-width: 400px;
+      margin: 0 auto;
+      margin-top: 32px;
+    }
+
+    /* TITLE */
+    .title-block {
+      text-align: center;
+      margin-bottom: 32px;
+      animation: fadeUp 1s ease-out;
+    }
+    .title {
+      font-size: 32px;
+      font-weight: 400;
+      letter-spacing: 6px;
+      text-shadow: 0 0 30px var(--glow);
+      transition: all 0.5s ease;
+    }
+    .subtitle {
+      font-size: 13px;
+      letter-spacing: 3px;
+      opacity: 0.7;
+      margin-top: 8px;
+    }
+
+    /* STAT BARS */
+    .stats { animation: fadeUp 1s ease-out 0.3s both; }
+    .stat { margin-bottom: 14px; }
+    .stat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      letter-spacing: 2px;
+      opacity: 0.8;
+      margin-bottom: 4px;
+    }
+    .stat-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .stat-btn {
+      width: 24px;
+      height: 24px;
+      border: 1px solid var(--glow);
+      background: transparent;
+      color: var(--text);
+      font-size: 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      opacity: 0.6;
+      transition: all 0.2s;
+    }
+    .stat-btn:hover { opacity: 1; background: var(--bar-bg); }
+    .stat-btn:active { transform: scale(0.95); }
+    .stat-value { min-width: 36px; text-align: center; }
+    .stat-bar {
+      height: 8px;
+      background: var(--bar-bg);
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+    .stat-fill {
+      height: 100%;
+      background: var(--bar-fill);
+      border-radius: 4px;
+      box-shadow: 0 0 8px var(--glow);
+      transition: width 0.3s ease-out;
+    }
+
+    /* YEARS */
+    .years {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 11px;
+      letter-spacing: 2px;
+      opacity: 0.5;
+    }
+
+    /* MESSAGE (tyrant only) */
+    .message {
+      margin-top: 32px;
+      text-align: center;
+      font-size: 11px;
+      line-height: 1.8;
+      letter-spacing: 1px;
+      opacity: 0;
+      transition: opacity 1s ease;
+    }
+    .phone-frame.tyrant .message { opacity: 0.5; }
+
+    /* BUTTON BAR - HIDDEN (unlocked after completing all endings) */
+    .buttons {
+      display: none;
+    }
+    .buttons.dev-mode {
+      display: flex;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0,0,0,0.9);
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .buttons button {
+      flex: 1;
+      padding: 14px 8px;
+      background: transparent;
+      border: none;
+      color: #888;
+      font-family: Georgia, serif;
+      font-size: 10px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .buttons button:hover { color: #fff; background: rgba(255,255,255,0.05); }
+    .buttons button.active { color: var(--text); background: rgba(255,255,255,0.1); }
+
+    /* VIBE FINDER */
+    .vibe-toggle {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.6);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #fff;
+      padding: 8px 12px;
+      font-size: 10px;
+      letter-spacing: 1px;
+      border-radius: 4px;
+      cursor: pointer;
+      z-index: 10;
+      font-family: Georgia, serif;
+    }
+    .vibe-toggle:hover { background: rgba(0,0,0,0.8); }
+    
+    .vibe-panel {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.95);
+      z-index: 20;
+      padding: 20px;
+      overflow-y: auto;
+      display: none;
+    }
+    .vibe-panel.open { display: block; }
+    
+    .vibe-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 24px;
+      cursor: pointer;
+    }
+    
+    .vibe-title {
+      font-size: 14px;
+      letter-spacing: 2px;
+      margin-bottom: 16px;
+      color: #fff;
+    }
+    
+    .vibe-section {
+      margin-bottom: 20px;
+    }
+    .vibe-section h3 {
+      font-size: 11px;
+      letter-spacing: 1px;
+      color: #888;
+      margin-bottom: 10px;
+      font-weight: normal;
+    }
+    
+    .vibe-search {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .vibe-search input {
+      flex: 1;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #fff;
+      padding: 10px;
+      font-size: 12px;
+      border-radius: 4px;
+      font-family: Georgia, serif;
+    }
+    .vibe-search input::placeholder { color: #666; }
+    .vibe-search button {
+      background: var(--glow, #c9a227);
+      border: none;
+      color: #000;
+      padding: 10px 16px;
+      font-size: 10px;
+      letter-spacing: 1px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: Georgia, serif;
+    }
+    
+    .vibe-results {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .vibe-results img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      border-radius: 4px;
+      cursor: pointer;
+      opacity: 0.8;
+      transition: opacity 0.2s;
+    }
+    .vibe-results img:hover { opacity: 1; }
+    
+    .vibe-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .vibe-links a {
+      background: rgba(255,255,255,0.1);
+      color: #aaa;
+      padding: 8px 12px;
+      font-size: 10px;
+      letter-spacing: 1px;
+      border-radius: 4px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .vibe-links a:hover { background: rgba(255,255,255,0.2); color: #fff; }
+    
+    .vibe-suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .vibe-tag {
+      background: rgba(255,255,255,0.08);
+      color: #888;
+      padding: 6px 10px;
+      font-size: 10px;
+      border-radius: 12px;
+      cursor: pointer;
+      border: none;
+      font-family: Georgia, serif;
+    }
+    .vibe-tag:hover { background: rgba(255,255,255,0.15); color: #fff; }
+    
+    /* CATEGORY CARDS */
+    .category-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .category-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .category-card:hover { 
+      background: rgba(255,255,255,0.1); 
+      border-color: var(--glow, #c9a227);
+    }
+    .category-card.active {
+      border-color: var(--glow, #c9a227);
+      box-shadow: 0 0 15px rgba(201, 162, 39, 0.3);
+    }
+    .category-card .badge {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      background: #2a5;
+      color: #fff;
+      font-size: 8px;
+      padding: 3px 6px;
+      border-radius: 8px;
+      letter-spacing: 1px;
+    }
+    .category-card .badge.custom {
+      background: #c9a227;
+    }
+    .category-card h4 {
+      font-size: 11px;
+      letter-spacing: 1px;
+      margin: 0 0 4px 0;
+      color: #fff;
+      font-weight: normal;
+    }
+    .category-card p {
+      font-size: 9px;
+      color: #666;
+      margin: 0;
+      line-height: 1.4;
+    }
+    
+    .new-category-btn {
+      grid-column: span 2;
+      background: transparent;
+      border: 2px dashed rgba(255,255,255,0.2);
+      border-radius: 8px;
+      padding: 16px;
+      color: #666;
+      font-size: 11px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      font-family: Georgia, serif;
+      transition: all 0.2s;
+    }
+    .new-category-btn:hover {
+      border-color: var(--glow, #c9a227);
+      color: #fff;
+    }
+    
+    /* EDITOR */
+    .editor-section {
+      background: rgba(255,255,255,0.03);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .editor-section h3 {
+      font-size: 11px;
+      letter-spacing: 1px;
+      color: #888;
+      margin: 0 0 12px 0;
+      font-weight: normal;
+    }
+    .editor-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .editor-row label {
+      font-size: 10px;
+      color: #666;
+      min-width: 60px;
+      padding-top: 8px;
+    }
+    .editor-row input {
+      flex: 1;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #fff;
+      padding: 8px 10px;
+      font-size: 11px;
+      border-radius: 4px;
+      font-family: Georgia, serif;
+    }
+    .editor-row input::placeholder { color: #444; }
+    
+    .editor-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    .editor-actions button {
+      flex: 1;
+      padding: 12px;
+      font-size: 10px;
+      letter-spacing: 1px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: Georgia, serif;
+      border: none;
+    }
+    .btn-preview {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+    }
+    .btn-save {
+      background: var(--glow, #c9a227);
+      color: #000;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* BOTTOM BUTTONS */
+    .bottom-buttons {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      z-index: 10;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s;
+    }
+    .bottom-buttons.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .bottom-btn {
+      background: linear-gradient(135deg, rgba(0,0,0,0.8), rgba(30,30,30,0.9));
+      border: 2px solid var(--glow);
+      color: var(--text);
+      padding: 14px 24px;
+      font-size: 12px;
+      letter-spacing: 2px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: Georgia, serif;
+      transition: all 0.3s;
+      text-align: center;
+      line-height: 1.4;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+      animation: pulseGlow 2s ease-in-out infinite;
+    }
+    .bottom-btn:hover {
+      background: rgba(0,0,0,0.95);
+      box-shadow: 0 0 30px var(--glow);
+      transform: scale(1.05);
+    }
+    .bottom-btn .unlock-label {
+      font-size: 10px;
+      letter-spacing: 2px;
+      opacity: 0.8;
+      display: block;
+      margin-bottom: 4px;
+    }
+    .share-btn {
+      border-color: #f0f;
+      color: #f0f;
+    }
+    .share-btn:hover { box-shadow: 0 0 30px #f0f; }
+
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+      50% { box-shadow: 0 0 30px var(--glow); }
+    }
+
+    /* ACHIEVEMENT POPUP */
+    .achievement-popup {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+      border: 2px solid #ff4444;
+      color: #fff;
+      padding: 30px 40px;
+      border-radius: 15px;
+      text-align: center;
+      z-index: 200;
+      opacity: 0;
+      transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      box-shadow: 0 0 40px rgba(255, 68, 68, 0.4);
+    }
+    .achievement-popup.show {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+    }
+    .achievement-icon { font-size: 48px; margin-bottom: 10px; }
+    .achievement-text { font-size: 14px; font-weight: bold; letter-spacing: 2px; }
+    .achievement-sub { font-size: 10px; opacity: 0.6; margin-top: 8px; letter-spacing: 1px; }
+  </style>
+</head>
+<body>
+
+<div class="phone-frame saint" id="phoneFrame">
+  
+  <button class="vibe-toggle" id="vibeToggle" onclick="toggleVibePanel()" style="display:none;">🎨 VIBE FINDER</button>
+  
+  <!-- BOTTOM BUTTONS (hidden until tally complete) -->
+  <div class="bottom-buttons" id="bottomButtons">
+    <button class="bottom-btn" id="playAgainBtn" onclick="goToMenu()">PLAY AGAIN</button>
+    <button class="bottom-btn share-btn" id="shareBtn" onclick="shareScore()">SHARE</button>
+  </div>
+
+  <!-- ACHIEVEMENT POPUP -->
+  <div class="achievement-popup" id="achievementPopup">
+    <div class="achievement-icon" id="achievementIcon"></div>
+    <div class="achievement-text" id="achievementText"></div>
+    <div class="achievement-sub" id="achievementSub"></div>
+  </div>
+  
+  <!-- VIBE FINDER PANEL -->
+  <div class="vibe-panel" id="vibePanel">
+    <button class="vibe-close" onclick="toggleVibePanel()">Ã—</button>
+    <div class="vibe-title">ENDING EDITOR</div>
+    
+    <!-- UNLOCKED CATEGORIES -->
+    <div class="vibe-section">
+      <h3>YOUR ENDINGS</h3>
+      <div class="category-grid" id="categoryGrid">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+    
+    <!-- EDITOR -->
+    <div class="editor-section" id="editorSection" style="display:none;">
+      <h3>EDITING: <span id="editingName">SAINT</span></h3>
+      
+      <div class="editor-row">
+        <label>TITLE</label>
+        <input type="text" id="editTitle" placeholder="ASCENSION">
+      </div>
+      <div class="editor-row">
+        <label>SUBTITLE</label>
+        <input type="text" id="editSubtitle" placeholder="He Has Transcended">
+      </div>
+      <div class="editor-row">
+        <label>VIDEO</label>
+        <input type="text" id="editVideo" placeholder="https://...webm">
+      </div>
+      <div class="editor-row">
+        <label>MUSIC</label>
+        <input type="text" id="editMusic" placeholder="https://...mp3">
+      </div>
+      
+      <div class="editor-actions">
+        <button class="btn-preview" onclick="previewEnding()">ðŸ‘ PREVIEW</button>
+        <button class="btn-save" onclick="saveEnding()">ðŸ’¾ SAVE</button>
+      </div>
+    </div>
+    
+    <!-- ASSET FINDER -->
+    <div class="vibe-section">
+      <h3>FIND ASSETS</h3>
+      <div class="vibe-suggestions" id="vibeSuggestions"></div>
+      
+      <div class="vibe-search" style="margin-top:12px;">
+        <input type="text" id="assetSearch" placeholder="search memes, sounds, videos..." onkeypress="if(event.key==='Enter')searchAssets()">
+        <button onclick="searchAssets()">FIND</button>
+      </div>
+      <div class="vibe-results" id="memeResults"></div>
+      <div class="vibe-links" id="assetLinks" style="margin-top:10px;">
+        <a href="#" onclick="openSearch('freesound')">ðŸŽµ Sounds</a>
+        <a href="#" onclick="openSearch('tenor')">ðŸŽ¬ GIFs</a>
+        <a href="#" onclick="openSearch('youtube')">â–¶ï¸ YouTube</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="video-container">
+    <video id="bgVideo" autoplay loop playsinline>
+      <source src="https://www.shortfactory.shop/trump/win_no_nukes.webm" type="video/webm">
+    </video>
+    <div class="video-gradient"></div>
+  </div>
+
+  <div class="content">
+    <div class="title-block">
+      <h1 class="title" id="title">ASCENSION</h1>
+      <p class="subtitle" id="subtitle">He Has Transcended</p>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-header">
+          <span>POWER</span>
+          <div class="stat-controls">
+            <button class="stat-btn" onclick="adjustStat('power', -5)">âˆ’</button>
+            <span class="stat-value" id="powerVal">75%</span>
+            <button class="stat-btn" onclick="adjustStat('power', 5)">+</button>
+          </div>
+        </div>
+        <div class="stat-bar"><div class="stat-fill" id="powerBar" style="width: 75%"></div></div>
+      </div>
+      <div class="stat">
+        <div class="stat-header">
+          <span>SPIRIT</span>
+          <div class="stat-controls">
+            <button class="stat-btn" onclick="adjustStat('spirit', -5)">âˆ’</button>
+            <span class="stat-value" id="spiritVal">85%</span>
+            <button class="stat-btn" onclick="adjustStat('spirit', 5)">+</button>
+          </div>
+        </div>
+        <div class="stat-bar"><div class="stat-fill" id="spiritBar" style="width: 85%"></div></div>
+      </div>
+      <div class="stat">
+        <div class="stat-header">
+          <span>INTELLIGENCE</span>
+          <div class="stat-controls">
+            <button class="stat-btn" onclick="adjustStat('intelligence', -5)">âˆ’</button>
+            <span class="stat-value" id="intelligenceVal">60%</span>
+            <button class="stat-btn" onclick="adjustStat('intelligence', 5)">+</button>
+          </div>
+        </div>
+        <div class="stat-bar"><div class="stat-fill" id="intelligenceBar" style="width: 60%"></div></div>
+      </div>
+    </div>
+
+    <div class="years">4 YEARS IN OFFICE</div>
+
+    <div class="message">
+      When everyone is Hitler,<br>
+      no one will see the real one coming.
+    </div>
+  </div>
+
+  <div class="buttons">
+    <button class="active" onclick="setEnding('saint')">SAINT</button>
+    <button onclick="setEnding('peaceful')">PEACE</button>
+    <button onclick="setEnding('aggressive')">AGGRO</button>
+    <button onclick="setEnding('tyrant')">TYRANT</button>
+    <button onclick="setEnding('old')">OLD</button>
+  </div>
+</div>
+
+  <script>
+    // Sound effects
+    const sounds = {
+      powerup: [],
+      counter: new Audio('https://www.shortfactory.shop/trump/arcadecounter.mp3'),
+      counterFinal: new Audio('https://www.shortfactory.shop/trump/arcadecounterfinal.mp3'),
+      lightning: new Audio('https://www.shortfactory.shop/trump/lightning-strike.mp3'),
+      breath: new Audio('https://www.shortfactory.shop/trump/breath.mp3'),
+      hell: new Audio('https://www.shortfactory.shop/trump/hellscommin.mp3')
+    };
+    
+    // Preload powerup sounds
+    for (let i = 1; i <= 10; i++) {
+      sounds.powerup.push(new Audio(`https://www.shortfactory.shop/trump/powerup${i}.mp3`));
+    }
+
+    // Stats state
+    const stats = {
+      power: 75,
+      spirit: 85,
+      intelligence: 60
+    };
+    
+    // Display state (for animated tally)
+    const displayStats = {
+      power: 0,
+      spirit: 0,
+      intelligence: 0
+    };
+
+    let powerupIndex = 0;
+    
+    function playPowerup() {
+      const sound = sounds.powerup[powerupIndex % sounds.powerup.length];
+      sound.currentTime = 0;
+      sound.volume = 0.4;
+      sound.play().catch(() => {});
+      powerupIndex++;
+    }
+    
+    function playCounter() {
+      sounds.counter.currentTime = 0;
+      sounds.counter.volume = 0.3;
+      sounds.counter.play().catch(() => {});
+    }
+    
+    function playFinal() {
+      sounds.counterFinal.currentTime = 0;
+      sounds.counterFinal.volume = 0.5;
+      sounds.counterFinal.play().catch(() => {});
+    }
+
+    function adjustStat(stat, delta) {
+      stats[stat] = Math.max(0, Math.min(100, stats[stat] + delta));
+      displayStats[stat] = stats[stat];
+      document.getElementById(stat + 'Val').textContent = stats[stat] + '%';
+      document.getElementById(stat + 'Bar').style.width = stats[stat] + '%';
+      if (delta > 0) playPowerup();
+      else playCounter();
+    }
+    
+    // Achievement popup
+    function showAchievementPopup(icon, text, sub) {
+      document.getElementById('achievementIcon').textContent = icon;
+      document.getElementById('achievementText').textContent = text;
+      document.getElementById('achievementSub').textContent = sub || '';
+      document.getElementById('achievementPopup').classList.add('show');
+    }
+
+    function hideAchievementPopup() {
+      document.getElementById('achievementPopup').classList.remove('show');
+    }
+
+    // Bottom buttons (Play Again + Share)
+    function showPlayAgainButton(hasNewUnlock) {
+      const btn = document.getElementById('playAgainBtn');
+      if (hasNewUnlock) {
+        btn.innerHTML = '<span class="unlock-label">NEW ADVISOR UNLOCKED!</span>PLAY AGAIN';
+      } else {
+        btn.textContent = 'PLAY AGAIN';
+      }
+      document.getElementById('bottomButtons').classList.add('visible');
+    }
+
+    // Share score card
+    const ADVISOR_NAMES = ['','MAGA','MUSK','PEPE','ALEX JONES','TUCKER','TRUMP','HITLER'];
+    let shareParams = {};
+
+    function shareScore() {
+      const c = document.createElement('canvas');
+      c.width = 600; c.height = 400;
+      const ctx = c.getContext('2d');
+
+      // Background
+      ctx.fillStyle = '#0a0a1a';
+      ctx.fillRect(0,0,600,400);
+
+      // Border
+      ctx.strokeStyle = '#f0f';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(8,8,584,384);
+      ctx.strokeStyle = '#808';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(14,14,572,372);
+
+      // Title
+      ctx.font = 'bold 28px Georgia, serif';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#ff0';
+      ctx.shadowColor = '#ff0'; ctx.shadowBlur = 15;
+      ctx.fillText('TRUMP vs DEEPSTATE', 300, 52);
+      ctx.shadowBlur = 0;
+
+      // Ending type
+      const endingTitles = {saint:'ASCENSION',peaceful:'PEACE',aggressive:'ASHES',tyrant:'GAME OVER',old:'REST'};
+      const endingColors = {saint:'#c9a227',peaceful:'#4da6ff',aggressive:'#ff4444',tyrant:'#555',old:'#9d8cff'};
+      const endType = shareParams.type || 'peaceful';
+      ctx.font = 'bold 20px Georgia, serif';
+      ctx.fillStyle = endingColors[endType] || '#fff';
+      ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 10;
+      ctx.fillText(endingTitles[endType] || endType.toUpperCase(), 300, 85);
+      ctx.shadowBlur = 0;
+
+      // Divider
+      ctx.strokeStyle = '#333'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(50,98); ctx.lineTo(550,98); ctx.stroke();
+
+      // Stats section
+      ctx.textAlign = 'left';
+      ctx.font = '14px Georgia, serif';
+      const drawStat = (label, val, unit, y, color) => {
+        ctx.fillStyle = '#888';
+        ctx.fillText(label, 50, y);
+        ctx.fillStyle = color;
+        ctx.font = 'bold 18px Georgia, serif';
+        ctx.fillText(val + unit, 200, y);
+        ctx.font = '14px Georgia, serif';
+      };
+
+      // Draw stat bars
+      const drawBar = (x, y, w, pct, color) => {
+        ctx.fillStyle = '#1a1a2e';
+        ctx.fillRect(x, y, w, 10);
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, w * Math.min(1, pct/100), 10);
+      };
+
+      const p = shareParams;
+      drawStat('PURITY', p.purity || 0, '%', 130, '#0ff');
+      drawBar(320, 118, 220, p.purity || 0, '#0ff');
+
+      drawStat('POWER', p.power || 0, '%', 160, endingColors[endType] || '#fff');
+      drawBar(320, 148, 220, p.power || 0, endingColors[endType] || '#fff');
+
+      drawStat('SPIRIT', p.spirit || 0, '%', 190, endingColors[endType] || '#fff');
+      drawBar(320, 178, 220, p.spirit || 0, endingColors[endType] || '#fff');
+
+      drawStat('INTELLIGENCE', p.intelligence || 0, '%', 220, endingColors[endType] || '#fff');
+      drawBar(320, 208, 220, p.intelligence || 0, endingColors[endType] || '#fff');
+
+      // More stats
+      ctx.strokeStyle = '#222'; ctx.beginPath(); ctx.moveTo(50,238); ctx.lineTo(550,238); ctx.stroke();
+      ctx.font = '13px Georgia, serif';
+      ctx.fillStyle = '#666';
+      ctx.fillText('ROUND ' + (p.round || '?'), 50, 262);
+      ctx.fillText('TRUMP HP: ' + (p.trumpHP || '?') + '%', 200, 262);
+      ctx.fillText('DEEPSTATE: ' + (p.deepStateHP || '?') + '%', 370, 262);
+
+      const advisorName = ADVISOR_NAMES[p.advisor] || '???';
+      ctx.fillText('ADVISOR: ' + advisorName, 50, 288);
+      if (parseInt(p.ngPlusLoop) > 0) {
+        ctx.fillStyle = '#f0f';
+        ctx.fillText('NG+ LOOP ' + p.ngPlusLoop, 250, 288);
+      }
+
+      // Footer
+      ctx.strokeStyle = '#222'; ctx.beginPath(); ctx.moveTo(50,310); ctx.lineTo(550,310); ctx.stroke();
+      ctx.textAlign = 'center';
+      ctx.font = '12px Georgia, serif';
+      ctx.fillStyle = '#555';
+      ctx.fillText('shortfactory.shop/trump/game', 300, 340);
+      ctx.font = 'bold 14px Georgia, serif';
+      ctx.fillStyle = '#f0f';
+      ctx.shadowColor = '#f0f'; ctx.shadowBlur = 8;
+      ctx.fillText('CAN YOU BEAT MY SCORE?', 300, 370);
+      ctx.shadowBlur = 0;
+
+      // Convert to blob and share
+      c.toBlob(blob => {
+        const file = new File([blob], 'trump-score.png', {type: 'image/png'});
+
+        if (navigator.share && navigator.canShare && navigator.canShare({files: [file]})) {
+          navigator.share({
+            title: 'Trump vs DeepState - ' + (endingTitles[endType] || 'Score'),
+            text: 'I got ' + (p.purity || 0) + '% purity in Trump vs DeepState! Can you beat it?',
+            url: 'https://www.shortfactory.shop/trump/game/',
+            files: [file]
+          }).catch(() => {});
+        } else {
+          // Fallback: download image + copy link
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = 'trump-score.png';
+          a.click();
+          URL.revokeObjectURL(a.href);
+
+          // Also copy share text to clipboard
+          const text = 'I got ' + (p.purity || 0) + '% purity in Trump vs DeepState! ' + (endingTitles[endType] || '') + ' ending. Can you beat it? https://www.shortfactory.shop/trump/game/';
+          navigator.clipboard.writeText(text).catch(() => {});
+
+          // Show confirmation
+          const btn = document.getElementById('shareBtn');
+          btn.textContent = 'SAVED!';
+          setTimeout(() => { btn.textContent = 'SHARE'; }, 2000);
+        }
+      }, 'image/png');
+    }
+
+    // Animated tally on load
+    function runTally(onComplete) {
+      const statKeys = ['power', 'spirit', 'intelligence'];
+      let currentStat = 0;
+      let tickCount = 0;
+
+      function tickStat() {
+        const key = statKeys[currentStat];
+        const target = stats[key];
+
+        if (displayStats[key] < target) {
+          displayStats[key] += 1;
+          document.getElementById(key + 'Val').textContent = displayStats[key] + '%';
+          document.getElementById(key + 'Bar').style.width = displayStats[key] + '%';
+
+          // Play sound every few ticks
+          tickCount++;
+          if (tickCount % 5 === 0) playCounter();
+
+          setTimeout(tickStat, 25);
+        } else {
+          // Stat complete
+          playPowerup();
+          currentStat++;
+          tickCount = 0;
+
+          if (currentStat < statKeys.length) {
+            setTimeout(tickStat, 300);
+          } else {
+            // All done
+            setTimeout(() => {
+              playFinal();
+              if (onComplete) onComplete();
+            }, 200);
+          }
+        }
+      }
+
+      // Start after a delay
+      setTimeout(tickStat, 800);
+    }
+
+    function setEnding(type) {
+      const cat = categories[type];
+      if (!cat) return;
+      
+      const frame = document.getElementById('phoneFrame');
+      
+      // Track current mode
+      currentMode = type;
+      
+      // Map to theme (custom endings default to saint theme)
+      const themeMap = { saint:'saint', peaceful:'peaceful', aggressive:'aggressive', tyrant:'tyrant', old:'old' };
+      const theme = themeMap[type] || 'saint';
+      
+      // Update frame class
+      frame.className = 'phone-frame ' + theme;
+      
+      // Update video
+      if (cat.video) {
+        const video = document.getElementById('bgVideo');
+        video.src = cat.video;
+        video.load();
+        video.play();
+      }
+      
+      // Update text
+      document.getElementById('title').textContent = cat.title;
+      document.getElementById('subtitle').textContent = cat.subtitle;
+      
+      // Update vibe suggestions if panel is open
+      if (document.getElementById('vibePanel').classList.contains('open')) {
+        updateVibeSuggestions();
+      }
+    }
+
+    // Export stats for game integration
+    function getStats() {
+      return { ...stats };
+    }
+    
+    // Export categories for sharing
+    function exportConfig() {
+      return JSON.stringify(categories, null, 2);
+    }
+    
+    // ===== VIBE FINDER =====
+    const vibeKeywords = {
+      saint: ['trump angel', 'god emperor', 'ascension', 'heavenly', 'golden trump'],
+      peaceful: ['trump peace', 'diplomacy', 'trump smile', 'america united'],
+      aggressive: ['trump power', 'military', 'strength', 'dominant'],
+      tyrant: ['dystopia', 'ashes', 'empire falls', 'dark throne'],
+      old: ['trump legacy', 'end of era', 'sunset', 'farewell']
+    };
+    
+    let currentMode = 'saint';
+    let editingCategory = null;
+    
+    // All categories (preloaded as "completed")
+    const categories = {
+      saint: {
+        title: 'ASCENSION',
+        subtitle: 'He Has Transcended',
+        video: 'https://www.shortfactory.shop/trump/win_no_nukes.webm',
+        music: '',
+        unlocked: true,
+        custom: false
+      },
+      peaceful: {
+        title: 'PEACE',
+        subtitle: 'A Legacy of Harmony',
+        video: 'https://www.shortfactory.shop/trump/win_no_hostile.webm',
+        music: '',
+        unlocked: true,
+        custom: false
+      },
+      aggressive: {
+        title: 'ASHES',
+        subtitle: 'Ruling Over The Ashes',
+        video: 'https://www.shortfactory.shop/trump/win_aggressive.webm',
+        music: '',
+        unlocked: true,
+        custom: false
+      },
+      tyrant: {
+        title: 'GAME OVER',
+        subtitle: 'The Deep State Wins',
+        video: 'https://www.shortfactory.shop/trump/gameover.webm',
+        music: '',
+        unlocked: true,
+        custom: false
+      },
+      old: {
+        title: 'REST',
+        subtitle: 'The Long Watch Ends',
+        video: 'https://www.shortfactory.shop/trump/old.webm',
+        music: '',
+        unlocked: true,
+        custom: false
+      }
+    };
+    
+    function toggleVibePanel() {
+      const panel = document.getElementById('vibePanel');
+      panel.classList.toggle('open');
+      if (panel.classList.contains('open')) {
+        renderCategories();
+        updateVibeSuggestions();
+      }
+    }
+    
+    function renderCategories() {
+      const grid = document.getElementById('categoryGrid');
+      let html = '';
+      
+      for (const [key, cat] of Object.entries(categories)) {
+        const isActive = key === currentMode ? 'active' : '';
+        const badge = cat.custom ? '<span class="badge custom">CUSTOM</span>' : '<span class="badge">âœ“ DONE</span>';
+        html += `
+          <div class="category-card ${isActive}" onclick="selectCategory('${key}')">
+            ${badge}
+            <h4>${cat.title}</h4>
+            <p>${cat.subtitle}</p>
+          </div>
+        `;
+      }
+      
+      html += `<button class="new-category-btn" onclick="createNewCategory()">+ CREATE NEW ENDING</button>`;
+      grid.innerHTML = html;
+    }
+    
+    function selectCategory(key) {
+      currentMode = key;
+      editingCategory = key;
+      
+      // Update main display
+      setEnding(key);
+      
+      // Show editor
+      const cat = categories[key];
+      document.getElementById('editorSection').style.display = 'block';
+      document.getElementById('editingName').textContent = key.toUpperCase();
+      document.getElementById('editTitle').value = cat.title;
+      document.getElementById('editSubtitle').value = cat.subtitle;
+      document.getElementById('editVideo').value = cat.video;
+      document.getElementById('editMusic').value = cat.music || '';
+      
+      renderCategories();
+      updateVibeSuggestions();
+    }
+    
+    function createNewCategory() {
+      const name = prompt('Enter ending name (e.g., MEMELORD, GIGACHAD, CRUSADER):');
+      if (!name) return;
+      
+      const key = name.toLowerCase().replace(/\s+/g, '_');
+      categories[key] = {
+        title: name.toUpperCase(),
+        subtitle: 'Custom Ending',
+        video: '',
+        music: '',
+        unlocked: true,
+        custom: true
+      };
+      
+      selectCategory(key);
+    }
+    
+    function previewEnding() {
+      if (!editingCategory) return;
+      
+      const cat = categories[editingCategory];
+      cat.title = document.getElementById('editTitle').value || cat.title;
+      cat.subtitle = document.getElementById('editSubtitle').value || cat.subtitle;
+      cat.video = document.getElementById('editVideo').value || cat.video;
+      cat.music = document.getElementById('editMusic').value || '';
+      
+      // Apply to display
+      document.getElementById('title').textContent = cat.title;
+      document.getElementById('subtitle').textContent = cat.subtitle;
+      
+      if (cat.video) {
+        const video = document.getElementById('bgVideo');
+        video.src = cat.video;
+        video.load();
+        video.play();
+      }
+      
+      // Handle music
+      if (cat.music) {
+        if (!window.bgMusic) {
+          window.bgMusic = new Audio();
+          window.bgMusic.loop = true;
+        }
+        window.bgMusic.src = cat.music;
+        window.bgMusic.play().catch(() => {});
+      }
+    }
+    
+    function saveEnding() {
+      previewEnding();
+      renderCategories();
+      
+      // Save to localStorage
+      localStorage.setItem('trumpEndings', JSON.stringify(categories));
+      alert('Ending saved! Share your config with others.');
+    }
+    
+    function updateVibeSuggestions() {
+      const container = document.getElementById('vibeSuggestions');
+      const keywords = vibeKeywords[currentMode] || vibeKeywords.saint;
+      container.innerHTML = keywords.map(kw => 
+        `<button class="vibe-tag" onclick="searchAssets('${kw}')">${kw}</button>`
+      ).join('');
+    }
+    
+    async function searchAssets(term) {
+      const query = term || document.getElementById('assetSearch').value || 'trump';
+      document.getElementById('assetSearch').value = query;
+      
+      const container = document.getElementById('memeResults');
+      container.innerHTML = '<span style="color:#666;font-size:11px;">Searching...</span>';
+      
+      try {
+        const res = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=dc6zaTOxFJmzC&q=${encodeURIComponent(query)}&limit=12&rating=pg-13`);
+        const data = await res.json();
+        
+        if (data.data && data.data.length > 0) {
+          container.innerHTML = data.data.map(gif => 
+            `<img src="${gif.images.fixed_height_small.url}" alt="${gif.title}" onclick="copyUrl('${gif.images.original.url}')" title="Click to copy URL">`
+          ).join('');
+        } else {
+          container.innerHTML = '<span style="color:#666;font-size:11px;">No results</span>';
+        }
+      } catch (e) {
+        container.innerHTML = '<span style="color:#666;font-size:11px;">Search failed</span>';
+      }
+    }
+    
+    function openSearch(type) {
+      const query = document.getElementById('assetSearch').value || 'trump';
+      const urls = {
+        freesound: `https://freesound.org/search/?q=${encodeURIComponent(query)}`,
+        tenor: `https://tenor.com/search/${encodeURIComponent(query)}-gifs`,
+        youtube: `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`
+      };
+      window.open(urls[type], '_blank');
+    }
+    
+    function copyUrl(url) {
+      navigator.clipboard.writeText(url).then(() => {
+        alert('URL copied! Paste into VIDEO or MUSIC field.');
+      }).catch(() => {
+        prompt('Copy this URL:', url);
+      });
+    }
+    
+    // Load saved categories
+    function loadSavedCategories() {
+      const saved = localStorage.getItem('trumpEndings');
+      if (saved) {
+        Object.assign(categories, JSON.parse(saved));
+      }
+    }
+    
+    // Check if all endings completed
+    function checkAllEndingsComplete(completedList) {
+      const requiredEndings = ['peaceful', 'aggressive', 'tyrant', 'saint', 'old'];
+      return requiredEndings.every(e => completedList.includes(e));
+    }
+    
+    // Go to main menu / play again
+    function goToMenu() {
+      // Ensure unlocks are set
+      localStorage.setItem('trumpUnlocked', 'true');
+
+      // Tell parent game to close overlay and reset
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage('ending-restart', '*');
+      }
+      // Go to finished page
+      window.location.href = 'https://www.shortfactory.shop/trump/finished.html';
+    }
+
+    // Init: read URL params, set ending type, run timed completion sequence
+    window.addEventListener('load', () => {
+      loadSavedCategories();
+
+      // Read URL params from game
+      const params = new URLSearchParams(window.location.search);
+      const type = params.get('type') || 'saint';
+      const power = parseInt(params.get('power')) || 75;
+      const spirit = parseInt(params.get('spirit')) || 85;
+      const intelligence = parseInt(params.get('intelligence')) || 60;
+      const completedEndingsStr = params.get('completedEndings') || '';
+      const completedEndings = completedEndingsStr ? completedEndingsStr.split(',') : [];
+      const hitlerJustUnlocked = params.get('hitlerJustUnlocked') === 'true';
+
+      // Set stats from URL
+      stats.power = power;
+      stats.spirit = spirit;
+      stats.intelligence = intelligence;
+
+      // Store all params for share card
+      shareParams = {
+        type: type,
+        power: power,
+        spirit: spirit,
+        intelligence: intelligence,
+        round: params.get('round') || '?',
+        purity: params.get('purity') || '?',
+        trumpHP: params.get('trumpHP') || '?',
+        deepStateHP: params.get('deepStateHP') || '?',
+        ngPlusLoop: params.get('ngPlusLoop') || '0',
+        advisor: parseInt(params.get('advisor')) || 1
+      };
+
+      // Set ending type
+      setEnding(type);
+
+      // Check if VIBE FINDER should be visible (all endings completed)
+      if (checkAllEndingsComplete(completedEndings)) {
+        document.getElementById('vibeToggle').style.display = 'block';
+      }
+
+      // Set bars to 0 then run tally → achievement → play again
+      ['power', 'spirit', 'intelligence'].forEach(key => {
+        document.getElementById(key + 'Val').textContent = '0%';
+        document.getElementById(key + 'Bar').style.width = '0%';
+      });
+
+      runTally(() => {
+        // Tally complete - show achievement if any, then play again button
+        if (hitlerJustUnlocked) {
+          // Show Hitler unlock achievement
+          setTimeout(() => {
+            showAchievementPopup('💀', 'ADOLF HITLER ADVISOR UNLOCKED!', 'New advisor available');
+            // Hide achievement after 4 seconds, then show play again
+            setTimeout(() => {
+              hideAchievementPopup();
+              setTimeout(() => showPlayAgainButton(true), 500);
+            }, 4000);
+          }, 500);
+        } else {
+          // No new unlock - just show play again after short delay
+          setTimeout(() => showPlayAgainButton(false), 500);
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>

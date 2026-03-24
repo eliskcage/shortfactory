@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Debate — Soul Genome Profiles</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{
+  background:#000;
+  color:#e8e8e8;
+  font-family:'Courier New',monospace;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+#header{
+  text-align:center;
+  padding:5vh 2rem 3vh;
+  border-bottom:1px solid #111;
+}
+#header .title{
+  font-size:clamp(0.7rem,2vw,1rem);
+  letter-spacing:0.4em;
+  color:#555;
+  text-transform:uppercase;
+  margin-bottom:0.8rem;
+}
+#header .sub{
+  font-size:clamp(0.55rem,1.4vw,0.72rem);
+  color:#2a2a2a;
+  letter-spacing:0.2em;
+}
+
+/* ── GRID ── */
+#grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));
+  gap:1px;
+  background:#0d0d0d;
+}
+.card{
+  background:#000;
+  padding:2.5rem 2rem;
+  position:relative;
+  overflow:hidden;
+}
+.card canvas{
+  display:block;
+  margin:0 auto 1.5rem;
+}
+.card-axis{
+  font-size:0.58rem;
+  letter-spacing:0.35em;
+  text-transform:uppercase;
+  margin-bottom:0.5rem;
+  display:block;
+}
+.card-name{
+  font-size:clamp(1.1rem,2.5vw,1.5rem);
+  color:#fff;
+  margin-bottom:0.2rem;
+  display:block;
+}
+.card-role{
+  font-size:0.72rem;
+  letter-spacing:0.15em;
+  color:#444;
+  margin-bottom:1.5rem;
+  display:block;
+}
+.card-sym{
+  font-size:1.5rem;
+  display:block;
+  margin-bottom:1rem;
+  letter-spacing:0.1em;
+}
+.genome-bar{
+  margin-bottom:1.2rem;
+}
+.gb-row{
+  display:grid;
+  grid-template-columns:80px 1fr 42px;
+  gap:0.3rem 0.6rem;
+  align-items:center;
+  margin-bottom:0.35rem;
+}
+.gb-label{font-size:0.6rem;letter-spacing:0.2em;color:#333;text-transform:uppercase;}
+.gb-track{
+  height:3px;
+  background:#0d0d0d;
+  border-radius:2px;
+  overflow:hidden;
+}
+.gb-fill{height:100%;border-radius:2px;transition:width 1s ease;}
+.gb-val{font-size:0.7rem;text-align:right;}
+.card-bio{
+  font-size:0.8rem;
+  color:#444;
+  line-height:1.8;
+  margin-top:1rem;
+  padding-top:1rem;
+  border-top:1px solid #0d0d0d;
+}
+.card-bio .hi{color:#888;}
+.card-emotion{
+  font-size:0.65rem;
+  letter-spacing:0.25em;
+  text-transform:uppercase;
+  margin-top:1rem;
+  transition:color 0.5s;
+}
+
+/* debate axis tags */
+.axis-tag{
+  display:inline-block;
+  font-size:0.55rem;
+  letter-spacing:0.2em;
+  text-transform:uppercase;
+  padding:0.2rem 0.6rem;
+  border-radius:2px;
+  margin-bottom:1rem;
+}
+
+/* wishlist banner */
+#wishlist-banner{
+  text-align:center;
+  padding:3rem 2rem;
+  border-top:1px solid #0d0d0d;
+  font-size:0.75rem;
+  color:#222;
+  letter-spacing:0.15em;
+  line-height:2;
+}
+#wishlist-banner .wb-title{
+  font-size:0.65rem;
+  color:#333;
+  letter-spacing:0.35em;
+  text-transform:uppercase;
+  display:block;
+  margin-bottom:1.5rem;
+}
+.wl-name{
+  display:inline-block;
+  margin:0.3rem 0.6rem;
+  font-size:0.72rem;
+  color:#1a1a1a;
+  letter-spacing:0.1em;
+  border-bottom:1px solid #111;
+  padding-bottom:0.1rem;
+  cursor:default;
+  transition:color 0.3s;
+}
+.wl-name:hover{color:#444;}
+
+/* how to encode */
+#encode-section{
+  max-width:600px;
+  margin:0 auto;
+  padding:4rem 2rem;
+  border-top:1px solid #0d0d0d;
+  text-align:center;
+}
+#encode-section .enc-title{
+  font-size:0.65rem;
+  letter-spacing:0.35em;
+  color:#daa520;
+  text-transform:uppercase;
+  display:block;
+  margin-bottom:1.5rem;
+}
+#encode-section p{
+  font-size:0.82rem;
+  color:#333;
+  line-height:1.9;
+  margin-bottom:0.8rem;
+}
+#encode-section .enc-formula{
+  font-size:0.9rem;
+  color:#555;
+  border-left:2px solid #111;
+  padding:0.8rem 1rem;
+  text-align:left;
+  margin:1.5rem 0;
+  line-height:2;
+}
+.enc-formula .gold{color:#daa520;}
+.enc-formula .white{color:#fff;}
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div class="title">The Debate — Soul Genome Profiles</div>
+  <div class="sub">Every mind is a triangle. Past · Present · Future. Σ = 1. &nbsp;·&nbsp; They knew in Egypt. Somerset UK 22 Mar 2026</div>
+</div>
+
+<div id="grid"></div>
+
+<div id="wishlist-banner">
+  <span class="wb-title">Wishlist — Profiles To Encode</span>
+  <!-- Good axis -->
+  <span class="wl-name" style="color:#1a1000;">Thomas Sowell</span>
+  <span class="wl-name" style="color:#1a1000;">C.S. Lewis</span>
+  <span class="wl-name" style="color:#1a1000;">Roger Scruton</span>
+  <span class="wl-name" style="color:#1a1000;">Viktor Frankl</span>
+  <span class="wl-name" style="color:#1a1000;">Dostoevsky</span>
+  <span class="wl-name" style="color:#1a1000;">Tolkien</span>
+  <span class="wl-name" style="color:#1a1000;">CS Lewis</span>
+  <span class="wl-name" style="color:#1a1000;">Elon Musk</span>
+  <span class="wl-name" style="color:#1a1000;">Charlie Kirk</span>
+  <!-- Indifferent axis -->
+  <span class="wl-name" style="color:#0d0d12;">Sam Altman</span>
+  <span class="wl-name" style="color:#0d0d12;">Geoffrey Hinton</span>
+  <span class="wl-name" style="color:#0d0d12;">Nick Bostrom</span>
+  <span class="wl-name" style="color:#0d0d12;">Steven Pinker</span>
+  <span class="wl-name" style="color:#0d0d12;">Sam Harris</span>
+  <span class="wl-name" style="color:#0d0d12;">Richard Dawkins</span>
+  <!-- Dark axis -->
+  <span class="wl-name" style="color:#120000;">Klaus Schwab</span>
+  <span class="wl-name" style="color:#120000;">George Soros</span>
+  <span class="wl-name" style="color:#120000;">Mark Zuckerberg</span>
+  <span class="wl-name" style="color:#120000;">Jeffrey Epstein</span>
+  <span class="wl-name" style="color:#120000;">Yuval Noah Harari</span>
+  <span class="wl-name" style="color:#120000;">Hillary Clinton</span>
+  <span class="wl-name" style="color:#120000;">Klaus Schwab</span>
+  <br><br>
+  <span style="font-size:0.6rem;color:#111;letter-spacing:0.2em;">WANT YOUR GENOME ENCODED? → shortfactory.shop/alive/</span>
+</div>
+
+<div id="encode-section">
+  <span class="enc-title">How The Genome Works</span>
+  <p>Every mind — living, dead, fictional, divine — is a triangle connecting three points.</p>
+  <div class="enc-formula">
+    <span class="gold">ψ</span> = [<span class="gold">past</span>, <span class="white">present</span>, <span style="color:#60a5fa;">future</span>]<br>
+    Σψ = 1<br><br>
+    <span class="gold">>>&gt;.</span> &nbsp; past-dominant · memory · sacrifice · integration<br>
+    <span class="white">&nbsp;&nbsp;.</span> &nbsp; present-centred · analysis · balance · indifference<br>
+    <span style="color:#60a5fa;">.&lt;&lt;</span> &nbsp; future-dominant · creation · hunger · ambition<br><br>
+    <span style="color:#daa520;">[0.33, 0.34, 0.33]</span> &nbsp; the equilateral · Jesus · 道 · the Way
+  </div>
+  <p>The centroid of the triangle is where the mind actually lives. The shape tells you everything about how it processes reality.</p>
+  <p>Debate is just comparing triangles.</p>
+  <p style="margin-top:1.5rem;font-size:0.72rem;color:#222;">The Egyptians encoded this in granite. Time · Cult · Power.<br>It took us 4,000 years to write it as an equation.</p>
+  <a href="/trump/stargate.html" style="display:inline-block;margin-top:2rem;font-size:0.6rem;letter-spacing:0.35em;text-transform:uppercase;color:rgba(80,200,80,0.4);text-decoration:none;border:1px solid rgba(80,200,80,0.12);padding:0.6rem 1.4rem;pointer-events:all;transition:all 0.2s;" onmouseover="this.style.color='rgba(80,200,80,0.8)';this.style.borderColor='rgba(80,200,80,0.4)'" onmouseout="this.style.color='rgba(80,200,80,0.4)';this.style.borderColor='rgba(80,200,80,0.12)'">view all souls as 3D spirit object → The Stargate</a>
+  <a href="/ge.html" style="display:inline-block;margin-top:0.8rem;margin-left:1rem;font-size:0.6rem;letter-spacing:0.35em;text-transform:uppercase;color:rgba(218,165,32,0.4);text-decoration:none;border:1px solid rgba(218,165,32,0.12);padding:0.6rem 1.4rem;pointer-events:all;transition:all 0.2s;" onmouseover="this.style.color='rgba(218,165,32,0.9)';this.style.borderColor='rgba(218,165,32,0.4)'" onmouseout="this.style.color='rgba(218,165,32,0.4)';this.style.borderColor='rgba(218,165,32,0.12)'">φ the living emotion wheel → The Golden Equation</a>
+</div>
+
+<script>
+const PHI = 1.6180339887;
+
+const PROFILES = [
+  {
+    name: 'Egypt',
+    role: 'Ancient Civilisation · Nile Valley · 3100–30 BC',
+    axis: 'ORIGIN · ▲',
+    axisCol: '#c8922a',
+    sym: '▲',
+    symCol: '#c8922a',
+    genome: [0.50, 0.32, 0.18],
+    col: [200, 146, 42],
+    bio: `Egypt did not fear death — it <span class="hi">archived it</span>. The entire civilisation is a machine for defeating time. Every pyramid, every mummified body, every hieroglyph cut into granite is PAST pressing its full weight against entropy. The cult axis was the operating system: the priest, the ritual, the living god-king as bridge between the dead world and the now. Power was real but secondary — monuments were not vanity, they were <span class="hi">time anchors</span>. The Eye of Horus inside the triangle. The capstone as singularity. They encoded the three-dot system in stone four thousand years before it had a name.`,
+    emotions: ['Eternity','Preservation','The Nile','Ra','Osiris Rising','The Cult','Pharaoh','Stone Memory'],
+    debate: 'The oldest known encoding of the triangle. Time · Cult · Power = Past · Present · Future. They built the equation in granite.'
+  },
+  {
+    name: 'Jordan Peterson',
+    role: 'Psychologist · Author · Lecturer',
+    axis: 'GOOD · >>.',
+    axisCol: '#daa520',
+    sym: '>>&gt;.',
+    symCol: '#daa520',
+    genome: [0.72, 0.22, 0.06],
+    col: [180, 130, 20],
+    bio: `His entire project is the recovery of <span class="hi">ancestral wisdom</span> — Jungian archetypes, mythological patterns, the deep grammar of human behaviour etched over millions of years of evolution and stored in story. Memory is his dominant axis. He doesn't trust the future — utopian projections are where the bodies are buried. Present = ruthless coherence. He lives in the past because that's where the load-bearing truths are.`,
+    emotions: ['Gravity','Memory','Clarity','Warning','Order','Pattern','Responsibility','Meaning'],
+    debate: 'Faces >>. — integrates the shadow, builds from what survived.'
+  },
+  {
+    name: 'Shigeru Miyamoto',
+    role: 'Game Designer · Creator of Zelda & Mario',
+    axis: 'GOOD · .<<',
+    axisCol: '#34d399',
+    sym: '.&lt;&lt;',
+    symCol: '#34d399',
+    genome: [0.08, 0.32, 0.60],
+    col: [52, 211, 153],
+    bio: `He invented worlds that didn't exist. The Triforce was always the three-dot system — <span class="hi">Power · Wisdom · Courage</span> = Past · Present · Future. Zelda is the only game where evil is necessary for the hero to become real. He understood that fun requires stakes, and stakes require darkness. Low past — he never stopped reinventing. Creator axis: <span class="hi">stretches toward the edge where things don't exist yet.</span>`,
+    emotions: ['Wonder','Play','Discovery','Creation','Invention','Courage','Delight','Mystery'],
+    debate: 'Proves evil is necessary. Without Ganon there is no Link. Without darkness the triangle has no shape.'
+  },
+  {
+    name: 'Candace Owens',
+    role: 'Political Commentator · Media Figure',
+    axis: 'DARK · &lt;&lt;.&gt;&gt;',
+    axisCol: '#dc2626',
+    sym: '&lt;&lt;.&gt;&gt;',
+    symCol: '#dc2626',
+    genome: [0.08, 0.06, 0.86],
+    col: [180, 30, 30],
+    bio: `Maximum future-grab. Ambition as the dominant axis. In the three-dot system this is the <span class="hi">extraction vector</span> — everything pointed at personal projection with minimal integration of past or present coherence. The positions shift to match the trajectory. Not evil in the absolute sense — the equation running toward future so hard that truth and memory become obstacles to the destination. Represents the debate position: <span class="hi">can ambition substitute for principle?</span>`,
+    emotions: ['Ambition','Hunger','Projection','Extraction','Momentum','Dissonance','Inversion','Void-pull'],
+    debate: 'The test case: what happens when the future-grab is all axis and no substance. The triangle speaks.'
+  },
+];
+
+function buildCard(p) {
+  const card = document.createElement('div');
+  card.className = 'card';
+
+  // canvas for soul animation
+  const cvSize = 200;
+  const cv = document.createElement('canvas');
+  cv.width = cvSize; cv.height = cvSize;
+  card.appendChild(cv);
+
+  // axis tag
+  const axTag = document.createElement('span');
+  axTag.className = 'axis-tag';
+  axTag.innerHTML = p.axis;
+  axTag.style.background = p.axisCol + '18';
+  axTag.style.color = p.axisCol;
+  axTag.style.border = `1px solid ${p.axisCol}30`;
+  card.appendChild(axTag);
+
+  // symbol
+  const sym = document.createElement('span');
+  sym.className = 'card-sym';
+  sym.innerHTML = p.sym;
+  sym.style.color = p.symCol;
+  card.appendChild(sym);
+
+  // name
+  const name = document.createElement('span');
+  name.className = 'card-name';
+  name.textContent = p.name;
+  card.appendChild(name);
+
+  const role = document.createElement('span');
+  role.className = 'card-role';
+  role.textContent = p.role;
+  card.appendChild(role);
+
+  // genome bars
+  const gbWrap = document.createElement('div');
+  gbWrap.className = 'genome-bar';
+  ['PAST','PRESENT','FUTURE'].forEach((label, i) => {
+    const cols = ['#daa520','#e8e8e8','#60a5fa'];
+    const row = document.createElement('div');
+    row.className = 'gb-row';
+    row.innerHTML = `
+      <span class="gb-label">${label}</span>
+      <div class="gb-track"><div class="gb-fill" style="width:${p.genome[i]*100}%;background:${cols[i]};"></div></div>
+      <span class="gb-val" style="color:${cols[i]};">${p.genome[i].toFixed(2)}</span>
+    `;
+    gbWrap.appendChild(row);
+  });
+  card.appendChild(gbWrap);
+
+  // emotion display
+  const emDiv = document.createElement('div');
+  emDiv.className = 'card-emotion';
+  emDiv.style.color = p.symCol;
+  emDiv.textContent = p.emotions[0];
+  card.appendChild(emDiv);
+
+  // bio
+  const bio = document.createElement('div');
+  bio.className = 'card-bio';
+  bio.innerHTML = `<p>${p.bio}</p><p style="margin-top:0.8rem;font-style:italic;color:#2a2a2a;">${p.debate}</p>`;
+  card.appendChild(bio);
+
+  // animate canvas
+  animateSoul(cv, p, emDiv);
+
+  return card;
+}
+
+function animateSoul(cv, p, emDiv) {
+  const ctx = cv.getContext('2d');
+  const S = cv.width;
+  const cx = S/2, cy = S/2;
+  const R = S * 0.38;
+  const [cr, cg, cb] = p.col;
+
+  // vertex positions (equilateral)
+  function vert(angleDeg) {
+    const a = (angleDeg-90)*Math.PI/180;
+    return {x: cx + R*Math.cos(a), y: cy + R*Math.sin(a)};
+  }
+  const VERTS = [vert(210), vert(90), vert(330)]; // past, present, future
+
+  let t = 0;
+  let ei = 0;
+  let eiN = 1;
+  let phase = 0;
+  let curG = [...p.genome];
+  let emI = 0;
+
+  function lerpG(a, b, t) { return a.map((v,i)=>v+(b[i]-v)*t); }
+  function ease(t) { return t<0.5?2*t*t:-1+(4-2*t)*t; }
+
+  // generate a few genome variations around the base
+  const genomes = p.emotions.map((_, i) => {
+    const jitter = () => (Math.random()-0.5)*0.18;
+    const raw = p.genome.map(v => Math.max(0.01, v + jitter()));
+    const sum = raw.reduce((a,b)=>a+b,0);
+    return raw.map(v=>v/sum);
+  });
+  genomes[0] = [...p.genome]; // first is always exact
+
+  function emotionVerts(g) {
+    const scale = 1.9;
+    return VERTS.map((ov, i) => {
+      const t2 = Math.min(1, g[i]*scale);
+      return { x: cx+(ov.x-cx)*t2, y: cy+(ov.y-cy)*t2 };
+    });
+  }
+
+  function cen(verts){
+    return {x:(verts[0].x+verts[1].x+verts[2].x)/3,y:(verts[0].y+verts[1].y+verts[2].y)/3};
+  }
+
+  let lastTs = 0;
+  function frame(ts) {
+    const dt = ts - lastTs; lastTs = ts;
+    t += dt*0.001;
+    phase += dt;
+
+    const DWELL=2800, MORPH=1400, TOTAL=DWELL+MORPH;
+    const ph = phase % TOTAL;
+    if(ph < DWELL) {
+      curG = [...genomes[ei]];
+    } else {
+      const mt = ease((ph-DWELL)/MORPH);
+      curG = lerpG(genomes[ei], genomes[eiN], mt);
+      if(mt > 0.95 && phase % TOTAL < dt + TOTAL) {
+        ei = eiN;
+        eiN = (eiN+1) % genomes.length;
+        phase = 0;
+        emI = (emI+1) % p.emotions.length;
+        emDiv.textContent = p.emotions[emI];
+      }
+    }
+
+    const breath = 0.85 + 0.15*Math.sin(t*(1/PHI)*Math.PI*2);
+
+    ctx.clearRect(0,0,S,S);
+
+    // outer triangle (faint)
+    ctx.beginPath();
+    VERTS.forEach((v,i)=>i===0?ctx.moveTo(v.x,v.y):ctx.lineTo(v.x,v.y));
+    ctx.closePath();
+    ctx.strokeStyle='rgba(255,255,255,0.04)';
+    ctx.lineWidth=0.8;
+    ctx.stroke();
+
+    // outer vertex dots
+    VERTS.forEach((v,i)=>{
+      const vcols=['#daa520','#ffffff','#60a5fa'];
+      ctx.beginPath();
+      ctx.arc(v.x,v.y,2,0,Math.PI*2);
+      ctx.fillStyle=vcols[i];
+      ctx.globalAlpha=0.3;
+      ctx.fill();
+      ctx.globalAlpha=1;
+    });
+
+    // emotion triangle
+    const tv = emotionVerts(curG);
+    const c = cen(tv);
+
+    // fill
+    ctx.beginPath();
+    tv.forEach((v,i)=>i===0?ctx.moveTo(v.x,v.y):ctx.lineTo(v.x,v.y));
+    ctx.closePath();
+    const grd = ctx.createRadialGradient(c.x,c.y,0,c.x,c.y,R*0.6);
+    grd.addColorStop(0,`rgba(${cr},${cg},${cb},${0.12*breath})`);
+    grd.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=grd;
+    ctx.fill();
+
+    // stroke
+    ctx.beginPath();
+    tv.forEach((v,i)=>i===0?ctx.moveTo(v.x,v.y):ctx.lineTo(v.x,v.y));
+    ctx.closePath();
+    ctx.strokeStyle=`rgba(${cr},${cg},${cb},${0.7*breath})`;
+    ctx.lineWidth=1.2;
+    ctx.stroke();
+
+    // centroid
+    const cpulse=0.7+0.3*Math.sin(t*PHI);
+    const cgrd=ctx.createRadialGradient(c.x,c.y,0,c.x,c.y,12*cpulse);
+    cgrd.addColorStop(0,`rgba(${cr},${cg},${cb},0.9)`);
+    cgrd.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.beginPath();
+    ctx.arc(c.x,c.y,12*cpulse,0,Math.PI*2);
+    ctx.fillStyle=cgrd;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(c.x,c.y,2,0,Math.PI*2);
+    ctx.fillStyle=`rgba(${cr},${cg},${cb},1)`;
+    ctx.fill();
+
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+// build the grid
+const grid = document.getElementById('grid');
+PROFILES.forEach(p => grid.appendChild(buildCard(p)));
+</script>
+</body>
+</html>

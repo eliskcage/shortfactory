@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Genetic Logo — ShortFactory</title>
+<meta name="description" content="We don't design your logo. We give you its DNA. 96 bytes. Resolution-independent. Provably original. Patent-protected.">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --gold:#daa520;--gold2:#f5c518;--void:#000;
+  --dim:#0a0a0a;--text:#e2e8f0;--muted:#64748b;
+}
+html{scroll-behavior:smooth;}
+body{background:#000;color:var(--text);font-family:'Courier New',monospace;overflow-x:hidden;}
+
+/* ── HERO ── */
+#hero{
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;padding:60px 20px;position:relative;
+  overflow:hidden;
+}
+#heroBg{position:absolute;inset:0;z-index:0;}
+.hero-content{position:relative;z-index:2;}
+
+/* ── LOGO CANVAS ── */
+#logoWrap{
+  position:relative;margin:0 auto 48px;
+  width:clamp(240px,40vw,480px);
+  height:clamp(240px,40vw,480px);
+}
+#logoCanvas{width:100%;height:100%;}
+.logo-glow{
+  position:absolute;inset:0;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(218,165,32,0.08) 0%,transparent 70%);
+  pointer-events:none;
+  animation:breathe 4s ease-in-out infinite;
+}
+@keyframes breathe{0%,100%{transform:scale(0.95);opacity:0.5;}50%{transform:scale(1.05);opacity:1;}}
+
+.hero-eyebrow{
+  font-size:10px;letter-spacing:6px;text-transform:uppercase;
+  color:var(--gold);margin-bottom:20px;opacity:0.8;
+}
+.hero-title{
+  font-size:clamp(36px,6vw,80px);font-weight:900;
+  color:#fff;letter-spacing:3px;font-family:Georgia,serif;
+  line-height:1.1;margin-bottom:16px;
+}
+.hero-title em{color:var(--gold);font-style:normal;}
+.hero-sub{
+  font-size:clamp(13px,2vw,17px);color:var(--muted);
+  line-height:1.8;max-width:600px;margin:0 auto 40px;
+  letter-spacing:1px;
+}
+.hero-genome{
+  display:inline-block;
+  background:rgba(218,165,32,0.06);
+  border:1px solid rgba(218,165,32,0.2);
+  border-radius:6px;padding:12px 24px;
+  font-size:13px;color:var(--gold);
+  letter-spacing:2px;margin-bottom:40px;
+  font-family:'Courier New',monospace;
+}
+
+/* ── GENOME DISPLAY ── */
+#genomePanel{
+  background:rgba(218,165,32,0.03);
+  border-top:1px solid rgba(218,165,32,0.08);
+  border-bottom:1px solid rgba(218,165,32,0.08);
+  padding:60px 20px;
+}
+.gp-inner{max-width:1100px;margin:0 auto;}
+.section-label{font-size:10px;letter-spacing:5px;text-transform:uppercase;color:var(--gold);margin-bottom:12px;}
+.section-title{font-size:clamp(24px,4vw,44px);font-weight:900;color:#fff;font-family:Georgia,serif;margin-bottom:40px;letter-spacing:2px;}
+
+.genome-viz{
+  display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start;
+}
+@media(max-width:700px){.genome-viz{grid-template-columns:1fr;}}
+
+.genome-code{
+  background:#000;border:1px solid rgba(218,165,32,0.15);
+  border-radius:12px;padding:28px;
+  font-family:'Courier New',monospace;font-size:12px;
+  line-height:1.9;overflow:hidden;
+}
+.gc-comment{color:#334155;}
+.gc-key{color:var(--gold);}
+.gc-num{color:#22c55e;}
+.gc-str{color:#60a5fa;}
+.gc-label{
+  font-size:9px;letter-spacing:3px;text-transform:uppercase;
+  color:var(--muted);margin-bottom:12px;display:block;
+}
+.genome-bytes{
+  margin-top:16px;padding-top:16px;
+  border-top:1px solid rgba(255,255,255,0.04);
+  font-size:10px;color:#334155;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.bytes-count{
+  font-size:28px;font-weight:900;color:var(--gold);
+  display:block;line-height:1;
+}
+
+.genome-explain{padding:8px 0;}
+.ge-row{
+  display:flex;align-items:flex-start;gap:16px;
+  padding:20px 0;border-bottom:1px solid rgba(255,255,255,0.04);
+}
+.ge-row:last-child{border-bottom:none;}
+.ge-dot{
+  width:48px;height:48px;flex-shrink:0;
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:900;
+  font-family:'Courier New',monospace;
+}
+.ge-dot.d1{background:radial-gradient(circle,#000 40%,#1a1000 100%);border:2px solid rgba(218,165,32,0.3);color:var(--gold);}
+.ge-dot.d2{background:radial-gradient(circle,rgba(218,165,32,0.03) 0%,transparent 100%);border:1px dashed rgba(218,165,32,0.2);color:rgba(218,165,32,0.4);}
+.ge-dot.d3{background:transparent;border:2px solid var(--gold);color:var(--gold);box-shadow:0 0 20px rgba(218,165,32,0.2);}
+.ge-text{}
+.ge-name{font-size:13px;font-weight:700;color:#fff;margin-bottom:4px;letter-spacing:1px;}
+.ge-desc{font-size:12px;color:var(--muted);line-height:1.7;}
+.ge-eq{font-size:11px;color:rgba(218,165,32,0.6);margin-top:6px;font-style:italic;}
+
+/* ── CONTROLS ── */
+#controls{padding:60px 20px;max-width:1100px;margin:0 auto;}
+.ctrl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;}
+.ctrl-card{
+  background:rgba(255,255,255,0.02);
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:12px;padding:24px;
+}
+.ctrl-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
+.ctrl-value{font-size:24px;font-weight:700;color:#fff;margin-bottom:16px;}
+input[type=range]{
+  width:100%;-webkit-appearance:none;appearance:none;
+  height:2px;background:rgba(218,165,32,0.2);border-radius:1px;outline:none;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:16px;height:16px;
+  border-radius:50%;background:var(--gold);cursor:pointer;
+  box-shadow:0 0 12px rgba(218,165,32,0.5);
+}
+.ctrl-sub{font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;}
+
+/* ── VARIATIONS ── */
+#variations{
+  padding:60px 20px;
+  border-top:1px solid rgba(255,255,255,0.04);
+}
+.var-inner{max-width:1100px;margin:0 auto;}
+.var-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-top:40px;}
+.var-card{
+  background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);
+  border-radius:12px;padding:24px;text-align:center;cursor:pointer;
+  transition:border-color 0.2s,background 0.2s;
+}
+.var-card:hover,.var-card.active{border-color:rgba(218,165,32,0.4);background:rgba(218,165,32,0.03);}
+.var-canvas{width:100%;aspect-ratio:1;}
+.var-name{font-size:11px;color:var(--muted);margin-top:12px;letter-spacing:2px;text-transform:uppercase;}
+.var-genome{font-size:9px;color:#334155;margin-top:4px;}
+
+/* ── GROK RENDERS ── */
+#renders{
+  padding:60px 20px;
+  background:rgba(0,0,0,0.5);
+  border-top:1px solid rgba(255,255,255,0.04);
+}
+.renders-inner{max-width:1100px;margin:0 auto;}
+.renders-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+  gap:16px;margin-top:40px;
+}
+.render-card{
+  border-radius:12px;overflow:hidden;
+  aspect-ratio:1;position:relative;
+  background:#0a0a0a;
+  border:1px solid rgba(255,255,255,0.06);
+}
+.render-card img{width:100%;height:100%;object-fit:cover;display:block;}
+.render-loading{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:12px;
+}
+.render-spinner{
+  width:32px;height:32px;border-radius:50%;
+  border:2px solid rgba(218,165,32,0.1);
+  border-top-color:var(--gold);
+  animation:spin 1s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+.render-label{font-size:10px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;}
+.render-caption{
+  position:absolute;bottom:0;left:0;right:0;
+  padding:12px 16px;
+  background:linear-gradient(to top,rgba(0,0,0,0.9),transparent);
+  font-size:11px;color:rgba(255,255,255,0.6);
+  letter-spacing:1px;
+}
+
+/* ── PITCH ── */
+#pitch{
+  padding:100px 20px;
+  text-align:center;
+  border-top:1px solid rgba(218,165,32,0.06);
+}
+.pitch-inner{max-width:800px;margin:0 auto;}
+.pitch-quote{
+  font-size:clamp(28px,5vw,56px);font-weight:900;
+  color:#fff;font-family:Georgia,serif;
+  line-height:1.2;margin-bottom:24px;
+}
+.pitch-quote em{color:var(--gold);font-style:normal;}
+.pitch-body{font-size:15px;color:var(--muted);line-height:2;margin-bottom:48px;}
+.pitch-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:2px;background:rgba(255,255,255,0.03);
+  border-radius:12px;overflow:hidden;margin-bottom:48px;
+}
+.pitch-cell{background:#000;padding:28px 20px;}
+.pitch-cell-num{font-size:36px;font-weight:900;color:var(--gold);display:block;line-height:1;}
+.pitch-cell-label{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:6px;display:block;}
+.cta-row{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;}
+.btn{
+  display:inline-block;padding:14px 32px;border-radius:6px;
+  font-family:'Courier New',monospace;font-size:12px;
+  letter-spacing:3px;text-transform:uppercase;text-decoration:none;
+  transition:all 0.2s;
+}
+.btn-gold{background:var(--gold);color:#000;font-weight:700;}
+.btn-gold:hover{background:var(--gold2);transform:translateY(-2px);}
+.btn-outline{color:var(--gold);border:1px solid rgba(218,165,32,0.3);}
+.btn-outline:hover{border-color:var(--gold);background:rgba(218,165,32,0.05);}
+
+/* ── EXPORT ── */
+#export{
+  padding:60px 20px;
+  border-top:1px solid rgba(255,255,255,0.04);
+  max-width:1100px;margin:0 auto;
+}
+.export-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px;}
+.exp-btn{
+  padding:12px 24px;border-radius:6px;
+  font-family:'Courier New',monospace;font-size:11px;
+  letter-spacing:2px;text-transform:uppercase;cursor:pointer;
+  background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);
+  color:var(--muted);transition:all 0.2s;
+}
+.exp-btn:hover{border-color:rgba(218,165,32,0.4);color:var(--gold);}
+
+footer{
+  border-top:1px solid rgba(255,255,255,0.04);
+  padding:32px 20px;text-align:center;
+  font-size:11px;color:#334155;letter-spacing:2px;
+}
+footer a{color:#475569;text-decoration:none;}
+footer a:hover{color:var(--gold);}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<section id="hero">
+  <canvas id="heroBg" style="position:absolute;inset:0;width:100%;height:100%;"></canvas>
+  <div class="hero-content">
+    <div class="hero-eyebrow">// Patent GB2605434.6 — Genome-Based Visual Encoding</div>
+    <div id="logoWrap">
+      <canvas id="logoCanvas"></canvas>
+      <div class="logo-glow"></div>
+    </div>
+    <h1 class="hero-title">We Don't Design<br>Your Logo.<br><em>We Give You Its DNA.</em></h1>
+    <p class="hero-sub">96 bytes. Resolution-independent forever. Provably original. Every variation mathematically derivable from one genome. This is not design. This is genetics.</p>
+    <div class="hero-genome" id="heroGenomeDisplay">genome: { ρ:0.618 · gap:φ · ring:φ² · w:0.04 · #daa520 }</div>
+    <div class="cta-row" style="justify-content:center;">
+      <a href="#genomePanel" class="btn btn-gold">See The Genome</a>
+      <a href="#renders" class="btn btn-outline">Cinematic Renders</a>
+    </div>
+  </div>
+</section>
+
+<!-- GENOME DISPLAY -->
+<section id="genomePanel">
+<div class="gp-inner">
+  <div class="section-label">// The Genetic Code</div>
+  <h2 class="section-title">Three Shapes. One Genome.</h2>
+  <div class="genome-viz">
+
+    <div>
+      <div class="genome-code">
+        <span class="gc-label">SHORTFACTORY · THREE-DOT GENOME · v1.0</span>
+        <span class="gc-comment">// The entire logo in 96 bytes</span><br>
+        {<br>
+        &nbsp;&nbsp;<span class="gc-key">"v"</span>: <span class="gc-num">1</span>,<br>
+        &nbsp;&nbsp;<span class="gc-key">"cx"</span>: <span class="gc-num">0.5</span>, <span class="gc-key">"cy"</span>: <span class="gc-num">0.5</span>,<br>
+        &nbsp;&nbsp;<span class="gc-key">"dot"</span>: { <span class="gc-key">"r"</span>: <span class="gc-num" id="gv-dot">0.12</span>, <span class="gc-key">"fill"</span>: <span class="gc-str">"#000"</span>, <span class="gc-key">"stroke"</span>: <span class="gc-str">"#daa520"</span> },<br>
+        &nbsp;&nbsp;<span class="gc-comment">// gap: void between inner and outer</span><br>
+        &nbsp;&nbsp;<span class="gc-key">"gap"</span>: { <span class="gc-key">"r0"</span>: <span class="gc-num" id="gv-gap0">0.20</span>, <span class="gc-key">"r1"</span>: <span class="gc-num" id="gv-gap1">0.31</span>, <span class="gc-key">"fill"</span>: <span class="gc-str">"transparent"</span> },<br>
+        &nbsp;&nbsp;<span class="gc-key">"ring"</span>: { <span class="gc-key">"r"</span>: <span class="gc-num" id="gv-ring">0.42</span>, <span class="gc-key">"w"</span>: <span class="gc-num" id="gv-w">0.025</span>, <span class="gc-key">"fill"</span>: <span class="gc-str">"#daa520"</span> },<br>
+        &nbsp;&nbsp;<span class="gc-key">"ratio"</span>: <span class="gc-str">"φ"</span>, <span class="gc-comment">// gap width = golden ratio</span><br>
+        &nbsp;&nbsp;<span class="gc-key">"theory"</span>: <span class="gc-str">"ρ=S/S_Bek"</span> <span class="gc-comment">// the physics is in the spacing</span><br>
+        }
+        <div class="genome-bytes">
+          <span><span class="bytes-count" id="byteCount">96</span><br>bytes total</span>
+          <span style="text-align:right">Resolution independent<br>Renders at any size<br>Patent GB2605434.6</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="genome-explain">
+      <div class="ge-row">
+        <div class="ge-dot d1">·</div>
+        <div class="ge-text">
+          <div class="ge-name">THE DOT — Singularity Core</div>
+          <div class="ge-desc">Maximum compression. The past. Everything that ever fell in, compressed to this point. Black on black — you see the edge of nothing.</div>
+          <div class="ge-eq">r = ρ_base · scale &nbsp;·&nbsp; fill: void &nbsp;·&nbsp; stroke: gold</div>
+        </div>
+      </div>
+      <div class="ge-row">
+        <div class="ge-dot d2">·</div>
+        <div class="ge-text">
+          <div class="ge-name">THE GAP — Holographic Present</div>
+          <div class="ge-desc">The air gap between the black hole and the outer edge. This is where you live. The void IS the data — absence encoded as presence. The gap width = φ (golden ratio). Not aesthetic choice. Physics.</div>
+          <div class="ge-eq">r0 = dot.r · φ &nbsp;·&nbsp; r1 = r0 + φ·ε &nbsp;·&nbsp; fill: transparent</div>
+        </div>
+      </div>
+      <div class="ge-row">
+        <div class="ge-dot d3">·</div>
+        <div class="ge-text">
+          <div class="ge-name">THE EDGE — Projected Reality</div>
+          <div class="ge-desc">The outer ring. What everyone thinks is real. The holographic surface — the universe projected from the information that compressed inward. Thin. Gold. Precise.</div>
+          <div class="ge-eq">r = dot.r · φ² &nbsp;·&nbsp; w = 0.025 · scale &nbsp;·&nbsp; fill: #daa520</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</section>
+
+<!-- CONTROLS -->
+<div id="controls">
+  <div class="section-label">// Genome Editor — Tune The Physics</div>
+  <h2 class="section-title">Every Slider Is An Equation</h2>
+  <div class="ctrl-grid">
+    <div class="ctrl-card">
+      <div class="ctrl-label">Compression ρ (dot size)</div>
+      <div class="ctrl-value" id="cv-rho">0.618</div>
+      <input type="range" id="sl-rho" min="20" max="80" value="45" step="1">
+      <div class="ctrl-sub">ρ = S/S_Bek — how compressed is the core. At ρ→1, the dot saturates and inverts.</div>
+    </div>
+    <div class="ctrl-card">
+      <div class="ctrl-label">Gap Width (air gap / φ)</div>
+      <div class="ctrl-value" id="cv-gap">φ = 1.618</div>
+      <input type="range" id="sl-gap" min="10" max="60" value="35" step="1">
+      <div class="ctrl-sub">The void between the black hole and the projected edge. This is where you live. Wider = more holographic space.</div>
+    </div>
+    <div class="ctrl-card">
+      <div class="ctrl-label">Ring Weight</div>
+      <div class="ctrl-value" id="cv-ring">0.025</div>
+      <input type="range" id="sl-ring" min="5" max="40" value="12" step="1">
+      <div class="ctrl-sub">Thickness of the outer projected reality. Thin = refined. Thick = bold. The ring IS the universe.</div>
+    </div>
+    <div class="ctrl-card">
+      <div class="ctrl-label">Pulse Speed</div>
+      <div class="ctrl-value" id="cv-pulse">Breathing</div>
+      <input type="range" id="sl-pulse" min="0" max="100" value="50" step="1">
+      <div class="ctrl-sub">The compression heartbeat. Set to 0 for static. Increase for living logo mode.</div>
+    </div>
+  </div>
+</div>
+
+<!-- VARIATIONS -->
+<section id="variations">
+<div class="var-inner">
+  <div class="section-label">// Genome Variations — Same DNA, Infinite Expression</div>
+  <h2 class="section-title">One Genome. Every Brand.</h2>
+  <div class="var-grid" id="varGrid"></div>
+</div>
+</section>
+
+<!-- GROK RENDERS -->
+<section id="renders">
+<div class="renders-inner">
+  <div class="section-label">// Cinematic Renders — Grok AI</div>
+  <h2 class="section-title">What The Genome Looks Like<br>At Cosmic Scale</h2>
+  <div class="renders-grid" id="rendersGrid">
+    <div class="render-card" id="r0">
+      <div class="render-loading"><div class="render-spinner"></div><div class="render-label">Generating</div></div>
+    </div>
+    <div class="render-card" id="r1">
+      <div class="render-loading"><div class="render-spinner"></div><div class="render-label">Generating</div></div>
+    </div>
+    <div class="render-card" id="r2">
+      <div class="render-loading"><div class="render-spinner"></div><div class="render-label">Generating</div></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- PITCH -->
+<section id="pitch">
+<div class="pitch-inner">
+  <div class="section-label">// The Product</div>
+  <div class="pitch-quote">"Every great brand<br>has always had a genome.<br><em>Now they can prove it."</em></div>
+  <p class="pitch-body">
+    For fifty years, logos have been pixels. Static files. Bitmaps that blur when you scale them. Design files locked in proprietary software. Logos that can be copied, stolen, disputed.
+    <br><br>
+    A Genetic Logo is none of those things. It is a mathematical description — a genome — from which the logo can be <em>derived</em> at any resolution, in any medium, forever. The genome is the original. Not the pixels. The genome is what you own. The genome is what you file. The genome is what no one can copy, because copying the output is not copying the DNA.
+    <br><br>
+    The physics is in the spacing. The golden ratio defines the gap. The Bekenstein saturation defines the compression. Your brand carries the structure of the universe inside it.
+  </p>
+  <div class="pitch-grid">
+    <div class="pitch-cell"><span class="pitch-cell-num">96</span><span class="pitch-cell-label">bytes total genome</span></div>
+    <div class="pitch-cell"><span class="pitch-cell-num">∞</span><span class="pitch-cell-label">resolution output</span></div>
+    <div class="pitch-cell"><span class="pitch-cell-num">φ</span><span class="pitch-cell-label">physics in the spacing</span></div>
+    <div class="pitch-cell"><span class="pitch-cell-num">1</span><span class="pitch-cell-label">provable original</span></div>
+  </div>
+  <div class="cta-row">
+    <a href="/portfolio.html#cv" class="btn btn-gold">Commission A Genome</a>
+    <a href="/alien.html" class="btn btn-outline">The Technology</a>
+    <a href="/singularity.html" class="btn btn-outline">The Theory</a>
+  </div>
+</div>
+</section>
+
+<!-- EXPORT -->
+<div id="export">
+  <div class="section-label">// Export</div>
+  <h2 class="section-title" style="font-size:24px;">Download Your Genome</h2>
+  <div class="export-row">
+    <button class="exp-btn" onclick="exportSVG()">Export SVG</button>
+    <button class="exp-btn" onclick="exportJSON()">Export Genome JSON</button>
+    <button class="exp-btn" onclick="exportPNG()">Export PNG 4K</button>
+    <button class="exp-btn" onclick="copyGenome()">Copy Genome String</button>
+  </div>
+</div>
+
+<footer>
+  <p>
+    <a href="/">shortfactory.shop</a> &nbsp;·&nbsp;
+    Genetic Logo System &nbsp;·&nbsp;
+    Patent <a href="/patent-compression-inversion.html">GB2605434.6</a> &nbsp;·&nbsp;
+    Daniel Chipchase &nbsp;·&nbsp; Somerset &nbsp;·&nbsp; 2026
+  </p>
+</footer>
+
+<script>
+const PROXY = 'https://api.shortfactory.shop/grok';
+const PHI = 1.6180339887;
+
+// ── GENOME STATE ──
+const G = {
+  rho: 0.45,      // dot radius (normalised 0-1)
+  gap: 0.35,      // gap width factor
+  ringW: 0.12,    // ring weight factor
+  pulse: 0.5,     // pulse speed
+  color: '#daa520',
+  bg: '#000000'
+};
+
+function dotR(size)   { return size * G.rho * 0.28; }
+function gapR0(size)  { return dotR(size) * PHI; }
+function gapR1(size)  { return gapR0(size) + (size * G.gap * 0.18); }
+function ringR(size)  { return gapR1(size) * PHI * 0.82; }
+function ringW(size)  { return size * G.ringW * 0.04; }
+
+// ── MAIN LOGO CANVAS ──
+const logoCanvas = document.getElementById('logoCanvas');
+const lctx = logoCanvas.getContext('2d');
+let logoT = 0;
+
+function sizeLogoCanvas() {
+  const wrap = document.getElementById('logoWrap');
+  const s = wrap.offsetWidth;
+  logoCanvas.width = s * devicePixelRatio;
+  logoCanvas.height = s * devicePixelRatio;
+  logoCanvas.style.width = s + 'px';
+  logoCanvas.style.height = s + 'px';
+}
+
+function drawLogo(ctx, size, t, opts={}) {
+  const cx = size / 2, cy = size / 2;
+  const pulse = opts.pulse !== undefined ? opts.pulse : G.pulse;
+  const breathe = 1 + Math.sin(t * pulse * 2) * 0.025;
+  const color = opts.color || G.color;
+  const bg = opts.bg || G.bg;
+
+  ctx.clearRect(0, 0, size, size);
+
+  const dr = dotR(size) * breathe;
+  const g0 = gapR0(size) * breathe;
+  const g1 = gapR1(size) * breathe;
+  const rr = ringR(size) * breathe;
+  const rw = ringW(size);
+
+  // Outer glow
+  const grd = ctx.createRadialGradient(cx, cy, rr * 0.6, cx, cy, rr * 1.8);
+  grd.addColorStop(0, 'rgba(218,165,32,0.06)');
+  grd.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.beginPath(); ctx.arc(cx, cy, rr * 1.8, 0, Math.PI*2);
+  ctx.fillStyle = grd; ctx.fill();
+
+  // Gap subtle shimmer
+  const grd2 = ctx.createRadialGradient(cx, cy, g0, cx, cy, g1);
+  grd2.addColorStop(0, 'rgba(218,165,32,0.0)');
+  grd2.addColorStop(0.5, `rgba(218,165,32,${0.03 + Math.sin(t*1.3)*0.01})`);
+  grd2.addColorStop(1, 'rgba(218,165,32,0.0)');
+  ctx.beginPath();
+  ctx.arc(cx, cy, g1, 0, Math.PI*2);
+  ctx.arc(cx, cy, g0, 0, Math.PI*2, true);
+  ctx.fillStyle = grd2; ctx.fill();
+
+  // Dot (the singularity)
+  const dotGrd = ctx.createRadialGradient(cx-dr*0.2, cy-dr*0.2, 0, cx, cy, dr);
+  dotGrd.addColorStop(0, '#111');
+  dotGrd.addColorStop(1, '#000');
+  ctx.beginPath(); ctx.arc(cx, cy, dr, 0, Math.PI*2);
+  ctx.fillStyle = dotGrd; ctx.fill();
+  // dot stroke
+  ctx.beginPath(); ctx.arc(cx, cy, dr, 0, Math.PI*2);
+  ctx.strokeStyle = `rgba(218,165,32,${0.4 + Math.sin(t*0.8)*0.1})`;
+  ctx.lineWidth = rw * 0.6;
+  ctx.stroke();
+
+  // Outer ring (the projected edge)
+  ctx.beginPath(); ctx.arc(cx, cy, rr, 0, Math.PI*2);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = rw;
+  ctx.globalAlpha = 0.9 + Math.sin(t*1.1) * 0.05;
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  // Tick marks on ring — 3 dots at φ intervals
+  for(let i=0; i<3; i++) {
+    const angle = (i/3)*Math.PI*2 + t*0.1;
+    const tx = cx + Math.cos(angle)*rr;
+    const ty = cy + Math.sin(angle)*rr;
+    ctx.beginPath(); ctx.arc(tx, ty, rw*1.2, 0, Math.PI*2);
+    ctx.fillStyle = color; ctx.fill();
+  }
+}
+
+function animateLogo() {
+  logoT += 0.016;
+  const s = logoCanvas.width;
+  drawLogo(lctx, s, logoT);
+  updateGenomeDisplay();
+  requestAnimationFrame(animateLogo);
+}
+
+// ── BACKGROUND PARTICLE FIELD ──
+(function(){
+  const c = document.getElementById('heroBg');
+  const ctx = c.getContext('2d');
+  let W, H, pts=[];
+  function resize(){W=c.width=window.innerWidth;H=c.height=window.innerHeight;}
+  window.addEventListener('resize',resize); resize();
+  for(let i=0;i<80;i++) pts.push({x:Math.random()*1200,y:Math.random()*800,vx:(Math.random()-.5)*.2,vy:(Math.random()-.5)*.2,r:Math.random()*1.5+.3});
+  function tick(){
+    ctx.clearRect(0,0,W,H);
+    const cx=W/2,cy=H/2;
+    pts.forEach(p=>{
+      const dx=cx-p.x,dy=cy-p.y,d=Math.sqrt(dx*dx+dy*dy)||1;
+      p.vx+=dx/d*0.001; p.vy+=dy/d*0.001; p.vx*=.997; p.vy*=.997;
+      p.x+=p.vx; p.y+=p.vy;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(218,165,32,${0.08+p.r*0.04})`; ctx.fill();
+    });
+    requestAnimationFrame(tick);
+  }
+  tick();
+})();
+
+// ── GENOME DISPLAY UPDATE ──
+function updateGenomeDisplay(){
+  const s = logoCanvas.width;
+  document.getElementById('gv-dot').textContent = (dotR(s)/s).toFixed(3);
+  document.getElementById('gv-gap0').textContent = (gapR0(s)/s).toFixed(3);
+  document.getElementById('gv-gap1').textContent = (gapR1(s)/s).toFixed(3);
+  document.getElementById('gv-ring').textContent = (ringR(s)/s).toFixed(3);
+  document.getElementById('gv-w').textContent = (ringW(s)/s).toFixed(3);
+  const json = `{"v":1,"cx":0.5,"cy":0.5,"dot":{"r":${(dotR(s)/s).toFixed(3)}},"gap":{"r0":${(gapR0(s)/s).toFixed(3)},"r1":${(gapR1(s)/s).toFixed(3)}},"ring":{"r":${(ringR(s)/s).toFixed(3)},"w":${(ringW(s)/s).toFixed(3)}},"ratio":"φ","theory":"ρ=S/S_Bek"}`;
+  document.getElementById('byteCount').textContent = json.length;
+  document.getElementById('heroGenomeDisplay').textContent = `genome: { ρ:${G.rho.toFixed(3)} · gap:${(G.gap*PHI).toFixed(3)} · ring:φ² · w:${G.ringW.toFixed(3)} · ${G.color} }`;
+}
+
+// ── SLIDERS ──
+document.getElementById('sl-rho').addEventListener('input', function(){
+  G.rho = this.value/100;
+  document.getElementById('cv-rho').textContent = G.rho.toFixed(3);
+  drawVariations();
+});
+document.getElementById('sl-gap').addEventListener('input', function(){
+  G.gap = this.value/100;
+  document.getElementById('cv-gap').textContent = 'φ × ' + (G.gap*3).toFixed(2);
+  drawVariations();
+});
+document.getElementById('sl-ring').addEventListener('input', function(){
+  G.ringW = this.value/100;
+  document.getElementById('cv-ring').textContent = G.ringW.toFixed(3);
+  drawVariations();
+});
+document.getElementById('sl-pulse').addEventListener('input', function(){
+  G.pulse = this.value/100;
+  document.getElementById('cv-pulse').textContent = G.pulse < 0.1 ? 'Static' : G.pulse < 0.4 ? 'Slow' : G.pulse < 0.7 ? 'Breathing' : 'Alive';
+});
+
+// ── VARIATIONS ──
+const VARIANTS = [
+  {name:'Origin',      color:'#daa520', bg:'#000000', rho:0.45, gap:0.35, ringW:0.12},
+  {name:'Void',        color:'#ffffff', bg:'#000000', rho:0.30, gap:0.45, ringW:0.08},
+  {name:'Inversion',   color:'#000000', bg:'#daa520', rho:0.50, gap:0.30, ringW:0.15},
+  {name:'Compressed',  color:'#daa520', bg:'#000000', rho:0.65, gap:0.20, ringW:0.10},
+  {name:'Expanded',    color:'#daa520', bg:'#000000', rho:0.25, gap:0.55, ringW:0.06},
+  {name:'Singularity', color:'#ff2222', bg:'#000000', rho:0.80, gap:0.15, ringW:0.20},
+];
+
+function drawVariations(){
+  const grid = document.getElementById('varGrid');
+  grid.innerHTML = '';
+  VARIANTS.forEach((v,i)=>{
+    const card = document.createElement('div');
+    card.className = 'var-card' + (i===0?' active':'');
+    card.innerHTML = `<canvas class="var-canvas" id="vc${i}"></canvas>
+      <div class="var-name">${v.name}</div>
+      <div class="var-genome">ρ:${v.rho} · gap:${v.gap} · w:${v.ringW}</div>`;
+    card.onclick = ()=>{
+      document.querySelectorAll('.var-card').forEach(c=>c.classList.remove('active'));
+      card.classList.add('active');
+      G.rho=v.rho; G.gap=v.gap; G.ringW=v.ringW; G.color=v.color; G.bg=v.bg;
+      document.getElementById('sl-rho').value = v.rho*100;
+      document.getElementById('sl-gap').value = v.gap*100;
+      document.getElementById('sl-ring').value = v.ringW*100;
+    };
+    grid.appendChild(card);
+    // draw
+    requestAnimationFrame(()=>{
+      const vc = document.getElementById(`vc${i}`);
+      const s = vc.offsetWidth;
+      vc.width = s*devicePixelRatio; vc.height=s*devicePixelRatio;
+      const vctx = vc.getContext('2d');
+      // temp override
+      const _rho=G.rho,_gap=G.gap,_rw=G.ringW,_col=G.color;
+      G.rho=v.rho; G.gap=v.gap; G.ringW=v.ringW; G.color=v.color;
+      if(v.bg!=='#000000'){vctx.fillStyle=v.bg;vctx.fillRect(0,0,s*devicePixelRatio,s*devicePixelRatio);}
+      drawLogo(vctx, s*devicePixelRatio, 0, {pulse:0, color:v.color});
+      G.rho=_rho; G.gap=_gap; G.ringW=_rw; G.color=_col;
+    });
+  });
+}
+
+// ── GROK RENDERS ──
+const RENDER_PROMPTS = [
+  "Three perfectly concentric geometric shapes floating in deep space as a logo mark: a dense black compressed sphere at absolute center, surrounded by a pure void air gap of luminous nothingness, then a razor-thin golden ring at the outer edge. The void gap glows faintly with compressed information. Cosmic scale. Ultra-minimal. Like nothing ever designed. 8K photorealistic, dark background, gold and black",
+  "Cross-section diagram of a black hole rendered as a stunning logo: innermost compressed singularity core in pure black, middle layer is the holographic air gap where information hangs suspended as golden light particles, outer ring is the projected reality surface in gold. Scientific beauty meets brand identity. Interstellar aesthetic. 8K cinematic",
+  "Extreme close-up of a black hole event horizon showing three distinct zones as an abstract logo: the void core, the shimmering information gap, the golden outer projection ring. Looks like the most expensive logo ever created. Ultra-minimal geometry. Deep space. Gold on black. 8K photorealistic stunning"
+];
+
+async function generateRenders(){
+  for(let i=0;i<3;i++){
+    (async()=>{
+      try{
+        const res = await fetch(`${PROXY}/image`,{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({prompt:RENDER_PROMPTS[i],n:1,response_format:'b64_json'})
+        });
+        const data = await res.json();
+        if(data.data && data.data[0]){
+          const card = document.getElementById(`r${i}`);
+          const img = document.createElement('img');
+          img.src = 'data:image/jpeg;base64,'+data.data[0].b64_json;
+          const captions = ['Dot · Gap · Ring — The Three Zones','Holographic Information Gap','The Projected Edge — Your Reality'];
+          card.innerHTML = `<div class="render-caption">${captions[i]}</div>`;
+          card.insertBefore(img, card.firstChild);
+        }
+      }catch(e){console.log('render',i,'failed:',e);}
+    })();
+  }
+}
+
+// ── EXPORT ──
+function exportSVG(){
+  const s = 500;
+  const cx=250,cy=250;
+  const dr=dotR(s), g0=gapR0(s), g1=gapR1(s), rr=ringR(s), rw=ringW(s);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 ${s} ${s}">
+  <rect width="${s}" height="${s}" fill="${G.bg}"/>
+  <!-- Genome: {"v":1,"rho":${G.rho},"gap":${G.gap},"ringW":${G.ringW},"color":"${G.color}","ratio":"phi","theory":"rho=S/S_Bek"} -->
+  <!-- THE DOT — singularity core -->
+  <circle cx="${cx}" cy="${cy}" r="${dr.toFixed(2)}" fill="#000" stroke="${G.color}" stroke-width="${(rw*0.6).toFixed(2)}"/>
+  <!-- THE GAP — holographic void (absence = data) -->
+  <!-- gap r0=${g0.toFixed(2)} r1=${g1.toFixed(2)} fill:transparent -->
+  <!-- THE RING — projected reality -->
+  <circle cx="${cx}" cy="${cy}" r="${rr.toFixed(2)}" fill="none" stroke="${G.color}" stroke-width="${rw.toFixed(2)}"/>
+  <!-- Tick marks at phi intervals -->
+  ${[0,1,2].map(i=>{
+    const a=(i/3)*Math.PI*2;
+    return `<circle cx="${(cx+Math.cos(a)*rr).toFixed(2)}" cy="${(cy+Math.sin(a)*rr).toFixed(2)}" r="${(rw*1.2).toFixed(2)}" fill="${G.color}"/>`;
+  }).join('\n  ')}
+</svg>`;
+  const blob = new Blob([svg],{type:'image/svg+xml'});
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='genome-logo.svg'; a.click();
+}
+
+function exportJSON(){
+  const s=500;
+  const json = JSON.stringify({
+    v:1, generator:'ShortFactory Genetic Logo v1.0',
+    patent:'GB2605434.6',
+    cx:0.5, cy:0.5,
+    dot:{r:+(dotR(s)/s).toFixed(4), fill:'#000000', stroke:G.color},
+    gap:{r0:+(gapR0(s)/s).toFixed(4), r1:+(gapR1(s)/s).toFixed(4), fill:'transparent'},
+    ring:{r:+(ringR(s)/s).toFixed(4), w:+(ringW(s)/s).toFixed(4), fill:G.color},
+    ticks:3, tickAngle:'2π/3',
+    ratio:'φ=1.6180339887',
+    theory:'ρ=S/S_Bek — dot·φ=gap·φ=ring',
+    genome_bytes: null
+  }, null, 2);
+  const blob = new Blob([json],{type:'application/json'});
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='genome-logo.json'; a.click();
+}
+
+function exportPNG(){
+  const s=2000;
+  const c=document.createElement('canvas'); c.width=s; c.height=s;
+  const ctx=c.getContext('2d');
+  ctx.fillStyle=G.bg; ctx.fillRect(0,0,s,s);
+  drawLogo(ctx,s,0,{pulse:0});
+  c.toBlob(blob=>{
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='genome-logo-4k.png'; a.click();
+  },'image/png');
+}
+
+function copyGenome(){
+  const s=500;
+  const str=`{"v":1,"cx":0.5,"cy":0.5,"dot":{"r":${(dotR(s)/s).toFixed(4)}},"gap":{"r0":${(gapR0(s)/s).toFixed(4)},"r1":${(gapR1(s)/s).toFixed(4)}},"ring":{"r":${(ringR(s)/s).toFixed(4)},"w":${(ringW(s)/s).toFixed(4)}},"ratio":"φ","theory":"ρ=S/S_Bek"}`;
+  navigator.clipboard.writeText(str).then(()=>alert('Genome copied to clipboard.'));
+}
+
+// ── INIT ──
+window.addEventListener('resize', ()=>{ sizeLogoCanvas(); drawVariations(); });
+sizeLogoCanvas();
+drawVariations();
+animateLogo();
+generateRenders();
+</script>
+</body>
+</html>

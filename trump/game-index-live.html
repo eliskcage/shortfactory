@@ -1,0 +1,1431 @@
+<!-- ============================================================
+     index_mood_demo.html — TRUMP vs DEEP STATE (3-screen game)
+     VERSION: v19 | 2026-02-11
+     LAST CHANGES:
+       v19 - Stats button greyed until debt cleared + $1T surplus
+           - Black ops require surplus cash (debt cleared) to unlock
+       v18 - Status dot: green=working, blue=check, red=dan approved (code)
+           - Threat meter hide moved to mood_system.js (was in dead if(false) block)
+       v17 - Threat meters: display:none (not opacity:0) on stats/stocks
+           - Fade back in on map return
+       v16 - Intensity arrows now ▲/▼ (were ◀/▶)
+       v15 - Real stock market UI replaces CLAUDEISRETARDED test
+           - Beep-first button pattern (never silently fails)
+           - Force-init G.stocks on entry + button press
+           - Hide threat-meters on stats/stocks view
+           - Fade threat-meters back on map return
+           - Click threat-meters to cycle factions
+     ============================================================ -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0a0a12">
+  <title>Trump's World</title>
+
+  <!-- SNES-style retro font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+  <!-- CSS Files - Edit these to change appearance -->
+  <link rel="stylesheet" href="css/variables.css?v=20260209-1">
+  <link rel="stylesheet" href="css/layout.css?v=20260212-3">
+  <link rel="stylesheet" href="css/components.css?v=20260209-1">
+  <link rel="stylesheet" href="css/overlays.css?v=20260211-23">
+  <link rel="stylesheet" href="css/animations.css?v=20260209-1">
+  <link rel="stylesheet" href="css/notifications.css?v=20260209-1">
+  <link rel="stylesheet" href="css/stockmarket.css?v=20260211-19">
+
+  <!-- Game Start Screen Styles -->
+  <style>
+    .game-start-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #000 0%, #1a0000 50%, #000 100%);
+      z-index: 99999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: opacity 0.5s;
+    }
+
+    .game-start-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .start-content {
+      text-align: center;
+      font-family: 'Press Start 2P', monospace;
+      color: #fff;
+      padding: 20px;
+    }
+
+    .start-title {
+      font-size: clamp(2rem, 10vw, 5rem);
+      color: #ff0;
+      text-shadow:
+        0 0 20px #ff0,
+        0 0 40px #f00,
+        4px 4px 0 #000;
+      margin-bottom: 50px;
+      animation: titlePulse 2s ease-in-out infinite;
+      line-height: 1.3;
+    }
+
+    @keyframes titlePulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .start-subtitle {
+      font-size: clamp(0.8rem, 3vw, 1.2rem);
+      color: #0ff;
+      text-shadow: 0 0 10px #0ff, 2px 2px 0 #000;
+      margin-bottom: 30px;
+      animation: blink 1.5s ease-in-out infinite;
+      line-height: 1.8;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .start-hint {
+      font-size: clamp(0.5rem, 2vw, 0.8rem);
+      color: #f0f;
+      text-shadow: 0 0 10px #f0f, 2px 2px 0 #000;
+      margin-top: 30px;
+      animation: pulse 1s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.7; }
+      50% { opacity: 1; }
+    }
+
+    @keyframes oilSellFlash {
+      0%, 100% { opacity: 1; transform: scale(1.2); }
+      50% { opacity: 0.3; transform: scale(1.4); }
+    }
+    @keyframes priceGoodPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; transform: scale(1.1); }
+    }
+    @keyframes poopFlashWarn {
+      0%, 100% { opacity: 1; filter: drop-shadow(0 0 4px #f00); }
+      50% { opacity: 0.4; filter: drop-shadow(0 0 8px #ff0000) drop-shadow(0 0 16px #ff0000); }
+    }
+    @keyframes poopFlashCrit {
+      0%, 100% { opacity: 1; filter: drop-shadow(0 0 6px #f00) drop-shadow(0 0 12px #f00); }
+      50% { opacity: 0.2; filter: drop-shadow(0 0 12px #ff0000) drop-shadow(0 0 24px #ff0000); transform: scale(1.15); }
+    }
+    @keyframes impeachPulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.6; }
+    }
+    @keyframes heartFlashWarn {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; filter: drop-shadow(0 0 8px #ff0000) drop-shadow(0 0 16px #ff0000) hue-rotate(300deg); }
+    }
+    @keyframes heartFlashCrit {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.2; filter: drop-shadow(0 0 12px #ff0000) drop-shadow(0 0 24px #ff0000) hue-rotate(300deg); transform: scale(1.15); }
+    }
+
+    /* Mobile/Desktop specific text */
+    .mobile-only { display: none; }
+    .desktop-only { display: inline; }
+
+    @media (max-width: 768px), (hover: none) {
+      .mobile-only { display: inline; }
+      .desktop-only { display: none; }
+    }
+
+    /* Toggle row - side by side */
+    .toggle-row {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 20px;
+      z-index: 100;
+    }
+    .toggle-row .rumble-toggle-container {
+      position: static;
+      transform: none;
+      bottom: auto;
+      left: auto;
+    }
+
+    /* Shake slider - cyan instead of green */
+    input:checked + .shake-slider {
+      background: linear-gradient(135deg, #0ff, #088) !important;
+      border-color: #066 !important;
+    }
+
+    /* Test slider - magenta */
+    input:checked + .test-slider {
+      background: linear-gradient(135deg, #f0f, #808) !important;
+      border-color: #606 !important;
+    }
+
+    /* When shake is OFF, kill all shake/transform animations on phone */
+    .phone-frame.no-shake.shake,
+    .phone-frame.no-shake.rumble-shake,
+    .phone-frame.no-shake.charging-shake {
+      animation: none !important;
+      transform: none !important;
+    }
+  </style>
+  <style>
+  /* MOOD OVERLAY STYLES */
+  .mood-view,.stocks-view{position:absolute;inset:0;flex-direction:column;overflow:hidden}
+  .mm-sec{background:rgba(0,0,0,0.85);border:1px solid #222;border-radius:8px;padding:4px 5px}
+  .mm-sec-title{font-size:4.5px;color:#ffd700;text-shadow:0 0 4px rgba(255,215,0,0.4);text-align:center;margin-bottom:2px;letter-spacing:2px;font-family:'Press Start 2P',monospace}
+  .mm-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:1px}
+  .mm-tile{width:34px;display:flex;flex-direction:column;align-items:center;padding:2px 0 1px;border-radius:4px;border:1px solid transparent;transition:all 0.12s;position:relative;user-select:none;-webkit-user-select:none}
+  .mm-tile .ico{font-size:14px;line-height:1;filter:grayscale(1);opacity:0.3;transition:all 0.3s}
+  .mm-tile.lit .ico{filter:none;opacity:1}
+  .mm-tile .cnt{font-size:6px;color:#003300;font-family:'Press Start 2P',monospace;margin-top:1px;min-width:14px;text-align:center;background:rgba(0,20,0,0.6);border:1px solid #0a2a0a;border-radius:3px;padding:1px 2px;letter-spacing:1px}
+  .mm-tile .cnt.has{color:#00ff88;text-shadow:0 0 6px #00ff88,0 0 12px #00ff88;border-color:#00ff88;background:rgba(0,40,0,0.7)}
+  .mm-tile .lbl{font-size:2.5px;color:#333;font-family:'Press Start 2P',monospace;text-align:center;line-height:1.1;white-space:nowrap;overflow:hidden;max-width:34px}
+  .mm-tile.flash-good{background:rgba(0,255,136,0.3)!important;border-color:#00ff88!important}
+  .mm-tile.flash-bad{background:rgba(255,68,68,0.3)!important;border-color:#ff4444!important}
+  .mm-tile.flash-nuke{background:rgba(255,136,0,0.5)!important;border-color:#ff8800!important}
+  .mm-imp{position:absolute;top:-6px;left:50%;transform:translateX(-50%);font-family:'Press Start 2P',monospace;font-size:6px;pointer-events:none;z-index:10;white-space:nowrap;text-shadow:0 0 6px currentColor;animation:mmFUp 0.8s ease-out forwards}
+  .mm-nuke-flavor{position:absolute;top:-12px;left:50%;transform:translateX(-50%);font-family:'Press Start 2P',monospace;font-size:4px;color:#ff8800;pointer-events:none;z-index:10;white-space:nowrap;text-shadow:0 0 8px #ff8800;animation:mmFUp 1.2s ease-out forwards}
+  @keyframes mmFUp{0%{opacity:1;transform:translateX(-50%) translateY(0)}100%{opacity:0;transform:translateX(-50%) translateY(-16px)}}
+  .mm-ev{font-size:3.5px;color:#555;padding:1px 0;border-bottom:1px solid #0a0a0a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'Press Start 2P',monospace}
+  .mm-ev:last-child{border-bottom:none}
+  .mm-ev.good{color:#4a8}.mm-ev.bad{color:#a44}.mm-ev.nuke{color:#f80}
+  .mm-mood-label.extreme{animation:mmPulse 0.8s ease-in-out infinite}
+  @keyframes mmPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.7;transform:scale(1.05)}}
+  .mm-sflash{position:absolute;inset:0;pointer-events:none;z-index:90;animation:mmSfAnim 0.25s ease-out forwards}
+  @keyframes mmSfAnim{0%{opacity:0.35}100%{opacity:0}}
+  </style>
+</head>
+<body>
+  <!-- GAME START SCREEN (overlay - all cinematic + rotation lives HERE) -->
+  <div class="game-start-overlay" id="game-start-overlay">
+    <video id="menu-bg-video" autoplay muted loop playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;filter:contrast(1.3) brightness(0.9);z-index:0;"></video>
+    <div id="menu-lightning" style="position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:1;"></div>
+    <div class="start-content" style="position:relative;z-index:2;">
+      <h1 class="start-title">TRUMP vs<br>DEEPSTATE</h1>
+      <div style="font-size:clamp(0.5rem,1.5vw,0.8rem);color:#ff0;text-shadow:0 0 10px #ff0,2px 2px 0 #000;margin-bottom:15px;letter-spacing:0.15em;">v2.9</div>
+      <div class="start-subtitle" id="start-subtitle">
+        <span class="mobile-only">TAP TO START</span>
+        <span class="desktop-only">🎮 BEST PLAYED ON MOBILE 📱<br><br>CLICK TO START ANYWAY</span>
+      </div>
+      <div class="start-hint">⚡ HIGH SCORES UNLOCK AT 97% PURITY ⚡</div>
+
+      <!-- VIBRATE + SHAKE TOGGLES (on start screen so they don't interfere with gameplay) -->
+      <div class="toggle-row" style="position:relative;bottom:auto;left:auto;transform:none;justify-content:center;margin-top:25px;" onclick="if (!window.__cfRLUnblockHandlers) return false; event.stopPropagation();" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">
+        <div class="rumble-toggle-container">
+          <label class="rumble-switch">
+            <input type="checkbox" id="rumble-toggle" checked onchange="if (!window.__cfRLUnblockHandlers) return false; toggleRumble(this.checked)" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">
+            <span class="rumble-slider"></span>
+          </label>
+          <div class="rumble-label" id="rumble-label">
+            <span class="rumble-text">VIBRATE</span>
+            <span class="rumble-state">ON</span>
+          </div>
+        </div>
+        <div class="rumble-toggle-container" id="shake-toggle-container">
+          <label class="rumble-switch">
+            <input type="checkbox" id="shake-toggle" checked onchange="if (!window.__cfRLUnblockHandlers) return false; toggleShake(this.checked)" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">
+            <span class="rumble-slider shake-slider"></span>
+          </label>
+          <div class="rumble-label" id="shake-label">
+            <span class="rumble-text" style="color:#0ff;text-shadow:1px 1px 0 #066;">SHAKE</span>
+            <span class="rumble-state" style="color:#0ff;text-shadow:1px 1px 0 #066;">ON</span>
+          </div>
+        </div>
+        <div class="rumble-toggle-container" id="test-toggle-container">
+          <label class="rumble-switch">
+            <input type="checkbox" id="test-toggle" onchange="if (!window.__cfRLUnblockHandlers) return false; toggleTestMode(this.checked)" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">
+            <span class="rumble-slider test-slider"></span>
+          </label>
+          <div class="rumble-label" id="test-label">
+            <span class="rumble-text" style="color:#f0f;text-shadow:1px 1px 0 #606;">TEST</span>
+            <span class="rumble-state" style="color:#f0f;text-shadow:1px 1px 0 #606;">OFF</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="menu-counter" style="display:none;"></div>
+    <div id="menu-countdown" style="display:none;"></div>
+    <audio id="menu-bond-music" loop preload="auto"><source src="https://www.shortfactory.shop/trump/bond.mp3" type="audio/mpeg"></audio>
+    <audio id="menu-lightning-sound" preload="auto"><source src="https://www.shortfactory.shop/trump/lightning-strike.mp3" type="audio/mpeg"></audio>
+  </div>
+
+  <div class="phone-frame game-loading" id="phone">
+    <!-- STATUS DOT: green=claude working, blue=ready for dan to check, red=dan approved -->
+    <div id="status-dot" style="position:absolute;top:6px;right:6px;z-index:99999;width:12px;height:12px;border-radius:50%;cursor:pointer;border:2px solid rgba(0,0,0,0.5);box-shadow:0 0 8px currentColor;transition:all 0.3s" onclick="if (!window.__cfRLUnblockHandlers) return false; statusDotClick()" data-cf-modified-ce6ebab04b0e11e62b7882c0-=""></div>
+    <div class="screen-flash" id="flash"></div>
+
+    <!-- FULLSCREEN VIDEO -->
+    <div class="fullscreen-video" id="fullscreen-video">
+      <video id="fs-vid" playsinline></video>
+      <div class="nuke-text-overlay" id="nuke-text-overlay">
+        <div class="nuke-target" id="nuke-target">SOMALIA</div>
+        <div class="nuke-subtitle">NUKED</div>
+        <div class="nuke-tagline" id="nuke-tagline">NOTHING OF VALUE LOST</div>
+      </div>
+    </div>
+
+    <!-- ⚠️ DO NOT DELETE - PIPE BOMB DETONATOR SEQUENCE ⚠️ -->
+    <div class="pipebomb-overlay" id="pipebomb-overlay">
+      <video id="pipebomb-video" playsinline></video>
+      <div class="detonator-button-hotspot" id="detonator-hotspot" onclick="if (!window.__cfRLUnblockHandlers) return false; detonateNecklace()" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">
+        <div class="button-ring"></div>
+      </div>
+      <div class="detonator-timer" id="detonator-timer">10</div>
+    </div>
+    <!-- ⚠️ END PROTECTED SECTION ⚠️ -->
+
+    <!-- ADVISOR SELECT -->
+    <div class="advisor-overlay" id="advisor-overlay">
+      <img id="advisor-img" src="https://www.shortfactory.shop/trump/advisor/advisor.jpg" alt="Choose">
+      <div class="advisor-countdown" id="advisor-countdown">10</div>
+      <div class="advisor-hotspot hotspot-1" onclick="if (!window.__cfRLUnblockHandlers) return false; selectAdvisor(1)" data-cf-modified-ce6ebab04b0e11e62b7882c0-=""></div>
+      <div class="advisor-hotspot hotspot-2" onclick="if (!window.__cfRLUnblockHandlers) return false; selectAdvisor(2)" data-cf-modified-ce6ebab04b0e11e62b7882c0-=""></div>
+      <div class="advisor-hotspot hotspot-3" onclick="if (!window.__cfRLUnblockHandlers) return false; selectAdvisor(3)" data-cf-modified-ce6ebab04b0e11e62b7882c0-=""></div>
+      <div class="advisor-hotspot hotspot-4" onclick="if (!window.__cfRLUnblockHandlers) return false; selectAdvisor(4)" data-cf-modified-ce6ebab04b0e11e62b7882c0-=""></div>
+      <div class="advisor-hotspot hotspot-5" onclick="if (!window.__cfRLUnblockHandlers) return false; selectAdvisor(5)" data-cf-modified-ce6ebab04b0e11e62b7882c0-=""></div>
+      <div class="advisor-hotspot hotspot-6" id="trump-hotspot" onclick="if (!window.__cfRLUnblockHandlers) return false; selectAdvisor(6)" data-cf-modified-ce6ebab04b0e11e62b7882c0-=""></div>
+      <div class="advisor-hotspot hotspot-7" id="hitler-hotspot" onclick="if (!window.__cfRLUnblockHandlers) return false; selectAdvisor(7)" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">💀 HITLER</div>
+    </div>
+
+    <!-- UNLOCK BANNER -->
+    <div class="unlock-banner" id="unlock-banner">NEW ADVISOR UNLOCKED!</div>
+
+    <!-- DICE -->
+    <div class="dice-overlay" id="dice-overlay">
+      <div class="dice-result" id="dice-result"></div>
+      <div class="dice-text" id="dice-text">Rolling...</div>
+    </div>
+
+    <!-- MEAN TWEETS -->
+    <div class="mean-tweets-overlay" id="mean-tweets-overlay">
+      <div class="tweet-instruction">FAST TAP TO FILL THE BAR!</div>
+      <div class="tweet-timer" id="tweet-timer">10</div>
+      <div class="tweet-progress-container">
+        <div class="tweet-progress-fill" id="tweet-progress-fill"></div>
+        <div class="tweet-progress-text">TWEET POWER</div>
+      </div>
+      <button class="tweet-button" id="tweet-btn" onclick="if (!window.__cfRLUnblockHandlers) return false; tapTweet()" oncontextmenu="if (!window.__cfRLUnblockHandlers) return false; return false;" data-cf-modified-ce6ebab04b0e11e62b7882c0-=""><img src="https://www.shortfactory.shop/trump/george.png" alt="TAP"></button>
+      <div class="tweet-counter">Taps: <span id="tweet-count">0</span></div>
+    </div>
+
+    <!-- BOOST ANNOUNCEMENT -->
+    <div class="boost-announce" id="boost-announce">
+      <div class="boost-text" id="boost-text">10X BOOST!</div>
+    </div>
+
+    <!-- POWERUP TAP GAME -->
+    <div class="powerup-tap-overlay" id="powerup-tap-overlay">
+      <div class="powerup-tap-title">⚡ RAPID TAP FOR BOOST! ⚡</div>
+      <div class="powerup-tap-timer" id="powerup-tap-timer">3</div>
+      <div class="powerup-tap-multiplier">x<span id="powerup-tap-mult">1</span></div>
+      <div class="powerup-tap-bar-container">
+        <div class="powerup-tap-bar-fill" id="powerup-tap-fill"></div>
+        <div class="powerup-tap-bar-markers">
+          <span>1x</span><span>3x</span><span>5x</span><span>7x</span><span>10x</span>
+        </div>
+      </div>
+      <button class="powerup-tap-btn" id="powerup-tap-btn" onclick="if (!window.__cfRLUnblockHandlers) return false; tapPowerup()" data-cf-modified-ce6ebab04b0e11e62b7882c0-=""><img src="https://www.shortfactory.shop/trump/george.png" alt="TAP"></button>
+      <div class="powerup-tap-action" id="powerup-tap-action">HOME</div>
+    </div>
+
+    <!-- TRUMP CARD -->
+    <div class="trump-card-overlay" id="trump-card-overlay">
+      <div class="trump-card-container" id="trump-card-container">
+        <div class="trump-card">
+          <div class="trump-card-inner">
+            <div class="trump-card-front"><video id="trump-card-video" muted playsinline></video></div>
+            <div class="trump-card-back"><img src="https://shortfactory.shop/trump/trumpcard.jpeg" alt="Card"></div>
+          </div>
+        </div>
+      </div>
+      <div class="trump-card-effect" id="trump-card-effect"></div>
+    </div>
+
+    <!-- TRUMP STAGE -->
+    <div class="trump-stage">
+      <div class="round-display" id="round-display">1</div>
+      <div class="stat-pill pill-debt" id="pill-debt" style="cursor:pointer;transition:all 0.3s">DEBT: <span id="disp-debt">$38T</span></div>
+      <div class="stat-pill pill-moves" id="pill-moves" onclick="if (!window.__cfRLUnblockHandlers) return false; tryDiceRoll()" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">MOVES: <span id="disp-moves">5</span></div>
+      <div class="stat-pill pill-round" id="pill-round">ROUND: <span id="disp-round">1</span></div>
+      <div class="wealth-stack" id="wealth-stack"></div>
+      <button class="advisor-info-btn" id="advisor-info-btn" onclick="if (!window.__cfRLUnblockHandlers) return false; playAdvisorInfo()" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">i</button>
+      <button class="trump-side-btn btn-emergency test-btn" id="btn-emergency" onclick="if (!window.__cfRLUnblockHandlers) return false; activateEmergencyTier()" style="display:none" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">☢️</button>
+      <button class="trump-side-btn btn-litigation test-btn" id="btn-litigation" onclick="if (!window.__cfRLUnblockHandlers) return false; toggleLitigation()" style="display:none" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">⚖️</button>
+      <button class="trump-side-btn btn-gas-test test-btn" id="btn-gas-test" onclick="if (!window.__cfRLUnblockHandlers) return false; triggerBioattackEffect(12000)" style="display:none;background: linear-gradient(135deg, #0f0, #080); border-color: #ff0; top: 90px;" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">☣️</button>
+      <button class="trump-side-btn btn-pipebomb-test test-btn" onclick="if (!window.__cfRLUnblockHandlers) return false; testPipeBombSequence()" style="display:none;background: linear-gradient(135deg, #f00, #800); border-color: #ff0; top: 140px;" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">💣</button>
+      <div class="trump-box" id="trump-box">
+        <video id="trump-video" autoplay loop muted playsinline></video>
+        <div class="trump-hp-bar"><div class="trump-hp-fill" id="trump-hp-fill" style="width:100%"></div><span class="trump-hp-text" id="trump-hp-text">100%</span></div>
+      </div>
+    </div>
+
+    <!-- STATUS -->
+    <div class="status-section">
+      <div class="news-ticker">
+        <span style="color:#f00">*</span>
+        <span id="news-text" style="font-size:14px;color:#fff;text-shadow:2px 2px 0 #f00, 0 0 10px #f00;letter-spacing:2px">YOUR MOVE</span>
+        <span id="population-display" style="display:none"></span>
+      </div>
+      <div class="purity-display"><span>PURITY</span> <span class="purity-value" id="disp-purity">6%</span></div>
+      <div class="deepstate-bar-container">
+        <span class="deepstate-label">DEEP ST.</span>
+        <div class="deepstate-bar-bg"><div class="deepstate-fill" id="ds-fill" style="width:30%"></div></div>
+      </div>
+    </div>
+
+    <!-- MAP -->
+    <div class="map-section" id="map-section">
+      <video id="map-video" autoplay loop muted playsinline></video>
+      <button class="map-toggle-btn" id="stats-btn" onclick="if (!window.__cfRLUnblockHandlers) return false; toggleStats()" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">STATS</button>
+
+      <!-- IMPEACHMENT OVERLAY - shows when HP <= 15 -->
+      <div id="impeach-overlay" style="display:none;position:absolute;inset:0;z-index:50;background:rgba(0,0,0,0.7);display:none;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;" onclick="if (!window.__cfRLUnblockHandlers) return false; toggleLitigation()" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">
+        <div style="font-family:'Press Start 2P',monospace;font-size:clamp(12px,3vw,20px);color:#ff0000;text-shadow:0 0 20px #f00,0 0 40px #f00,3px 3px 0 #000;animation:impeachPulse 0.8s ease-in-out infinite;text-align:center;padding:10px;">
+          ⚖️ IMPEACHED ⚖️
+        </div>
+        <div style="font-family:'Press Start 2P',monospace;font-size:clamp(8px,2vw,12px);color:#ffff00;text-shadow:0 0 10px #ff0,2px 2px 0 #000;margin-top:10px;animation:blink 1s infinite;text-align:center;">
+          TAP TO FIGHT IN COURT
+        </div>
+        <div id="impeach-phrase" style="font-family:'Press Start 2P',monospace;font-size:clamp(7px,1.8vw,10px);color:#0ff;text-shadow:0 0 8px #0ff;margin-top:15px;text-align:center;max-width:90%;"></div>
+      </div>
+
+      <!-- Danger Warning -->
+      <div class="danger-warning" id="danger-warning">
+        <span class="danger-icon">⚠️</span>
+        <span class="danger-stat" id="danger-stat">TRUMP HP LOW</span>
+      </div>
+
+      <!-- Threat Meters (appear when relevant) -->
+      <div class="threat-meters" id="threat-meters">
+        <div class="threat-meter hidden" id="feminist-meter">
+          <span class="threat-label">♀</span>
+          <div class="threat-hearts"></div>
+        </div>
+        <div class="threat-meter hidden" id="muslim-meter">
+          <span class="threat-label muslim-label">☪️</span>
+          <div class="threat-hearts"></div>
+        </div>
+      </div>
+
+      <!-- ⚠️ DO NOT DELETE - SLOT MACHINE SINGLE ICON (SATIRICAL GAMBLING CRITIQUE) ⚠️ -->
+      <div class="slot-machine-icon" id="slot-machine-icon" onclick="if (!window.__cfRLUnblockHandlers) return false; slotMachineClick()" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">☢️</div>
+      <!-- ⚠️ END PROTECTED SECTION ⚠️ -->
+
+      <div class="emergency-drop" id="emergency-drop">
+        <div class="emerg-icon pulse" id="emerg-litigation" onclick="if (!window.__cfRLUnblockHandlers) return false; emergLitigation()" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">⚖️</div>
+        <div class="emerg-icon pulse" id="emerg-nuke" onclick="if (!window.__cfRLUnblockHandlers) return false; activateNuke()" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">☢️</div>
+        <div class="emerg-icon pulse" id="emerg-blackops" onclick="if (!window.__cfRLUnblockHandlers) return false; activateBlackOps()" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">🎯</div>
+      </div>
+
+      <!-- Emergency Alert - shows at HP thresholds -->
+      <span class="blackops-alert-icon" id="blackops-alert-icon" onclick="if (!window.__cfRLUnblockHandlers) return false; handleAlertClick()" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">☢️</span>
+      <div class="blackops-alert-text" id="blackops-alert-text">BLACK OPS AVAILABLE</div>
+
+      <div class="nuke-confirm" id="nuke-confirm">
+        <div class="nuke-countdown" id="nuke-countdown">10</div>
+        <div class="nuke-question">LAUNCH NUKE?</div>
+        <div class="nuke-buttons">
+          <button class="nuke-btn yes" onclick="if (!window.__cfRLUnblockHandlers) return false; nukeDecision(true)" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">YES</button>
+          <button class="nuke-btn no" onclick="if (!window.__cfRLUnblockHandlers) return false; nukeDecision(false)" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">NO</button>
+        </div>
+      </div>
+
+      <div class="wheel-overlay" id="wheel-overlay">
+        <div class="wheel-countdown" id="wheel-countdown">15</div>
+        <div class="wheel-pointer">▼</div>
+        <div class="wheel-container">
+          <img src="https://shortfactory.shop/trump/map/wheel.png" class="wheel-img" id="wheel-img">
+          <div class="george-btn" onclick="if (!window.__cfRLUnblockHandlers) return false; spinWheel()" data-cf-modified-ce6ebab04b0e11e62b7882c0-=""><img src="https://shortfactory.shop/trump/george.png"></div>
+        </div>
+        <div class="wheel-result" id="wheel-result"></div>
+        <div class="wheel-text">PRESS TO SPIN</div>
+      </div>
+
+      <div class="blackops-overlay" id="blackops-overlay">
+        <div class="blackops-title">BLACK OPS</div>
+        <div class="blackops-countdown" id="blackops-countdown">15</div>
+        <div class="blackops-scroll" id="blackops-scroll"></div>
+      </div>
+
+      <div class="stats-overlay" id="stats-overlay">
+        <!-- VIEW 0: MARKET MOOD -->
+        <div class="mood-view" id="mood-view" style="display:flex">
+          <div style="background:linear-gradient(90deg,#1a0000,#0a0a12,#001a00);border-bottom:2px solid #333;padding:5px 8px 3px;text-align:center">
+            <div style="font-size:9px;color:#ffd700;text-shadow:0 0 8px #ffd700,0 0 16px #f80,2px 2px 0 #000;letter-spacing:2px">📊 MARKET MOOD</div>
+            <div class="mm-mood-label" id="mmLabel" style="font-size:7px;margin-top:2px;color:#ffcc00;transition:all 0.3s">😐 NEUTRAL</div>
+            <div id="mmScore" style="font-size:5px;color:#666;margin-top:1px">MOOD: 0 | ACTIONS: 0</div>
+          </div>
+          <div style="padding:3px 8px 1px">
+            <div style="height:12px;background:linear-gradient(90deg,#ff0000,#ff4400,#ff8800,#ffcc00,#88ff00,#00ff88);border-radius:6px;border:1px solid #444;position:relative">
+              <div id="mmPtr" style="position:absolute;top:-2px;width:4px;height:16px;background:#fff;border-radius:2px;box-shadow:0 0 8px #fff;transition:left 0.4s;left:50%;margin-left:-2px"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:3.5px;color:#555;margin-top:1px;padding:0 2px"><span>💀 DEPRESSION</span><span>📊 MOOD</span><span>🚀 ECSTASY</span></div>
+          </div>
+          <!-- TOGGLE: ICONS / GRAPH -->
+          <div style="display:flex;justify-content:center;padding:3px 0 1px;gap:6px">
+            <button id="mm-tab-icons" onclick="if (!window.__cfRLUnblockHandlers) return false; mmToggleView('icons')" style="font-family:'Press Start 2P',monospace;font-size:5px;padding:3px 10px;border-radius:10px;border:1px solid #ffd700;background:rgba(255,215,0,0.2);color:#ffd700;cursor:pointer;text-shadow:0 0 4px #ffd700" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">ICONS</button>
+            <button id="mm-tab-graph" onclick="if (!window.__cfRLUnblockHandlers) return false; mmToggleView('graph')" style="font-family:'Press Start 2P',monospace;font-size:5px;padding:3px 10px;border-radius:10px;border:1px solid #333;background:transparent;color:#666;cursor:pointer" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">GRAPH</button>
+          </div>
+
+          <!-- === ICONS VIEW (default) === -->
+          <div id="mood-icons-panel" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+            <div style="padding:2px 8px 0">
+              <div style="height:55px;background:linear-gradient(180deg,#001108,#0a0004);border:1px solid #1a1a1a;border-radius:6px;overflow:hidden">
+                <svg id="mmChart" viewBox="0 0 340 55" preserveAspectRatio="none" style="width:100%;height:100%">
+                  <defs>
+                    <linearGradient id="mmGUp" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#00ff88" stop-opacity="0.5"/><stop offset="100%" stop-color="#00ff88" stop-opacity="0"/></linearGradient>
+                    <linearGradient id="mmGDn" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="#ff4444" stop-opacity="0.5"/><stop offset="100%" stop-color="#ff4444" stop-opacity="0"/></linearGradient>
+                  </defs>
+                  <line x1="0" y1="27.5" x2="340" y2="27.5" stroke="rgba(255,255,255,0.08)" stroke-width="0.5" stroke-dasharray="4,4"/>
+                  <polygon id="mmFillUp" fill="url(#mmGUp)" points="0,27.5 340,27.5"/>
+                  <polygon id="mmFillDn" fill="url(#mmGDn)" points="0,27.5 340,27.5"/>
+                  <polyline id="mmLine" fill="none" stroke="#ffd700" stroke-width="2" style="filter:drop-shadow(0 0 4px #ffd700)" points="0,27.5"/>
+                  <circle id="mmDot" cx="0" cy="27.5" r="2.5" fill="#ffd700"><animate attributeName="r" values="2.5;4;2.5" dur="1.5s" repeatCount="indefinite"/></circle>
+                </svg>
+              </div>
+              <div style="display:flex;justify-content:center;gap:10px;margin-top:1px">
+                <span style="font-size:3.5px;color:#555;display:flex;align-items:center;gap:2px"><span style="display:inline-block;width:6px;height:2px;border-radius:1px;background:#00ff88;box-shadow:0 0 3px #00ff88"></span>ROARING</span>
+                <span style="font-size:3.5px;color:#555;display:flex;align-items:center;gap:2px"><span style="display:inline-block;width:6px;height:2px;border-radius:1px;background:#ffd700;box-shadow:0 0 3px #ffd700"></span>MOOD</span>
+                <span style="font-size:3.5px;color:#555;display:flex;align-items:center;gap:2px"><span style="display:inline-block;width:6px;height:2px;border-radius:1px;background:#ff4444;box-shadow:0 0 3px #ff4444"></span>DOOMING</span>
+              </div>
+            </div>
+            <div class="mm-scroll" style="flex:1;overflow-y:auto;overflow-x:hidden;padding:3px 5px 6px;display:flex;flex-direction:column;gap:3px;scrollbar-width:none">
+              <div class="mm-sec"><div class="mm-sec-title">☢️ NUCLEAR ARSENAL ☢️</div><div class="mm-grid" id="mmGridNukes"></div></div>
+              <div class="mm-sec"><div class="mm-sec-title">⚡ TRUMP'S MOVES ⚡</div><div class="mm-grid" id="mmGridActions"></div></div>
+              <div class="mm-sec"><div class="mm-sec-title">🎯 BLACK OPS 🎯</div><div class="mm-grid" id="mmGridOps"></div></div>
+              <div class="mm-sec"><div class="mm-sec-title">🎰 WHEEL OF DOOM 🎰</div><div class="mm-grid" id="mmGridWheel"></div></div>
+              <div id="mmEventLog" class="mm-sec" style="max-height:45px;overflow-y:auto"></div>
+            </div>
+          </div>
+
+          <!-- === GRAPH VIEW (hidden) === -->
+          <div id="mood-graph-panel" style="display:none;flex:1;flex-direction:column;padding:4px 8px;overflow:hidden">
+            <!-- BIG CHART -->
+            <div style="flex:1;min-height:140px;background:linear-gradient(180deg,#001108 0%,#0a0a12 50%,#0a0004 100%);border:1px solid #1a1a1a;border-radius:8px;overflow:hidden;position:relative">
+              <!-- Health hearts overlay top-right -->
+              <div id="mmBigHP" style="position:absolute;top:4px;right:6px;font-size:10px;z-index:2;text-shadow:0 0 8px #f00;letter-spacing:1px"></div>
+              <!-- Mood value overlay top-left -->
+              <div id="mmBigMoodVal" style="position:absolute;top:4px;left:6px;font-family:'Press Start 2P',monospace;font-size:7px;z-index:2;color:#ffd700;text-shadow:0 0 6px #ffd700">0</div>
+              <svg id="mmBigChart" viewBox="0 0 340 160" preserveAspectRatio="none" style="width:100%;height:100%">
+                <defs>
+                  <linearGradient id="mmBGUp" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#00ff88" stop-opacity="0.6"/><stop offset="100%" stop-color="#00ff88" stop-opacity="0"/></linearGradient>
+                  <linearGradient id="mmBGDn" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="#ff4444" stop-opacity="0.6"/><stop offset="100%" stop-color="#ff4444" stop-opacity="0"/></linearGradient>
+                </defs>
+                <!-- Grid lines -->
+                <line x1="0" y1="40" x2="340" y2="40" stroke="rgba(0,255,136,0.1)" stroke-width="0.5" stroke-dasharray="4,4"/>
+                <line x1="0" y1="80" x2="340" y2="80" stroke="rgba(255,255,255,0.15)" stroke-width="0.5" stroke-dasharray="4,4"/>
+                <line x1="0" y1="120" x2="340" y2="120" stroke="rgba(255,68,68,0.1)" stroke-width="0.5" stroke-dasharray="4,4"/>
+                <!-- Labels -->
+                <text x="3" y="38" fill="rgba(0,255,136,0.3)" font-size="6" font-family="'Press Start 2P',monospace">HEAL</text>
+                <text x="3" y="130" fill="rgba(255,68,68,0.3)" font-size="6" font-family="'Press Start 2P',monospace">HURT</text>
+                <!-- Fill areas -->
+                <polygon id="mmBFillUp" fill="url(#mmBGUp)" points="0,80 340,80"/>
+                <polygon id="mmBFillDn" fill="url(#mmBGDn)" points="0,80 340,80"/>
+                <!-- Line -->
+                <polyline id="mmBLine" fill="none" stroke="#ffd700" stroke-width="2.5" style="filter:drop-shadow(0 0 6px #ffd700)" points="0,80"/>
+                <!-- Dot -->
+                <circle id="mmBDot" cx="0" cy="80" r="4" fill="#ffd700"><animate attributeName="r" values="4;6;4" dur="1.5s" repeatCount="indefinite"/></circle>
+              </svg>
+            </div>
+            <!-- Health explanation -->
+            <div style="display:flex;gap:6px;margin-top:4px">
+              <div style="flex:1;background:rgba(0,40,0,0.5);border:1px solid #004400;border-radius:6px;padding:4px 6px">
+                <div style="font-family:'Press Start 2P',monospace;font-size:5px;color:#00ff88;text-shadow:0 0 4px #00ff88;margin-bottom:2px">HEALS YOU</div>
+                <div style="font-size:7px;line-height:1.4">🏠 Homeland</div>
+                <div style="font-size:7px;line-height:1.4">🧠 Psyops</div>
+                <div style="font-size:7px;line-height:1.4">🔍 Audits</div>
+                <div style="font-size:7px;line-height:1.4">✝️ Jesus</div>
+                <div style="font-size:7px;line-height:1.4">👶 Births</div>
+              </div>
+              <div style="flex:1;background:rgba(40,0,0,0.5);border:1px solid #440000;border-radius:6px;padding:4px 6px">
+                <div style="font-family:'Press Start 2P',monospace;font-size:5px;color:#ff4444;text-shadow:0 0 4px #ff4444;margin-bottom:2px">HURTS YOU</div>
+                <div style="font-size:7px;line-height:1.4">☢️ Nukes</div>
+                <div style="font-size:7px;line-height:1.4">🧟 Zombies</div>
+                <div style="font-size:7px;line-height:1.4">🦠 Plagues</div>
+                <div style="font-size:7px;line-height:1.4">👽 Aliens</div>
+                <div style="font-size:7px;line-height:1.4">⚔️ War</div>
+              </div>
+            </div>
+            <!-- Event log at bottom -->
+            <div style="margin-top:3px;max-height:35px;overflow-y:auto;background:rgba(0,0,0,0.85);border:1px solid #222;border-radius:6px;padding:3px 5px">
+              <div id="mmEventLog2" style="font-family:'Press Start 2P',monospace;font-size:4px"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW 1: STOCK MARKET — CORPS vs PEOPLE EXCHANGE -->
+        <div class="stocks-view" id="stocks-view" style="display:none;flex-direction:column">
+          <!-- Header -->
+          <div style="background:linear-gradient(90deg,#001a00,#0a0a12,#1a0a00);border-bottom:2px solid #333;padding:6px 8px 4px;text-align:center;flex-shrink:0">
+            <div style="font-size:10px;font-family:'Press Start 2P',monospace;color:#ffd700;text-shadow:0 0 10px #ffd700,0 0 20px #f80,2px 2px 0 #000;letter-spacing:2px">TRUMP MARKET</div>
+            <div style="font-size:4px;font-family:'Press Start 2P',monospace;color:#00ff88;margin-top:2px;display:flex;align-items:center;justify-content:center;gap:4px"><span style="width:5px;height:5px;border-radius:50%;background:#00ff88;display:inline-block;animation:blink 1s infinite"></span>LIVE</div>
+            <div style="font-size:4px;font-family:'Press Start 2P',monospace;color:#00ffff;margin-top:1px;text-shadow:0 0 6px #00ffff">CORPS vs PEOPLE EXCHANGE</div>
+          </div>
+          <!-- Ticker -->
+          <div id="cs-ticker-bar" style="font-size:4px;font-family:'Press Start 2P',monospace;color:#888;padding:3px 8px;border-bottom:1px solid #1a1a1a;overflow:hidden;white-space:nowrap;flex-shrink:0">loading...</div>
+          <!-- Portfolio stats -->
+          <div style="display:flex;justify-content:space-around;padding:4px 6px;border-bottom:1px solid #1a1a1a;flex-shrink:0">
+            <div style="text-align:center"><div style="font-size:3px;font-family:'Press Start 2P',monospace;color:#555">PORTFOLIO</div><div id="cs-portfolio" style="font-size:7px;font-family:'Press Start 2P',monospace;color:#ffd700;margin-top:1px">$0</div></div>
+            <div style="text-align:center"><div style="font-size:3px;font-family:'Press Start 2P',monospace;color:#555">CHANGE</div><div id="cs-change" style="font-size:7px;font-family:'Press Start 2P',monospace;color:#00ff88;margin-top:1px">+$0</div></div>
+            <div style="text-align:center"><div style="font-size:3px;font-family:'Press Start 2P',monospace;color:#555">CASH</div><div id="cs-cash" style="font-size:7px;font-family:'Press Start 2P',monospace;color:#ffd700;margin-top:1px">$0</div></div>
+            <div style="text-align:center"><div style="font-size:3px;font-family:'Press Start 2P',monospace;color:#555">ROUND</div><div id="cs-round" style="font-size:7px;font-family:'Press Start 2P',monospace;color:#ddd;margin-top:1px">0</div></div>
+          </div>
+          <!-- Corps vs People meter -->
+          <div style="padding:3px 8px;flex-shrink:0">
+            <div style="display:flex;justify-content:space-between;font-size:4px;font-family:'Press Start 2P',monospace">
+              <span id="cs-corp-label" style="color:#ff4444">☠ CORPS 50%</span>
+              <span id="cs-people-label" style="color:#00ff88">✊ PEOPLE 50%</span>
+            </div>
+            <div style="height:8px;background:#111;border-radius:4px;overflow:hidden;display:flex;border:1px solid #333;margin-top:2px">
+              <div id="cs-corp-fill" style="width:50%;background:linear-gradient(90deg,#440000,#ff0000);box-shadow:inset 0 1px 0 rgba(255,255,255,0.15)"></div>
+              <div id="cs-people-fill" style="width:50%;background:linear-gradient(90deg,#00ff88,#004400);box-shadow:inset 0 1px 0 rgba(255,255,255,0.15)"></div>
+            </div>
+          </div>
+          <!-- Chart -->
+          <div style="padding:2px 8px;flex-shrink:0">
+            <div style="display:flex;justify-content:space-between;font-size:5px;font-family:'Press Start 2P',monospace;margin-bottom:2px">
+              <span id="cs-chart-name" style="color:#fff">$MAGA</span>
+              <span id="cs-chart-price" style="color:#00ff88;text-shadow:0 0 4px #00ff88">$100</span>
+            </div>
+            <div style="height:55px;background:#050a05;border:1px solid #1a1a1a;border-radius:6px;overflow:hidden">
+              <svg viewBox="0 0 340 60" preserveAspectRatio="none" style="width:100%;height:100%">
+                <defs><linearGradient id="csChartGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#00ff88" stop-opacity="0.3"/><stop offset="100%" stop-color="#00ff88" stop-opacity="0"/></linearGradient></defs>
+                <line x1="0" y1="15" x2="340" y2="15" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
+                <line x1="0" y1="30" x2="340" y2="30" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
+                <line x1="0" y1="45" x2="340" y2="45" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
+                <polygon id="cs-chart-fill" fill="url(#csChartGrad)" points="0,60"/>
+                <polyline id="cs-chart-line" fill="none" stroke="#00ff88" stroke-width="2" style="filter:drop-shadow(0 0 3px #00ff88)" points="0,30"/>
+                <circle id="cs-chart-dot" r="3" fill="#00ff88" cx="0" cy="30"><animate attributeName="r" values="3;5;3" dur="2s" repeatCount="indefinite"/></circle>
+              </svg>
+            </div>
+          </div>
+          <!-- Stock rows (populated by compact_stocks.js updateCompactRows) -->
+          <div id="cs-stock-list" style="flex:1;overflow-y:auto;overflow-x:hidden;padding:2px 6px;display:flex;flex-direction:column;gap:2px;scrollbar-width:none"></div>
+          <!-- Trade buttons — proven BEEP-FIRST pattern from CLAUDEISRETARDED test -->
+          <div style="display:flex;gap:3px;padding:4px 6px 6px;flex-shrink:0;align-items:center;border-top:1px solid #1a1a1a">
+            <button type="button" id="cs-buy-btn" onclick="if (!window.__cfRLUnblockHandlers) return false; csBtn('BUY')" style="flex:2;padding:7px 0;text-align:center;border-radius:6px;font-size:6px;font-family:'Press Start 2P',monospace;border:1px solid #0a0;cursor:pointer;background:rgba(0,100,0,0.3);color:#00ff88;touch-action:manipulation;-webkit-appearance:none" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">📈 BUY</button>
+            <button type="button" id="cs-sell-btn" onclick="if (!window.__cfRLUnblockHandlers) return false; csBtn('SELL')" style="flex:2;padding:7px 0;text-align:center;border-radius:6px;font-size:6px;font-family:'Press Start 2P',monospace;border:1px solid #a00;cursor:pointer;background:rgba(100,0,0,0.3);color:#ff4444;touch-action:manipulation;-webkit-appearance:none" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">📉 SELL</button>
+            <button type="button" id="cs-int-dn" onclick="if (!window.__cfRLUnblockHandlers) return false; csBtn('DN')" style="padding:5px 4px;border-radius:4px;font-size:7px;font-family:'Press Start 2P',monospace;border:1px solid #555;cursor:pointer;background:rgba(50,50,50,0.3);color:#ffd700;touch-action:manipulation;-webkit-appearance:none" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">▼</button>
+            <span id="cs-intensity" style="font-size:5px;font-family:'Press Start 2P',monospace;color:#ffd700;min-width:24px;text-align:center">10%</span>
+            <button type="button" id="cs-int-up" onclick="if (!window.__cfRLUnblockHandlers) return false; csBtn('UP')" style="padding:5px 4px;border-radius:4px;font-size:7px;font-family:'Press Start 2P',monospace;border:1px solid #555;cursor:pointer;background:rgba(50,50,50,0.3);color:#ffd700;touch-action:manipulation;-webkit-appearance:none" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">▲</button>
+            <button type="button" id="cs-auto-btn" onclick="if (!window.__cfRLUnblockHandlers) return false; csBtn('AUTO')" style="flex:2;padding:7px 0;text-align:center;border-radius:6px;font-size:6px;font-family:'Press Start 2P',monospace;border:1px solid #00a;cursor:pointer;background:rgba(0,0,100,0.3);color:#00ffff;touch-action:manipulation;-webkit-appearance:none" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">🤖 AUTO</button>
+          </div>
+        </div>
+
+        <script data-cfasync="false">
+        /* ===== STOCK MARKET BUTTONS — BEEP-FIRST PATTERN ===== */
+        /* Root cause of old failure: handlers had if(!G||!G.stocks)return at top */
+        /* which silently exited when stocks not initialized. Now: beep FIRST, */
+        /* force-init G.stocks if missing, THEN run trade logic. Never silent. */
+        var _csAudioCtx = null;
+        function _csBeep(freq, dur) {
+          try {
+            if (!_csAudioCtx) _csAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            var o = _csAudioCtx.createOscillator(), g = _csAudioCtx.createGain();
+            o.type = 'square'; o.frequency.value = freq; g.gain.value = 0.3;
+            o.connect(g); g.connect(_csAudioCtx.destination); o.start();
+            g.gain.exponentialRampToValueAtTime(0.001, _csAudioCtx.currentTime + dur);
+            o.stop(_csAudioCtx.currentTime + dur);
+          } catch(e) {}
+        }
+        function _csForceInitStocks() {
+          if (typeof G === 'undefined' || !G) return false;
+          if (!G.stocks) {
+            G.stocks = {
+              MAGA:   { price: 100, shares: 0, shortShares: 0, shortEntryPrice: 0, history: [100], hodlRound: 0 },
+              FAITH:  { price: 80,  shares: 0, shortShares: 0, shortEntryPrice: 0, history: [80],  hodlRound: 0 },
+              OIL:    { price: 70,  shares: 0, shortShares: 0, shortEntryPrice: 0, history: [70],  hodlRound: 0 },
+              WALL:   { price: 150, shares: 0, shortShares: 0, shortEntryPrice: 0, history: [150], hodlRound: 0 },
+              DEEP:   { price: 50,  shares: 0, shortShares: 0, shortEntryPrice: 0, history: [50],  hodlRound: 0 },
+              WOKE:   { price: 40,  shares: 0, shortShares: 0, shortEntryPrice: 0, history: [40],  hodlRound: 0 },
+              MSM:    { price: 30,  shares: 0, shortShares: 0, shortEntryPrice: 0, history: [30],  hodlRound: 0 },
+              PHARMA: { price: 45,  shares: 0, shortShares: 0, shortEntryPrice: 0, history: [45],  hodlRound: 0 }
+            };
+            G.stockMarketUnlocked = true;
+            G.stockMarketEvents = G.stockMarketEvents || [];
+            G.stockSelectedTicker = G.stockSelectedTicker || 'MAGA';
+            G.stockAutoMode = G.stockAutoMode || false;
+            G.stockAutoIntensity = G.stockAutoIntensity || 10;
+            if (typeof calculateStockPrices === 'function') calculateStockPrices();
+            if (typeof updateCompactUI === 'function') setTimeout(updateCompactUI, 50);
+          }
+          return true;
+        }
+        function csBtn(which) {
+          var freq = which === 'BUY' ? 523 : which === 'SELL' ? 330 : which === 'AUTO' ? 784 : 440;
+          var dur = which === 'AUTO' ? 0.3 : 0.15;
+          _csBeep(freq, dur);
+          if (!_csForceInitStocks()) {
+            var el = document.getElementById('cs-ticker-bar');
+            if (el) el.innerHTML = '<span style="color:#ff4444">GAME NOT LOADED</span>';
+            return;
+          }
+          if (which === 'BUY') { if (typeof window.csBuy === 'function') window.csBuy(); }
+          else if (which === 'SELL') { if (typeof window.csSell === 'function') window.csSell(); }
+          else if (which === 'AUTO') { if (typeof window.csAutoToggle === 'function') window.csAutoToggle(); }
+          else if (which === 'UP') { if (typeof window.csIntUp === 'function') window.csIntUp(); }
+          else if (which === 'DN') { if (typeof window.csIntDn === 'function') window.csIntDn(); }
+        }
+
+        // Make threat-meters clickable — tap to cycle through muslim/israel/feminist/christian
+        document.addEventListener('DOMContentLoaded', function() {
+          var tm = document.getElementById('threat-meters');
+          if (tm) {
+            tm.style.transition = 'opacity 0.5s ease';
+            tm.style.pointerEvents = 'auto';
+            tm.style.cursor = 'pointer';
+            tm.onclick = function() {
+              if (typeof window.cycleThreatDisplay === 'function') window.cycleThreatDisplay();
+            };
+          }
+        });
+
+        /* ===== STATUS DOT SYSTEM ===== */
+        /* GREEN = Claude working on it | BLUE = Ready for Dan to check | RED = Dan approved (code required) */
+        var STATUS_COLORS = {green:'#00ff00',blue:'#4488ff',red:'#ff0000'};
+        var pageStatus = localStorage.getItem('page_status') || 'blue';
+        var approvalCode = localStorage.getItem('approval_code') || '';
+
+        function setStatusDot(color) {
+          var dot = document.getElementById('status-dot');
+          if (!dot) return;
+          dot.style.background = STATUS_COLORS[color] || color;
+          dot.style.color = STATUS_COLORS[color] || color;
+          dot.title = color === 'green' ? 'CLAUDE WORKING' : color === 'blue' ? 'READY FOR DAN TO CHECK' : 'DAN APPROVED';
+          pageStatus = color;
+          localStorage.setItem('page_status', color);
+        }
+
+        function statusDotClick() {
+          if (pageStatus === 'red') {
+            alert('STATUS: DAN APPROVED (RED)\nClick OK to keep.');
+            return;
+          }
+          var code = prompt('Enter approval code to set RED (approved).\nOr type RESET to go back to blue.');
+          if (!code) return;
+          if (code === 'RESET' || code === 'reset') { setStatusDot('blue'); return; }
+          if (approvalCode && code === approvalCode) { setStatusDot('red'); return; }
+          if (!approvalCode) {
+            // First time — Dan sets his code
+            approvalCode = code;
+            localStorage.setItem('approval_code', code);
+            setStatusDot('red');
+            return;
+          }
+          alert('WRONG CODE');
+        }
+
+        // Init dot — set to BLUE (ready for Dan to check)
+        setStatusDot(pageStatus === 'red' ? 'red' : 'blue');
+        </script>
+        <!-- Hidden dummy elements so main.js updateDisplay() doesn't crash -->
+        <div style="display:none">
+          <span id="stat-oil"></span><span id="stat-birth"></span><span id="stat-age"></span>
+          <span id="stat-israel"></span><span id="stat-optics"></span><span id="stat-ds"></span>
+          <span id="stat-deadbodies"></span><span id="stat-israel-aid"></span>
+          <span id="stat-abortions"></span><span id="stat-babies"></span>
+          <span id="health-muslim"></span><span id="health-israel"></span>
+          <span id="health-feminist"></span><span id="health-christian"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- GAME BUTTONS -->
+    <div class="game-buttons" id="game-buttons">
+      <button class="game-btn" data-action="oil" data-idx="0" data-cost="0"><img id="btn-oil-img" src="https://shortfactory.shop/trump/rollover/1.gif"><span class="powerup-badge">5x</span><span class="unlock-cost">FREE</span></button>
+      <button class="game-btn locked" data-action="home" data-idx="1" data-cost="1000"><img src="https://shortfactory.shop/trump/rollover/3.gif"><span class="powerup-badge">5x</span><span class="unlock-cost">$1000</span></button>
+      <button class="game-btn locked" data-action="psyop" data-idx="2" data-cost="2000"><img src="https://shortfactory.shop/trump/rollover/8.gif"><span class="powerup-badge">5x</span><span class="unlock-cost">$2000</span></button>
+      <button class="game-btn locked" data-action="aid" data-idx="3" data-cost="3000"><img src="https://shortfactory.shop/trump/rollover/5.gif"><span class="powerup-badge">5x</span><span class="unlock-cost">$3000</span></button>
+      <button class="game-btn locked" data-action="war" data-idx="4" data-cost="4000"><img src="https://shortfactory.shop/trump/rollover/2.gif"><span class="powerup-badge">5x</span><span class="unlock-cost">$4000</span></button>
+      <button class="game-btn locked" data-action="audit" data-idx="5" data-cost="5000"><img src="https://shortfactory.shop/trump/rollover/4.gif"><span class="powerup-badge">5x</span><span class="unlock-cost">$5000</span></button>
+      <button class="game-btn locked" data-action="drone" data-idx="6" data-cost="6000"><img src="https://shortfactory.shop/trump/rollover/7.gif"><span class="powerup-badge">5x</span><span class="unlock-cost">$6000</span></button>
+      <button class="game-btn" data-action="loan" data-idx="7" data-cost="0"><img id="btn-loan-img" src="https://shortfactory.shop/trump/rollover/6.gif"><span class="powerup-badge">5x</span><span class="unlock-cost">FREE</span></button>
+    </div>
+
+    <!-- CREDITS - ASCII ART -->
+    <div class="game-credits">
+      <pre class="ascii-art adam-cola">
+ ▄▀█ █▀▄ ▄▀█ █▀▄▀█   █▀▀ █▀█ █   ▄▀█
+ █▀█ █▄▀ █▀█ █ ▀ █   █▄▄ █▄█ █▄▄ █▀█</pre>
+      <pre class="ascii-art eliskcage">
+ █▀▀ █   █ █▀ █▄▀ █▀▀ ▄▀█ █▀▀ █▀▀
+ ██▄ █▄▄ █ ▄█ █ █ █▄▄ █▀█ █▄█ ██▄</pre>
+    </div>
+
+    <!-- CLAUDE LOGO (removed - was interfering with gameplay) -->
+
+    <!-- DEEPSTATE POPUP (Legacy - kept for fallback) -->
+    <div class="deepstate-popup" id="ds-popup">
+      <div class="deepstate-content">
+        <button class="popup-mute-btn" id="ds-mute-btn" onclick="if (!window.__cfRLUnblockHandlers) return false; toggleDeepstateMute()" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">🔊</button>
+        <button class="popup-close-btn" onclick="if (!window.__cfRLUnblockHandlers) return false; closeDeepstatePopup()" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">×</button>
+        <div class="deepstate-header" id="ds-header">DEEPSTATE!</div>
+        <div class="deepstate-meme"><video id="ds-video" loop playsinline></video></div>
+        <div class="deepstate-message" id="ds-message">Swamp!</div>
+        <div class="deepstate-damage">
+          <div class="damage-item"><div class="damage-label">HP</div><div class="damage-value" id="ds-dmg-hp">-10</div></div>
+          <div class="damage-item"><div class="damage-label">DS</div><div class="damage-value" id="ds-dmg-ds">+5</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STOCK MARKET OVERLAY -->
+    <div class="stock-market-overlay" id="stock-market-overlay">
+      <div class="sm-header">
+        <div class="sm-status"><div class="sm-status-dot"></div><span class="sm-status-text">LIVE</span></div>
+        <div class="sm-title">TRUMP MARKET</div>
+        <div class="sm-subtitle">CORPS vs PEOPLE EXCHANGE</div>
+        <div class="sm-close-btn" onclick="if (!window.__cfRLUnblockHandlers) return false; toggleStockMarket()" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">X</div>
+      </div>
+      <div class="sm-ticker-bar">
+        <div class="sm-ticker-track" id="sm-ticker-track"></div>
+      </div>
+      <div class="sm-portfolio-bar">
+        <div class="sm-port-stat"><div class="sm-port-label">PORTFOLIO</div><div class="sm-port-value" id="sm-portfolio-value">$0</div></div>
+        <div class="sm-port-stat"><div class="sm-port-label">CHANGE</div><div class="sm-port-value" id="sm-portfolio-change">$0</div></div>
+        <div class="sm-port-stat"><div class="sm-port-label">CASH</div><div class="sm-port-value" id="sm-oil-cash">$0</div></div>
+        <div class="sm-port-stat"><div class="sm-port-label">ROUND</div><div class="sm-port-value" id="sm-round">1</div></div>
+      </div>
+      <div class="sm-power-meter">
+        <div class="sm-power-header">
+          <span class="sm-power-label corp" id="sm-corp-pct">☠ CORPS 50%</span>
+          <span class="sm-power-label people" id="sm-people-pct">✊ PEOPLE 50%</span>
+        </div>
+        <div class="sm-power-bar">
+          <div class="sm-power-fill-corp" id="sm-power-fill-corp" style="width:50%"></div>
+          <div class="sm-power-fill-people" id="sm-power-fill-people" style="width:50%"></div>
+        </div>
+      </div>
+      <div class="sm-chart-section">
+        <div class="sm-chart-header">
+          <span class="sm-chart-name" id="sm-chart-name">$MAGA</span>
+          <span class="sm-chart-price" id="sm-chart-price">$100.00</span>
+        </div>
+        <div class="sm-chart-canvas">
+          <svg id="sm-chart-svg" viewBox="0 0 340 100" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="smChartGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#00ff88" stop-opacity="0.4"/>
+                <stop offset="100%" stop-color="#00ff88" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <line x1="0" y1="25" x2="340" y2="25" class="sm-grid-line"/>
+            <line x1="0" y1="50" x2="340" y2="50" class="sm-grid-line"/>
+            <line x1="0" y1="75" x2="340" y2="75" class="sm-grid-line"/>
+            <polygon id="sm-chart-fill" class="sm-chart-fill" points=""/>
+            <polyline id="sm-chart-line" class="sm-chart-line" points=""/>
+            <circle id="sm-chart-dot" cx="335" cy="50" r="3" fill="#00ff88">
+              <animate attributeName="r" values="3;5;3" dur="2s" repeatCount="indefinite"/>
+            </circle>
+          </svg>
+        </div>
+      </div>
+      <div class="sm-stock-list" id="sm-stock-list"></div>
+      <div class="sm-news" id="sm-news">⚡ MARKET OPEN ⚡</div>
+      <!-- Trump SFX for stock market -->
+      <audio id="sm-sfx-powerup" src="https://www.shortfactory.shop/trump/powerup1.mp3" preload="auto"></audio>
+      <audio id="sm-sfx-counter-final" src="https://www.shortfactory.shop/trump/arcadecounterfinal.mp3" preload="auto"></audio>
+      <audio id="sm-sfx-shutup" src="https://www.shortfactory.shop/trump/trump-shut-up-silly-woman.mp3" preload="auto"></audio>
+      <audio id="sm-sfx-loseheart" src="https://www.shortfactory.shop/trump/looseaheart.mp3" preload="auto"></audio>
+      <audio id="sm-sfx-hellscoming" src="https://www.shortfactory.shop/trump/hellscommin.mp3" preload="auto"></audio>
+      <audio id="sm-sfx-cantgetaway" src="https://www.shortfactory.shop/trump/game/sfx/he-cant-keep-getting-away.mp3" preload="auto"></audio>
+      <audio id="sm-sfx-lightning" src="https://www.shortfactory.shop/trump/lightning-strike.mp3" preload="auto"></audio>
+
+      <div class="sm-action-bar">
+        <div class="sm-action-btn buy" onclick="if (!window.__cfRLUnblockHandlers) return false; showTradeModal('BUY')" data-cf-modified-ce6ebab04b0e11e62b7882c0-=""><span class="sm-action-icon">📈</span><span class="sm-action-label">BUY</span></div>
+        <div class="sm-action-btn sell" onclick="if (!window.__cfRLUnblockHandlers) return false; showTradeModal('SELL')" data-cf-modified-ce6ebab04b0e11e62b7882c0-=""><span class="sm-action-icon">📉</span><span class="sm-action-label">SELL</span></div>
+        <div class="sm-intensity-col">
+          <div class="sm-intensity-btn up" onclick="if (!window.__cfRLUnblockHandlers) return false; smAdjIntensity(1)" data-cf-modified-ce6ebab04b0e11e62b7882c0-=""><span>▲</span></div>
+          <div class="sm-intensity-label" id="sm-intensity-label">10%</div>
+          <div class="sm-intensity-btn down" onclick="if (!window.__cfRLUnblockHandlers) return false; smAdjIntensity(-1)" data-cf-modified-ce6ebab04b0e11e62b7882c0-=""><span>▼</span></div>
+        </div>
+        <div class="sm-action-btn auto" id="sm-auto-btn" onclick="if (!window.__cfRLUnblockHandlers) return false; toggleAutoTrade()" data-cf-modified-ce6ebab04b0e11e62b7882c0-=""><span class="sm-action-icon">🤖</span><span class="sm-action-label">AUTO</span></div>
+      </div>
+
+      <!-- Screen flash overlays -->
+      <div class="sm-screen-flash win" id="sm-flash-win"></div>
+      <div class="sm-screen-flash fail" id="sm-flash-fail"></div>
+
+      <div class="sm-trade-modal" id="sm-trade-modal">
+        <div class="sm-trade-title" id="sm-trade-title">BUY $MAGA</div>
+        <div class="sm-trade-price" id="sm-trade-price">$100.00/share</div>
+        <div class="sm-pledge-amount" id="sm-pledge-amount">$500</div>
+        <div class="sm-pledge-pct" id="sm-pledge-pct">10% OF BALANCE</div>
+        <div class="sm-pledge-controls">
+          <div class="sm-pledge-btn down" onclick="if (!window.__cfRLUnblockHandlers) return false; smAdjPledge(-500)" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">-500</div>
+          <div class="sm-pledge-btn down" onclick="if (!window.__cfRLUnblockHandlers) return false; smAdjPledge(-100)" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">-100</div>
+          <div class="sm-pledge-btn up" onclick="if (!window.__cfRLUnblockHandlers) return false; smAdjPledge(100)" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">+100</div>
+          <div class="sm-pledge-btn up" onclick="if (!window.__cfRLUnblockHandlers) return false; smAdjPledge(500)" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">+500</div>
+          <div class="sm-pledge-btn allin" onclick="if (!window.__cfRLUnblockHandlers) return false; smPledgeAllIn()" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">ALL IN</div>
+        </div>
+        <div class="sm-trade-total" id="sm-trade-total">= 5 SHARES</div>
+        <div class="sm-trade-btns">
+          <button class="sm-confirm-btn" id="sm-confirm-btn" onclick="if (!window.__cfRLUnblockHandlers) return false; confirmTrade()" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">CONFIRM</button>
+          <button class="sm-cancel-btn" onclick="if (!window.__cfRLUnblockHandlers) return false; closeTradeModal()" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">CANCEL</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LITIGATION IFRAME OVERLAY -->
+    <div class="iframe-overlay" id="litigation-overlay">
+      <iframe id="litigation-iframe" src="" frameborder="0" scrolling="no"></iframe>
+    </div>
+
+    <!-- GAME HINTS - SNES Style floating tips -->
+    <div class="game-hint-overlay" id="game-hint" onclick="if (!window.__cfRLUnblockHandlers) return false; dismissHint()" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">
+      <div class="hint-text" id="hint-text">★ TAP OIL TO START ★</div>
+      <div class="hint-sub" id="hint-sub">Build up cash to unlock more actions!</div>
+      <div class="hint-dismiss">PRESS ANY KEY</div>
+    </div>
+
+    <!-- RESULT POPUP -->
+    <div class="result-popup" id="result-popup">
+      <div class="result-title" id="result-title">RESULT</div>
+      <div class="result-outcome" id="result-outcome"></div>
+      <div class="result-stats" id="result-stats"></div>
+      <button class="result-close" onclick="if (!window.__cfRLUnblockHandlers) return false; closeResult()" data-cf-modified-ce6ebab04b0e11e62b7882c0-="">OK</button>
+    </div>
+
+    <!-- DISASTER ANNOUNCEMENT -->
+    <div class="disaster-overlay" id="disaster-overlay">
+      <div class="disaster-name" id="disaster-name">TSUNAMI</div>
+      <div class="disaster-effects" id="disaster-effects"></div>
+    </div>
+
+    <!-- IFRAME OVERLAYS -->
+    <div class="iframe-overlay" id="tally-overlay">
+      <iframe id="tally-iframe" src="" frameborder="0" scrolling="no"></iframe>
+    </div>
+    <div class="iframe-overlay" id="ending-overlay">
+      <iframe id="ending-iframe" src="" frameborder="0" scrolling="no"></iframe>
+    </div>
+  </div>
+
+  <audio id="mute-sound" src="https://www.shortfactory.shop/trump/trump-shut-up-silly-woman.mp3" preload="auto"></audio>
+  <audio id="click-sound" src="https://www.shortfactory.shop/trump/powerup1.mp3" preload="auto"></audio>
+  <audio id="drone-sound" src="https://www.shortfactory.shop/trump/powerup1.mp3" preload="auto"></audio>
+  <audio id="breath-sound" src="https://www.shortfactory.shop/trump/arcadecounter.mp3" preload="auto"></audio>
+  <audio id="success-sound" src="https://www.shortfactory.shop/trump/powerup1.mp3" preload="auto"></audio>
+  <audio id="longhold-charge-a" src="https://www.shortfactory.shop/trump/longholdcharge.wav" preload="auto"></audio>
+  <audio id="longhold-charge-b" src="https://www.shortfactory.shop/trump/longholdchargeb.wav" preload="auto"></audio>
+
+
+  <!-- JavaScript Files - Edit these to change behavior -->
+  <script data-cfasync="false" src="js/config.js?v=20260212-6"></script>
+  <script data-cfasync="false" src="js/state.js?v=20260209-1"></script>
+  <script data-cfasync="false" src="js/assetmanager.js?v=20260211-19"></script>
+  <script data-cfasync="false" src="js/notifications.js?v=20260212-8"></script>
+  <script data-cfasync="false" src="js/actions.js?v=20260212-8"></script>
+  <script data-cfasync="false" src="js/main.js?v=20260212-8"></script>
+  <script data-cfasync="false" src="js/stockmarket.js?v=20260212-3"></script>
+
+  <!-- High Score System -->
+  <script data-cfasync="false" src="highscore_system.js?v=20260319"></script>
+  <script data-cfasync="false" src="/js/empire-bar.js?v=2"></script>
+
+  <!-- Cortex Command System -->
+  <script data-cfasync="false" src="cortex_commands.js?v=20260209-1"></script>
+<!-- User Interaction Tracking -->
+<script src="/tracking.js" type="ce6ebab04b0e11e62b7882c0-text/javascript"></script>
+
+<!-- AI Feedback System - disabled on game page (interferes with game UI) -->
+<!-- <script src="/ai_feedback.js"></script> -->
+
+<!-- Game Start Handler + Menu Cinematic (all on the overlay, nothing touches the game) -->
+<script data-cfasync="false" src="/rotation_config_v23.js?v=20260209-1"></script>
+<script data-cfasync="false">
+// ?reset clears corrupted save for testing
+if(location.search.indexOf('reset')!==-1){localStorage.clear();history.replaceState(null,'',location.pathname);location.reload();}
+let gameStarted = false;
+
+document.addEventListener('DOMContentLoaded', () => {
+    const overlay = document.getElementById('game-start-overlay');
+    const bgVideo = document.getElementById('menu-bg-video');
+    const lightning = document.getElementById('menu-lightning');
+    const bondMusic = document.getElementById('menu-bond-music');
+    const lightningSound = document.getElementById('menu-lightning-sound');
+    const counterEl = document.getElementById('menu-counter');
+    const countdownEl = document.getElementById('menu-countdown');
+    const screenNumEl = document.getElementById('menu-screen-num');
+    const screenTotalEl = document.getElementById('menu-screen-total');
+    let menuActive = true;
+    let lightningTimer, countdownTimer;
+
+    // Set screen number from rotation config
+    if (typeof ROTATION_CONFIG !== 'undefined' && screenNumEl && screenTotalEl) {
+        const screens = ROTATION_CONFIG.screens;
+        const idx = screens.findIndex(s => window.location.pathname.includes(s.url) || s.url.includes('/trump/game'));
+        if (idx !== -1) screenNumEl.textContent = idx + 1;
+        screenTotalEl.textContent = 'OF ' + screens.length + ' SCREENS';
+    }
+
+    // Start background video
+    if (bgVideo) {
+        bgVideo.src = 'https://www.shortfactory.shop/trump/background.webm';
+        bgVideo.play().catch(()=>{});
+    }
+
+    // Video pulse
+    let vDir = 1, vOp = 0;
+    function pulseVid() {
+        if (!menuActive) return;
+        vOp += 0.003 * vDir;
+        if (vOp >= 0.6) { vOp = 0.6; vDir = -1; }
+        else if (vOp <= 0) { vOp = 0; vDir = 1; }
+        if (bgVideo) bgVideo.style.opacity = vOp;
+        requestAnimationFrame(pulseVid);
+    }
+    pulseVid();
+
+    // Lightning
+    function flash() {
+        if (!menuActive) return;
+        const n = Math.floor(Math.random() * 3) + 1;
+        let d = 0;
+        if (lightningSound) { lightningSound.currentTime = 0; lightningSound.volume = 0.5; lightningSound.play().catch(()=>{}); }
+        for (let i = 0; i < n; i++) {
+            setTimeout(() => {
+                if (!menuActive) return;
+                lightning.style.opacity = 0.6 + Math.random() * 0.4;
+                setTimeout(() => { lightning.style.opacity = 0; }, 60 + Math.random() * 80);
+            }, d);
+            d += 100 + Math.random() * 150;
+        }
+    }
+    lightningTimer = setInterval(flash, 5000 + Math.random() * 8000);
+
+    // Countdown (30s)
+    let timeLeft = 30;
+    countdownTimer = setInterval(() => {
+        timeLeft--;
+        if (countdownEl) countdownEl.textContent = timeLeft;
+        if (timeLeft <= 10 && countdownEl) {
+            countdownEl.style.color = '#f00';
+            countdownEl.style.borderColor = '#f00';
+            countdownEl.style.textShadow = '0 0 20px #f00, 0 0 40px #f00, 4px 4px 0 #000';
+            countdownEl.style.boxShadow = '0 0 30px rgba(255,0,0,0.8)';
+        }
+        if (timeLeft <= 0) goNext();
+    }, 1000);
+
+    // Navigate to next screen (disabled — standalone mode)
+    function goNext() {}
+
+    // Counter click = next
+    if (counterEl) counterEl.addEventListener('click', (e) => { e.stopPropagation(); goNext(); });
+
+    // Kill all menu stuff
+    function killMenu() {
+        menuActive = false;
+        if (lightningTimer) clearInterval(lightningTimer);
+        if (countdownTimer) clearInterval(countdownTimer);
+        if (bgVideo) { bgVideo.pause(); }
+        if (bondMusic) { bondMusic.pause(); }
+        if (lightningSound) { lightningSound.pause(); }
+    }
+
+    // Click overlay = start game (not the counter)
+    if (overlay) {
+        overlay.addEventListener('click', () => {
+            killMenu();
+            overlay.classList.add('hidden');
+            gameStarted = true;
+            console.log('🎮 Game started by user');
+
+            if (typeof trackEvent === 'function') {
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                trackEvent('game_start', isMobile ? 'mobile' : 'desktop');
+            }
+        });
+    }
+});
+
+// Shake toggle - controls screen shake animations (separate from phone vibration)
+let shakeEnabled = localStorage.getItem('shakeEnabled') !== 'false'; // default ON
+
+window.toggleShake = function(enabled) {
+    shakeEnabled = enabled;
+    localStorage.setItem('shakeEnabled', enabled.toString());
+    const phone = document.getElementById('phone');
+    const label = document.getElementById('shake-label');
+    if (phone) {
+        if (!enabled) {
+            phone.classList.add('no-shake');
+        } else {
+            phone.classList.remove('no-shake');
+            // Test shake so user sees it working
+            phone.classList.add('rumble-shake');
+            setTimeout(() => phone.classList.remove('rumble-shake'), 600);
+        }
+    }
+    if (label) {
+        label.querySelector('.rumble-state').textContent = enabled ? 'ON' : 'OFF';
+        if (!enabled) label.classList.add('off');
+        else label.classList.remove('off');
+    }
+    console.log('📳 SHAKE:', enabled ? 'ON' : 'OFF');
+};
+
+// TEST MODE toggle - shows/hides the 4 test buttons (☢️⚖️☣️💣)
+var testModeEnabled = localStorage.getItem('testMode') === 'true';
+window.toggleTestMode = function(enabled) {
+    testModeEnabled = enabled;
+    localStorage.setItem('testMode', enabled);
+    var testBtns = document.querySelectorAll('.test-btn');
+    testBtns.forEach(function(btn) {
+        btn.style.display = enabled ? '' : 'none';
+    });
+    var label = document.getElementById('test-label');
+    if (label) {
+        label.querySelector('.rumble-state').textContent = enabled ? 'ON' : 'OFF';
+        if (!enabled) label.classList.add('off');
+        else label.classList.remove('off');
+    }
+    console.log('🧪 TEST MODE:', enabled ? 'ON' : 'OFF');
+};
+
+// Sync both toggles with localStorage on load + detect vibration support
+setTimeout(() => {
+    var hasVibrate = !!navigator.vibrate;
+    var isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+
+    // Rumble (vibrate) toggle
+    var rToggle = document.getElementById('rumble-toggle');
+    var rLabel = document.getElementById('rumble-label');
+    if (rToggle && typeof rumbleEnabled !== 'undefined') {
+        rToggle.checked = rumbleEnabled;
+        if (rLabel) {
+            var stateEl = rLabel.querySelector('.rumble-state');
+            if (!hasVibrate) {
+                // Device doesn't support vibration
+                stateEl.textContent = isIOS ? 'NO iOS' : 'N/A';
+                stateEl.style.color = '#888';
+                rToggle.disabled = true;
+                rLabel.querySelector('.rumble-text').style.color = '#888';
+                rLabel.querySelector('.rumble-text').style.textShadow = 'none';
+            } else {
+                stateEl.textContent = rumbleEnabled ? 'ON' : 'OFF';
+                if (!rumbleEnabled) rLabel.classList.add('off');
+            }
+        }
+    }
+
+    // Shake toggle
+    var sToggle = document.getElementById('shake-toggle');
+    var sLabel = document.getElementById('shake-label');
+    var phone = document.getElementById('phone');
+    if (sToggle) sToggle.checked = shakeEnabled;
+    if (sLabel) {
+        sLabel.querySelector('.rumble-state').textContent = shakeEnabled ? 'ON' : 'OFF';
+        if (!shakeEnabled) sLabel.classList.add('off');
+    }
+    if (phone && !shakeEnabled) phone.classList.add('no-shake');
+
+    // Test mode toggle
+    var tToggle = document.getElementById('test-toggle');
+    var tLabel = document.getElementById('test-label');
+    if (tToggle) tToggle.checked = testModeEnabled;
+    if (tLabel) {
+        tLabel.querySelector('.rumble-state').textContent = testModeEnabled ? 'ON' : 'OFF';
+        if (!testModeEnabled) tLabel.classList.add('off');
+    }
+    // Show/hide test buttons based on stored state
+    if (testModeEnabled) {
+        var testBtns = document.querySelectorAll('.test-btn');
+        testBtns.forEach(function(btn) { btn.style.display = ''; });
+    }
+
+    console.log('📱 Vibrate API:', hasVibrate ? 'SUPPORTED' : 'NOT SUPPORTED', '| iOS:', isIOS);
+}, 100);
+</script>
+
+<script data-cfasync="false">
+/* REPLACED - see mood_system.js */
+if(false){(function(){
+  var MM_ITEMS = [
+    {id:'oil',icon:'🛢️',name:'OIL',cat:'action',mood:5,msg:'Oil pumping! Cash flow up!'},
+    {id:'home',icon:'🏠',name:'HOME',cat:'action',mood:8,msg:'Homeland secured! Purity rising!'},
+    {id:'psyop',icon:'🧠',name:'PSYOP',cat:'action',mood:10,msg:'Deep State exposed!'},
+    {id:'aid',icon:'🏥',name:'AID',cat:'action',mood:3,msg:'Foreign aid cut! Debt shrinking!'},
+    {id:'war',icon:'⚔️',name:'WAR',cat:'action',mood:-5,msg:'War declared! Markets nervous...'},
+    {id:'audit',icon:'🔍',name:'AUDIT',cat:'action',mood:15,msg:'AUDIT DROPPED! Deep State -15!'},
+    {id:'drone',icon:'✈️',name:'DRONE',cat:'action',mood:4,msg:'Drone strike! Target eliminated!'},
+    {id:'loan',icon:'💰',name:'LOAN',cat:'action',mood:-2,msg:'Elon loan! Debt rises...'},
+    {id:'tweet',icon:'📱',name:'TWEET',cat:'action',mood:2,msg:'Mean tweet fired!'},
+    {id:'regime',icon:'🏴',name:'REGIME',cat:'ops',mood:15,msg:'REGIME CHANGE!'},
+    {id:'extract',icon:'📦',name:'EXTRACT',cat:'ops',mood:10,msg:'ASSET EXTRACTION!'},
+    {id:'flag',icon:'🚩',name:'FLAG',cat:'ops',mood:18,msg:'FALSE FLAG! Blame shifted!'},
+    {id:'cyber',icon:'💻',name:'CYBER',cat:'ops',mood:12,msg:'CYBER ATTACK!'},
+    {id:'strike',icon:'🚀',name:'STRIKE',cat:'ops',mood:8,msg:'DRONE STRIKE!'},
+    {id:'wet',icon:'🔪',name:'WETWORK',cat:'ops',mood:22,msg:'WETWORK! No witnesses!'},
+    {id:'coup',icon:'👤',name:'COUP',cat:'ops',mood:28,msg:'SHADOW COUP!'},
+    {id:'jesus',icon:'✝️',name:'JESUS',cat:'wheel',mood:35,msg:'JESUS RETURNS!'},
+    {id:'timewarp',icon:'⏰',name:'TIME',cat:'wheel',mood:22,msg:'TIME TRAVEL!'},
+    {id:'zombie',icon:'🧟',name:'ZOMBIE',cat:'wheel',mood:-18,msg:'ZOMBIE PLAGUE!'},
+    {id:'tsunami',icon:'🌊',name:'TSUNAMI',cat:'wheel',mood:-14,msg:'MEGA TSUNAMI!'},
+    {id:'plague',icon:'🦠',name:'PLAGUE',cat:'wheel',mood:-22,msg:'SUPER PLAGUE!'},
+    {id:'pest',icon:'🐛',name:'PEST',cat:'wheel',mood:-10,msg:'PESTILENCE!'},
+    {id:'nazi',icon:'💀',name:'NAZI',cat:'wheel',mood:-20,msg:'NAZI UPRISING!'},
+    {id:'famine',icon:'🌾',name:'FAMINE',cat:'wheel',mood:-16,msg:'GLOBAL FAMINE!'},
+    {id:'alien',icon:'👽',name:'ALIEN',cat:'wheel',mood:-28,msg:'ALIEN INVASION!'},
+    {id:'asteroid',icon:'☄️',name:'ASTEROID',cat:'wheel',mood:-35,msg:'ASTEROID IMPACT!'},
+    {id:'biowar',icon:'☣️',name:'BIO',cat:'wheel',mood:-22,msg:'BIO WARFARE!'},
+    {id:'locust',icon:'🦗',name:'LOCUST',cat:'wheel',mood:-10,msg:'LOCUST SWARM!'},
+    {id:'skynet',icon:'🤖',name:'SKYNET',cat:'wheel',mood:-30,msg:'SKYNET AWAKENS!'},
+    {id:'volcano',icon:'🌋',name:'VOLCANO',cat:'wheel',mood:-22,msg:'SUPER VOLCANO!'},
+    {id:'ruwins',icon:'🇷🇺',name:'RU WIN',cat:'wheel',mood:-20,msg:'RUSSIA WINS!'},
+    {id:'rufalls',icon:'🏆',name:'RU FALL',cat:'wheel',mood:12,msg:'RUSSIA FALLS!'},
+    {id:'cnwins',icon:'🇨🇳',name:'CN WIN',cat:'wheel',mood:-25,msg:'CHINA WINS!'},
+    {id:'cnfalls',icon:'🎉',name:'CN FALL',cat:'wheel',mood:15,msg:'CHINA FALLS!'},
+    {id:'nk_somalia',icon:'☢️',name:'SOMALIA',cat:'nuke',mood:20,msg:'NUKED SOMALIA!'},
+    {id:'nk_iran',icon:'☢️',name:'IRAN',cat:'nuke',mood:22,msg:'NUKED IRAN!'},
+    {id:'nk_nkorea',icon:'☢️',name:'N.KOREA',cat:'nuke',mood:25,msg:'NUKED N.KOREA!'},
+    {id:'nk_syria',icon:'☢️',name:'SYRIA',cat:'nuke',mood:18,msg:'NUKED SYRIA!'},
+    {id:'nk_venez',icon:'☢️',name:'VENEZ',cat:'nuke',mood:20,msg:'NUKED VENEZUELA!'},
+    {id:'nk_afghan',icon:'☢️',name:'AFGHAN',cat:'nuke',mood:15,msg:'NUKED AFGHANISTAN!'},
+    {id:'nk_iraq',icon:'☢️',name:'IRAQ',cat:'nuke',mood:18,msg:'NUKED IRAQ! Again!'},
+    {id:'nk_china',icon:'☢️',name:'CHINA',cat:'nuke',mood:-15,msg:'NUKED CHINA! PANIC!'},
+    {id:'nk_russia',icon:'☢️',name:'RUSSIA',cat:'nuke',mood:-20,msg:'NUKED RUSSIA! MUTUAL DESTRUCTION!'},
+    {id:'nk_mexico',icon:'☢️',name:'MEXICO',cat:'nuke',mood:10,msg:'NUKED MEXICO!'}
+  ];
+
+  var NUKE_FLAVOR={nk_somalia:'NOTHING OF VALUE LOST',nk_iran:'DEMOCRACY DELIVERED',nk_nkorea:'PROBLEM SOLVED',nk_syria:'FREEDOM INCOMING',nk_venez:'OIL SECURED',nk_afghan:'MISSION ACCOMPLISHED',nk_iraq:'AGAIN',nk_china:'TRADE WAR WON',nk_russia:'COLD WAR OVER',nk_mexico:'WALL NOT NEEDED'};
+  var mmMood=0,mmHist=[0],mmCounts={},mmTotal=0,MM_MAX=50,mmEvents=[];
+  for(var i=0;i<MM_ITEMS.length;i++)mmCounts[MM_ITEMS[i].id]=0;
+
+  function mmBuildGrid(elId,cat){
+    var el=document.getElementById(elId);if(!el)return;var h='';
+    for(var i=0;i<MM_ITEMS.length;i++){var it=MM_ITEMS[i];if(it.cat!==cat)continue;
+      h+='<div class="mm-tile" id="mm-'+it.id+'" onclick="mmDoIt(\''+it.id+'\')"><div class="ico">'+it.icon+'</div><div class="cnt" id="mmc-'+it.id+'">0</div><div class="lbl">'+it.name+'</div></div>';
+    }el.innerHTML=h;
+  }
+
+  // Build grids on load
+  setTimeout(function(){
+    mmBuildGrid('mmGridActions','action');mmBuildGrid('mmGridOps','ops');mmBuildGrid('mmGridWheel','wheel');mmBuildGrid('mmGridNukes','nuke');
+    mmUpdateMeter();mmUpdateChart();
+  },200);
+
+  window.mmDoIt=function(id){
+    var item=null;for(var i=0;i<MM_ITEMS.length;i++){if(MM_ITEMS[i].id===id){item=MM_ITEMS[i];break;}}if(!item)return;
+    mmCounts[id]++;mmTotal++;
+    var cntEl=document.getElementById('mmc-'+id);if(cntEl){cntEl.textContent=mmCounts[id];cntEl.classList.add('has');}
+    var raw=item.mood;if(mmCounts[id]>5)raw=Math.round(raw*(5/mmCounts[id]));
+    mmMood=Math.max(-100,Math.min(100,mmMood+raw));mmHist.push(mmMood);if(mmHist.length>MM_MAX)mmHist.shift();
+    var tile=document.getElementById('mm-'+id);
+    if(tile){
+      var fc=item.cat==='nuke'?'flash-nuke':(item.mood>=0?'flash-good':'flash-bad');
+      tile.classList.add(fc);setTimeout(function(){tile.classList.remove(fc);},300);
+      var fl=document.createElement('div');fl.className='mm-imp';fl.style.color=raw>=0?'#00ff88':'#ff4444';fl.textContent=(raw>=0?'+':'')+raw;tile.appendChild(fl);setTimeout(function(){fl.remove();},800);
+      if(NUKE_FLAVOR[id]){var nf=document.createElement('div');nf.className='mm-nuke-flavor';nf.textContent=NUKE_FLAVOR[id];tile.appendChild(nf);setTimeout(function(){nf.remove();},1200);}
+    }
+    // Screen flash
+    var ov=document.getElementById('stats-overlay');
+    if(ov){var sf=document.createElement('div');sf.className='mm-sflash';
+      if(item.cat==='nuke')sf.style.background='rgba(255,136,0,0.25)';else if(raw>=0)sf.style.background='rgba(0,255,136,0.12)';else sf.style.background='rgba(255,68,68,0.15)';
+      ov.appendChild(sf);setTimeout(function(){sf.remove();},250);
+    }
+    mmAddEvent(item.msg,raw>=0?'good':(item.cat==='nuke'?'nuke':'bad'));
+    mmUpdateMeter();mmUpdateChart();
+    setTimeout(function(){mmMood=Math.round(mmMood*0.93);mmHist.push(mmMood);if(mmHist.length>MM_MAX)mmHist.shift();mmUpdateMeter();mmUpdateChart();},1500);
+  };
+
+  function mmAddEvent(msg,type){mmEvents.unshift({msg:msg,type:type});if(mmEvents.length>8)mmEvents.pop();var el=document.getElementById('mmEventLog');if(!el)return;var h='';for(var i=0;i<mmEvents.length;i++){h+='<div class="mm-ev '+mmEvents[i].type+'">'+mmEvents[i].msg+'</div>';}el.innerHTML=h;}
+
+  function mmUpdateMeter(){
+    var pct=((mmMood+100)/200)*100;var ptr=document.getElementById('mmPtr');if(ptr)ptr.style.left=pct+'%';
+    var label,color;
+    if(mmMood<=-60){label='💀 DEPRESSION';color='#ff0000';}
+    else if(mmMood<=-30){label='📉 CRASHING';color='#ff4444';}
+    else if(mmMood<=-10){label='📉 BEARISH';color='#ff8844';}
+    else if(mmMood<10){label='😐 NEUTRAL';color='#ffcc00';}
+    else if(mmMood<30){label='📈 BULLISH';color='#aaff00';}
+    else if(mmMood<60){label='📈 ROARING';color='#44ff44';}
+    else{label='🚀 ECSTASY';color='#00ff88';}
+    var lbl=document.getElementById('mmLabel');if(lbl){lbl.textContent=label;lbl.style.color=color;lbl.style.textShadow='0 0 10px '+color;
+      if(mmMood<=-60||mmMood>=60)lbl.classList.add('extreme');else lbl.classList.remove('extreme');}
+    var sc=document.getElementById('mmScore');if(sc)sc.textContent='MOOD: '+mmMood+' | ACTIONS: '+mmTotal;
+  }
+
+  var W=340,H=55,MID=27.5;
+  function mmUpdateChart(){
+    var len=mmHist.length;if(len<1)return;var step=len>1?W/(len-1):0;
+    var lP=[],uP=[],dP=[];
+    for(var i=0;i<len;i++){var x=len===1?W/2:Math.round(i*step);var y=MID-Math.round((mmHist[i]/100)*MID);y=Math.max(1,Math.min(H-1,y));lP.push(x+','+y);uP.push(x+','+Math.min(y,MID));dP.push(x+','+Math.max(y,MID));}
+    var lastX=len===1?W/2:Math.round((len-1)*step);
+    var ln=document.getElementById('mmLine');if(ln)ln.setAttribute('points',lP.join(' '));
+    var lastY=MID-Math.round((mmHist[len-1]/100)*MID);lastY=Math.max(1,Math.min(H-1,lastY));
+    var d=document.getElementById('mmDot');if(d){d.setAttribute('cx',lastX);d.setAttribute('cy',lastY);d.setAttribute('fill',mmMood>=0?'#00ff88':'#ff4444');}
+    if(ln){if(mmMood>=30){ln.style.stroke='#00ff88';ln.style.filter='drop-shadow(0 0 4px #00ff88)';}else if(mmMood<=-30){ln.style.stroke='#ff4444';ln.style.filter='drop-shadow(0 0 4px #ff4444)';}else{ln.style.stroke='#ffd700';ln.style.filter='drop-shadow(0 0 4px #ffd700)';}}
+    var fu=document.getElementById('mmFillUp');if(fu)fu.setAttribute('points',uP.join(' ')+' '+lastX+','+MID+' 0,'+MID);
+    var fd=document.getElementById('mmFillDn');if(fd)fd.setAttribute('points',dP.join(' ')+' '+lastX+','+MID+' 0,'+MID);
+  }
+
+  // ==================== OVERRIDE TOGGLESTATS: 3-STATE CYCLE ====================
+  // State 0: closed (map). State 1: mood. State 2: stocks.
+  var statsState = 0;
+  window.toggleStats = function() {
+    var overlay = document.getElementById('stats-overlay');
+    var moodV = document.getElementById('mood-view');
+    var stocksV = document.getElementById('stocks-view');
+    var btn = document.getElementById('stats-btn');
+    var mapSec = document.getElementById('map-section');
+    var smOverlay = document.getElementById('stock-market-overlay');
+
+    var threats = document.getElementById('threat-meters');
+
+    // Kill the wheel dead — wheel is MAP ONLY
+    var wheelOv = document.getElementById('wheel-overlay');
+    if(wheelOv) wheelOv.classList.remove('show');
+    if(typeof wheelTimer !== 'undefined') clearInterval(wheelTimer);
+    if(typeof wheelSpinning !== 'undefined') wheelSpinning = false;
+
+    if (statsState === 0) {
+      // CLOSED -> MOOD
+      statsState = 1;
+      statsOpen = true;
+      overlay.classList.add('show');
+      mapSec.classList.add('expanded');
+      moodV.style.display = 'flex';
+      stocksV.style.display = 'none';
+      btn.textContent = 'STOCKS';
+      btn.classList.add('active');
+      document.getElementById('danger-warning').classList.remove('show');
+      if(typeof stopSlotMachine==='function')stopSlotMachine();
+      // Hide threat meters (display:none — can't be overridden by rotation timer)
+      if(threats) threats.style.display='none';
+    } else if (statsState === 1) {
+      // MOOD -> COMPACT STOCKS
+      statsState = 2;
+      moodV.style.display = 'none';
+      stocksV.style.display = 'flex';
+      btn.textContent = 'MAP';
+      btn.classList.add('active');
+      if(smOverlay){smOverlay.classList.remove('show');smOverlay.style.display='none';};
+      // Keep threat meters hidden
+      if(threats) threats.style.display='none';
+    } else {
+      // STOCKS -> CLOSED (back to map)
+      statsState = 0;
+      statsOpen = false;
+      overlay.classList.remove('show');
+      mapSec.classList.remove('expanded');
+      moodV.style.display = 'flex';
+      stocksV.style.display = 'none';
+      btn.textContent = 'STATS';
+      btn.classList.remove('active');
+      // Bring threat meters back with fade
+      if(threats){threats.style.display='flex';threats.style.opacity='0';threats.style.transition='opacity 0.5s ease';setTimeout(function(){threats.style.opacity='1';},50);threats.style.pointerEvents='auto';}
+    }
+  };
+})();}
+</script>
+<script data-cfasync="false" src="mood_system.js?v=20260212-5"></script>
+<script data-cfasync="false" src="compact_stocks.js?v=20260212-3"></script>
+
+<!-- Geiger escalation system -->
+<script data-cfasync="false">
+(function(){
+  var geigerAudio = new Audio('sfx/geiger.mp3');
+  geigerAudio.loop = false;
+  var geigerVol = 0;
+  var geigerRunning = false;
+  var noiseCanvas, noiseCtx, noiseOpacity = 0;
+
+  // Create white noise overlay
+  function createNoiseOverlay(){
+    noiseCanvas = document.createElement('canvas');
+    noiseCanvas.id = 'geiger-noise';
+    noiseCanvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:99998;opacity:0;mix-blend-mode:overlay';
+    noiseCanvas.width = 128;
+    noiseCanvas.height = 128;
+    document.body.appendChild(noiseCanvas);
+    noiseCtx = noiseCanvas.getContext('2d');
+  }
+
+  function drawNoise(){
+    if(!noiseCtx || noiseOpacity <= 0) return;
+    var img = noiseCtx.createImageData(128, 128);
+    var d = img.data;
+    for(var i = 0; i < d.length; i += 4){
+      var v = Math.random() * 255;
+      d[i] = d[i+1] = d[i+2] = v;
+      d[i+3] = 255;
+    }
+    noiseCtx.putImageData(img, 0, 0);
+    noiseCanvas.style.opacity = noiseOpacity;
+    if(geigerRunning) requestAnimationFrame(drawNoise);
+  }
+
+  // Each loop end: bump volume +5%, bump noise
+  geigerAudio.addEventListener('ended', function(){
+    if(!geigerRunning) return;
+    geigerVol = Math.min(1, geigerVol + 0.05);
+    geigerAudio.volume = geigerVol;
+    noiseOpacity = Math.min(0.4, noiseOpacity + 0.02);
+    geigerAudio.play().catch(function(){});
+  });
+
+  window.startGeiger = function(){
+    if(geigerRunning) return;
+    geigerRunning = true;
+    geigerVol = 0;
+    noiseOpacity = 0;
+    geigerAudio.volume = 0;
+    if(!noiseCanvas) createNoiseOverlay();
+    noiseCanvas.style.opacity = '0';
+    geigerAudio.play().catch(function(){});
+    drawNoise();
+  };
+
+  window.stopGeiger = function(){
+    geigerRunning = false;
+    geigerAudio.pause();
+    geigerAudio.currentTime = 0;
+    geigerVol = 0;
+    noiseOpacity = 0;
+    if(noiseCanvas) noiseCanvas.style.opacity = '0';
+  };
+
+  window.getGeigerLevel = function(){ return Math.round(geigerVol * 100); };
+
+  // Hook into nukes — start geiger on every nuke launch
+  var _origNuke = window.nukeDecision;
+  window.nukeDecision = function(yes){
+    if(_origNuke) _origNuke.apply(this, arguments);
+    if(yes) startGeiger();
+  };
+})();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js', {scope:'/'}).then(function(r) {
+    r.update(); // force SW version check on every game load
+    if (r.waiting) r.waiting.postMessage('SKIP_WAITING');
+  });
+}
+</script>
+</body>
+</html>
