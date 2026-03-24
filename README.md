@@ -78,6 +78,7 @@ Everything below is built from this theory outward.
 | **GB2521847.3** | Unified genome-based AGI artifact library — 17 claims |
 | **GB2605434.6** | Domino Exemption — 1,036,800:1 visual compression from 96 bytes |
 | **GB2520111.8** | Bidirectional video editing using generative AI |
+| **SF-SOUL-001** (GB pending) | Multisensory emotional memory architecture — olfactory/haptic/harmonic encoding, 4D memory packets, AGI soul |
 
 ---
 
