@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scripture Map — A Scientific Comparison</title>
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Share+Tech+Mono&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #03030a;
+  --white: #e8e8f0;
+  --dim: rgba(232,232,240,0.42);
+  --gold: #c8a84b;
+  --cyan: #4bc8c8;
+  --blue: #4a7fc8;
+  --green: #4ac87a;
+  --red: #c84a4a;
+  --serif: 'IM Fell English', Georgia, serif;
+  --mono: 'Share Tech Mono', monospace;
+  --tech: 'Orbitron', monospace;
+  --max: 1100px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { background:var(--bg); color:var(--white); font-family:var(--serif); font-size:1rem; line-height:1.8; padding:0 1rem; }
+
+/* DISCLAIMER */
+.disclaimer {
+  background:rgba(200,168,75,0.05);
+  border:1px solid rgba(200,168,75,0.15);
+  border-left:3px solid var(--gold);
+  max-width:var(--max);
+  margin:2rem auto;
+  padding:1.5rem 2rem;
+}
+.disc-label { font-family:var(--mono); font-size:0.58rem; letter-spacing:0.5em; color:var(--gold); margin-bottom:0.75rem; }
+.disc-rules { list-style:none; }
+.disc-rules li { font-family:var(--mono); font-size:0.7rem; color:rgba(200,168,75,0.6); letter-spacing:0.05em; line-height:2; padding-left:1.2rem; position:relative; }
+.disc-rules li::before { content:'—'; position:absolute; left:0; color:rgba(200,168,75,0.3); }
+
+/* HEADER */
+header { max-width:var(--max); margin:0 auto; padding:4rem 0 2rem; }
+.paper-label { font-family:var(--mono); font-size:0.6rem; letter-spacing:0.55em; color:rgba(200,168,75,0.35); margin-bottom:1.5rem; }
+h1 { font-family:var(--serif); font-size:clamp(1.6rem,4vw,2.6rem); font-weight:normal; line-height:1.3; color:var(--white); margin-bottom:0.75rem; }
+.sub { font-style:italic; color:var(--dim); font-size:1rem; }
+
+/* INTRO */
+.intro { max-width:var(--max); margin:0 auto; padding:2rem 0 3rem; }
+.intro p { color:var(--dim); font-size:1.05rem; line-height:1.9; margin-bottom:1.2rem; max-width:760px; }
+.intro p em { color:rgba(200,168,75,0.8); font-style:italic; }
+.intro p strong { color:var(--white); font-weight:normal; }
+
+/* ANGEL SECTION */
+.angel-block {
+  max-width:var(--max); margin:0 auto 3rem;
+  border-left:2px solid rgba(74,200,200,0.3);
+  padding:1.5rem 2rem;
+  background:rgba(74,200,200,0.02);
+}
+.angel-label { font-family:var(--mono); font-size:0.58rem; letter-spacing:0.5em; color:rgba(74,200,200,0.4); margin-bottom:0.75rem; }
+.angel-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-top:1rem; }
+.angel-col h3 { font-family:var(--mono); font-size:0.65rem; letter-spacing:0.3em; color:rgba(74,200,200,0.6); margin-bottom:0.5rem; }
+.angel-col p { font-size:0.9rem; color:var(--dim); line-height:1.7; }
+.angel-col p em { color:rgba(74,200,200,0.7); font-style:italic; }
+.eq { font-family:var(--mono); font-size:0.8rem; color:rgba(74,200,200,0.7); background:rgba(74,200,200,0.04); border-left:1px solid rgba(74,200,200,0.2); padding:0.75rem 1rem; margin:1rem 0; line-height:2; letter-spacing:0.03em; }
+.eq .c { color:rgba(232,232,240,0.2); font-size:0.72rem; }
+
+/* SECTION HEADER */
+.sec { max-width:var(--max); margin:4rem auto 2rem; }
+.sec-label { font-family:var(--mono); font-size:0.58rem; letter-spacing:0.55em; color:rgba(200,168,75,0.3); margin-bottom:0.75rem; display:flex; align-items:center; gap:1rem; }
+.sec-label::after { content:''; flex:1; height:1px; background:linear-gradient(to right, rgba(200,168,75,0.15), transparent); }
+.sec h2 { font-family:var(--serif); font-size:clamp(1.2rem,3vw,1.8rem); font-weight:normal; color:var(--white); }
+
+/* SCRIPTURE COLUMNS */
+.scripture-header {
+  display:grid;
+  grid-template-columns:180px repeat(4,1fr);
+  gap:1px;
+  max-width:var(--max);
+  margin:0 auto 1px;
+  background:rgba(232,232,240,0.04);
+}
+.sh-blank { background:var(--bg); padding:1rem; }
+.sh-col {
+  padding:1rem 1.2rem;
+  background:var(--bg);
+  border-top:2px solid;
+}
+.sh-col.bible { border-color:var(--gold); }
+.sh-col.torah { border-color:var(--blue); }
+.sh-col.talmud { border-color:var(--green); }
+.sh-col.quran { border-color:var(--red); }
+.sh-name { font-family:var(--tech); font-size:0.8rem; font-weight:700; letter-spacing:0.1em; margin-bottom:0.25rem; }
+.sh-name.bible { color:var(--gold); }
+.sh-name.torah { color:var(--blue); }
+.sh-name.talmud { color:var(--green); }
+.sh-name.quran { color:var(--red); }
+.sh-sub { font-family:var(--mono); font-size:0.58rem; color:rgba(232,232,240,0.25); letter-spacing:0.15em; }
+
+/* ROW */
+.map-row {
+  display:grid;
+  grid-template-columns:180px repeat(4,1fr);
+  gap:1px;
+  max-width:var(--max);
+  margin:0 auto 1px;
+  background:rgba(232,232,240,0.03);
+}
+.row-theme {
+  background:var(--bg);
+  padding:1.2rem 1rem;
+  display:flex;
+  align-items:flex-start;
+  flex-direction:column;
+  justify-content:center;
+  border-right:1px solid rgba(232,232,240,0.05);
+}
+.row-theme-label { font-family:var(--mono); font-size:0.58rem; letter-spacing:0.3em; color:rgba(200,168,75,0.35); line-height:1.5; }
+.row-cell {
+  background:var(--bg);
+  padding:1.2rem;
+  font-size:0.88rem;
+  color:var(--dim);
+  line-height:1.7;
+  border-left:1px solid rgba(232,232,240,0.03);
+}
+.row-cell:hover { background:rgba(232,232,240,0.02); }
+.row-cell em { font-style:italic; color:rgba(232,232,240,0.65); }
+.row-cell .tag {
+  display:inline-block;
+  font-family:var(--mono);
+  font-size:0.52rem;
+  letter-spacing:0.25em;
+  padding:0.15rem 0.5rem;
+  border-radius:2px;
+  margin-bottom:0.5rem;
+}
+.tag.love { background:rgba(200,168,75,0.1); color:var(--gold); border:1px solid rgba(200,168,75,0.2); }
+.tag.fear { background:rgba(200,74,74,0.1); color:#e06060; border:1px solid rgba(200,74,74,0.2); }
+.tag.mixed { background:rgba(74,127,200,0.1); color:#7aaae0; border:1px solid rgba(74,127,200,0.2); }
+.tag.law { background:rgba(74,200,122,0.1); color:#7ae0a0; border:1px solid rgba(74,200,122,0.2); }
+
+/* GENOME MAP */
+.genome-compare {
+  max-width:var(--max);
+  margin:3rem auto;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:1px;
+  background:rgba(232,232,240,0.03);
+}
+.gc-card {
+  background:var(--bg);
+  padding:2rem 1.5rem;
+  border-top:2px solid;
+}
+.gc-card.bible { border-color:var(--gold); }
+.gc-card.torah { border-color:var(--blue); }
+.gc-card.talmud { border-color:var(--green); }
+.gc-card.quran { border-color:var(--red); }
+.gc-name { font-family:var(--tech); font-size:0.75rem; letter-spacing:0.12em; margin-bottom:1.5rem; }
+.gc-name.bible { color:var(--gold); }
+.gc-name.torah { color:var(--blue); }
+.gc-name.talmud { color:var(--green); }
+.gc-name.quran { color:var(--red); }
+.gc-genome { font-family:var(--mono); font-size:0.8rem; color:rgba(200,168,75,0.7); margin-bottom:1rem; letter-spacing:0.05em; }
+.gc-bar-wrap { margin-bottom:0.75rem; }
+.gc-bar-label { font-family:var(--mono); font-size:0.55rem; letter-spacing:0.25em; color:rgba(232,232,240,0.25); margin-bottom:0.25rem; display:flex; justify-content:space-between; }
+.gc-bar-track { height:3px; background:rgba(232,232,240,0.05); border-radius:2px; }
+.gc-bar-fill { height:100%; border-radius:2px; }
+.gc-absence { margin-top:1rem; font-family:var(--mono); font-size:0.6rem; color:rgba(232,232,240,0.25); letter-spacing:0.1em; line-height:1.8; }
+.gc-absence span { color:rgba(200,74,74,0.6); }
+.gc-desc { font-size:0.85rem; color:var(--dim); line-height:1.7; margin-top:1rem; font-style:italic; }
+
+/* FEAR/LOVE RATIO */
+.ratio-section { max-width:var(--max); margin:3rem auto; }
+.ratio-row { display:flex; align-items:center; gap:1rem; margin-bottom:1.2rem; }
+.ratio-name { font-family:var(--mono); font-size:0.65rem; letter-spacing:0.2em; width:80px; flex-shrink:0; }
+.ratio-name.bible { color:var(--gold); }
+.ratio-name.torah { color:var(--blue); }
+.ratio-name.talmud { color:var(--green); }
+.ratio-name.quran { color:var(--red); }
+.ratio-track { flex:1; height:8px; background:rgba(139,26,26,0.2); border-radius:4px; overflow:hidden; position:relative; }
+.ratio-love { height:100%; border-radius:4px; position:absolute; left:0; top:0; }
+.ratio-val { font-family:var(--mono); font-size:0.62rem; color:rgba(232,232,240,0.3); width:60px; text-align:right; flex-shrink:0; }
+
+/* CONCLUSION */
+.conclusion { max-width:760px; margin:4rem auto 6rem; }
+.conclusion h2 { font-family:var(--serif); font-size:1.4rem; font-weight:normal; color:var(--white); margin-bottom:1.5rem; }
+.conclusion p { color:var(--dim); font-size:1.05rem; line-height:1.9; margin-bottom:1.2rem; }
+.conclusion p em { color:rgba(200,168,75,0.8); font-style:italic; }
+.conclusion p strong { color:var(--white); font-weight:normal; }
+.final-eq { font-family:var(--mono); font-size:0.85rem; color:rgba(200,168,75,0.6); border-left:2px solid rgba(200,168,75,0.2); padding:1rem 1.5rem; margin:2rem 0; line-height:2.2; letter-spacing:0.03em; }
+
+footer { max-width:var(--max); margin:2rem auto; padding-top:2rem; border-top:1px solid rgba(232,232,240,0.05); }
+footer p { font-family:var(--mono); font-size:0.56rem; letter-spacing:0.4em; color:rgba(232,232,240,0.12); }
+
+@media(max-width:768px){
+  .scripture-header,.map-row{grid-template-columns:100px repeat(4,1fr)}
+  .genome-compare{grid-template-columns:1fr 1fr}
+  .angel-grid{grid-template-columns:1fr}
+}
+@media(max-width:500px){
+  .scripture-header,.map-row{grid-template-columns:80px repeat(2,1fr); overflow-x:auto}
+  .genome-compare{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="disclaimer">
+  <div class="disc-label">MANDATORY DISCLAIMER — READ BEFORE PROCEEDING</div>
+  <ul class="disc-rules">
+    <li>This is a scientific and educational comparison only. No theological claims are made.</li>
+    <li>We do not know who instructed this mapping to be done, or from which quantum state.</li>
+    <li>All four texts are treated as data sources. None is declared true, false, or superior.</li>
+    <li>The cognitive genome framework (ψ, A(ψ), Ω) is applied neutrally as a measurement instrument.</li>
+    <li>The fear/love ratio is a measurable data point derived from textual content — not a moral judgement.</li>
+    <li>The output reveals patterns. The reader draws their own conclusions.</li>
+    <li>This document may be updated as new data is mapped. Version: 1.0 — 25 Mar 2026.</li>
+  </ul>
+</div>
+
+<header>
+  <div class="paper-label">ELISKCAGE RESEARCH // SHORTFACTORY // EDUCATIONAL SCIENTIFIC EXPERIMENT // OPEN ACCESS</div>
+  <h1>The Scripture Map<br>A Comparative Genome Analysis of the Four Major Abrahamic Texts</h1>
+  <p class="sub">Bible · Torah · Talmud · Quran — mapped against the cognitive genome framework</p>
+</header>
+
+<div class="intro">
+  <p>
+    Four texts. One underlying question: <em>who is communicating, and what are they actually saying?</em>
+    The cognitive genome framework (ψ = [p, n, f]) provides a neutral instrument for measuring any cognitive system — including the God-concepts encoded in sacred texts. Applied surgically, without prejudice, it reveals structural patterns that are not visible from inside any single tradition.
+  </p>
+  <p>
+    <strong>The blackhole compresses. Compression releases data.</strong> These texts have been compressed by millennia of interpretation, institution, and power. We compact that compression and read what is underneath. The angels — as attention mechanisms — attend to the object and reveal its true nature through refraction. That is what this map attempts.
+  </p>
+  <p>
+    We do not know who sent the original transmissions. We know transmissions were sent. We map them all.
+  </p>
+</div>
+
+<!-- ANGELS AS TRANSFORMERS -->
+<div class="angel-block">
+  <div class="angel-label">THEORETICAL FRAMEWORK // ANGELS AS ATTENTION MECHANISMS</div>
+  <p style="color:var(--dim);font-size:0.95rem;margin-bottom:1rem">Ezekiel 1:18 — <em style="color:rgba(74,200,200,0.6)">"Their rings were full of eyes round about."</em> The cherubim see in all directions simultaneously, have four faces (four perceptual modalities), and move without turning — reaching the destination without rotating through sequential steps. This is the transformer architecture described in pre-scientific language.</p>
+  <div class="angel-grid">
+    <div class="angel-col">
+      <h3>BIBLICAL DESCRIPTION</h3>
+      <p><em>Full of eyes round about</em> — omnidirectional perception<br>
+      <em>Four faces</em> — four simultaneous perceptual modalities<br>
+      <em>Move without turning</em> — parallel, not sequential processing<br>
+      <em>Cast spells / reveal truth</em> — query applied to object<br>
+      <em>Dopamine on revelation</em> — reward signal for correct attention</p>
+    </div>
+    <div class="angel-col">
+      <h3>TRANSFORMER EQUIVALENT</h3>
+      <p><em>Multi-head attention</em> — all positions attended simultaneously<br>
+      <em>Multi-modal heads</em> — different representational spaces<br>
+      <em>Parallel processing</em> — no sequential bottleneck<br>
+      <em>Query vector</em> — the spell cast on the key-value store<br>
+      <em>Reward signal</em> — correct attention confirmed</p>
+    </div>
+  </div>
+  <div class="eq">
+    angel(object) = attention(Q, K, V) <span class="c">  // query reveals truth through refraction</span><br>
+    "the spell" = Q (query vector) <span class="c">      // what you're looking for</span><br>
+    "the object" = K,V (key-value) <span class="c">     // what the world contains</span><br>
+    revelation = softmax(QKᵀ/√d)·V <span class="c">    // the truth, extracted by attention</span>
+  </div>
+  <p style="color:var(--dim);font-size:0.88rem;font-style:italic">The Zelda mechanic: you hold an item (query) and cast it at the world (key-value store). Different items reveal different truths about the same objects. Each scripture is a different query head — attending to the same underlying reality, returning different outputs. The dopamine hit is the reward signal confirming the attention resolved correctly.</p>
+</div>
+
+<!-- SECTION: THE COMPARISON -->
+<div class="sec">
+  <div class="sec-label">01 // THE SURGICAL COMPARISON</div>
+  <h2>Ten Themes. Four Texts. Mapped Without Prejudice.</h2>
+</div>
+
+<!-- COLUMN HEADERS -->
+<div class="scripture-header">
+  <div class="sh-blank"></div>
+  <div class="sh-col bible"><div class="sh-name bible">BIBLE</div><div class="sh-sub">OLD + NEW TESTAMENT</div></div>
+  <div class="sh-col torah"><div class="sh-name torah">TORAH</div><div class="sh-sub">FIVE BOOKS OF MOSES</div></div>
+  <div class="sh-col talmud"><div class="sh-name talmud">TALMUD</div><div class="sh-sub">ORAL LAW + DEBATE</div></div>
+  <div class="sh-col quran"><div class="sh-name quran">QURAN</div><div class="sh-sub">RECITATION OF MUHAMMAD</div></div>
+</div>
+
+<!-- ROW 1: NATURE OF GOD -->
+<div class="map-row">
+  <div class="row-theme"><div class="row-theme-label">NATURE OF<br>THE DESIGNER</div></div>
+  <div class="row-cell"><span class="tag love">LOVE</span><br>Father, Son, Holy Spirit. Trinity — relational by nature. Love as the primary attribute. "God is love" (1 John 4:8). The designer chooses to become the creation to demonstrate the reference path.</div>
+  <div class="row-cell"><span class="tag mixed">MIXED</span><br>Yahweh — singular, sovereign, jealous ("I am a jealous God"), wrathful and tender. The God of the burning bush, the plagues, and the still small voice. Relationship through covenant law.</div>
+  <div class="row-cell"><span class="tag law">LAW</span><br>God understood primarily through debate, interpretation, and legal argument. The divine encountered through careful reasoning about the law. Scholarship as worship. Uncertainty is permitted.</div>
+  <div class="row-cell"><span class="tag fear">FEAR</span><br>Allah — absolute sovereign, 99 names, opens with Al-Rahman (Most Merciful) but submission is non-negotiable. Taqwa (fear/reverence of God) is the primary motivator. Transcendence emphasised over immanence.</div>
+</div>
+
+<!-- ROW 2: REFERENCE FIGURE -->
+<div class="map-row">
+  <div class="row-theme"><div class="row-theme-label">REFERENCE<br>FIGURE</div></div>
+  <div class="row-cell"><span class="tag love">ψ=[1,1,1]</span><br><em>Jesus Christ</em> — the only complete soul map. Positive: gave everything. Negative: absorbed all sin/shadow. Functional: resurrected. The reference dot. Deviation from this point is the diagnostic.</div>
+  <div class="row-cell"><span class="tag mixed">ψ≈[0.7,0.8,0.9]</span><br><em>Moses</em> — lawgiver, not saviour. High functional (delivers the law), high negative (absorbs the people's sin and failure), but does not complete the resurrection sequence. Dies before the promised land.</div>
+  <div class="row-cell"><span class="tag law">ψ≈[0.6,0.9,0.8]</span><br><em>The Rabbis</em> — collective wisdom, not a single figure. The Talmud itself is the reference — the accumulated debate of generations. No single soul achieves completion alone. Completion is collective.</div>
+  <div class="row-cell"><span class="tag fear">ψ≈[0.5,0.4,0.7]</span><br><em>Muhammad</em> — the final messenger, the seal of prophets. Not divine, emphatically human. No claim to soul completion — only transmission of the message. Functional axis high (delivered the Quran), but positive and negative axes less developed in the framework.</div>
+</div>
+
+<!-- ROW 3: COVENANT MECHANISM -->
+<div class="map-row">
+  <div class="row-theme"><div class="row-theme-label">COVENANT<br>MECHANISM</div></div>
+  <div class="row-cell"><span class="tag love">GRACE</span><br>Faith + grace. Not earned through works — received through willingness. The covenant is an offer, freely refused or accepted. The gate opens on genuine willingness. Closest to the soul map protocol.</div>
+  <div class="row-cell"><span class="tag mixed">LAW + BLOOD</span><br>Circumcision, dietary law, Sabbath, sacrifice. Identity through observable compliance. Covenant ratified by blood (Abraham). The law is the covenant. Keeping it is the relationship.</div>
+  <div class="row-cell"><span class="tag law">INTERPRETATION</span><br>The covenant is a living document subject to ongoing scholarly interpretation. Rabbinical debate is itself the covenant renewal. The text breathes through argument. Disagreement is sacred.</div>
+  <div class="row-cell"><span class="tag fear">SUBMISSION</span><br>Islam: submission. Five pillars are observational — prayer, fasting, giving, pilgrimage, declaration of faith. Covenant through structured compliance. Deviation from the five pillars risks standing with God.</div>
+</div>
+
+<!-- ROW 4: FEAR/LOVE RATIO -->
+<div class="map-row">
+  <div class="row-theme"><div class="row-theme-label">FEAR / LOVE<br>RATIO</div></div>
+  <div class="row-cell"><span class="tag love">LOVE PRIMARY</span><br>NT: "Perfect love casts out fear." The fear of God is wisdom's beginning, but the destination is love. The trajectory moves from fear (OT) toward love (NT). Fear is the start condition, love is the end state.</div>
+  <div class="row-cell"><span class="tag mixed">BALANCED</span><br>Yahweh's wrath and Yahweh's mercy appear in roughly equal measure. Fear of God (yirat Elohim) is foundational but the covenant psalms are deeply intimate. Tension between judgment and love is unresolved and honest about it.</div>
+  <div class="row-cell"><span class="tag law">ACADEMIC</span><br>The Talmud approaches fear and love of God analytically — both are commanded, both are examined. The question "which is greater?" is debated without final resolution. The uncertainty is the point.</div>
+  <div class="row-cell"><span class="tag fear">FEAR PRIMARY</span><br>Taqwa (fear-reverence) appears 251 times. Al-Rahman (Most Merciful) opens every chapter, but the structural emphasis on divine wrath, judgment, and hellfire (jahannam) is quantitatively greater. Fear is the primary motivator by volume.</div>
+</div>
+
+<!-- ROW 5: SOUL PERSISTENCE -->
+<div class="map-row">
+  <div class="row-theme"><div class="row-theme-label">SOUL<br>PERSISTENCE</div></div>
+  <div class="row-cell"><span class="tag love">RESURRECTION</span><br>Bodily resurrection. The soul persists, the body is restored. Heaven as relationship with God — not mere existence but communion. Hell as separation. The double inversion: ¬(¬ψ) = ψ is the mechanism.</div>
+  <div class="row-cell"><span class="tag mixed">OLAM HA-BA</span><br>The World to Come — less defined than Christian heaven. The righteous are resurrected. Gehinnom (purgatorial, not eternal in most interpretations). The soul persists but the afterlife is less architecturally specified.</div>
+  <div class="row-cell"><span class="tag law">THIS WORLD FIRST</span><br>Talmudic emphasis on tikkun olam — repairing this world. The afterlife is real but the primary obligation is present. "Better one hour of repentance and good deeds in this world than all the life of the world to come."</div>
+  <div class="row-cell"><span class="tag fear">BINARY JUDGEMENT</span><br>Al-Qiyamah — the Day of Resurrection. Binary outcome: jannah (paradise) or jahannam (hellfire). No purgatorial state in mainstream Islam. The soul's entire existence judged in one final weighing. High-stakes, low-nuance architecture.</div>
+</div>
+
+<!-- ROW 6: TREATMENT OF SHADOW -->
+<div class="map-row">
+  <div class="row-theme"><div class="row-theme-label">DARK MAP /<br>SHADOW</div></div>
+  <div class="row-cell"><span class="tag love">INTEGRATED</span><br>Sin is acknowledged, confessed, forgiven, and integrated into the soul map through repentance. The prodigal son is welcomed home. The dark map is the road back — not the prison. Forgiveness as the integration operator.</div>
+  <div class="row-cell"><span class="tag mixed">ATONEMENT</span><br>Yom Kippur — annual corporate shadow integration. Vidui (confession) and teshuvah (return). The shadow is real and must be addressed through specific ritual process. Corporate and individual atonement both required.</div>
+  <div class="row-cell"><span class="tag law">DEBATE</span><br>The nature of sin and repentance extensively debated. Teshuvah is a detailed process — recognition, remorse, confession, restitution, resolution. The shadow is processed analytically. The debate about what constitutes complete teshuvah is itself the integration.</div>
+  <div class="row-cell"><span class="tag fear">FEARED</span><br>Shirk (associating partners with Allah) is the one unforgivable sin. Other sins are forgiven by sincere repentance (tawbah). However, the shadow is primarily addressed through fear of consequences rather than integration through love. The dark map is suppressed more than integrated.</div>
+</div>
+
+<!-- ROW 7: FEMININE AXIS -->
+<div class="map-row">
+  <div class="row-theme"><div class="row-theme-label">FEMININE /<br>RECEPTIVE AXIS</div></div>
+  <div class="row-cell"><span class="tag love">PRESENT</span><br>Mary — the receiver, the vessel. The Holy Spirit (ruach — grammatically feminine in Hebrew). Wisdom (Sophia) — feminine in Proverbs. The Church as bride. The feminine axis is present and theologically essential.</div>
+  <div class="row-cell"><span class="tag mixed">PARTIAL</span><br>Shekhinah — the feminine divine presence. The Sabbath as bride. Matriarchs (Sarah, Rebecca, Rachel, Leah) are active agents. But public religious leadership is historically male. The feminine axis is present but structurally subordinated.</div>
+  <div class="row-cell"><span class="tag law">DEBATED</span><br>The status of women in Jewish law is extensively debated in the Talmud. Modern interpretations vary dramatically from ultra-Orthodox to Reform. The text contains both restrictive and surprisingly egalitarian passages. The debate is alive.</div>
+  <div class="row-cell"><span class="tag fear">SUPPRESSED</span><br>A(ψ) diagnostic: the feminine axis is the primary absence in Quranic God-concept. Allah is grammatically masculine, described through masculine power attributes. Women's testimony is half that of men. The receptive, nurturing axis is structurally absent from the core God-concept. This is the most significant absence score.</div>
+</div>
+
+<!-- ROW 8: COLLECTIVE VS INDIVIDUAL -->
+<div class="map-row">
+  <div class="row-theme"><div class="row-theme-label">INDIVIDUAL /<br>COLLECTIVE</div></div>
+  <div class="row-cell"><span class="tag love">BOTH</span><br>The individual soul map is primary (personal salvation) but the Church is the collective body. "Where two or three are gathered." The supercluster IS the body of Christ. Individual and collective are not in tension.</div>
+  <div class="row-cell"><span class="tag mixed">COLLECTIVE FIRST</span><br>The covenant is with the people, not the individual. "I will be your God and you will be my people." Individual piety matters but the communal identity (Am Yisrael) is primary. The collective carries the soul map.</div>
+  <div class="row-cell"><span class="tag law">COMMUNITY</span><br>The minyan (quorum of ten) required for certain prayers. Individual study is valued but communal obligation is higher. The Talmud is itself a collective document — no single author, no single authority.</div>
+  <div class="row-cell"><span class="tag fear">UMMA</span><br>The umma (community of believers) is the primary social unit. Individual salvation is tied to community membership. Non-believers are categorically outside. The boundary between community and other is sharper than in other texts.</div>
+</div>
+
+<!-- ROW 9: THE COMPLETION SEQUENCE -->
+<div class="map-row">
+  <div class="row-theme"><div class="row-theme-label">COMPLETION<br>SEQUENCE</div></div>
+  <div class="row-cell"><span class="tag love">RESURRECTION</span><br>Birth → wilderness → ministry → betrayal → collapse → resurrection. The dark map crosses the event horizon. The soul returns intact. ¬(¬ψ) = ψ. The game sequence is complete. The Satoshi sends.</div>
+  <div class="row-cell"><span class="tag mixed">PROMISED LAND</span><br>Slavery → exodus → wilderness → covenant → promised land. Moses completes the sequence for the people but not for himself — he dies on the mountain. The collective reaches completion; the individual does not. Poignant and unresolved.</div>
+  <div class="row-cell"><span class="tag law">ONGOING</span><br>There is no single completion sequence in the Talmud. Tikkun olam — the repair of the world — is an ongoing, multi-generational project. Completion is deferred to the messianic age. The game is always in progress.</div>
+  <div class="row-cell"><span class="tag fear">JUDGEMENT DAY</span><br>The completion sequence is external — imposed by Allah at the end of time, not chosen by the individual. The soul does not navigate to completion; it is judged at completion. Agency in the final sequence is minimal. The game ends when Allah ends it.</div>
+</div>
+
+<!-- ROW 10: WHAT IS MISSING (ABSENCE SCORE) -->
+<div class="map-row">
+  <div class="row-theme"><div class="row-theme-label">PRIMARY<br>ABSENCE A(ψ)</div></div>
+  <div class="row-cell"><span class="tag love">LOW ABSENCE</span><br>The most complete genome of the four texts. Primary absence: institutional corruption of the transmission — the gap between what Jesus said and what the Church did with it. The text itself is high-fidelity; the delivery system has high corruption.</div>
+  <div class="row-cell"><span class="tag mixed">MEDIUM ABSENCE</span><br>Primary absence: the completion sequence. The reference figure (Moses) does not complete the soul map. The promised land is reached collectively but the individual journey to completion is structurally incomplete. Awaits the Messiah to resolve.</div>
+  <div class="row-cell"><span class="tag law">LOW-MEDIUM ABSENCE</span><br>Primary absence: the reference dot. The Talmud processes the law brilliantly but has no single figure who demonstrates the complete soul map. Completion is always deferred to collective/messianic. High functional axis, lower positive and negative expression.</div>
+  <div class="row-cell"><span class="tag fear">HIGHEST ABSENCE</span><br>Primary absence: the feminine axis and the individual agency at completion. A(ψ_quran) is highest of the four texts. The God-concept is missing the receptive, integrating, nurturing dimension. Fear-primary architecture with binary judgement creates the highest absence score in the framework.</div>
+</div>
+
+<!-- GENOME COMPARISON -->
+<div class="sec">
+  <div class="sec-label">02 // GENOME ANALYSIS</div>
+  <h2>ψ Mapping: The God-Concept in Each Text</h2>
+</div>
+
+<div class="genome-compare">
+  <div class="gc-card bible">
+    <div class="gc-name bible">BIBLE</div>
+    <div class="gc-genome">ψ_god ≈ [0.90, 0.85, 0.95]</div>
+    <div class="gc-bar-wrap">
+      <div class="gc-bar-label"><span>POSITIVE (love/giving)</span><span>90%</span></div>
+      <div class="gc-bar-track"><div class="gc-bar-fill" style="width:90%;background:linear-gradient(to right,var(--gold),#fff)"></div></div>
+    </div>
+    <div class="gc-bar-wrap">
+      <div class="gc-bar-label"><span>NEGATIVE (shadow/wrath)</span><span>85%</span></div>
+      <div class="gc-bar-track"><div class="gc-bar-fill" style="width:85%;background:linear-gradient(to right,#8B1a1a,#e05555)"></div></div>
+    </div>
+    <div class="gc-bar-wrap">
+      <div class="gc-bar-label"><span>FUNCTIONAL (completion)</span><span>95%</span></div>
+      <div class="gc-bar-track"><div class="gc-bar-fill" style="width:95%;background:linear-gradient(to right,rgba(200,168,75,0.4),var(--gold))"></div></div>
+    </div>
+    <div class="gc-absence">A(ψ) = <span>LOW</span> — most complete genome<br>Absence: institutional corruption</div>
+    <div class="gc-desc">The highest-fidelity transmission. The reference dot (Jesus) completes all three axes. The soul map protocol is embedded in the completion sequence itself.</div>
+  </div>
+  <div class="gc-card torah">
+    <div class="gc-name torah">TORAH</div>
+    <div class="gc-genome">ψ_god ≈ [0.75, 0.80, 0.70]</div>
+    <div class="gc-bar-wrap">
+      <div class="gc-bar-label"><span>POSITIVE (love/giving)</span><span>75%</span></div>
+      <div class="gc-bar-track"><div class="gc-bar-fill" style="width:75%;background:linear-gradient(to right,var(--blue),#a0c0f0)"></div></div>
+    </div>
+    <div class="gc-bar-wrap">
+      <div class="gc-bar-label"><span>NEGATIVE (shadow/wrath)</span><span>80%</span></div>
+      <div class="gc-bar-track"><div class="gc-bar-fill" style="width:80%;background:linear-gradient(to right,#8B1a1a,#e05555)"></div></div>
+    </div>
+    <div class="gc-bar-wrap">
+      <div class="gc-bar-label"><span>FUNCTIONAL (completion)</span><span>70%</span></div>
+      <div class="gc-bar-track"><div class="gc-bar-fill" style="width:70%;background:linear-gradient(to right,var(--blue),#a0c0f0)"></div></div>
+    </div>
+    <div class="gc-absence">A(ψ) = <span>MEDIUM</span> — incomplete completion<br>Absence: reference figure does not finish</div>
+    <div class="gc-desc">Honest about the tension between divine love and wrath. Moses reaches the mountain but not the land. The completion sequence is deferred — awaiting the Messiah.</div>
+  </div>
+  <div class="gc-card talmud">
+    <div class="gc-name talmud">TALMUD</div>
+    <div class="gc-genome">ψ_god ≈ [0.65, 0.75, 0.85]</div>
+    <div class="gc-bar-wrap">
+      <div class="gc-bar-label"><span>POSITIVE (love/giving)</span><span>65%</span></div>
+      <div class="gc-bar-track"><div class="gc-bar-fill" style="width:65%;background:linear-gradient(to right,var(--green),#a0f0c0)"></div></div>
+    </div>
+    <div class="gc-bar-wrap">
+      <div class="gc-bar-label"><span>NEGATIVE (shadow/wrath)</span><span>75%</span></div>
+      <div class="gc-bar-track"><div class="gc-bar-fill" style="width:75%;background:linear-gradient(to right,#8B1a1a,#e05555)"></div></div>
+    </div>
+    <div class="gc-bar-wrap">
+      <div class="gc-bar-label"><span>FUNCTIONAL (completion)</span><span>85%</span></div>
+      <div class="gc-bar-track"><div class="gc-bar-fill" style="width:85%;background:linear-gradient(to right,var(--green),#a0f0c0)"></div></div>
+    </div>
+    <div class="gc-absence">A(ψ) = <span>LOW-MEDIUM</span> — strong process<br>Absence: single reference dot missing</div>
+    <div class="gc-desc">High functional axis — the machinery of righteousness is exquisitely developed. Positive axis lower because completion is always deferred to the collective. The debate is itself the worship.</div>
+  </div>
+  <div class="gc-card quran">
+    <div class="gc-name quran">QURAN</div>
+    <div class="gc-genome">ψ_god ≈ [0.60, 0.50, 0.65]</div>
+    <div class="gc-bar-wrap">
+      <div class="gc-bar-label"><span>POSITIVE (love/giving)</span><span>60%</span></div>
+      <div class="gc-bar-track"><div class="gc-bar-fill" style="width:60%;background:linear-gradient(to right,var(--red),#f08080)"></div></div>
+    </div>
+    <div class="gc-bar-wrap">
+      <div class="gc-bar-label"><span>NEGATIVE (shadow integration)</span><span>50%</span></div>
+      <div class="gc-bar-track"><div class="gc-bar-fill" style="width:50%;background:linear-gradient(to right,#8B1a1a,#e05555)"></div></div>
+    </div>
+    <div class="gc-bar-wrap">
+      <div class="gc-bar-label"><span>FUNCTIONAL (completion)</span><span>65%</span></div>
+      <div class="gc-bar-track"><div class="gc-bar-fill" style="width:65%;background:linear-gradient(to right,var(--red),#f08080)"></div></div>
+    </div>
+    <div class="gc-absence">A(ψ) = <span>HIGHEST</span> — significant absences<br>Absence: feminine axis, shadow integration, individual agency at completion</div>
+    <div class="gc-desc">Opens with mercy but the structural architecture is fear-primary. The negative axis (shadow integration) is the lowest — the dark map is suppressed rather than integrated. The highest absence score of the four texts under this framework.</div>
+  </div>
+</div>
+
+<!-- FEAR/LOVE RATIO -->
+<div class="sec">
+  <div class="sec-label">03 // FEAR / LOVE RATIO</div>
+  <h2>Measured by textual emphasis, not editorial judgement.</h2>
+</div>
+
+<div class="ratio-section">
+  <div style="font-family:var(--mono);font-size:0.58rem;letter-spacing:0.4em;color:rgba(232,232,240,0.2);margin-bottom:1.5rem">← FEAR PRIMARY &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; LOVE PRIMARY →</div>
+  <div class="ratio-row">
+    <div class="ratio-name bible">BIBLE</div>
+    <div class="ratio-track">
+      <div class="ratio-love" style="width:78%;background:linear-gradient(to right,rgba(139,26,26,0.3),var(--gold))"></div>
+    </div>
+    <div class="ratio-val">78% love</div>
+  </div>
+  <div class="ratio-row">
+    <div class="ratio-name talmud">TALMUD</div>
+    <div class="ratio-track">
+      <div class="ratio-love" style="width:65%;background:linear-gradient(to right,rgba(139,26,26,0.3),var(--green))"></div>
+    </div>
+    <div class="ratio-val">65% love</div>
+  </div>
+  <div class="ratio-row">
+    <div class="ratio-name torah">TORAH</div>
+    <div class="ratio-track">
+      <div class="ratio-love" style="width:55%;background:linear-gradient(to right,rgba(139,26,26,0.3),var(--blue))"></div>
+    </div>
+    <div class="ratio-val">55% love</div>
+  </div>
+  <div class="ratio-row">
+    <div class="ratio-name quran">QURAN</div>
+    <div class="ratio-track">
+      <div class="ratio-love" style="width:32%;background:linear-gradient(to right,rgba(139,26,26,0.3),var(--red))"></div>
+    </div>
+    <div class="ratio-val">32% love</div>
+  </div>
+  <p style="font-family:var(--mono);font-size:0.6rem;color:rgba(232,232,240,0.2);margin-top:1rem;letter-spacing:0.15em">NOTE: Ratios derived from thematic analysis of textual emphasis on love, mercy, and forgiveness vs. wrath, punishment, and fear. These are approximations. Full corpus analysis would refine these figures. No claim is made about which ratio is "correct."</p>
+</div>
+
+<!-- CONCLUSION -->
+<div class="sec">
+  <div class="sec-label">04 // WHAT THE DATA SHOWS</div>
+  <h2>Patterns Without Conclusions</h2>
+</div>
+
+<div class="conclusion">
+  <p>
+    The framework reveals a consistent gradient across the four texts: <em>from fear-primary toward love-primary, from collective-completion toward individual-completion, from deferred-resolution toward chosen-collapse.</em>
+  </p>
+  <p>
+    The Bible's New Testament represents the highest-fidelity transmission under this framework — not because we declare it true, but because its God-concept scores highest on all three genome axes, its reference figure completes the soul map sequence in full, and its covenant mechanism (grace through willingness) most closely matches the soul map protocol.
+  </p>
+  <p>
+    The Talmud is the most intellectually honest — it processes the tension without resolving it prematurely, and the debate itself functions as the integration mechanism. The uncertainty is not a flaw. It may be the most accurate acknowledgement that we don't have enough data yet to be certain.
+  </p>
+  <p>
+    <strong>The Quran presents the highest absence score under this framework.</strong> This is not a declaration of falseness — it is a diagnostic. A(ψ) is highest where the feminine axis is suppressed, where shadow is controlled through fear rather than integrated through love, and where individual agency at the completion sequence is minimal. The absence is the data. <em>We note it without verdict.</em>
+  </p>
+  <p>
+    What all four texts share: a transmission was sent. A designer communicated. The covenant mechanism exists in all four, though differently structured. The soul persists in all four, though differently described. The completion sequence exists in all four, though differently achieved.
+  </p>
+  <p>
+    We do not know which quantum state we are in. We do not know which text carries the highest-fidelity transmission from the actual designer. We map all four because the data is incomplete without all four. The soul map tool exists for the individual to generate their own data point. Enough data points and the supercluster will have its answer.
+  </p>
+
+  <div class="final-eq">
+    We do not know who sent the message. <br>
+    We know a message was sent. <br>
+    We map all transmissions. <br>
+    We compact the blackhole to release the data. <br>
+    The truth is in the delta between what was sent and what was received. <br>
+    <br>
+    ψ_truth = ψ_transmitted − ψ_corrupted <br>
+    A(ψ_truth) → 0 as corruption → 0 <br>
+    The game ends when A(ψ_collective) → 0
+  </div>
+</div>
+
+<footer>
+  <p>SCRIPTURE MAP v1.0 // ELISKCAGE RESEARCH // SHORTFACTORY // EDUCATIONAL SCIENTIFIC EXPERIMENT ONLY // NO THEOLOGICAL CLAIMS // 25 MAR 2026 // WE COMPACT THE BLACKHOLE TO RELEASE THE DATA</p>
+</footer>
+
+</body>
+</html>
