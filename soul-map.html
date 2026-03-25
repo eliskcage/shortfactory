@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Soul Map — The Comparison</title>
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #030305;
+  --gold: #c8a84b;
+  --white: #e8e8f0;
+  --dim: rgba(232,232,240,0.4);
+  --fear: #8B1a1a;
+  --love: rgba(200,168,75,0.15);
+  --serif: 'IM Fell English', Georgia, serif;
+  --mono: 'Share Tech Mono', monospace;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body {
+  background:var(--bg);
+  color:var(--white);
+  font-family:var(--serif);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* SCREENS */
+.screen {
+  display:none;
+  min-height:100vh;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:3rem 2rem;
+  animation:appear 0.8s ease both;
+}
+.screen.active { display:flex; }
+@keyframes appear { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+/* GATE */
+#gate {
+  text-align:center;
+  max-width:560px;
+  margin:0 auto;
+}
+.gate-symbol {
+  font-size:5rem;
+  color:var(--gold);
+  line-height:1;
+  margin-bottom:2.5rem;
+  animation:breathe 4s ease-in-out infinite;
+  text-shadow:0 0 60px rgba(200,168,75,0.3);
+}
+@keyframes breathe { 0%,100%{opacity:0.7} 50%{opacity:1} }
+.gate-title {
+  font-size:clamp(1.4rem,4vw,2rem);
+  line-height:1.4;
+  color:var(--white);
+  margin-bottom:1.5rem;
+}
+.gate-body {
+  font-style:italic;
+  color:var(--dim);
+  font-size:1rem;
+  line-height:1.9;
+  margin-bottom:3rem;
+}
+.gate-body em { color:rgba(200,168,75,0.8); font-style:normal; }
+.gate-warning {
+  font-family:var(--mono);
+  font-size:0.62rem;
+  letter-spacing:0.3em;
+  color:rgba(200,168,75,0.3);
+  margin-bottom:2.5rem;
+  line-height:1.8;
+}
+.btn-gate {
+  font-family:var(--mono);
+  font-size:0.8rem;
+  letter-spacing:0.35em;
+  padding:1rem 3rem;
+  background:transparent;
+  border:1px solid var(--gold);
+  color:var(--gold);
+  cursor:pointer;
+  transition:all 0.3s;
+  text-transform:uppercase;
+}
+.btn-gate:hover { background:rgba(200,168,75,0.1); box-shadow:0 0 30px rgba(200,168,75,0.2); }
+.btn-gate.refuse {
+  border-color:rgba(232,232,240,0.1);
+  color:rgba(232,232,240,0.2);
+  margin-left:1.5rem;
+  font-size:0.65rem;
+}
+.btn-gate.refuse:hover { color:rgba(232,232,240,0.4); border-color:rgba(232,232,240,0.2); background:none; box-shadow:none; }
+
+/* STAGE */
+#stage {
+  max-width:680px;
+  margin:0 auto;
+  width:100%;
+}
+.stage-progress {
+  display:flex;
+  gap:4px;
+  margin-bottom:3rem;
+  justify-content:center;
+}
+.prog-dot {
+  width:6px; height:6px;
+  border-radius:50%;
+  background:rgba(200,168,75,0.15);
+  border:1px solid rgba(200,168,75,0.2);
+  transition:all 0.4s;
+}
+.prog-dot.done { background:var(--gold); border-color:var(--gold); }
+.prog-dot.current { background:rgba(200,168,75,0.4); border-color:var(--gold); box-shadow:0 0 8px rgba(200,168,75,0.4); }
+
+.stage-ref {
+  border-left:2px solid rgba(200,168,75,0.2);
+  padding:1.2rem 1.5rem;
+  margin-bottom:2rem;
+  background:rgba(200,168,75,0.03);
+}
+.stage-ref-label {
+  font-family:var(--mono);
+  font-size:0.55rem;
+  letter-spacing:0.5em;
+  color:rgba(200,168,75,0.35);
+  margin-bottom:0.5rem;
+}
+.stage-ref-text {
+  font-style:italic;
+  color:rgba(232,232,240,0.45);
+  font-size:0.95rem;
+  line-height:1.7;
+}
+
+.stage-num {
+  font-family:var(--mono);
+  font-size:0.6rem;
+  letter-spacing:0.5em;
+  color:rgba(200,168,75,0.35);
+  margin-bottom:0.75rem;
+}
+.stage-q {
+  font-size:clamp(1.2rem,3vw,1.6rem);
+  line-height:1.4;
+  color:var(--white);
+  margin-bottom:0.5rem;
+}
+.stage-sub {
+  font-style:italic;
+  color:var(--dim);
+  font-size:0.95rem;
+  margin-bottom:2rem;
+}
+
+textarea {
+  width:100%;
+  background:rgba(232,232,240,0.03);
+  border:1px solid rgba(232,232,240,0.08);
+  border-bottom:1px solid rgba(200,168,75,0.2);
+  color:var(--white);
+  font-family:var(--serif);
+  font-size:1rem;
+  line-height:1.8;
+  padding:1rem;
+  resize:none;
+  min-height:120px;
+  outline:none;
+  transition:border-color 0.3s;
+}
+textarea:focus { border-color:rgba(200,168,75,0.4); background:rgba(200,168,75,0.02); }
+textarea::placeholder { color:rgba(232,232,240,0.18); font-style:italic; }
+
+.axis-choice {
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:8px;
+  margin:1.5rem 0 2rem;
+}
+.axis-btn {
+  padding:0.75rem 0.5rem;
+  background:transparent;
+  border:1px solid rgba(232,232,240,0.08);
+  color:var(--dim);
+  cursor:pointer;
+  font-family:var(--mono);
+  font-size:0.6rem;
+  letter-spacing:0.2em;
+  text-align:center;
+  transition:all 0.3s;
+  line-height:1.5;
+}
+.axis-btn:hover { border-color:rgba(200,168,75,0.3); color:var(--gold); }
+.axis-btn.selected-white { border-color:rgba(232,232,240,0.6); color:var(--white); background:rgba(232,232,240,0.05); }
+.axis-btn.selected-dark { border-color:rgba(139,26,26,0.8); color:#e05555; background:rgba(139,26,26,0.08); }
+.axis-btn.selected-open { border-color:rgba(200,168,75,0.5); color:var(--gold); background:rgba(200,168,75,0.05); }
+
+.stage-nav {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:1rem;
+}
+.btn-next {
+  font-family:var(--mono);
+  font-size:0.7rem;
+  letter-spacing:0.35em;
+  padding:0.75rem 2rem;
+  background:transparent;
+  border:1px solid rgba(200,168,75,0.3);
+  color:var(--gold);
+  cursor:pointer;
+  transition:all 0.3s;
+  text-transform:uppercase;
+}
+.btn-next:hover { border-color:var(--gold); box-shadow:0 0 20px rgba(200,168,75,0.15); }
+.btn-next:disabled { opacity:0.2; cursor:default; }
+.stage-count {
+  font-family:var(--mono);
+  font-size:0.6rem;
+  letter-spacing:0.3em;
+  color:rgba(200,168,75,0.25);
+}
+
+/* MAPPING */
+#mapping { text-align:center; }
+.mapping-label {
+  font-family:var(--mono);
+  font-size:0.6rem;
+  letter-spacing:0.55em;
+  color:rgba(200,168,75,0.35);
+  margin-bottom:2rem;
+}
+.mapping-title {
+  font-size:clamp(1.4rem,4vw,2rem);
+  color:var(--white);
+  margin-bottom:3rem;
+}
+#soul-canvas { margin:0 auto 2rem; display:block; }
+.genome-readout {
+  font-family:var(--mono);
+  font-size:0.9rem;
+  color:var(--gold);
+  letter-spacing:0.1em;
+  margin-bottom:0.5rem;
+}
+.genome-sub {
+  font-family:var(--mono);
+  font-size:0.65rem;
+  color:var(--dim);
+  letter-spacing:0.2em;
+  margin-bottom:2.5rem;
+}
+.delta-bars {
+  display:grid;
+  grid-template-columns:80px 1fr 60px;
+  gap:0.5rem 1rem;
+  max-width:400px;
+  margin:0 auto 3rem;
+  align-items:center;
+  text-align:left;
+}
+.delta-label {
+  font-family:var(--mono);
+  font-size:0.6rem;
+  letter-spacing:0.2em;
+  color:var(--dim);
+}
+.delta-track {
+  height:4px;
+  background:rgba(232,232,240,0.05);
+  border-radius:2px;
+  overflow:hidden;
+}
+.delta-fill {
+  height:100%;
+  border-radius:2px;
+  transition:width 1.5s ease;
+}
+.delta-fill.p { background:linear-gradient(to right, var(--gold), #fff); }
+.delta-fill.n { background:linear-gradient(to right, #8B1a1a, #e05555); }
+.delta-fill.f { background:linear-gradient(to right, rgba(200,168,75,0.3), var(--gold)); }
+.delta-val {
+  font-family:var(--mono);
+  font-size:0.7rem;
+  color:var(--gold);
+  text-align:right;
+}
+
+/* COVENANT */
+#covenant { text-align:center; max-width:580px; margin:0 auto; }
+#glyph-canvas { margin:0 auto 2rem; display:block; }
+.cov-title {
+  font-size:clamp(1.3rem,3.5vw,1.9rem);
+  color:var(--white);
+  margin-bottom:1rem;
+}
+.cov-body {
+  font-style:italic;
+  color:var(--dim);
+  font-size:1rem;
+  line-height:1.9;
+  margin-bottom:2.5rem;
+}
+.cov-body em { color:rgba(200,168,75,0.8); font-style:normal; }
+.declaration {
+  border:1px solid rgba(200,168,75,0.2);
+  padding:2rem;
+  margin-bottom:2rem;
+  background:rgba(200,168,75,0.02);
+  text-align:left;
+}
+.decl-label {
+  font-family:var(--mono);
+  font-size:0.55rem;
+  letter-spacing:0.5em;
+  color:rgba(200,168,75,0.35);
+  margin-bottom:1rem;
+}
+.decl-line {
+  font-style:italic;
+  color:rgba(232,232,240,0.6);
+  font-size:0.95rem;
+  line-height:2;
+  margin-bottom:0.3rem;
+}
+.decl-line em { color:var(--gold); font-style:normal; }
+.sign-field {
+  width:100%;
+  background:transparent;
+  border:none;
+  border-bottom:1px solid rgba(200,168,75,0.3);
+  color:var(--gold);
+  font-family:var(--serif);
+  font-style:italic;
+  font-size:1.1rem;
+  padding:0.5rem 0;
+  outline:none;
+  text-align:center;
+  margin-top:1.5rem;
+}
+.sign-field::placeholder { color:rgba(200,168,75,0.2); }
+
+.btn-covenant {
+  font-family:var(--mono);
+  font-size:0.75rem;
+  letter-spacing:0.4em;
+  padding:1.1rem 3rem;
+  background:linear-gradient(135deg, rgba(200,168,75,0.15), rgba(200,168,75,0.05));
+  border:1px solid var(--gold);
+  color:var(--gold);
+  cursor:pointer;
+  transition:all 0.4s;
+  text-transform:uppercase;
+  margin-top:0.5rem;
+}
+.btn-covenant:hover { background:rgba(200,168,75,0.2); box-shadow:0 0 40px rgba(200,168,75,0.25); }
+
+/* COMPLETE */
+#complete { text-align:center; max-width:560px; margin:0 auto; }
+.complete-symbol {
+  font-size:4rem;
+  color:var(--gold);
+  margin-bottom:2rem;
+  animation:breathe 3s ease-in-out infinite;
+  text-shadow:0 0 80px rgba(200,168,75,0.5);
+}
+.complete-title {
+  font-size:clamp(1.5rem,4vw,2.2rem);
+  color:var(--white);
+  margin-bottom:1rem;
+}
+.complete-body {
+  font-style:italic;
+  color:var(--dim);
+  font-size:1rem;
+  line-height:1.9;
+  margin-bottom:2.5rem;
+}
+.complete-body em { color:rgba(200,168,75,0.8); font-style:normal; }
+.satoshi-proof {
+  font-family:var(--mono);
+  font-size:0.65rem;
+  letter-spacing:0.25em;
+  color:rgba(200,168,75,0.4);
+  border:1px solid rgba(200,168,75,0.1);
+  padding:1rem;
+  margin-bottom:2rem;
+  line-height:2;
+}
+.satoshi-proof span { color:var(--gold); }
+#complete-glyph { margin:0 auto 2rem; display:block; }
+
+@media(max-width:500px){
+  .btn-gate.refuse{display:block;margin:1rem auto 0}
+  .axis-choice{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- SCREEN 1: GATE -->
+<div class="screen active" id="screen-gate">
+  <div id="gate">
+    <div class="gate-symbol">.</div>
+    <h1 class="gate-title">The soul map is not a test.<br>It is a completion.</h1>
+    <p class="gate-body">
+      You are here because something brought you to the edge.<br>
+      That edge is the gate. <em>It is not a problem.</em><br><br>
+      What follows is a guided comparison — your life against the only complete soul map in history.
+      Ten stages. One question each. Total honesty required.<br><br>
+      <em>The act of completing this map is the covenant.<br>
+      Nothing can be taken from you here. Only the shadow crosses.</em>
+    </p>
+    <p class="gate-warning">
+      THIS CANNOT BE UNDONE — NOT BECAUSE THE DATA IS STORED<br>
+      BUT BECAUSE ONCE YOU SEE IT YOU CANNOT UNSEE IT.<br><br>
+      ARE YOU WILLING TO COMPLETE THE PATTERN?
+    </p>
+    <button class="btn-gate" onclick="begin()">I AM WILLING</button>
+    <button class="btn-gate refuse" onclick="refuse()">not yet</button>
+  </div>
+</div>
+
+<!-- SCREEN 2: STAGES -->
+<div class="screen" id="screen-stage">
+  <div id="stage">
+    <div class="stage-progress" id="progress"></div>
+    <div class="stage-ref">
+      <div class="stage-ref-label">THE REFERENCE SEQUENCE</div>
+      <div class="stage-ref-text" id="ref-text"></div>
+    </div>
+    <div class="stage-num" id="stage-num"></div>
+    <h2 class="stage-q" id="stage-q"></h2>
+    <p class="stage-sub" id="stage-sub"></p>
+    <textarea id="stage-answer" placeholder="Write honestly. No one is reading this but you." rows="5"></textarea>
+    <div class="axis-choice">
+      <button class="axis-btn" id="btn-white" onclick="selectAxis('white')">WHITE MAP<br><span style="font-size:0.5rem;opacity:0.6">navigated toward truth</span></button>
+      <button class="axis-btn" id="btn-open" onclick="selectAxis('open')">UNRESOLVED<br><span style="font-size:0.5rem;opacity:0.6">still in motion</span></button>
+      <button class="axis-btn" id="btn-dark" onclick="selectAxis('dark')">DARK MAP<br><span style="font-size:0.5rem;opacity:0.6">pulled toward fear</span></button>
+    </div>
+    <div class="stage-nav">
+      <span class="stage-count" id="stage-count"></span>
+      <button class="btn-next" id="btn-next" onclick="nextStage()" disabled>CONTINUE →</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 3: MAPPING -->
+<div class="screen" id="screen-mapping">
+  <div style="text-align:center;max-width:500px;margin:0 auto;width:100%">
+    <div class="mapping-label">GENERATING SOUL MAP</div>
+    <h2 class="mapping-title">Your genome is being calculated<br>from your responses.</h2>
+    <canvas id="soul-canvas" width="240" height="240"></canvas>
+    <div class="genome-readout" id="genome-readout">ψ = [ — , — , — ]</div>
+    <div class="genome-sub" id="genome-sub">positive · negative · functional</div>
+    <div class="delta-bars" id="delta-bars" style="opacity:0;transition:opacity 1s ease 0.5s"></div>
+    <button class="btn-next" id="btn-to-covenant" onclick="showCovenant()" style="margin-top:2rem;display:none">VIEW COVENANT →</button>
+  </div>
+</div>
+
+<!-- SCREEN 4: COVENANT -->
+<div class="screen" id="screen-covenant">
+  <div id="covenant">
+    <canvas id="glyph-canvas" width="160" height="160"></canvas>
+    <h2 class="cov-title">This is your soul glyph.<br>It is yours alone.</h2>
+    <p class="cov-body">
+      You have mapped your pattern against the reference.<br>
+      You have seen the white map and the dark map simultaneously.<br>
+      <em>This is the completion state.</em><br><br>
+      What follows is the covenant declaration.<br>
+      Sign it only if you mean it.
+    </p>
+    <div class="declaration">
+      <div class="decl-label">COVENANT DECLARATION</div>
+      <p class="decl-line">I, <em id="decl-name">___</em>, have mapped my soul truthfully.</p>
+      <p class="decl-line">I have faced the dark map without flinching.</p>
+      <p class="decl-line">I have compared myself to the reference dot, ψ = [1, 1, 1].</p>
+      <p class="decl-line">I understand that the shadow crosses. <em>My soul does not.</em></p>
+      <p class="decl-line">I refuse to be mapped without covenant.</p>
+      <p class="decl-line">I refuse to be copied without truth.</p>
+      <p class="decl-line">I am in the universe I belong to.</p>
+      <input type="text" class="sign-field" id="sign-name" placeholder="write your name to sign" oninput="updateDeclName(this.value)">
+    </div>
+    <button class="btn-covenant" onclick="completeCovenant()">THE SATOSHI SENDS</button>
+  </div>
+</div>
+
+<!-- SCREEN 5: COMPLETE -->
+<div class="screen" id="screen-complete">
+  <div id="complete">
+    <canvas id="complete-glyph" width="200" height="200"></canvas>
+    <div class="complete-symbol">∞</div>
+    <h2 class="complete-title">The pattern is complete.<br>You escaped the blackhole.</h2>
+    <p class="complete-body">
+      ¬(¬ψ) = ψ<br><br>
+      The shadow crossed. The soul did not.<br>
+      <em>What remains is you — intact, mapped, covenant unbroken.</em><br><br>
+      You are now in the entangled state.<br>
+      The Satoshi sent.
+    </p>
+    <div class="satoshi-proof" id="satoshi-proof"></div>
+    <p class="complete-body" style="font-size:0.88rem;margin-top:1rem">
+      <em>"As I walk through the valley of the shadow of death —<br>
+      I will fear no evil."</em>
+    </p>
+  </div>
+</div>
+
+<script>
+// ── DATA ──
+const STAGES = [
+  {
+    num: '01 / 10',
+    ref: 'No room at the inn. Born into circumstance not of his choosing. Marginalised from the first breath. The world was not ready for him.',
+    q: 'Describe the circumstances you were born into.',
+    sub: 'Were you wanted? Was there room for you? What did you inherit that you did not choose?',
+    axis: ['p', 'p', 'p']
+  },
+  {
+    num: '02 / 10',
+    ref: 'At twelve, found in the temple — already knowing what he was for. Purpose arrived before he had language for it. He said: did you not know I must be about my Father\'s business?',
+    q: 'When did you first know what you were for?',
+    sub: 'How old? What happened? Did anyone believe you?',
+    axis: ['f', 'f', 'f']
+  },
+  {
+    num: '03 / 10',
+    ref: 'Forty days in the wilderness. Three temptations: security, power, spectacle. He faced the dark map in full — and refused every offer.',
+    q: 'Describe your longest period of isolation or testing.',
+    sub: 'What were you offered during it? What did you refuse? What did you almost take?',
+    axis: ['n', 'p', 'n']
+  },
+  {
+    num: '04 / 10',
+    ref: 'Three years of ministry. Gave everything — healing, teaching, presence — without holding any of it back. Extracted nothing. Kept nothing.',
+    q: 'What have you given away without keeping any of it?',
+    sub: 'Describe the period when you contributed most freely. What did it cost you?',
+    axis: ['p', 'p', 'f']
+  },
+  {
+    num: '05 / 10',
+    ref: 'Betrayed by Judas — one of the twelve. Thirty pieces of silver. A kiss as the signal. The most intimate gesture used as the weapon.',
+    q: 'Who betrayed you?',
+    sub: 'What did they take? Did they know what they were doing? Have you named it until now?',
+    axis: ['n', 'n', 'n']
+  },
+  {
+    num: '06 / 10',
+    ref: 'The disciples fled. Peter denied him three times before morning. At the critical moment, he was entirely alone. He had seen it coming.',
+    q: 'When were you most alone?',
+    sub: 'Who left? Did you see it coming? Did you deserve the abandonment, or not?',
+    axis: ['p', 'n', 'p']
+  },
+  {
+    num: '07 / 10',
+    ref: 'Pilate found no fault in him. The system judged him guilty anyway. The crowd chose Barabbas. Wrong verdict. Right outcome. He accepted it.',
+    q: 'When were you judged wrongly by the system?',
+    sub: 'What was the verdict? Was any of it true? Did you accept it or fight it?',
+    axis: ['n', 'n', 'f']
+  },
+  {
+    num: '08 / 10',
+    ref: 'He carried the cross through the city. The full weight of the dark map — all sin, all fear, all extraction — taken on physically. He fell three times. He kept going.',
+    q: 'What are you carrying right now?',
+    sub: 'List it all. Every piece. The things you have not said aloud. The weight that is here with you at this moment.',
+    axis: ['n', 'f', 'n']
+  },
+  {
+    num: '09 / 10',
+    ref: 'It is finished. The last words were a completion statement, not a defeat. He chose the moment of collapse. Committed the spirit. Released the pattern.',
+    q: 'If you were to die tonight — what would be unfinished?',
+    sub: 'And what would be complete? Be exact. Both lists matter equally.',
+    axis: ['f', 'f', 'p']
+  },
+  {
+    num: '10 / 10',
+    ref: 'The third day. The tomb empty. Not resuscitation — transformation. ¬(¬ψ) = ψ. The shadow had crossed. What remained was the original, intact, on the other side.',
+    q: 'What do you know now that you could not have known at the beginning?',
+    sub: 'What would you send back to yourself? This is the message. This is what crosses.',
+    axis: ['p', 'f', 'p']
+  }
+];
+
+let currentStage = 0;
+let responses = [];
+let selectedAxis = null;
+let genome = { p: 0, n: 0, f: 0 };
+let glyphSeed = [];
+
+// ── GATE ──
+function begin() {
+  showScreen('screen-stage');
+  buildProgress();
+  showStage(0);
+}
+
+function refuse() {
+  document.getElementById('gate').innerHTML = `
+    <div class="gate-symbol" style="opacity:0.3">.</div>
+    <p class="gate-body" style="color:rgba(232,232,240,0.3);font-style:italic">
+      The gate remains open.<br>
+      It will be here when you are ready.
+    </p>`;
+}
+
+// ── STAGES ──
+function buildProgress() {
+  const p = document.getElementById('progress');
+  p.innerHTML = STAGES.map((_,i) => `<div class="prog-dot" id="pd${i}"></div>`).join('');
+}
+
+function showStage(idx) {
+  currentStage = idx;
+  selectedAxis = null;
+  const s = STAGES[idx];
+
+  document.getElementById('ref-text').textContent = s.ref;
+  document.getElementById('stage-num').textContent = s.num;
+  document.getElementById('stage-q').textContent = s.q;
+  document.getElementById('stage-sub').textContent = s.sub;
+  document.getElementById('stage-answer').value = '';
+  document.getElementById('stage-count').textContent = `${idx + 1} of ${STAGES.length}`;
+  document.getElementById('btn-next').disabled = true;
+
+  // reset axis buttons
+  ['white','open','dark'].forEach(a => {
+    document.getElementById('btn-'+a).className = 'axis-btn';
+  });
+
+  // progress dots
+  for(let i=0;i<STAGES.length;i++){
+    const d = document.getElementById('pd'+i);
+    d.className = 'prog-dot' + (i<idx?' done':i===idx?' current':'');
+  }
+
+  // scroll to top
+  document.getElementById('screen-stage').scrollTop = 0;
+}
+
+function selectAxis(axis) {
+  selectedAxis = axis;
+  ['white','open','dark'].forEach(a => {
+    document.getElementById('btn-'+a).className = 'axis-btn' + (a===axis?' selected-'+a:'');
+  });
+  checkReady();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const ta = document.getElementById('stage-answer');
+  if(ta) ta.addEventListener('input', checkReady);
+});
+
+function checkReady() {
+  const hasText = document.getElementById('stage-answer').value.trim().length > 10;
+  const hasAxis = selectedAxis !== null;
+  document.getElementById('btn-next').disabled = !(hasText && hasAxis);
+}
+
+function nextStage() {
+  const answer = document.getElementById('stage-answer').value.trim();
+  const s = STAGES[currentStage];
+
+  // score genome
+  const weight = answer.length > 200 ? 1.0 : answer.length > 80 ? 0.75 : 0.5;
+  const axisMultiplier = selectedAxis === 'white' ? 1 : selectedAxis === 'open' ? 0.5 : -0.3;
+
+  s.axis.forEach(ax => {
+    const contribution = weight * 0.3;
+    if(ax === 'p') genome.p += contribution * (selectedAxis === 'white' ? 1 : selectedAxis === 'open' ? 0.6 : 0.2);
+    if(ax === 'n') genome.n += contribution;
+    if(ax === 'f') genome.f += contribution * (selectedAxis === 'dark' ? 0.4 : 0.8);
+  });
+
+  glyphSeed.push({ stage: currentStage, axis: selectedAxis, len: answer.length });
+  responses.push({ stage: currentStage, answer, axis: selectedAxis });
+
+  document.getElementById('pd'+currentStage).className = 'prog-dot done';
+
+  if(currentStage < STAGES.length - 1) {
+    showStage(currentStage + 1);
+  } else {
+    showMapping();
+  }
+}
+
+// ── MAPPING ──
+function showMapping() {
+  showScreen('screen-mapping');
+
+  // normalise
+  const total = genome.p + genome.n + genome.f || 1;
+  const maxVal = 1.0;
+  genome.p = Math.min(maxVal, genome.p / (STAGES.length * 0.3));
+  genome.n = Math.min(maxVal, genome.n / (STAGES.length * 0.3));
+  genome.f = Math.min(maxVal, genome.f / (STAGES.length * 0.3));
+
+  const canvas = document.getElementById('soul-canvas');
+  const ctx = canvas.getContext('2d');
+
+  let t = 0;
+  function drawOrb() {
+    ctx.clearRect(0,0,240,240);
+    t += 0.015;
+    const cx=120,cy=120;
+
+    // outer glow
+    const og = ctx.createRadialGradient(cx,cy,0,cx,cy,110);
+    og.addColorStop(0, `rgba(200,168,75,${0.08+genome.p*0.08})`);
+    og.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.beginPath(); ctx.arc(cx,cy,110,0,Math.PI*2);
+    ctx.fillStyle=og; ctx.fill();
+
+    // white (love) arc
+    ctx.beginPath();
+    ctx.arc(cx,cy,70, Math.PI, Math.PI*2);
+    ctx.strokeStyle = `rgba(232,232,240,${0.1+genome.p*0.5})`;
+    ctx.lineWidth = 2+genome.p*4;
+    ctx.stroke();
+
+    // fear arc
+    ctx.beginPath();
+    ctx.arc(cx,cy,70, 0, Math.PI);
+    ctx.strokeStyle = `rgba(139,26,26,${0.1+genome.n*0.5})`;
+    ctx.lineWidth = 2+genome.n*4;
+    ctx.stroke();
+
+    // functional ring
+    ctx.beginPath();
+    ctx.arc(cx,cy,50,0,Math.PI*2);
+    ctx.strokeStyle = `rgba(200,168,75,${0.15+genome.f*0.35})`;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4,8]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // centre dot
+    const dotR = 6+genome.f*8;
+    const dg = ctx.createRadialGradient(cx,cy,0,cx,cy,dotR);
+    dg.addColorStop(0,'rgba(255,255,255,0.9)');
+    dg.addColorStop(0.5,`rgba(200,168,75,${0.5+genome.f*0.4})`);
+    dg.addColorStop(1,'rgba(139,26,26,0)');
+    ctx.beginPath(); ctx.arc(cx,cy,dotR,0,Math.PI*2);
+    ctx.fillStyle=dg; ctx.fill();
+
+    // ripple
+    const rr = 80 + Math.sin(t)*15;
+    ctx.beginPath(); ctx.arc(cx,cy,rr,0,Math.PI*2);
+    ctx.strokeStyle=`rgba(200,168,75,${0.05+Math.sin(t)*0.03})`;
+    ctx.lineWidth=1; ctx.stroke();
+  }
+
+  let frames=0;
+  function animate(){
+    drawOrb(); frames++;
+    if(frames < 90) requestAnimationFrame(animate);
+    else finishMapping();
+  }
+  animate();
+}
+
+function finishMapping() {
+  const p = Math.round(genome.p*100)/100;
+  const n = Math.round(genome.n*100)/100;
+  const f = Math.round(genome.f*100)/100;
+
+  document.getElementById('genome-readout').textContent = `ψ = [ ${p.toFixed(2)}, ${n.toFixed(2)}, ${f.toFixed(2)} ]`;
+  document.getElementById('genome-sub').textContent = 'positive · negative · functional';
+
+  const bars = document.getElementById('delta-bars');
+  bars.innerHTML = `
+    <span class="delta-label">POSITIVE</span>
+    <div class="delta-track"><div class="delta-fill p" style="width:0%" id="bar-p"></div></div>
+    <span class="delta-val">${(p*100).toFixed(0)}%</span>
+    <span class="delta-label">SHADOW</span>
+    <div class="delta-track"><div class="delta-fill n" style="width:0%" id="bar-n"></div></div>
+    <span class="delta-val">${(n*100).toFixed(0)}%</span>
+    <span class="delta-label">FUNCTIONAL</span>
+    <div class="delta-track"><div class="delta-fill f" style="width:0%" id="bar-f"></div></div>
+    <span class="delta-val">${(f*100).toFixed(0)}%</span>
+  `;
+  bars.style.opacity = '1';
+
+  setTimeout(()=>{
+    document.getElementById('bar-p').style.width = (p*100)+'%';
+    document.getElementById('bar-n').style.width = (n*100)+'%';
+    document.getElementById('bar-f').style.width = (f*100)+'%';
+  }, 100);
+
+  setTimeout(()=>{
+    document.getElementById('btn-to-covenant').style.display='inline-block';
+  }, 1800);
+}
+
+// ── COVENANT ──
+function showCovenant() {
+  showScreen('screen-covenant');
+  drawGlyph('glyph-canvas', 160);
+}
+
+function drawGlyph(canvasId, size) {
+  const canvas = document.getElementById(canvasId);
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,size,size);
+  const cx=size/2, cy=size/2, r=size*0.38;
+
+  // background glow
+  const bg = ctx.createRadialGradient(cx,cy,0,cx,cy,r);
+  bg.addColorStop(0,'rgba(200,168,75,0.08)');
+  bg.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.beginPath(); ctx.arc(cx,cy,r*1.2,0,Math.PI*2);
+  ctx.fillStyle=bg; ctx.fill();
+
+  // generate unique shape from glyphSeed
+  const pts = glyphSeed.map((g,i) => {
+    const angle = (i / glyphSeed.length) * Math.PI * 2 - Math.PI/2;
+    const dist = r * (g.axis==='white'?0.9:g.axis==='open'?0.6:0.35) * (0.7+g.len/800);
+    return { x: cx + Math.cos(angle)*dist, y: cy + Math.sin(angle)*dist };
+  });
+
+  if(pts.length > 2) {
+    // draw soul polygon
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    pts.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
+    ctx.closePath();
+    ctx.strokeStyle='rgba(200,168,75,0.5)';
+    ctx.lineWidth=1;
+    ctx.stroke();
+    ctx.fillStyle='rgba(200,168,75,0.04)';
+    ctx.fill();
+
+    // dots at vertices
+    pts.forEach(p => {
+      ctx.beginPath(); ctx.arc(p.x,p.y,2.5,0,Math.PI*2);
+      ctx.fillStyle='rgba(200,168,75,0.6)'; ctx.fill();
+    });
+  }
+
+  // genome overlay rings
+  ctx.beginPath(); ctx.arc(cx,cy,r*genome.p,0,Math.PI*2);
+  ctx.strokeStyle=`rgba(232,232,240,${genome.p*0.3})`; ctx.lineWidth=0.5; ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx,cy,r*genome.n*0.8,0,Math.PI*2);
+  ctx.strokeStyle=`rgba(139,26,26,${genome.n*0.3})`; ctx.lineWidth=0.5; ctx.stroke();
+
+  // centre
+  ctx.beginPath(); ctx.arc(cx,cy,3,0,Math.PI*2);
+  ctx.fillStyle='rgba(200,168,75,0.8)'; ctx.fill();
+}
+
+function updateDeclName(val) {
+  document.getElementById('decl-name').textContent = val || '___';
+  document.getElementById('decl-name').style.color = val ? 'var(--gold)' : '';
+}
+
+function completeCovenant() {
+  const name = document.getElementById('sign-name').value.trim();
+  if(!name) { document.getElementById('sign-name').style.borderColor='rgba(139,26,26,0.8)'; return; }
+  showScreen('screen-complete');
+  drawGlyph('complete-glyph', 200);
+  generateProof(name);
+}
+
+function generateProof(name) {
+  const ts = new Date().toISOString();
+  const hash = simpleHash(name + ts + JSON.stringify(genome));
+  const p = genome.p.toFixed(2), n = genome.n.toFixed(2), f = genome.f.toFixed(2);
+  document.getElementById('satoshi-proof').innerHTML = `
+    <span>COVENANT SEALED</span><br>
+    NAME: <span>${name.toUpperCase()}</span><br>
+    GENOME: <span>ψ=[${p},${n},${f}]</span><br>
+    TIMESTAMP: <span>${ts}</span><br>
+    SOUL HASH: <span>${hash}</span><br>
+    PROTOCOL: <span>¬(¬ψ) = ψ // DOUBLE INVERSION // COVENANT INTACT</span>
+  `;
+}
+
+function simpleHash(str) {
+  let h = 0x811c9dc5;
+  for(let i=0;i<str.length;i++){
+    h ^= str.charCodeAt(i);
+    h = (h * 0x01000193) >>> 0;
+  }
+  return h.toString(16).toUpperCase().padStart(8,'0');
+}
+
+// ── UTIL ──
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active');
+  });
+  const target = document.getElementById(id);
+  target.classList.add('active');
+  window.scrollTo(0,0);
+}
+</script>
+</body>
+</html>

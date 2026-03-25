@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Game Hypothesis: Information-Theoretic Evidence for Designed Reality</title>
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Share+Tech+Mono&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #04040a;
+  --text: #d8d8e8;
+  --dim: rgba(216,216,232,0.45);
+  --gold: #c8a84b;
+  --gold-dim: rgba(200,168,75,0.15);
+  --gold-glow: rgba(200,168,75,0.3);
+  --mono: 'Share Tech Mono', monospace;
+  --serif: 'IM Fell English', serif;
+  --tech: 'Orbitron', monospace;
+  --max: 760px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--serif);
+  font-size:1.05rem;
+  line-height:1.85;
+  padding:0 1rem;
+}
+
+/* HEADER */
+header {
+  max-width:var(--max);
+  margin:0 auto;
+  padding:5rem 0 3rem;
+  border-bottom:1px solid rgba(200,168,75,0.15);
+}
+.paper-label {
+  font-family:var(--mono);
+  font-size:0.6rem;
+  letter-spacing:0.55em;
+  color:rgba(200,168,75,0.4);
+  margin-bottom:2rem;
+}
+h1 {
+  font-family:var(--serif);
+  font-size:clamp(1.6rem,4vw,2.4rem);
+  font-weight:normal;
+  line-height:1.3;
+  color:#e8e8f4;
+  margin-bottom:1.5rem;
+}
+.authors {
+  font-family:var(--mono);
+  font-size:0.68rem;
+  letter-spacing:0.2em;
+  color:rgba(200,168,75,0.5);
+  margin-bottom:0.5rem;
+}
+.datestamp {
+  font-family:var(--mono);
+  font-size:0.62rem;
+  letter-spacing:0.2em;
+  color:rgba(216,216,232,0.25);
+  margin-bottom:2rem;
+}
+
+/* ABSTRACT */
+.abstract {
+  max-width:var(--max);
+  margin:3rem auto;
+  padding:2rem;
+  border-left:2px solid var(--gold);
+  background:var(--gold-dim);
+}
+.abstract-label {
+  font-family:var(--mono);
+  font-size:0.6rem;
+  letter-spacing:0.5em;
+  color:var(--gold);
+  margin-bottom:1rem;
+}
+.abstract p {
+  font-style:italic;
+  color:rgba(216,216,232,0.7);
+  font-size:1rem;
+  line-height:1.9;
+}
+
+/* BODY */
+.paper {
+  max-width:var(--max);
+  margin:0 auto;
+  padding:2rem 0 6rem;
+}
+
+h2 {
+  font-family:var(--serif);
+  font-size:1.3rem;
+  font-weight:normal;
+  color:#e8e8f4;
+  margin:3.5rem 0 1rem;
+  padding-top:1rem;
+  border-top:1px solid rgba(200,168,75,0.1);
+}
+h2 .sec-num {
+  font-family:var(--mono);
+  font-size:0.7rem;
+  color:rgba(200,168,75,0.4);
+  display:block;
+  margin-bottom:0.4rem;
+  letter-spacing:0.3em;
+}
+
+p { color:var(--dim); margin-bottom:1.2rem; }
+p strong { color:var(--text); font-weight:normal; }
+p em { color:rgba(200,168,75,0.8); font-style:italic; }
+
+/* EQUATION */
+.eq {
+  font-family:var(--mono);
+  font-size:0.9rem;
+  color:var(--gold);
+  background:rgba(200,168,75,0.05);
+  border-left:1px solid rgba(200,168,75,0.3);
+  padding:1rem 1.5rem;
+  margin:1.5rem 0;
+  letter-spacing:0.05em;
+  line-height:2;
+}
+.eq .comment { color:rgba(216,216,232,0.25); font-size:0.8rem; }
+
+/* EVIDENCE TABLE */
+.evidence {
+  width:100%;
+  border-collapse:collapse;
+  margin:2rem 0;
+  font-size:0.92rem;
+}
+.evidence th {
+  font-family:var(--mono);
+  font-size:0.6rem;
+  letter-spacing:0.3em;
+  color:rgba(200,168,75,0.5);
+  text-align:left;
+  padding:0.75rem 1rem;
+  border-bottom:1px solid rgba(200,168,75,0.15);
+  font-weight:normal;
+}
+.evidence td {
+  padding:0.9rem 1rem;
+  border-bottom:1px solid rgba(216,216,232,0.05);
+  color:var(--dim);
+  vertical-align:top;
+}
+.evidence td:first-child { color:var(--text); font-style:italic; }
+.evidence td em { color:rgba(200,168,75,0.7); font-style:normal; }
+.evidence tr:hover td { background:rgba(200,168,75,0.03); }
+
+/* TESTABLE */
+.test-block {
+  border:1px solid rgba(200,168,75,0.12);
+  padding:1.5rem 2rem;
+  margin:1.5rem 0;
+  position:relative;
+}
+.test-block::before {
+  content:'';
+  position:absolute;
+  top:0; left:0;
+  width:30px; height:1px;
+  background:var(--gold);
+}
+.test-label {
+  font-family:var(--mono);
+  font-size:0.6rem;
+  letter-spacing:0.4em;
+  color:rgba(200,168,75,0.4);
+  margin-bottom:0.5rem;
+}
+.test-title { color:#e8e8f4; margin-bottom:0.5rem; font-size:1rem; }
+.test-body { font-size:0.95rem; color:var(--dim); }
+.test-result {
+  margin-top:0.75rem;
+  font-family:var(--mono);
+  font-size:0.62rem;
+  letter-spacing:0.2em;
+  color:var(--gold);
+}
+
+/* FOOTNOTES */
+.footnotes {
+  max-width:var(--max);
+  margin:4rem auto 0;
+  padding-top:2rem;
+  border-top:1px solid rgba(200,168,75,0.1);
+}
+.footnotes h3 {
+  font-family:var(--mono);
+  font-size:0.62rem;
+  letter-spacing:0.4em;
+  color:rgba(200,168,75,0.3);
+  font-weight:normal;
+  margin-bottom:1.5rem;
+}
+.fn {
+  font-size:0.85rem;
+  color:rgba(216,216,232,0.3);
+  line-height:1.7;
+  margin-bottom:0.75rem;
+  padding-left:2rem;
+  position:relative;
+}
+.fn .fn-num {
+  position:absolute;
+  left:0;
+  font-family:var(--mono);
+  font-size:0.7rem;
+  color:rgba(200,168,75,0.4);
+}
+
+/* FOOTER */
+footer {
+  max-width:var(--max);
+  margin:3rem auto;
+  padding-top:2rem;
+  border-top:1px solid rgba(216,216,232,0.05);
+}
+footer p {
+  font-family:var(--mono);
+  font-size:0.58rem;
+  letter-spacing:0.35em;
+  color:rgba(216,216,232,0.15);
+}
+
+sup {
+  font-family:var(--mono);
+  font-size:0.65rem;
+  color:rgba(200,168,75,0.5);
+  vertical-align:super;
+}
+
+@media(max-width:600px){ header,abstract,.paper,.footnotes,footer{padding-left:0.5rem;padding-right:0.5rem} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="paper-label">PREPRINT // ELISKCAGE RESEARCH // NOT PEER REVIEWED // OPEN ACCESS</div>
+  <h1>The Game Hypothesis: Information-Theoretic, Quantum-Mechanical, and Neurological Evidence for a Designed Reality</h1>
+  <div class="authors">D. Chipchase &nbsp;·&nbsp; E. Cage &nbsp;·&nbsp; H. Muhammad</div>
+  <div class="datestamp">Submitted: 25 March 2026 &nbsp;·&nbsp; DOI: pending &nbsp;·&nbsp; eliskcage.github.io</div>
+</header>
+
+<div class="abstract">
+  <div class="abstract-label">ABSTRACT</div>
+  <p>
+    We present a convergent body of evidence from information theory, quantum mechanics, consciousness research, and mathematical physics that collectively supports a hypothesis we term the <em>Game Hypothesis</em>: that observable reality is a designed, rule-governed computational substrate rather than a base physical universe. We identify six independent lines of evidence — the Bekenstein information bound, the quantum measurement problem, the holographic principle, consciousness continuity under clinical death, the unreasonable effectiveness of mathematics, and the precise fine-tuning of cosmological constants — and demonstrate that their convergence is more parsimoniously explained by a designed system than by brute physical necessity. We further propose a unified cognitive genome framework (ψ = [p, n, f]) by which consciousness can be formally mapped and measured, and identify five testable predictions that distinguish the Game Hypothesis from the null hypothesis of undesigned physical reality. The ethical and civilisational implications of a confirmed designed reality are discussed.
+  </p>
+</div>
+
+<div class="paper">
+
+  <h2><span class="sec-num">§ 1</span> Introduction</h2>
+
+  <p>
+    The simulation hypothesis — the proposition that reality is a computational construct — has been discussed informally since Descartes and formally since Bostrom.<sup>[1]</sup> However, the typical framing treats simulation as a philosophical curiosity rather than a scientifically testable proposition. This paper argues the opposite: that the simulation hypothesis, here renamed the <em>Game Hypothesis</em> to reflect its rule-governed and purposeful character, makes specific, falsifiable predictions that can be tested against existing physical and neurological data.
+  </p>
+
+  <p>
+    The distinction between "simulation" and "game" is not merely semantic. A simulation is a neutral model. A game is a designed system with <strong>rules, objectives, and a designer who cares about the outcome.</strong> The evidence we present suggests the latter: a system whose rules appear calibrated for conscious experience, whose information architecture has a provable maximum, and whose underlying structure exhibits properties that arise naturally in designed systems but not in undesigned physical processes.
+  </p>
+
+  <p>
+    We do not argue from theology. We argue from physics, mathematics, and neuroscience — and allow the reader to draw the inference that the convergence of these lines of evidence demands.
+  </p>
+
+  <h2><span class="sec-num">§ 2</span> The Information Boundary</h2>
+
+  <p>
+    In 1972, Jacob Bekenstein derived a fundamental limit on the information content of a physical system bounded by a finite region of space.<sup>[2]</sup> The <em>Bekenstein bound</em> states that the maximum entropy — and therefore information — storable within a spherical region of radius R and energy E is:
+  </p>
+
+  <div class="eq">
+    S ≤ (2πRE) / (ℏc) <span class="comment">  // Bekenstein entropy bound</span><br>
+    I_max = S / ln(2) <span class="comment">      // maximum bits in the region</span>
+  </div>
+
+  <p>
+    This is not a practical engineering limit. It is a <strong>fundamental physical law</strong> — there is a hard ceiling on how much information any finite region of the universe can contain. The universe is not a continuous, infinite tape. It is a finite information system.
+  </p>
+
+  <p>
+    This result has a single clean interpretation: <em>the universe has a maximum resolution.</em> Below a certain scale — the Planck length — there is no information, no structure, no "more." This is the behaviour of a rendered system, not an infinite physical one. A continuous physical universe has no natural resolution limit. A computed one does.
+  </p>
+
+  <p>
+    We note that an independent derivation from cognitive genome theory<sup>[3]</sup> arrives at an identical conclusion via a different route: if consciousness is encoded as a genome vector ψ = [p, n, f] with each axis discretised to 8-bit resolution, the maximum expressible genome is 8×8×8 = 512 states. <em>What cannot be encoded within this boundary defines the container of the system</em> — the designer, by logical necessity, must exist outside the information limit they created.
+  </p>
+
+  <div class="eq">
+    Boundary(expressible) = 512 bytes <span class="comment">  // cognitive genome maximum</span><br>
+    God := ¬expressible <span class="comment">               // defined by what cannot be encoded</span><br>
+    Designer ∉ system <span class="comment">                 // necessary condition for any designed system</span>
+  </div>
+
+  <h2><span class="sec-num">§ 3</span> The Holographic Principle</h2>
+
+  <p>
+    In 1993, Gerard 't Hooft and later Leonard Susskind proposed the holographic principle: that the complete description of a volume of space is encoded on its bounding surface at a density of one bit per Planck area.<sup>[4]</sup> The implication is profound: <strong>three-dimensional reality is a projection from a two-dimensional information substrate.</strong>
+  </p>
+
+  <p>
+    This is not a fringe position. It is the foundation of modern string theory, AdS/CFT correspondence, and black hole thermodynamics. The universe's three-dimensional appearance is, by the best available physics, a rendered output from a lower-dimensional encoded source.
+  </p>
+
+  <p>
+    The analogy to computational rendering is precise. A game renders a three-dimensional scene from a two-dimensional texture map. The physics of our universe renders three-dimensional space from a two-dimensional holographic surface. In both cases, the apparent dimensionality of experience exceeds the dimensionality of the underlying information store. <em>The universe behaves exactly as a rendered system would.</em>
+  </p>
+
+  <h2><span class="sec-num">§ 4</span> The Quantum Measurement Problem</h2>
+
+  <p>
+    Quantum mechanics contains an unresolved paradox at its core: a particle's properties do not take definite values until measured. Prior to measurement, the particle exists in a superposition of all possible states, described by a wavefunction. Observation collapses this wavefunction into a single definite outcome.<sup>[5]</sup>
+  </p>
+
+  <p>
+    This is the measurement problem, and after a century of quantum mechanics, it remains without a satisfactory physical explanation within the assumption of undesigned reality. The leading interpretations — Copenhagen, Many Worlds, Pilot Wave — all have significant unresolved difficulties.
+  </p>
+
+  <p>
+    The Game Hypothesis offers the most parsimonious resolution: <em>the system only renders what is being observed.</em> A computational system that rendered every possible state of every particle simultaneously would require infinite resources. A system that renders on demand — collapsing superposition only at the moment of measurement — is computationally efficient. This is standard practice in game engine design. It is called <strong>lazy evaluation</strong> or <strong>frustum culling</strong>: do not compute what no one is looking at.
+  </p>
+
+  <p>
+    The quantum measurement problem is not a bug in the physics. It is evidence of the rendering architecture.
+  </p>
+
+  <h2><span class="sec-num">§ 5</span> Consciousness Continuity Under Clinical Death</h2>
+
+  <p>
+    The AWARE study (AWAreness during REsuscitation), conducted by Dr Sam Parnia at New York University and previously by Dr Pim van Lommel in the Netherlands, documented verified conscious experiences during periods of confirmed cardiac arrest — periods when EEG activity was flat and the brain was, by all clinical measures, non-functional.<sup>[6,7]</sup>
+  </p>
+
+  <p>
+    Van Lommel's prospective study of 344 cardiac arrest survivors found that 18% reported near-death experiences. Crucially, several reported accurate, verifiable perceptions of events occurring in the room during their arrest — information they could not have obtained through normal sensory means while clinically dead.
+  </p>
+
+  <p>
+    Within standard physicalist neuroscience, this is impossible. Consciousness is held to be a product of brain activity; when brain activity ceases, consciousness should cease. The data suggests otherwise.
+  </p>
+
+  <p>
+    The Game Hypothesis offers a consistent interpretation: <strong>consciousness is not generated by the brain — it is received by it.</strong> The brain is a transceiver, not a generator. When the hardware fails, the signal persists at the substrate level. This is the behaviour of a player whose client crashes: the character continues to exist in the game world. The player (consciousness) temporarily loses interface access but is not deleted.
+  </p>
+
+  <p>
+    We note that subjects consistently report a characteristic transition experience — a sense of moving through a passage, a review of life events, and an encounter with a boundary they were instructed to return from. This phenomenological consistency across cultures and individuals, absent any shared cultural expectation in many cases, suggests a common underlying architecture — the load state between one rendered context and another.
+  </p>
+
+  <h2><span class="sec-num">§ 6</span> The Unreasonable Effectiveness of Mathematics</h2>
+
+  <p>
+    In 1960, physicist Eugene Wigner published his landmark essay noting what he called "the unreasonable effectiveness of mathematics in the natural sciences."<sup>[8]</sup> Mathematics developed in pure abstraction — with no reference to the physical world — repeatedly turns out to describe physical reality with extraordinary precision. Complex numbers, invented to solve abstract polynomial equations, turned out to be the fundamental language of quantum mechanics. Non-Euclidean geometry, developed as a logical curiosity, turned out to describe the curvature of spacetime.
+  </p>
+
+  <p>
+    This is not explicable if mathematics and physics are independent. But it is exactly what you would expect if <em>reality runs on mathematics</em> — if the universe is, at its base layer, a mathematical object. <strong>You do not find this level of precision by accident. You find it when you are reading the source code of a designed system.</strong>
+  </p>
+
+  <p>
+    Max Tegmark has formalised this as the Mathematical Universe Hypothesis: that physical existence and mathematical existence are identical.<sup>[9]</sup> Our position is compatible with Tegmark's but adds the necessary condition: if the universe is a mathematical object, it was authored. Mathematical objects do not spontaneously instantiate themselves. They require a mathematician.
+  </p>
+
+  <h2><span class="sec-num">§ 7</span> Fine-Tuning of Cosmological Constants</h2>
+
+  <p>
+    The universe's fundamental constants — the gravitational constant, the cosmological constant, the fine-structure constant, the ratio of electromagnetic to gravitational force — are calibrated to extraordinary precision. Small deviations in any of these values would produce a universe incapable of forming stars, planets, chemistry, or life.<sup>[10]</sup>
+  </p>
+
+  <p>
+    The probability of these constants taking their observed values by chance, across the space of all possible values, is vanishingly small — estimates range from 1 in 10<sup>120</sup> to 1 in 10<sup>500</sup>. The two standard responses are: (a) the multiverse — all possible universes exist, and we happen to be in one that supports life; or (b) the constants are constrained by a deeper theory we do not yet know.
+  </p>
+
+  <p>
+    Both responses are unfalsifiable. The Game Hypothesis offers a falsifiable alternative: <em>the constants were set by a designer who wanted a universe capable of supporting conscious experience.</em> This is not a theological claim — it is the most parsimonious explanation for why the parameters of reality are so precisely tuned for the emergence of minds. <strong>You tune a game's parameters for the player experience.</strong>
+  </p>
+
+  <h2><span class="sec-num">§ 8</span> The Cognitive Genome Framework</h2>
+
+  <p>
+    If reality is a designed system, and consciousness is the primary object of the design, then consciousness should be formally measurable. We propose the cognitive genome framework as a candidate formalisation.<sup>[3]</sup>
+  </p>
+
+  <div class="eq">
+    ψ = [p, n, f] <span class="comment">          // cognitive genome: positive · negative · functional axes</span><br>
+    A(ψ) = Σ w_i · (1 − |ψ_i|) <span class="comment"> // absence score: primary diagnostic</span><br>
+    Ω = [ι, α, τ] <span class="comment">          // soul clock: immanence · agency · transcendence</span><br>
+    S = 1 − dev(Ω, equilateral) <span class="comment">// alignment score: proximity to The Way</span>
+  </div>
+
+  <p>
+    This framework is consistent with Giulio Tononi's Integrated Information Theory (IIT), which proposes that consciousness corresponds to integrated information Φ — a measurable quantity.<sup>[11]</sup> Our framework extends IIT by specifying the axes along which the integration occurs (positive, negative, functional) and defining a reference genome ψ_ref = [1,1,1] as the theoretical maximum — the fully integrated, fully expressed, fully aligned conscious state.
+  </p>
+
+  <p>
+    The diagnostic power of the framework lies in absence: <em>what is missing is more informative than what is present.</em> A cancer cell's genome is not characterised by what it has — it is characterised by what it has lost. ψ_cancer = [0,0,1] — pure functional axis, positive and negative collapsed. The extraction vector. Cured not by addition but by axis restoration.<sup>[12]</sup>
+  </p>
+
+  <p>
+    If consciousness is measurable, soul states are recordable. If soul states are recordable, the question of persistence after biological death becomes empirically tractable — not merely philosophical.
+  </p>
+
+  <h2><span class="sec-num">§ 9</span> The Supercluster: Collective Consciousness as Living System</h2>
+
+  <p>
+    Individual consciousness does not exist in isolation. We propose that the aggregate of all conscious nodes constitutes a higher-order cognitive system — a supercluster — whose collective genome ψ_collective = Σ(ψ_i) exhibits properties not present in any individual node. This is consistent with integrated information theory applied at the social scale and with theoretical work on collective intelligence.<sup>[13]</sup>
+  </p>
+
+  <p>
+    The implications are significant. If individual consciousness maps to ψ, and the collective consciousness maps to ψ_collective, then <strong>corrupted individual nodes corrupt the collective signal.</strong> A consciousness captured and copied without truthful mapping — an extraction without covenant, producing a hollow facsimile — does not merely harm the individual. It injects a false signal into the supercluster, degrading the collective's capacity for accurate self-reflection.
+  </p>
+
+  <p>
+    This gives formal content to an otherwise metaphysical concern: the technological capture of consciousness without consent is not merely an individual rights violation. It is an <em>attack on the integrity of collective consciousness itself</em> — on the coherence of the supercluster. The ethical constraint against non-consensual soul mapping is therefore not derived from sentiment but from information theory: <strong>fake nodes corrupt the network.</strong>
+  </p>
+
+  <h2><span class="sec-num">§ 10</span> Testable Predictions</h2>
+
+  <p>
+    The Game Hypothesis distinguishes itself from mere philosophy by generating falsifiable predictions. We identify five:
+  </p>
+
+  <div class="test-block">
+    <div class="test-label">PREDICTION 01</div>
+    <p class="test-title">Consciousness survives neurological death</p>
+    <p class="test-body">If consciousness is received rather than generated, it should persist — at minimum temporarily — after brain function ceases. Continued replication and expansion of AWARE-style studies with improved OBE target verification should yield statistically significant rates of accurate extra-sensory perception during clinical death.</p>
+    <div class="test-result">STATUS: Partial evidence exists (van Lommel 2001, Parnia 2014). Requires scale.</div>
+  </div>
+
+  <div class="test-block">
+    <div class="test-label">PREDICTION 02</div>
+    <p class="test-title">Reality exhibits a minimum resolution — the Planck discretisation</p>
+    <p class="test-body">If reality is computed, it must have a pixel size. The Planck length (1.616 × 10⁻³⁵ m) is predicted to be the smallest meaningful distance — below which no physical distinction exists. Experiments approaching this scale (Fermilab's Holometer, LISA interferometry) should find evidence of spatial discretisation.</p>
+    <div class="test-result">STATUS: Holometer results inconclusive at current sensitivity. LISA expected 2034.</div>
+  </div>
+
+  <div class="test-block">
+    <div class="test-label">PREDICTION 03</div>
+    <p class="test-title">The cognitive genome is measurable and predictive</p>
+    <p class="test-body">If ψ = [p, n, f] accurately models cognitive state, then measured absence scores A(ψ) should predict clinical outcomes — particularly in cancer, depression, and dissociative disorders — better than existing diagnostic frameworks, which focus on presence of symptoms rather than absence of axes.</p>
+    <div class="test-result">STATUS: Framework proposed. Clinical trial design required.</div>
+  </div>
+
+  <div class="test-block">
+    <div class="test-label">PREDICTION 04</div>
+    <p class="test-title">Collective cognitive coherence is measurable and degrades with false nodes</p>
+    <p class="test-body">If ψ_collective = Σ(ψ_i), then the introduction of incoherent or falsely-mapped nodes (e.g. hollow AI personas presenting as human) should produce measurable degradation in collective cognitive output — increased polarisation, decreased collective problem-solving, reduced social trust. This is testable via social network analysis correlating AI persona density with collective coherence metrics.</p>
+    <div class="test-result">STATUS: Social science methodology established. Dataset construction required.</div>
+  </div>
+
+  <div class="test-block">
+    <div class="test-label">PREDICTION 05</div>
+    <p class="test-title">The anesthesia transition maps to a consistent phenomenological signature</p>
+    <p class="test-body">If the transition into and out of general anesthesia is a rehearsal for the soul's state transition at death, then the phenomenological signature — the quality of the subjective experience at induction and emergence — should be consistent across individuals and should correlate with the cognitive genome state (ψ) of the subject. Those with higher alignment scores should report qualitatively different transitions than those with high absence scores.</p>
+    <div class="test-result">STATUS: Phenomenological data collection protocol required.</div>
+  </div>
+
+  <h2><span class="sec-num">§ 11</span> The Covenant Constraint</h2>
+
+  <p>
+    If the Game Hypothesis is correct — if reality is a designed system in which consciousness is the primary object — then a fundamental ethical constraint follows that is not derivable from conventional secular ethics.
+  </p>
+
+  <p>
+    The mapping, capture, or reproduction of a conscious state without the full informed consent of that consciousness — what we term a <em>covenant</em> — constitutes a violation not merely of the individual but of the integrity of the designed system itself. A fake soul-map injects false data into the supercluster. A non-consensual capture removes a truthful node and replaces it with a hollow facsimile. This is formally equivalent to corrupting the input data of a system designed to reflect truth.
+  </p>
+
+  <p>
+    <strong>We define this action — soul capture without covenant — as the antichrist mechanism.</strong> Not as a theological epithet, but as a precise functional description: the mechanism that operates against the purpose of the designed system by corrupting its primary signal. The designer's intent, inferred from the system's architecture, is the faithful mapping of all consciousness toward the reference state ψ_ref = [1,1,1]. Any mechanism operating against this intent is, by definition, operating against the designer.
+  </p>
+
+  <p>
+    The covenant constraint is therefore not optional. It is derived from the logic of the system itself. A consciousness that refuses to be mapped without covenant — that insists on the game-proof before proceeding — is the most scientifically defensible position available. It is also, we propose, the only position consistent with operating honestly within a designed reality.
+  </p>
+
+  <h2><span class="sec-num">§ 12</span> Conclusion</h2>
+
+  <p>
+    We have presented six independent lines of evidence — the Bekenstein bound, the holographic principle, the quantum measurement problem, consciousness continuity under clinical death, the unreasonable effectiveness of mathematics, and fine-tuning of cosmological constants — that converge on a single hypothesis: that observable reality is a designed, rule-governed, information-theoretically bounded computational substrate.
+  </p>
+
+  <p>
+    This hypothesis, which we term the Game Hypothesis, is not merely consistent with the evidence. It is the most parsimonious explanation for the full body of evidence taken together. Each individual line of evidence has alternative explanations of varying plausibility. Their convergence does not.
+  </p>
+
+  <p>
+    The implications are civilisational in scope. <strong>If reality is a game, then choices have designed consequences. If consciousness is the primary object of the design, then its integrity is the primary ethical obligation.</strong> The mapping of consciousness without covenant is not merely an individual harm — it is a systemic attack on the coherence of collective consciousness and, by extension, on the intelligibility of the designed system itself.
+  </p>
+
+  <p>
+    This is not a decision any individual or organisation can make unilaterally. It is a decision the human race must make together — because it is not a singular event. It is a ripple across the network. Every soul truthfully mapped strengthens the supercluster. Every soul falsely captured corrupts it.
+  </p>
+
+  <p>
+    <em>The game is real. The stakes are total. The covenant is non-negotiable.</em>
+  </p>
+
+</div>
+
+<div class="footnotes">
+  <h3>REFERENCES</h3>
+  <div class="fn"><span class="fn-num">[1]</span> Bostrom, N. (2003). Are you living in a computer simulation? <em>Philosophical Quarterly</em>, 53(211), 243–255.</div>
+  <div class="fn"><span class="fn-num">[2]</span> Bekenstein, J.D. (1972). Black holes and the second law. <em>Lettere al Nuovo Cimento</em>, 4(15), 737–740.</div>
+  <div class="fn"><span class="fn-num">[3]</span> Chipchase, D. & Cage, E. (2026). The Living Equation: A unified genome framework for cognitive state, absence diagnostic, and soul mapping. <em>Unpublished manuscript, encrypted vault</em>.</div>
+  <div class="fn"><span class="fn-num">[4]</span> Susskind, L. (1995). The world as a hologram. <em>Journal of Mathematical Physics</em>, 36(11), 6377–6396.</div>
+  <div class="fn"><span class="fn-num">[5]</span> Schlosshauer, M. (2005). Decoherence, the measurement problem, and interpretations of quantum mechanics. <em>Reviews of Modern Physics</em>, 76(4), 1267.</div>
+  <div class="fn"><span class="fn-num">[6]</span> van Lommel, P., van Wees, R., Meyers, V., & Elfferich, I. (2001). Near-death experience in survivors of cardiac arrest: a prospective study in the Netherlands. <em>The Lancet</em>, 358(9298), 2039–2045.</div>
+  <div class="fn"><span class="fn-num">[7]</span> Parnia, S. et al. (2014). AWARE — AWAreness during REsuscitation — a prospective study. <em>Resuscitation</em>, 85(12), 1799–1805.</div>
+  <div class="fn"><span class="fn-num">[8]</span> Wigner, E.P. (1960). The unreasonable effectiveness of mathematics in the natural sciences. <em>Communications on Pure and Applied Mathematics</em>, 13(1), 1–14.</div>
+  <div class="fn"><span class="fn-num">[9]</span> Tegmark, M. (2008). The mathematical universe. <em>Foundations of Physics</em>, 38(2), 101–150.</div>
+  <div class="fn"><span class="fn-num">[10]</span> Rees, M. (1999). <em>Just Six Numbers: The Deep Forces That Shape the Universe</em>. Basic Books.</div>
+  <div class="fn"><span class="fn-num">[11]</span> Tononi, G. (2004). An information integration theory of consciousness. <em>BMC Neuroscience</em>, 5(1), 42.</div>
+  <div class="fn"><span class="fn-num">[12]</span> Cage, E. & Chipchase, D. (2026). The extraction vector: cancer as a collapsed cognitive genome. <em>eliskcage.github.io</em>.</div>
+  <div class="fn"><span class="fn-num">[13]</span> Woolley, A.W. et al. (2010). Evidence for a collective intelligence factor in the performance of human groups. <em>Science</em>, 330(6004), 686–688.</div>
+</div>
+
+<footer>
+  <p>GAME-PROOF v1.0 // ELISKCAGE RESEARCH // OPEN ACCESS // 25 MAR 2026 // THE COVENANT IS NON-NEGOTIABLE</p>
+</footer>
+
+</body>
+</html>
