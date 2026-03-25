@@ -1,0 +1,11 @@
+name = "ai-image"
+main = "index.js"
+compatibility_date = "2024-09-23"
+account_id = "2783e78b87a0ffd54f8e91017e2695b7"
+
+routes = [
+  { pattern = "ai-image.shortfactory.shop/*", zone_name = "shortfactory.shop" }
+]
+
+[ai]
+binding = "AI"

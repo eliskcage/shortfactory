@@ -221,20 +221,41 @@ function sndPaired(){
 }
 function sndConverge(){tone(880,0.05);tone(1100,0.05,0.2,'sine',0.07);tone(1320,0.3,0.15,'sine',0.14);}
 
-// ── Single click-to-place node1 ───────────────────────────────────────
-let node1=null;  // {x,y} normalised — set by one click on the triangle
+// ── 3-node click-to-place system ──────────────────────────────────────
+let nodes=[null,null,null]; // [{x,y} normalised] — phone corners 1=apex 2=BR 3=BL
+let nodeIdx=0;              // which node gets placed next
+const NODE_COLORS=['rgba(255,199,44,1)','rgba(44,255,100,1)','rgba(80,160,255,1)'];
+const NODE_LABELS=['1','2','3'];
+const NODE_NAMES=['APEX','BR','BL'];
 
 function handleNodeClick(ex,ey){
   if(!homeVerts) return;
   const W=window.innerWidth,H=window.innerHeight;
-  node1={x:+(ex/W).toFixed(4), y:+(ey/H).toFixed(4)};
-  tone(660,.15,.2,'sine'); tone(880,.1,.12,'sine',.12);
-  statusEl.textContent='NODE 1 SET — ('+node1.x+', '+node1.y+')  CLICK TO MOVE';
+  nodes[nodeIdx]={x:+(ex/W).toFixed(4), y:+(ey/H).toFixed(4)};
+  const freqs=[660,784,880];
+  tone(freqs[nodeIdx],.15,.2,'sine');
+  nodeIdx=(nodeIdx+1)%3;
+  const placed=nodes.filter(Boolean).length;
+  if(placed===3){
+    statusEl.textContent='ALL 3 NODES PLACED — HANDSHAKE LOCKED';
+    statusEl.style.color='rgba(44,255,100,1)';
+    onHandshake();
+  } else {
+    statusEl.style.color='';
+    statusEl.textContent='NODE '+placed+' SET  ·  CLICK TO PLACE '+(placed+1)+' OF 3  ('+NODE_NAMES[nodeIdx]+')';
+  }
 }
 
 function resetNodes(){
-  node1=null;
-  statusEl.textContent='CLICK ANYWHERE ON TRIANGLE TO PLACE NODE 1';
+  nodes=[null,null,null]; nodeIdx=0;
+  statusEl.style.color='';
+  statusEl.textContent='CLICK TO PLACE NODE 1 (APEX)';
+}
+
+function onHandshake(){
+  sndPaired();
+  convergeEl.textContent='HANDSHAKE LOCKED';
+  convergeEl.classList.add('active');
 }
 
 cv.addEventListener('click',function(e){ handleNodeClick(e.clientX,e.clientY); });
@@ -248,7 +269,7 @@ function startSync(id){
     const W=window.innerWidth,H=window.innerHeight;
     // Push laptop verts
     const laptopPayload={side:'laptop',verts:lv.map(function(v){return{x:+(v.x/W).toFixed(4),y:+(v.y/H).toFixed(4)};}),tweenT:tweenT};
-    if(node1) laptopPayload.node1=node1;
+    if(nodes.some(Boolean)) laptopPayload.nodes=nodes;
     fetch('/soul/tricode_sync.php?id='+id,{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify(laptopPayload)
@@ -417,19 +438,41 @@ function draw(){
     ctx.shadowColor='rgba('+gr+','+gg+','+gb+',1)';ctx.shadowBlur=16;ctx.stroke();ctx.shadowBlur=0;
   }
 
-  // ── Draw pairing nodes A1 B2 C3 ────────────────────────────────────
-  // ── Node 1 — single click-placed dot ──────────────────────────────
-  if(node1){
-    const W=window.innerWidth,H=window.innerHeight;
-    const nx=node1.x*W, ny=node1.y*H;
-    ctx.beginPath(); ctx.arc(nx,ny,16,0,Math.PI*2);
-    ctx.fillStyle='rgba(255,199,44,1)'; ctx.shadowColor='#FFC72C'; ctx.shadowBlur=20; ctx.fill(); ctx.shadowBlur=0;
-    ctx.beginPath(); ctx.arc(nx,ny,26,0,Math.PI*2);
-    ctx.strokeStyle='rgba(255,199,44,0.35)'; ctx.lineWidth=1.5; ctx.stroke();
-    ctx.fillStyle='#000'; ctx.font='bold 10px Courier New';
-    ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('1',nx,ny);
-    ctx.font='6px Courier New'; ctx.fillStyle='rgba(255,199,44,.7)'; ctx.textBaseline='top';
-    ctx.fillText(node1.x+' · '+node1.y, nx, ny+20);
+  // ── Draw pairing nodes 1-2-3 + holographic link lines ──────────────
+  const W=window.innerWidth,H=window.innerHeight;
+  const phoneCorners=homeVerts;
+  nodes.forEach(function(n,i){
+    if(!n) return;
+    const nx=n.x*W, ny=n.y*H;
+    const col=NODE_COLORS[i];
+    // Dashed line: phone corner → laptop node (the holographic link)
+    if(phoneCorners&&phoneCorners[i]){
+      const pulse=0.5+0.35*Math.sin(Date.now()/500+i*2);
+      ctx.beginPath();
+      ctx.moveTo(phoneCorners[i].x,phoneCorners[i].y);
+      ctx.lineTo(nx,ny);
+      ctx.strokeStyle=col.replace(',1)',','+pulse.toFixed(2)+')');
+      ctx.lineWidth=2.5; ctx.setLineDash([6,8]); ctx.stroke(); ctx.setLineDash([]);
+    }
+    // Node dot
+    ctx.beginPath(); ctx.arc(nx,ny,14,0,Math.PI*2);
+    ctx.fillStyle=col; ctx.shadowColor=col; ctx.shadowBlur=18; ctx.fill(); ctx.shadowBlur=0;
+    ctx.beginPath(); ctx.arc(nx,ny,24,0,Math.PI*2);
+    ctx.strokeStyle=col.replace(',1)',',0.3)'); ctx.lineWidth=1.5; ctx.stroke();
+    ctx.fillStyle='#000'; ctx.font='bold 9px Courier New';
+    ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(NODE_LABELS[i],nx,ny);
+  });
+  // Genomic equation when all 3 placed
+  if(nodes.every(Boolean)&&phoneCorners){
+    const eq=nodes.map(function(n,i){
+      return NODE_NAMES[i]+'['+(phoneCorners[i].x/W).toFixed(3)+','+(phoneCorners[i].y/H).toFixed(3)+']→['+n.x+','+n.y+']';
+    });
+    ctx.font='6px Courier New'; ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+    ctx.fillStyle='rgba(44,255,100,0.8)'; ctx.fillText('HANDSHAKE GENOME',16,cv.height-60);
+    eq.forEach(function(line,i){
+      ctx.fillStyle='rgba(255,199,44,0.55)';
+      ctx.fillText(line,16,cv.height-46+i*13);
+    });
   }
 
   requestAnimationFrame(draw);

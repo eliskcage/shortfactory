@@ -1,0 +1,2112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TorrentFlix — Public Domain Cinema Remixed</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#000;color:#e2e8f0;font-family:'Courier New',monospace;overflow-x:hidden;}
+
+/* HEADER */
+header{padding:16px 28px;border-bottom:1px solid #111;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:90;background:#000;}
+.logo{font-size:15px;font-weight:900;letter-spacing:4px;color:#fff;}
+.logo span{color:#ef4444;}
+.tiers{display:flex;gap:6px;}
+.tier-btn{font-size:8px;letter-spacing:2px;padding:4px 12px;border:1px solid #1a1a1a;color:#333;background:none;cursor:pointer;text-transform:uppercase;transition:all 0.15s;font-family:'Courier New';}
+.tier-btn:hover{border-color:#444;color:#666;}
+.tier-btn.active{border-color:#ef4444;color:#ef4444;}
+.tier-btn.re.active{border-color:#f59e0b;color:#f59e0b;}
+
+/* ── CAROUSEL ── */
+#carousel-section{padding:28px 0 20px;border-bottom:1px solid #111;}
+.carousel-hdr{padding:0 28px;margin-bottom:16px;display:flex;align-items:baseline;gap:10px;}
+.carousel-hdr h2{font-size:10px;letter-spacing:4px;color:#fff;}
+.carousel-hdr p{font-size:8px;color:#2a2a2a;letter-spacing:1px;}
+#carousel{display:flex;gap:14px;overflow-x:auto;padding:4px 28px 12px;scrollbar-width:none;}
+#carousel::-webkit-scrollbar{display:none;}
+.movie-card{flex-shrink:0;width:160px;cursor:pointer;position:relative;transition:transform 0.18s;}
+.movie-card:hover{transform:translateY(-4px);}
+.movie-card.active .card-inner{outline:2px solid #fff;}
+.card-inner{border-radius:4px;overflow:hidden;position:relative;}
+.card-bg{height:220px;display:flex;flex-direction:column;justify-content:flex-end;padding:12px;position:relative;}
+.card-year{font-size:7px;letter-spacing:3px;color:rgba(255,255,255,0.5);margin-bottom:4px;}
+.card-title{font-size:11px;font-weight:900;letter-spacing:1px;color:#fff;line-height:1.2;margin-bottom:6px;}
+.card-tag{font-size:7px;letter-spacing:2px;padding:2px 7px;border-radius:2px;display:inline-block;font-weight:700;}
+.tag-free{background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);}
+.tag-premium{background:rgba(239,68,68,0.3);color:#ef4444;}
+.tag-unfiltered{background:rgba(245,158,11,0.25);color:#f59e0b;}
+.card-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 30%,rgba(0,0,0,0.75) 100%);}
+.card-lock{position:absolute;top:8px;right:8px;font-size:10px;opacity:0.7;}
+
+/* ── PLAYER AREA ── */
+#watch-section{display:none;}
+#watch-section.open{display:block;}
+
+.watch-title-bar{padding:10px 28px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #0f0f0f;}
+.watch-film-name{font-size:9px;letter-spacing:3px;color:#fff;}
+.watch-film-year{font-size:8px;color:#333;letter-spacing:1px;}
+.watch-seg-info{font-size:8px;color:#2a2a2a;letter-spacing:1px;margin-left:auto;}
+
+/* player + thumbs layout */
+#player-layout{display:flex;align-items:stretch;background:#000;}
+
+/* thumbs — left strip */
+#thumb-strip{width:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border-right:1px solid #0f0f0f;flex-shrink:0;}
+.thumb-btn{background:none;border:1px solid #1a1a1a;color:#2a2a2a;font-size:14px;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;border-radius:2px;}
+.thumb-btn:hover{border-color:#555;color:#888;}
+.thumb-btn.up:hover{border-color:#22c55e;color:#22c55e;}
+.thumb-btn.down:hover{border-color:#ef4444;color:#ef4444;}
+.thumb-btn.voted-up{border-color:#22c55e;color:#22c55e;background:rgba(34,197,94,0.08);}
+.thumb-btn.voted-down{border-color:#ef4444;color:#ef4444;background:rgba(239,68,68,0.08);}
+#seg-vote-count{font-size:7px;color:#222;letter-spacing:1px;writing-mode:vertical-lr;transform:rotate(180deg);}
+
+#player-wrap{flex:1;background:#000;height:58vh;display:flex;align-items:center;justify-content:center;position:relative;}
+#player{width:100%;height:100%;object-fit:contain;display:none;}
+#no-video{text-align:center;}
+#no-video .icon{font-size:32px;color:#111;margin-bottom:8px;}
+#no-video p{font-size:8px;letter-spacing:3px;color:#1a1a1a;}
+#now-playing{position:absolute;bottom:8px;left:10px;font-size:7px;letter-spacing:2px;color:#2a2a2a;background:rgba(0,0,0,0.8);padding:3px 8px;}
+
+/* CONTROLS */
+#controls{padding:8px 28px;display:flex;gap:8px;align-items:center;border-bottom:1px solid #080808;border-top:1px solid #080808;}
+.ctrl-btn{background:none;border:1px solid #111;color:#333;font-family:'Courier New';font-size:7px;letter-spacing:2px;padding:4px 10px;cursor:pointer;text-transform:uppercase;transition:all 0.15s;}
+.ctrl-btn:hover{border-color:#333;color:#666;}
+#cur-info{font-size:7px;color:#1a1a1a;letter-spacing:1px;margin-left:auto;}
+
+/* GRID */
+#grid-section{padding:16px 28px;}
+.grid-hdr{display:flex;align-items:baseline;gap:10px;margin-bottom:10px;}
+.grid-hdr h2{font-size:9px;letter-spacing:4px;color:#666;}
+.grid-hdr p{font-size:7px;color:#1a1a1a;letter-spacing:1px;}
+.legend{display:flex;gap:14px;margin-bottom:12px;flex-wrap:wrap;}
+.leg{font-size:7px;color:#222;letter-spacing:1px;display:flex;align-items:center;gap:5px;}
+.ld{width:7px;height:7px;border-radius:1px;}
+.ld-orig{background:#0a150a;border:1px solid #1a2a1a;}
+.ld-swap{background:#0a0a2a;border:1px solid #1a1a3a;}
+.ld-open{background:#2a0a0a;border:1px solid #3a1a1a;}
+.ld-play{background:#ef4444;}
+
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:2px;}
+.seg{aspect-ratio:16/9;border:1px solid #0f0f0f;cursor:pointer;position:relative;transition:border-color 0.1s,transform 0.1s;background:#0a0a0a;}
+.seg:hover{border-color:#333;transform:scale(1.1);z-index:2;}
+.seg.playing{border-color:#ef4444 !important;box-shadow:0 0 5px rgba(239,68,68,0.4);}
+.seg.original{background:#080f08;}
+.seg.swapped{background:#08080f;}
+.seg.open{background:#0f0808;}
+.seg.advert{background:#110a00;border-color:#2a1500 !important;}
+.seg.advert.playing{border-color:#f59e0b !important;box-shadow:0 0 5px rgba(245,158,11,0.4);}
+.seg-n{position:absolute;top:1px;left:2px;font-size:5px;color:#1a1a1a;}
+.seg-t{position:absolute;bottom:1px;left:2px;font-size:4px;color:#111;}
+.seg-i{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:7px;opacity:0.5;}
+.seg.open .seg-i{color:#ef4444;opacity:0.8;}
+.seg.swapped .seg-i{color:#6366f1;opacity:0.7;}
+.seg.advert .seg-i{color:#f59e0b;opacity:0.6;}
+/* edit pencil — always visible on touch, hover on desktop */
+.seg-edit{position:absolute;top:1px;right:1px;font-size:6px;color:#252525;line-height:1;cursor:pointer;z-index:3;padding:2px 3px;transition:color 0.1s;}
+@media(hover:hover){.seg-edit{color:#111;}.seg:hover .seg-edit{color:#555;}.seg.advert:hover .seg-edit{color:#f59e0b;}}
+@media(hover:none){.seg-edit{color:#2a2a2a;font-size:8px;padding:3px;}}
+
+/* ── DOWN MODAL — what happens when they hate a segment ── */
+#down-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:200;align-items:center;justify-content:center;}
+#down-modal.open{display:flex;}
+.dm-box{background:#060606;border:1px solid #1a1a1a;padding:36px;max-width:500px;width:92%;max-height:90vh;overflow-y:auto;}
+.dm-title{font-size:11px;letter-spacing:4px;color:#ef4444;margin-bottom:6px;}
+.dm-seg{font-size:8px;color:#333;letter-spacing:2px;margin-bottom:24px;}
+.dm-options{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;}
+.dm-opt{border:1px solid #1a1a1a;padding:18px 20px;cursor:pointer;transition:all 0.15s;text-align:left;}
+.dm-opt:hover{border-color:#555;}
+.dm-opt-title{font-size:9px;letter-spacing:3px;color:#fff;margin-bottom:5px;}
+.dm-opt-desc{font-size:8px;color:#333;letter-spacing:1px;line-height:1.7;}
+.dm-opt-tag{font-size:7px;letter-spacing:2px;margin-top:8px;display:inline-block;padding:2px 8px;}
+.tag-diy{background:rgba(34,197,94,0.1);color:#22c55e;border:1px solid rgba(34,197,94,0.2);}
+.tag-ai{background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2);}
+.tag-re{background:rgba(245,158,11,0.1);color:#f59e0b;border:1px solid rgba(245,158,11,0.2);}
+#upload-zone{display:none;margin-top:16px;}
+#upload-zone.open{display:block;}
+#upload-input{display:none;}
+
+/* upload zone internals */
+.uz-drop{border:1px dashed #222;padding:20px;text-align:center;cursor:pointer;transition:border-color 0.15s;margin-bottom:12px;}
+.uz-drop:hover,.uz-drop.drag{border-color:#22c55e;}
+.uz-drop p{font-size:8px;color:#333;letter-spacing:2px;margin-bottom:10px;}
+.upload-btn{background:none;border:1px solid #222;color:#444;font-family:'Courier New';font-size:8px;letter-spacing:2px;padding:7px 18px;cursor:pointer;text-transform:uppercase;}
+.upload-btn:hover{border-color:#22c55e;color:#22c55e;}
+
+/* preview panel */
+#uz-preview{display:none;margin-bottom:14px;}
+#uz-preview.open{display:block;}
+#uz-preview-video{width:100%;max-height:120px;background:#000;display:block;}
+.uz-meta{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;}
+.uz-meta-item{font-size:7px;letter-spacing:2px;padding:3px 8px;border:1px solid #1a1a1a;}
+.uz-meta-item.ok{border-color:#166534;color:#22c55e;}
+.uz-meta-item.warn{border-color:#7c2d12;color:#fb923c;}
+.uz-meta-item.bad{border-color:#7f1d1d;color:#ef4444;}
+
+/* audio choice */
+#uz-audio{display:none;margin-bottom:14px;}
+#uz-audio.open{display:block;}
+.uz-audio-label{font-size:7px;letter-spacing:3px;color:#333;margin-bottom:8px;}
+.uz-audio-opts{display:flex;gap:8px;}
+.uz-aud{flex:1;border:1px solid #1a1a1a;padding:12px;cursor:pointer;text-align:center;transition:all 0.15s;}
+.uz-aud:hover{border-color:#444;}
+.uz-aud.sel-aud{border-color:#22c55e;background:rgba(34,197,94,0.04);}
+.uz-aud.sel-aud.paid-aud{border-color:#f59e0b;background:rgba(245,158,11,0.04);}
+.uz-aud-icon{font-size:16px;margin-bottom:6px;}
+.uz-aud-name{font-size:8px;letter-spacing:2px;color:#888;margin-bottom:4px;}
+.uz-aud-price{font-size:7px;letter-spacing:1px;color:#333;}
+.uz-aud.sel-aud .uz-aud-name{color:#22c55e;}
+.uz-aud.sel-aud.paid-aud .uz-aud-name{color:#f59e0b;}
+
+/* 1p credit prompt */
+#uz-penny{display:none;margin-bottom:12px;border:1px solid #1f1200;padding:12px;background:#020202;}
+#uz-penny.open{display:block;}
+.uz-penny-row{display:flex;align-items:center;gap:10px;}
+.uz-penny-txt{font-size:7px;color:#4a3000;letter-spacing:1px;flex:1;line-height:1.6;}
+.uz-penny-input{background:#0a0a0a;border:1px solid #1a1a1a;color:#f59e0b;font-family:'Courier New';font-size:9px;padding:6px 10px;outline:none;width:140px;letter-spacing:1px;}
+
+/* submit */
+#uz-submit{width:100%;padding:11px;background:none;border:1px solid #166534;color:#22c55e;font-family:'Courier New';font-size:8px;letter-spacing:3px;cursor:pointer;text-transform:uppercase;transition:all 0.15s;display:none;}
+#uz-submit.open{display:block;}
+#uz-submit:hover{background:rgba(34,197,94,0.06);}
+#uz-submit:disabled{opacity:0.3;cursor:default;border-color:#111;color:#333;}
+#uz-progress{display:none;font-size:8px;letter-spacing:2px;color:#22c55e;text-align:center;padding:10px;}
+#uz-progress.open{display:block;}
+
+.dm-cancel{background:none;border:1px solid #111;color:#222;font-family:'Courier New';font-size:7px;letter-spacing:3px;padding:7px 18px;cursor:pointer;text-transform:uppercase;width:100%;margin-top:10px;}
+.dm-cancel:hover{border-color:#333;color:#444;}
+
+/* ── ADVERTAINMENT PANEL ── */
+#uz-advert{display:none;margin-bottom:14px;border:1px solid #1f1200;background:#030200;}
+#uz-advert.open{display:block;}
+.uz-advert-toggle{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;transition:background 0.15s;}
+.uz-advert-toggle:hover{background:rgba(245,158,11,0.04);}
+.uz-advert-chk{width:12px;height:12px;border:1px solid #333;background:#0a0a0a;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px;color:#f59e0b;}
+.uz-advert-lbl{font-size:8px;letter-spacing:2px;color:#4a3800;}
+.uz-advert-lbl b{color:#f59e0b;}
+.uz-advert-body{display:none;padding:0 14px 14px;border-top:1px solid #1a1000;}
+.uz-advert-body.open{display:block;}
+.uz-advert-row{margin-bottom:10px;}
+.uz-advert-label{font-size:7px;letter-spacing:2px;color:#3a3000;margin-bottom:4px;}
+.uz-advert-input{width:100%;background:#0a0a0a;border:1px solid #1a1a1a;color:#f59e0b;font-family:'Courier New';font-size:9px;padding:7px 10px;outline:none;letter-spacing:1px;}
+.uz-advert-input::placeholder{color:#2a2200;}
+.uz-stealth{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
+.uz-stealth-opt{flex:1;min-width:80px;border:1px solid #1a1a1a;padding:8px;cursor:pointer;text-align:center;transition:all 0.15s;}
+.uz-stealth-opt:hover{border-color:#444;}
+.uz-stealth-opt.sel{border-color:#f59e0b;background:rgba(245,158,11,0.04);}
+.uz-stealth-icon{font-size:12px;margin-bottom:3px;}
+.uz-stealth-name{font-size:7px;letter-spacing:1px;color:#555;}
+.uz-stealth-opt.sel .uz-stealth-name{color:#f59e0b;}
+.uz-royalty-note{font-size:7px;color:#2a2000;letter-spacing:1px;line-height:1.7;margin-top:10px;padding:8px;border:1px solid #1a1000;}
+.uz-royalty-note b{color:#6b4c00;}
+
+/* royalty counter in header */
+#royalty-badge{font-size:7px;letter-spacing:2px;color:#4a3800;border:1px solid #1f1200;padding:3px 10px;cursor:pointer;transition:all 0.15s;display:none;}
+#royalty-badge.active{display:inline-flex;align-items:center;gap:5px;}
+#royalty-badge:hover{border-color:#f59e0b;color:#f59e0b;}
+#royalty-badge .rb-val{color:#f59e0b;font-weight:900;}
+
+/* subliminal score overlay on advert segments */
+.seg-score{position:absolute;bottom:1px;right:2px;font-size:4px;color:#4a3800;letter-spacing:0;}
+.seg.advert .seg-score{color:#2a1800;}
+
+/* ── AI SHOWCASE OVERLAY ── */
+#ai-showcase{display:none;position:fixed;inset:0;z-index:350;background:rgba(0,0,0,0.92);}
+#ai-showcase.open{display:flex;flex-direction:column;}
+
+/* video canvas behind the showcase */
+#ai-canvas-wrap{position:relative;flex-shrink:0;height:40vh;background:#000;overflow:hidden;}
+#ai-canvas-video{width:100%;height:100%;object-fit:contain;opacity:0.35;filter:grayscale(0.3);}
+#ai-canvas-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;}
+#ai-preview-img{max-width:100%;max-height:100%;object-fit:contain;opacity:0;transition:opacity 0.6s;}
+#ai-preview-img.loaded{opacity:1;}
+#ai-canvas-label{position:absolute;top:10px;left:14px;font-size:7px;letter-spacing:3px;color:rgba(255,255,255,0.25);}
+#ai-generating{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px;}
+#ai-generating.open{display:flex;}
+#ai-generating-dots{font-size:9px;letter-spacing:4px;color:#555;}
+#ai-seg-desc{position:absolute;bottom:8px;left:14px;font-size:7px;color:rgba(255,255,255,0.2);letter-spacing:2px;}
+
+/* tool cards row */
+#ai-tools-row{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:0;}
+.ai-hdr{display:flex;align-items:baseline;gap:10px;margin-bottom:14px;}
+.ai-hdr-title{font-size:9px;letter-spacing:4px;color:#fff;}
+.ai-hdr-sub{font-size:7px;color:#222;letter-spacing:1px;}
+.ai-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:14px;}
+.ai-card{border:1px solid #1a1a1a;padding:14px;cursor:pointer;transition:all 0.18s;position:relative;background:#050505;}
+.ai-card:hover,.ai-card.active{transform:translateY(-2px);}
+.ai-card.active{box-shadow:0 0 16px var(--ac);}
+.ai-card-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.ai-card-icon{font-size:18px;}
+.ai-card-name{font-size:9px;letter-spacing:2px;color:#fff;font-weight:900;}
+.ai-card-tag{font-size:6px;letter-spacing:2px;padding:2px 6px;border-radius:2px;margin-left:auto;}
+.ai-card-pitch{font-size:7px;color:#333;letter-spacing:1px;line-height:1.7;margin-bottom:8px;}
+.ai-card-price{font-size:8px;font-weight:900;margin-bottom:8px;}
+.ai-card-preview{width:100%;height:60px;background:#0a0a0a;border:1px solid #0f0f0f;display:flex;align-items:center;justify-content:center;font-size:7px;color:#222;letter-spacing:2px;cursor:pointer;transition:border-color 0.15s;overflow:hidden;position:relative;}
+.ai-card-preview:hover{border-color:#444;}
+.ai-card-preview img{width:100%;height:100%;object-fit:cover;display:none;}
+.ai-card-preview img.loaded{display:block;}
+.ai-card-preview .gen-label{position:absolute;font-size:6px;letter-spacing:1px;color:#333;}
+.ai-card-preview .gen-label.loading{color:#f59e0b;animation:qrpulse 1s infinite;}
+/* sponsored badge */
+.ai-sponsored{position:absolute;top:6px;right:6px;font-size:5px;letter-spacing:1px;padding:2px 5px;border-radius:1px;background:rgba(245,158,11,0.15);color:#4a3800;border:1px solid #2a1500;}
+/* CTA */
+#ai-cta-row{display:flex;gap:8px;padding:0 0 6px;flex-wrap:wrap;}
+#ai-use-btn{flex:1;padding:12px;background:none;border:1px solid #333;color:#fff;font-family:'Courier New';font-size:9px;letter-spacing:3px;cursor:pointer;text-transform:uppercase;transition:all 0.2s;}
+#ai-use-btn:hover{background:rgba(255,255,255,0.04);}
+#ai-close-showcase{padding:12px 20px;background:none;border:1px solid #111;color:#222;font-family:'Courier New';font-size:8px;letter-spacing:3px;cursor:pointer;text-transform:uppercase;}
+#ai-close-showcase:hover{border-color:#333;color:#444;}
+
+/* ── QR PAYMENT MODAL ── */
+#qr-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.97);z-index:500;align-items:center;justify-content:center;}
+#qr-modal.open{display:flex;}
+.qr-box{background:#030303;border:1px solid #1a1a1a;padding:32px;max-width:380px;width:92%;text-align:center;}
+.qr-title{font-size:11px;letter-spacing:4px;color:#fff;margin-bottom:4px;}
+.qr-label{font-size:8px;letter-spacing:2px;color:#333;margin-bottom:22px;}
+.qr-amount-row{display:flex;justify-content:center;gap:16px;margin-bottom:20px;flex-wrap:wrap;}
+.qr-amount{border:1px solid #1a1a1a;padding:10px 18px;}
+.qr-amount-val{font-size:14px;font-weight:900;color:#f59e0b;letter-spacing:1px;}
+.qr-amount-sub{font-size:7px;color:#333;letter-spacing:1px;margin-top:2px;}
+/* tabs */
+.qr-tabs{display:flex;gap:4px;justify-content:center;margin-bottom:16px;}
+.qr-tab{font-size:7px;letter-spacing:2px;padding:5px 14px;border:1px solid #1a1a1a;color:#333;cursor:pointer;background:none;font-family:'Courier New';}
+.qr-tab.active{border-color:#f59e0b;color:#f59e0b;}
+/* qr image */
+.qr-img-wrap{background:#fff;padding:10px;display:inline-block;margin-bottom:14px;}
+.qr-img-wrap img{display:block;width:160px;height:160px;}
+/* address */
+.qr-addr{font-size:7px;color:#444;font-family:'Courier New';word-break:break-all;padding:8px 12px;border:1px solid #0f0f0f;background:#000;margin-bottom:4px;cursor:pointer;transition:border-color 0.15s;line-height:1.5;}
+.qr-addr:hover{border-color:#333;}
+.qr-copy-hint{font-size:6px;letter-spacing:1px;color:#222;margin-bottom:18px;}
+/* status */
+.qr-status{font-size:8px;letter-spacing:2px;color:#333;margin-bottom:16px;min-height:20px;transition:color 0.3s;}
+.qr-status.checking{color:#4a4a00;}
+.qr-status.confirmed{color:#22c55e;}
+.qr-status.error{color:#ef4444;}
+/* pulse dot */
+.qr-pulse{display:inline-block;width:6px;height:6px;border-radius:50%;background:#333;margin-right:6px;vertical-align:middle;}
+.qr-status.checking .qr-pulse{background:#f59e0b;animation:qrpulse 1s infinite;}
+.qr-status.confirmed .qr-pulse{background:#22c55e;}
+@keyframes qrpulse{0%,100%{opacity:1;}50%{opacity:0.2;}}
+/* cancel */
+.qr-cancel{background:none;border:1px solid #111;color:#222;font-family:'Courier New';font-size:7px;letter-spacing:3px;padding:7px;cursor:pointer;width:100%;text-transform:uppercase;margin-top:8px;}
+.qr-cancel:hover{border-color:#333;color:#444;}
+.qr-note{font-size:6px;color:#1a1a1a;letter-spacing:1px;margin-top:10px;line-height:1.7;}
+
+/* ── PAYWALL ── */
+#paywall{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.96);z-index:300;align-items:center;justify-content:center;}
+#paywall.open{display:flex;}
+.pw-box{background:#060606;border:1px solid #1a1a1a;padding:36px;max-width:400px;width:92%;}
+.pw-title{font-size:11px;letter-spacing:4px;color:#fff;margin-bottom:6px;}
+.pw-sub{font-size:8px;color:#333;letter-spacing:1px;line-height:1.8;margin-bottom:22px;}
+.pw-tier{border:1px solid #1a1a1a;padding:14px 18px;margin-bottom:8px;cursor:pointer;transition:border-color 0.15s;}
+.pw-tier:hover{border-color:#444;}
+.pw-tier.hi{border-color:#ef4444;}
+.pw-tier.hi-re{border-color:#f59e0b;}
+.pw-tier-name{font-size:8px;letter-spacing:3px;color:#fff;margin-bottom:4px;}
+.pw-tier-desc{font-size:7px;color:#333;letter-spacing:1px;line-height:1.7;}
+.pw-price{font-size:13px;font-weight:900;color:#ef4444;margin-top:8px;}
+.pw-tier.hi-re .pw-price{color:#f59e0b;}
+.pw-cancel{background:none;border:1px solid #111;color:#222;font-family:'Courier New';font-size:7px;letter-spacing:3px;padding:7px 18px;cursor:pointer;margin-top:14px;display:block;width:100%;text-transform:uppercase;}
+.pw-cancel:hover{border-color:#333;color:#444;}
+
+/* ── CINEMA PRE-SCREEN ── */
+#cinema-screen{position:fixed;inset:0;z-index:1000;background:#000;display:none;flex-direction:column;align-items:center;justify-content:center;}
+#cinema-screen.open{display:flex;}
+
+/* curtains */
+#curtain-l,#curtain-r{position:absolute;top:0;bottom:0;width:50%;background:linear-gradient(180deg,#0d0005 0%,#1a0008 40%,#0a0003 100%);z-index:2;transition:transform 1.4s cubic-bezier(0.77,0,0.18,1);}
+#curtain-l{left:0;transform-origin:left;}
+#curtain-r{right:0;transform-origin:right;}
+#curtain-l.open{transform:translateX(-100%);}
+#curtain-r.open{transform:translateX(100%);}
+
+/* curtain texture */
+#curtain-l::before,#curtain-r::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.15) 3px,rgba(0,0,0,0.15) 4px);pointer-events:none;}
+#curtain-l::after{content:'';position:absolute;right:0;top:0;bottom:0;width:18px;background:linear-gradient(90deg,transparent,rgba(180,0,40,0.3));}
+#curtain-r::after{content:'';position:absolute;left:0;top:0;bottom:0;width:18px;background:linear-gradient(270deg,transparent,rgba(180,0,40,0.3));}
+
+/* film container */
+#cinema-yt-wrap{position:absolute;inset:0;z-index:1;}
+#cinema-yt-wrap iframe{width:100%;height:100%;border:none;display:block;}
+
+/* vignette */
+#cinema-vignette{position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,0.7) 100%);}
+
+/* film grain overlay */
+#cinema-grain{position:absolute;inset:0;z-index:4;pointer-events:none;opacity:0.04;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:200px;}
+
+/* tap to start overlay (mobile) */
+#cinema-tap{position:absolute;inset:0;z-index:8;display:flex;align-items:center;justify-content:center;cursor:pointer;display:none;}
+#cinema-tap.show{display:flex;}
+.ct-btn{background:rgba(0,0,0,0.7);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.6);font-family:'Courier New',monospace;font-size:10px;letter-spacing:4px;padding:14px 28px;text-transform:uppercase;}
+
+/* skip button */
+#cinema-skip{position:absolute;bottom:32px;right:36px;z-index:10;background:none;border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.25);font-family:'Courier New',monospace;font-size:9px;letter-spacing:4px;padding:8px 18px;cursor:pointer;text-transform:uppercase;transition:all 0.3s;opacity:0;}
+#cinema-skip.visible{opacity:1;}
+#cinema-skip:hover{border-color:rgba(255,255,255,0.5);color:rgba(255,255,255,0.7);}
+@media(max-width:600px){#cinema-skip{bottom:16px;right:16px;font-size:8px;padding:10px 16px;}}
+
+/* film title card (shown during curtain close/open) */
+#cinema-title-card{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;opacity:0;transition:opacity 0.8s;}
+#cinema-title-card.show{opacity:1;}
+.ctc-pre{font-size:8px;letter-spacing:6px;color:rgba(255,255,255,0.3);margin-bottom:14px;text-transform:uppercase;}
+.ctc-title{font-size:clamp(18px,4vw,42px);font-weight:900;letter-spacing:6px;color:#fff;text-align:center;text-shadow:0 0 40px rgba(255,255,255,0.2);line-height:1.2;}
+.ctc-year{font-size:9px;letter-spacing:4px;color:rgba(255,255,255,0.3);margin-top:12px;}
+.ctc-line{width:60px;height:1px;background:rgba(255,255,255,0.15);margin:16px auto 0;}
+
+/* STATS */
+#stats{padding:6px 28px;background:#030303;border-top:1px solid #0a0a0a;display:flex;gap:18px;flex-wrap:wrap;}
+.st{font-size:7px;letter-spacing:1px;color:#111;}
+.st b{color:#222;}
+
+/* ── PREMIUM UNLOCK BANNER ── */
+#premium-bar{text-align:center;padding:10px 20px;background:#070707;border-bottom:1px solid #111;position:relative;}
+#premium-pill{display:inline-flex;align-items:center;gap:10px;border:1px solid #2a1a00;background:rgba(245,158,11,0.04);padding:8px 22px;cursor:pointer;transition:all 0.2s;border-radius:2px;}
+#premium-pill:hover{border-color:#f59e0b;background:rgba(245,158,11,0.09);}
+#premium-pill .lock{font-size:12px;}
+#premium-pill .pp-label{font-size:8px;letter-spacing:3px;color:#6b4c00;}
+#premium-pill .pp-price{font-size:8px;letter-spacing:2px;color:#f59e0b;font-weight:900;}
+#premium-pill .pp-arrow{font-size:9px;color:#3a2800;}
+#premium-pill.unlocked{border-color:#22c55e;background:rgba(34,197,94,0.05);cursor:default;}
+#premium-pill.unlocked .lock{opacity:0.5;}
+#premium-pill.unlocked .pp-label{color:#166534;}
+#premium-pill.unlocked .pp-price{color:#22c55e;}
+
+/* ── UNLOCK MODAL ── */
+#unlock-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.97);z-index:400;align-items:center;justify-content:center;}
+#unlock-modal.open{display:flex;}
+.ul-box{background:#050505;border:1px solid #1f1200;padding:40px;max-width:500px;width:94%;position:relative;}
+.ul-glow{position:absolute;inset:0;pointer-events:none;border-radius:0;box-shadow:inset 0 0 60px rgba(245,158,11,0.03);}
+.ul-badge{font-size:28px;text-align:center;margin-bottom:12px;}
+.ul-title{font-size:13px;letter-spacing:5px;color:#f59e0b;text-align:center;margin-bottom:4px;}
+.ul-sub{font-size:8px;letter-spacing:2px;color:#3a2800;text-align:center;margin-bottom:30px;}
+.ul-pick{margin-bottom:24px;}
+.ul-pick-label{font-size:7px;letter-spacing:3px;color:#3a3a3a;margin-bottom:10px;}
+.ul-films{display:flex;flex-direction:column;gap:6px;}
+.ul-film{border:1px solid #1a1a1a;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:border-color 0.15s;}
+.ul-film:hover{border-color:#444;}
+.ul-film.selected{border-color:#f59e0b;background:rgba(245,158,11,0.04);}
+.ul-film-dot{width:6px;height:6px;border-radius:50%;border:1px solid #333;flex-shrink:0;}
+.ul-film.selected .ul-film-dot{background:#f59e0b;border-color:#f59e0b;}
+.ul-film-name{font-size:9px;letter-spacing:2px;color:#888;}
+.ul-film-year{font-size:7px;color:#333;margin-left:auto;letter-spacing:1px;}
+.ul-methods{display:flex;flex-direction:column;gap:8px;margin-bottom:24px;}
+.ul-methods-label{font-size:7px;letter-spacing:3px;color:#3a3a3a;margin-bottom:4px;}
+.ul-method{border:1px solid #1a1a1a;padding:14px 18px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:14px;}
+.ul-method:hover{border-color:#555;}
+.ul-method.sel{border-color:#f59e0b;background:rgba(245,158,11,0.05);}
+.ul-method-icon{font-size:18px;flex-shrink:0;}
+.ul-method-body{flex:1;}
+.ul-method-name{font-size:9px;letter-spacing:2px;color:#ccc;margin-bottom:3px;}
+.ul-method-desc{font-size:7px;color:#333;letter-spacing:1px;line-height:1.6;}
+.ul-method-price{font-size:11px;font-weight:900;color:#f59e0b;margin-left:auto;flex-shrink:0;letter-spacing:1px;}
+.ul-crypto-detail{display:none;margin-top:10px;border:1px solid #1a1200;padding:14px;background:#020202;}
+.ul-crypto-detail.open{display:block;}
+.ul-crypto-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.ul-crypto-row:last-child{margin-bottom:0;}
+.ul-crypto-label{font-size:7px;letter-spacing:2px;color:#444;width:36px;flex-shrink:0;}
+.ul-crypto-addr{font-size:7px;color:#666;font-family:'Courier New';word-break:break-all;flex:1;line-height:1.5;}
+.ul-crypto-copy{font-size:6px;letter-spacing:1px;padding:3px 8px;border:1px solid #222;color:#333;background:none;cursor:pointer;font-family:'Courier New';flex-shrink:0;}
+.ul-crypto-copy:hover{border-color:#f59e0b;color:#f59e0b;}
+.ul-credits-detail{display:none;margin-top:10px;border:1px solid #1a1a00;padding:14px;background:#020202;}
+.ul-credits-detail.open{display:block;}
+.ul-credits-input{width:100%;background:#0a0a0a;border:1px solid #1a1a1a;color:#f59e0b;font-family:'Courier New';font-size:11px;padding:8px 12px;outline:none;letter-spacing:2px;}
+.ul-credits-hint{font-size:7px;color:#2a2a2a;letter-spacing:1px;margin-top:6px;}
+.ul-cta{width:100%;padding:14px;background:linear-gradient(135deg,#92400e,#78350f);border:1px solid #f59e0b;color:#f59e0b;font-family:'Courier New';font-size:10px;letter-spacing:4px;cursor:pointer;text-transform:uppercase;transition:all 0.2s;margin-bottom:10px;}
+.ul-cta:hover{background:linear-gradient(135deg,#b45309,#92400e);color:#fde68a;}
+.ul-cta:disabled{opacity:0.3;cursor:default;}
+.ul-cancel{background:none;border:1px solid #111;color:#222;font-family:'Courier New';font-size:7px;letter-spacing:3px;padding:7px;cursor:pointer;width:100%;text-transform:uppercase;}
+.ul-cancel:hover{border-color:#333;color:#444;}
+.ul-success{display:none;text-align:center;padding:20px 0;}
+.ul-success-icon{font-size:36px;margin-bottom:12px;}
+.ul-success-msg{font-size:10px;letter-spacing:3px;color:#22c55e;margin-bottom:6px;}
+.ul-success-film{font-size:8px;color:#444;letter-spacing:2px;}
+
+/* ── COMING SOON / COMMUNITY UNLOCK MODAL ── */
+#cs-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.97);z-index:450;align-items:center;justify-content:center;}
+#cs-modal.open{display:flex;}
+.cs-box{background:#050505;border:1px solid #1a0033;padding:36px;max-width:480px;width:94%;}
+.cs-lock{font-size:30px;text-align:center;margin-bottom:10px;}
+.cs-title{font-size:11px;letter-spacing:5px;color:#9333ea;text-align:center;margin-bottom:4px;}
+.cs-film{font-size:10px;letter-spacing:3px;color:#fff;text-align:center;margin-bottom:2px;}
+.cs-dir{font-size:7px;letter-spacing:2px;color:#333;text-align:center;margin-bottom:22px;}
+.cs-how{font-size:7px;letter-spacing:2px;color:#444;margin-bottom:12px;text-transform:uppercase;}
+.cs-step{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px solid #0d0d0d;font-size:8px;color:#333;letter-spacing:1px;line-height:1.6;}
+.cs-step strong{color:#777;}
+.cs-n{color:#9333ea;flex-shrink:0;}
+.cs-prog{margin:18px 0 16px;}
+.cs-prog-label{font-size:7px;letter-spacing:2px;color:#2a2a2a;margin-bottom:6px;}
+.cs-prog-bar{height:3px;background:#0a0a0a;overflow:hidden;margin-bottom:5px;}
+.cs-prog-fill{height:100%;background:#9333ea;transition:width 0.4s;}
+.cs-prog-val{font-size:9px;letter-spacing:1px;color:#9333ea;}
+.cs-cta{width:100%;padding:12px;background:none;border:1px solid #9333ea;color:#9333ea;font-family:'Courier New',monospace;font-size:9px;letter-spacing:3px;cursor:pointer;text-transform:uppercase;transition:all 0.2s;margin-bottom:7px;}
+.cs-cta:hover:not(:disabled){background:rgba(147,51,234,0.07);}
+.cs-cta:disabled{opacity:0.3;cursor:default;}
+.cs-cta.claimed{border-color:#166534;color:#22c55e;cursor:default;opacity:1;}
+.cs-cta.go{border-color:#f59e0b;color:#f59e0b;}
+.cs-cta.go:hover{background:rgba(245,158,11,0.06);}
+.cs-cancel{width:100%;padding:8px;background:none;border:1px solid #111;color:#222;font-family:'Courier New',monospace;font-size:7px;letter-spacing:3px;cursor:pointer;text-transform:uppercase;margin-top:2px;}
+.cs-cancel:hover{border-color:#333;color:#444;}
+.cs-sft{font-size:7px;letter-spacing:1px;color:#2a1800;text-align:center;margin-bottom:12px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">TORRENT<span>FLIX</span></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+    <div id="royalty-badge" onclick="showRoyaltyPanel()">💰 ROYALTIES <span class="rb-val" id="rb-val">£0.00</span></div>
+    <div class="tiers">
+      <button class="tier-btn active" id="t-free">FREE</button>
+      <button class="tier-btn" id="t-grok" onclick="showPaywall('grok')">GROK SUPER</button>
+      <button class="tier-btn re" id="t-re" onclick="showPaywall('re')">REVERSE ENTROPY</button>
+    </div>
+  </div>
+</header>
+
+<!-- CINEMA PRE-SCREEN -->
+<div id="cinema-screen">
+  <div id="curtain-l"></div>
+  <div id="curtain-r"></div>
+  <div id="cinema-yt-wrap">
+    <iframe id="cinema-yt" src="" allow="autoplay;encrypted-media" allowfullscreen></iframe>
+  </div>
+  <div id="cinema-vignette"></div>
+  <div id="cinema-grain"></div>
+  <div id="cinema-tap" onclick="tapToStart()"><div class="ct-btn">▶ TAP TO START</div></div>
+  <div id="cinema-title-card">
+    <div class="ctc-pre">NOW SHOWING</div>
+    <div class="ctc-title" id="ctc-title-text">—</div>
+    <div class="ctc-year" id="ctc-year-text"></div>
+    <div class="ctc-line"></div>
+  </div>
+  <button id="cinema-skip" onclick="skipCinema()">SKIP →</button>
+</div>
+
+<!-- PREMIUM UNLOCK BANNER -->
+<div id="premium-bar">
+  <div id="premium-pill" onclick="openUnlock()">
+    <span class="lock">🔒</span>
+    <span class="pp-label">PREMIUM CONTENT LOCKED</span>
+    <span class="pp-arrow">·</span>
+    <span class="pp-price">UNLOCK 1 FILM — £1</span>
+    <span class="pp-arrow">→</span>
+  </div>
+</div>
+
+<!-- UNLOCK MODAL -->
+<div id="unlock-modal">
+  <div class="ul-box">
+    <div class="ul-glow"></div>
+    <div id="ul-main">
+      <div class="ul-badge">🔒</div>
+      <div class="ul-title">UNLOCK PREMIUM FILM</div>
+      <div class="ul-sub">ONE FILM · ONE PAYMENT · £1 / $1 EQUIVALENT · NO SUBSCRIPTION</div>
+
+      <div class="ul-pick">
+        <div class="ul-pick-label">CHOOSE YOUR FILM</div>
+        <div class="ul-films" id="ul-film-list"></div>
+      </div>
+
+      <div class="ul-methods">
+        <div class="ul-methods-label">CHOOSE PAYMENT METHOD</div>
+
+        <div class="ul-method" id="m-credits" onclick="selectMethod('credits')">
+          <div class="ul-method-icon">⚡</div>
+          <div class="ul-method-body">
+            <div class="ul-method-name">SF CREDITS</div>
+            <div class="ul-method-desc">Use ShortFactory credits earned from contributing GPU, CPU or engagement. Earn free, spend here.</div>
+          </div>
+          <div class="ul-method-price">1,000 CR</div>
+        </div>
+        <div class="ul-credits-detail" id="credits-detail">
+          <input class="ul-credits-input" id="credits-input" type="text" placeholder="ENTER YOUR SF CODE" maxlength="32">
+          <div class="ul-credits-hint">Get credits by running the screensaver or playing the game at shortfactory.shop</div>
+        </div>
+
+        <div class="ul-method" id="m-xmr" onclick="selectMethod('xmr')">
+          <div class="ul-method-icon">ⓜ</div>
+          <div class="ul-method-body">
+            <div class="ul-method-name">MONERO (XMR)</div>
+            <div class="ul-method-desc">Private. Untraceable. Send ~$1 USD equivalent to the address below. No account needed.</div>
+          </div>
+          <div class="ul-method-price">~$1</div>
+        </div>
+        <div class="ul-crypto-detail" id="xmr-detail">
+          <div class="ul-crypto-row">
+            <div class="ul-crypto-label">XMR</div>
+            <div class="ul-crypto-addr" id="xmr-addr">43tFMgBe2TzuHyBuqLkKp4JNNUapSnXSWR6pENWuBrdNqwMnGWHDgGwHJFCfVF5KHPtHNpJ3xV3SRtJFHuRgNuGEtw3o2j</div>
+            <button class="ul-crypto-copy" onclick="copyAddr('xmr-addr',this)">COPY</button>
+          </div>
+          <div class="ul-credits-hint">Send any amount ≥ $1 USD in XMR · paste tx hash in credits field above as proof · manual verification within 24h</div>
+        </div>
+
+        <div class="ul-method" id="m-btc" onclick="selectMethod('btc')">
+          <div class="ul-method-icon">₿</div>
+          <div class="ul-method-body">
+            <div class="ul-method-name">BITCOIN (BTC)</div>
+            <div class="ul-method-desc">Send $1 USD equivalent in BTC. Manual unlock within 24 hours of confirmation.</div>
+          </div>
+          <div class="ul-method-price">~$1</div>
+        </div>
+        <div class="ul-crypto-detail" id="btc-detail">
+          <div class="ul-crypto-row">
+            <div class="ul-crypto-label">BTC</div>
+            <div class="ul-crypto-addr" id="btc-addr">bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh</div>
+            <button class="ul-crypto-copy" onclick="copyAddr('btc-addr',this)">COPY</button>
+          </div>
+          <div class="ul-credits-hint">Send any amount ≥ $1 USD in BTC · include your email or SF code in memo · verified within 24h</div>
+        </div>
+      </div>
+
+      <button class="ul-cta" id="ul-cta" onclick="doUnlock()" disabled>SELECT FILM + PAYMENT METHOD</button>
+      <button class="ul-cancel" onclick="closeUnlock()">CANCEL</button>
+    </div>
+
+    <div class="ul-success" id="ul-success">
+      <div class="ul-success-icon">🔓</div>
+      <div class="ul-success-msg">FILM UNLOCKED</div>
+      <div class="ul-success-film" id="ul-success-film">—</div>
+      <br><br>
+      <button class="ul-cta" onclick="closeUnlockAndPlay()" style="margin-bottom:0">▶ WATCH NOW</button>
+    </div>
+  </div>
+</div>
+
+<!-- MOVIE CAROUSEL -->
+<div id="carousel-section">
+  <div class="carousel-hdr">
+    <h2>NOW SHOWING</h2>
+    <p>— public domain · click to watch · 🔒 unfiltered content gated to premium</p>
+  </div>
+  <div id="carousel"></div>
+</div>
+
+<!-- WATCH SECTION — hidden until film selected -->
+<div id="watch-section">
+  <div class="watch-title-bar">
+    <div class="watch-film-name" id="watch-film-name">—</div>
+    <div class="watch-film-year" id="watch-film-year"></div>
+    <div class="watch-seg-info" id="watch-seg-info">select a segment</div>
+  </div>
+
+  <div id="player-layout">
+    <!-- THUMBS LEFT STRIP -->
+    <div id="thumb-strip">
+      <button class="thumb-btn up" id="thumb-up" onclick="doThumbUp()" title="Good scene">▲</button>
+      <div id="seg-vote-count">—</div>
+      <button class="thumb-btn down" id="thumb-down" onclick="doThumbDown()" title="Hate this scene">▼</button>
+    </div>
+    <!-- VIDEO -->
+    <div id="player-wrap">
+      <div id="no-video">
+        <div class="icon">▶</div>
+        <p>click a segment below</p>
+      </div>
+      <video id="player" controls></video>
+      <div id="now-playing"></div>
+    </div>
+  </div>
+
+  <div id="controls">
+    <button class="ctrl-btn" onclick="playSeg(currentSeg-1)">◀ PREV</button>
+    <button class="ctrl-btn" onclick="playSeg(currentSeg+1)">NEXT ▶</button>
+    <button class="ctrl-btn" onclick="togglePlayAll()">⏵ PLAY ALL</button>
+    <button class="ctrl-btn" id="btn-stem" onclick="doStemSep()" style="border-color:#6366f1;color:#6366f1;" title="Separate vocals from music in this segment">♪ STRIP MUSIC</button>
+    <div id="cur-info">no segment selected</div>
+  </div>
+
+  <div id="grid-section">
+    <div class="grid-hdr">
+      <h2>SEGMENT MAP</h2>
+      <p id="grid-sub">— click to play · ▼ to swap</p>
+    </div>
+    <div class="legend">
+      <div class="leg"><div class="ld ld-orig"></div>ORIGINAL</div>
+      <div class="leg"><div class="ld ld-swap"></div>AI SWAPPED</div>
+      <div class="leg"><div class="ld ld-open"></div>OPEN</div>
+      <div class="leg"><div class="ld ld-play"></div>PLAYING</div>
+    </div>
+    <div id="grid"></div>
+  </div>
+
+  <div id="stats">
+    <div class="st">TOTAL <b id="s-total">—</b></div>
+    <div class="st">ORIGINAL <b id="s-orig">—</b></div>
+    <div class="st">SWAPPED <b id="s-swap">0</b></div>
+    <div class="st">OPEN <b id="s-open">—</b></div>
+  </div>
+</div>
+
+<!-- COMING SOON / COMMUNITY UNLOCK MODAL -->
+<div id="cs-modal">
+  <div class="cs-box">
+    <div class="cs-lock">🔒</div>
+    <div class="cs-title">LOCKED — COMMUNITY UNLOCK</div>
+    <div class="cs-film" id="cs-film-name"></div>
+    <div class="cs-dir" id="cs-film-dir"></div>
+
+    <div class="cs-how">HOW TO UNLOCK</div>
+    <div class="cs-step"><span class="cs-n">1</span><div>Upload <strong>1 frame</strong> to <strong>The Last Man on Earth</strong> — any 10-second segment, any style. It counts immediately.</div></div>
+    <div class="cs-step"><span class="cs-n">2</span><div>Come back here and <strong>claim your unlock points</strong>. We log your reservation.</div></div>
+    <div class="cs-step"><span class="cs-n">3</span><div>When this film launches, <strong>you get in first</strong>. Your place is held.</div></div>
+
+    <div class="cs-prog">
+      <div class="cs-prog-label">YOUR CONTRIBUTION TO LAST MAN ON EARTH</div>
+      <div class="cs-prog-bar"><div class="cs-prog-fill" id="cs-prog-fill" style="width:0%"></div></div>
+      <div class="cs-prog-val"><span id="cs-contribs">0</span> / 1 frame required</div>
+    </div>
+
+    <div class="cs-sft" id="cs-sft-note">CLAIM AWARDS +50 SFT TO YOUR WALLET</div>
+    <button class="cs-cta" id="cs-claim-btn" onclick="claimUnlock()">CLAIM UNLOCK POINTS</button>
+    <button class="cs-cta go" id="cs-contrib-btn" onclick="contributeToLastman()">CONTRIBUTE A FRAME → LAST MAN ON EARTH</button>
+    <div class="cs-reserved-msg" id="cs-reserved-msg" style="display:none;color:#22c55e;font-size:9px;letter-spacing:2px;margin:8px 0;">✓ YOU ARE RESERVED — FIRST IN WHEN THIS LAUNCHES</div>
+    <button class="cs-cancel" onclick="closeCSModal()">CLOSE</button>
+  </div>
+</div>
+
+<!-- THUMBS DOWN MODAL -->
+<div id="down-modal">
+  <div class="dm-box">
+    <div class="dm-title">YOU HATE THIS SCENE</div>
+    <div class="dm-seg" id="dm-seg-info">SEG_0000 · 00:00:00 — 00:00:10</div>
+    <div class="dm-options">
+      <div class="dm-opt" onclick="chooseDIY()">
+        <div class="dm-opt-title">UPLOAD YOUR OWN VERSION</div>
+        <div class="dm-opt-desc">You edited it yourself. Clone the segment, cut your version, upload it here. Free forever — this is your film now.</div>
+        <div class="dm-opt-tag tag-diy">FREE · YOUR EDIT</div>
+      </div>
+      <div class="dm-opt" onclick="chooseAI()">
+        <div class="dm-opt-title">LET AI REPLACE IT</div>
+        <div class="dm-opt-desc">We send the segment to Grok. AI generates a 10-second replacement that fits the scene. Done in seconds.</div>
+        <div class="dm-opt-tag tag-ai">GROK SUPER · £9.99/mo</div>
+      </div>
+      <div class="dm-opt" onclick="chooseRE()">
+        <div class="dm-opt-title">REVERSE ENTROPY</div>
+        <div class="dm-opt-desc">Already swapped scenes? Restore narrative continuity backwards through your edits using bidirectional training.</div>
+        <div class="dm-opt-tag tag-re">PREMIUM · £24.99/mo · PATENT GB2520111.8</div>
+      </div>
+    </div>
+    <!-- DIY upload zone -->
+    <div id="upload-zone">
+      <input type="file" id="upload-input" accept="video/mp4,video/*">
+      <div class="uz-drop" id="uz-drop" onclick="document.getElementById('upload-input').click()">
+        <p>DROP YOUR CLIP HERE OR CLICK TO BROWSE</p>
+        <button class="upload-btn" type="button">SELECT FILE</button>
+      </div>
+
+      <!-- preview + validation -->
+      <div id="uz-preview">
+        <video id="uz-preview-video" muted playsinline></video>
+        <div class="uz-meta" id="uz-meta"></div>
+      </div>
+
+      <!-- audio choice -->
+      <div id="uz-audio">
+        <div class="uz-audio-label">AUDIO FOR YOUR SEGMENT</div>
+        <div class="uz-audio-opts">
+          <div class="uz-aud sel-aud" id="aud-orig" onclick="selectAudio('orig')">
+            <div class="uz-aud-icon">🎬</div>
+            <div class="uz-aud-name">ORIGINAL SOUND</div>
+            <div class="uz-aud-price">FREE — keeps the film's audio</div>
+          </div>
+          <div class="uz-aud paid-aud" id="aud-own" onclick="selectAudio('own')">
+            <div class="uz-aud-icon">🎤</div>
+            <div class="uz-aud-name">YOUR SOUND</div>
+            <div class="uz-aud-price">1 CREDIT (1p) — use your audio</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 1p credit prompt (shown when they pick own audio) -->
+      <div id="uz-penny">
+        <div class="uz-penny-row">
+          <div class="uz-penny-txt">1 SF CREDIT = 1p · earn credits free from the screensaver · or enter a code</div>
+          <input class="uz-penny-input" id="uz-penny-input" type="text" placeholder="SF CODE / CREDIT" maxlength="32">
+        </div>
+      </div>
+
+      <!-- advertainment toggle -->
+      <div id="uz-advert">
+        <div class="uz-advert-toggle" onclick="toggleAdvert()">
+          <div class="uz-advert-chk" id="uz-advert-chk"></div>
+          <div class="uz-advert-lbl">THIS CLIP CONTAINS AN <b>ADVERT</b> — EARN ROYALTIES</div>
+        </div>
+        <div class="uz-advert-body" id="uz-advert-body">
+          <div style="height:10px"></div>
+          <div class="uz-advert-row">
+            <div class="uz-advert-label">BRAND / PRODUCT</div>
+            <input class="uz-advert-input" id="uz-brand" type="text" placeholder="e.g. ENERGY DRINK / CAR / SNEAKERS" maxlength="60">
+          </div>
+          <div class="uz-advert-row">
+            <div class="uz-advert-label">THE MESSAGE (what you want them to feel)</div>
+            <input class="uz-advert-input" id="uz-message" type="text" placeholder="e.g. STRENGTH / FREEDOM / DESIRE" maxlength="80">
+          </div>
+          <div class="uz-advert-label">STEALTH LEVEL</div>
+          <div class="uz-stealth">
+            <div class="uz-stealth-opt sel" id="sl-0" onclick="selectStealth(0)">
+              <div class="uz-stealth-icon">👁</div>
+              <div class="uz-stealth-name">VISIBLE BRAND</div>
+            </div>
+            <div class="uz-stealth-opt" id="sl-1" onclick="selectStealth(1)">
+              <div class="uz-stealth-icon">🌫</div>
+              <div class="uz-stealth-name">BACKGROUND ONLY</div>
+            </div>
+            <div class="uz-stealth-opt" id="sl-2" onclick="selectStealth(2)">
+              <div class="uz-stealth-icon">🕶</div>
+              <div class="uz-stealth-name">FULLY SUBLIMINAL</div>
+            </div>
+          </div>
+          <div class="uz-royalty-note">
+            <b>HOW ROYALTIES WORK:</b> Every time someone watches your segment without thumbing it down = 1 verified impression.
+            Subliminal clips that pass undetected score higher. We gather the data. You own the proof.
+            Earn <b>0.1p per undetected impression</b>. Brands pay you directly once you have 1,000 verified hits.
+          </div>
+        </div>
+      </div>
+
+      <button id="uz-submit" type="button" onclick="submitUpload()">UPLOAD &amp; REPLACE SEGMENT</button>
+      <div id="uz-progress"></div>
+    </div>
+    <button class="dm-cancel" onclick="closeDownModal()">CANCEL</button>
+  </div>
+</div>
+
+<!-- AI SHOWCASE OVERLAY -->
+<div id="ai-showcase">
+  <!-- paused frame + AI preview behind the cards -->
+  <div id="ai-canvas-wrap">
+    <video id="ai-canvas-video" muted></video>
+    <div id="ai-canvas-overlay">
+      <img id="ai-preview-img" src="" alt="">
+    </div>
+    <div id="ai-canvas-label">SEG <span id="ai-seg-num">0000</span> · PAUSED</div>
+    <div id="ai-generating">
+      <div id="ai-generating-dots">GENERATING PREVIEW…</div>
+    </div>
+    <div id="ai-seg-desc"></div>
+  </div>
+
+  <!-- scrollable tool cards -->
+  <div id="ai-tools-row">
+    <div class="ai-hdr">
+      <div class="ai-hdr-title">AI VIDEO TOOLS</div>
+      <div class="ai-hdr-sub">— pick an engine · preview on your scene · subscribe through us · we take a cut</div>
+    </div>
+    <div class="ai-cards" id="ai-cards"></div>
+    <div id="ai-cta-row">
+      <button id="ai-use-btn" onclick="confirmAITool()">USE THIS TOOL ON THIS SEGMENT →</button>
+      <button id="ai-close-showcase" onclick="closeAIShowcase()">BACK</button>
+    </div>
+  </div>
+</div>
+
+<!-- QR PAYMENT MODAL -->
+<div id="qr-modal">
+  <div class="qr-box">
+    <div class="qr-title" id="qr-title">PAYMENT</div>
+    <div class="qr-label" id="qr-label">scan to pay</div>
+    <div class="qr-amount-row">
+      <div class="qr-amount"><div class="qr-amount-val" id="qr-gbp">£0.30</div><div class="qr-amount-sub">GBP</div></div>
+      <div class="qr-amount"><div class="qr-amount-val" id="qr-crypto-amt">~0.000005</div><div class="qr-amount-sub" id="qr-crypto-unit">BTC</div></div>
+    </div>
+    <div class="qr-tabs">
+      <button class="qr-tab active" onclick="switchQRCoin('btc')">₿ BTC</button>
+      <button class="qr-tab" onclick="switchQRCoin('xmr')">ⓜ XMR</button>
+    </div>
+    <div class="qr-img-wrap"><img id="qr-img" src="" alt="QR Code"></div>
+    <div class="qr-addr" id="qr-addr" onclick="copyQRAddr()" title="Tap to copy"></div>
+    <div class="qr-copy-hint">TAP ADDRESS TO COPY</div>
+    <div class="qr-status" id="qr-status"><span class="qr-pulse"></span>WAITING FOR PAYMENT…</div>
+    <button class="qr-cancel" onclick="closeQR()">CANCEL</button>
+    <div class="qr-note">Sends to ShortFactory community wallet · Payment verified on-chain · Unlocks immediately on confirmation</div>
+  </div>
+</div>
+
+<!-- PAYWALL -->
+<div id="paywall">
+  <div class="pw-box">
+    <div class="pw-title" id="pw-title">GROK SUPER</div>
+    <div class="pw-sub" id="pw-sub">Swap any 10-second segment with AI-generated replacement footage.</div>
+    <div class="pw-tier hi" id="pw-t1">
+      <div class="pw-tier-name">GROK SUPER</div>
+      <div class="pw-tier-desc">AI replaces any segment instantly. Unlimited swaps. Unfiltered historical content unlocked.</div>
+      <div class="pw-price">£9.99 / month</div>
+    </div>
+    <div class="pw-tier hi-re">
+      <div class="pw-tier-name">REVERSE ENTROPY PREMIUM</div>
+      <div class="pw-tier-desc">Restore continuity through your AI-swapped segments. Bidirectional temporal training. Patent GB2520111.8.</div>
+      <div class="pw-price" style="color:#f59e0b">£24.99 / month</div>
+    </div>
+    <button class="pw-cancel" onclick="closePaywall()">NOT YET</button>
+  </div>
+</div>
+
+<script>
+// ── FILM LIBRARY ──────────────────────────────────────────────────────────────
+const FILMS = [
+  { id:'lastman',   title:'The Last Man on Earth', year:1964, dir:'Ubaldo Ragona',  color:'#8b0000', accent:'#ef4444', segs:364, path:'segments/segments/', unfiltered:false },
+  { id:'nosferatu', title:'Nosferatu',              year:1922, dir:'F.W. Murnau',    color:'#1a0033', accent:'#9333ea', segs:null, path:null, unfiltered:false },
+  { id:'metropolis',title:'Metropolis',             year:1927, dir:'Fritz Lang',     color:'#1a1200', accent:'#f59e0b', segs:null, path:null, unfiltered:false },
+  { id:'general',   title:'The General',            year:1926, dir:'Buster Keaton',  color:'#001a0f', accent:'#10b981', segs:null, path:null, unfiltered:false },
+  { id:'notld',     title:'Night of the Living Dead',year:1968,dir:'George Romero',  color:'#001500', accent:'#4ade80', segs:null, path:null, unfiltered:false },
+  { id:'plan9',     title:'Plan 9 from Outer Space',year:1957, dir:'Ed Wood',        color:'#000d1a', accent:'#38bdf8', segs:null, path:null, unfiltered:false },
+  { id:'reefer',    title:'Reefer Madness',          year:1936, dir:'Louis Gasnier',  color:'#001a1a', accent:'#2dd4bf', segs:null, path:null, unfiltered:true  },
+  { id:'carnival',  title:'Carnival of Souls',       year:1962, dir:'Herk Harvey',    color:'#0a0a1a', accent:'#818cf8', segs:null, path:null, unfiltered:false },
+  { id:'whitezomb', title:'White Zombie',            year:1932, dir:'Victor Halperin',color:'#1a1a00', accent:'#facc15', segs:null, path:null, unfiltered:true  },
+  { id:'brainwont', title:"The Brain That Wouldn't Die",year:1962,dir:'Joseph Green',color:'#1a0a00', accent:'#fb923c', segs:null, path:null, unfiltered:true  },
+];
+
+// ── BUILD CAROUSEL ────────────────────────────────────────────────────────────
+var carousel = document.getElementById('carousel');
+FILMS.forEach(function(film) {
+  var card = document.createElement('div');
+  card.className = 'movie-card';
+  card.id = 'card-' + film.id;
+  var tagClass = film.unfiltered ? 'tag-unfiltered' : 'tag-free';
+  var tagText  = film.unfiltered ? '🔒 UNFILTERED' : '▶ FREE';
+  var lockIcon = film.unfiltered ? '<div class="card-lock">🔒</div>' : '';
+  card.innerHTML =
+    '<div class="card-inner">' +
+      '<div class="card-bg" style="background:linear-gradient(135deg,' + film.color + ' 0%,#000 100%)">' +
+        '<div class="card-overlay"></div>' +
+        lockIcon +
+        '<div style="position:relative">' +
+          '<div class="card-year">' + film.year + ' · ' + film.dir + '</div>' +
+          '<div class="card-title">' + film.title + '</div>' +
+          '<span class="card-tag ' + tagClass + '">' + tagText + '</span>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  card.style.setProperty('--accent', film.accent);
+  card.addEventListener('click', function() { selectFilm(film); });
+  carousel.appendChild(card);
+});
+
+// ── FILM SELECTION ────────────────────────────────────────────────────────────
+var currentFilm = null;
+var currentSeg  = -1;
+var autoPlay    = false;
+var userTier    = 'free';
+var state       = [];
+var votes       = [];
+
+function selectFilm(film) {
+  if (film.unfiltered && userTier === 'free') { showPaywall('grok'); return; }
+  if (!film.segs) { showComingSoonModal(film); return; }
+
+  currentFilm = film;
+  currentSeg  = -1;
+  autoPlay    = false;
+  state       = [];
+  votes       = [];
+  for (var i = 0; i < film.segs; i++) {
+    state[i] = Math.random() < 0.90 ? 'open' : 'original';
+    votes[i] = 0;
+  }
+
+  // Update carousel active state
+  document.querySelectorAll('.movie-card').forEach(function(c){ c.classList.remove('active'); });
+  document.getElementById('card-' + film.id).classList.add('active');
+
+  // Show watch section
+  document.getElementById('watch-section').classList.add('open');
+  document.getElementById('watch-film-name').textContent = film.title;
+  document.getElementById('watch-film-year').textContent = film.year + ' · Public Domain';
+  document.getElementById('grid-sub').textContent = '— ' + film.segs + ' × 10s · click to play · ▼ hate it to swap';
+  document.getElementById('s-total').textContent = film.segs;
+
+  buildGrid(film);
+  updateStats();
+
+  // Scroll to player
+  document.getElementById('watch-section').scrollIntoView({behavior:'smooth'});
+}
+
+// ── GRID ──────────────────────────────────────────────────────────────────────
+function buildGrid(film) {
+  var grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  for (var i = 0; i < film.segs; i++) {
+    (function(idx) {
+      var el = document.createElement('div');
+      el.className = 'seg ' + state[idx];
+      el.id = 'seg-' + idx;
+      el.innerHTML =
+        '<div class="seg-n">' + String(idx).padStart(4,'0') + '</div>' +
+        '<div class="seg-t">' + fmt(idx*10) + '</div>' +
+        '<div class="seg-i">' + segIcon(state[idx]) + '</div>' +
+        '<div class="seg-score" id="score-' + idx + '"></div>' +
+        '<div class="seg-edit" title="Replace segment" onclick="event.stopPropagation();openEditSeg(' + idx + ')">✏</div>';
+      el.onclick = function(){ playSeg(idx); };
+      grid.appendChild(el);
+    })(i);
+  }
+}
+
+// ── PLAYBACK ──────────────────────────────────────────────────────────────────
+var player = document.getElementById('player');
+player.addEventListener('ended', function() { if (autoPlay) playSeg(currentSeg+1); });
+
+function playSeg(idx) {
+  if (!currentFilm || idx < 0 || idx >= currentFilm.segs) { autoPlay = false; return; }
+  currentSeg = idx;
+
+  var prev = document.querySelector('.seg.playing');
+  if (prev) prev.classList.remove('playing');
+  var el = document.getElementById('seg-' + idx);
+  if (el) { el.classList.add('playing'); el.scrollIntoView({block:'nearest',behavior:'smooth'}); }
+
+  player.src = currentFilm.path + 'seg_' + String(idx).padStart(4,'0') + '.mp4';
+  player.style.display = 'block';
+  document.getElementById('no-video').style.display = 'none';
+  player.play().catch(function(){});
+
+  var timeStr = fmt(idx*10) + ' — ' + fmt(idx*10+10);
+  document.getElementById('now-playing').textContent = 'SEG_' + String(idx).padStart(4,'0') + '  ·  ' + timeStr;
+  document.getElementById('cur-info').textContent = 'seg ' + String(idx).padStart(4,'0') + ' · ' + fmt(idx*10);
+  document.getElementById('watch-seg-info').textContent = 'SEG_' + String(idx).padStart(4,'0') + ' · ' + timeStr;
+
+  // Update thumb state
+  resetThumbs();
+  document.getElementById('seg-vote-count').textContent = votes[idx] > 0 ? '+'+votes[idx] : votes[idx] < 0 ? votes[idx] : '—';
+  // Track advert impression
+  if (state[idx] === 'advert') trackImpression(idx);
+}
+
+function togglePlayAll() { autoPlay = !autoPlay; if (autoPlay && currentSeg < 0) playSeg(0); }
+
+// ── THUMBS ────────────────────────────────────────────────────────────────────
+function resetThumbs() {
+  document.getElementById('thumb-up').className   = 'thumb-btn up';
+  document.getElementById('thumb-down').className = 'thumb-btn down';
+}
+function doThumbUp() {
+  if (currentSeg < 0) return;
+  votes[currentSeg] = Math.max(-1, (votes[currentSeg]||0) + 1);
+  document.getElementById('thumb-up').className   = 'thumb-btn up voted-up';
+  document.getElementById('thumb-down').className = 'thumb-btn down';
+  document.getElementById('seg-vote-count').textContent = votes[currentSeg] > 0 ? '+'+votes[currentSeg] : '—';
+}
+function doThumbDown() {
+  if (currentSeg < 0) return;
+  votes[currentSeg] = (votes[currentSeg]||0) - 1;
+  document.getElementById('thumb-down').className = 'thumb-btn down voted-down';
+  document.getElementById('thumb-up').className   = 'thumb-btn up';
+  document.getElementById('seg-vote-count').textContent = votes[currentSeg];
+  // Advert detected — they noticed!
+  if (state[currentSeg] === 'advert') trackDetection(currentSeg);
+  openDownModal();
+}
+
+// ── DOWN MODAL ────────────────────────────────────────────────────────────────
+function openDownModal() {
+  document.getElementById('dm-seg-info').textContent =
+    'SEG_' + String(currentSeg).padStart(4,'0') + '  ·  ' + fmt(currentSeg*10) + ' — ' + fmt(currentSeg*10+10);
+  document.getElementById('upload-zone').classList.remove('open');
+  document.getElementById('down-modal').classList.add('open');
+}
+function closeDownModal() { document.getElementById('down-modal').classList.remove('open'); }
+
+function chooseDIY() {
+  document.getElementById('upload-zone').classList.add('open');
+}
+function chooseAI() {
+  closeDownModal();
+  openAIShowcase();
+}
+function chooseRE() {
+  closeDownModal();
+  showPaywall('re');
+}
+
+// ── AI SHOWCASE ───────────────────────────────────────────────────────────────
+var AI_TOOLS = [
+  {
+    id:'grok', name:'GROK', icon:'⚡', ac:'#ef4444',
+    pitch:'xAI\'s Grok. Knows the film. Knows the context. Generates a replacement segment that actually fits — tone, era, lighting. Our preferred engine.',
+    price:'£9.99/mo', tag:'OUR PICK', tagBg:'rgba(239,68,68,0.2)', tagCol:'#ef4444',
+    sponsored:true, affiliate:'https://x.ai',
+    promptStyle:'dramatic cinematic scene matching 1960s black and white horror film aesthetic, Vincent Price era, high contrast shadows'
+  },
+  {
+    id:'veo', name:'VEO 2', icon:'🎬', ac:'#4285f4',
+    pitch:'Google DeepMind\'s video model. Cinematic quality. Physics-aware. Trained on more footage than anything else on earth.',
+    price:'via Gemini Ultra', tag:'GOOGLE', tagBg:'rgba(66,133,244,0.15)', tagCol:'#4285f4',
+    sponsored:false, affiliate:'https://deepmind.google/technologies/veo',
+    promptStyle:'photorealistic cinematic video still, Google Veo quality, film grain, period accurate 1960s costume and set design'
+  },
+  {
+    id:'sora', name:'SORA', icon:'🌀', ac:'#10a37f',
+    pitch:'OpenAI Sora. Temporal consistency unlike anything before it. Scenes that hold together across the full 10 seconds.',
+    price:'ChatGPT Pro £18/mo', tag:'OPENAI', tagBg:'rgba(16,163,127,0.15)', tagCol:'#10a37f',
+    sponsored:false, affiliate:'https://sora.com',
+    promptStyle:'OpenAI Sora style temporal coherence, smooth motion, cinematic film still, consistent lighting throughout'
+  },
+  {
+    id:'runway', name:'RUNWAY', icon:'🛤', ac:'#a78bfa',
+    pitch:'Gen-4 Turbo. Motion brush. Reference image in → video out. The professional\'s choice for controlled output.',
+    price:'from $15/mo', tag:'GEN-4', tagBg:'rgba(167,139,250,0.15)', tagCol:'#a78bfa',
+    sponsored:false, affiliate:'https://runwayml.com',
+    promptStyle:'Runway Gen-4 style, high production value, controlled motion, studio lighting, film still quality'
+  },
+  {
+    id:'kling', name:'KLING', icon:'🌊', ac:'#38bdf8',
+    pitch:'Kuaishou\'s Kling AI. Longer clips. Better physics. Eastern production values bringing a different eye to Western classics.',
+    price:'from $8/mo', tag:'KLING AI', tagBg:'rgba(56,189,248,0.15)', tagCol:'#38bdf8',
+    sponsored:false, affiliate:'https://klingai.com',
+    promptStyle:'Kling AI style hyperrealistic video still, exceptional detail, cinematic composition, natural physics'
+  },
+  {
+    id:'pika', name:'PIKA', icon:'⚡', ac:'#f59e0b',
+    pitch:'Pika 2.2. Viral-ready. Fast. Punchy edits that feel TikTok-native — useful if you\'re modernising for a younger cut.',
+    price:'from $8/mo', tag:'PIKA 2.2', tagBg:'rgba(245,158,11,0.15)', tagCol:'#f59e0b',
+    sponsored:false, affiliate:'https://pika.art',
+    promptStyle:'Pika AI style dynamic energetic video still, high saturation, modern cinematic feel, bold composition'
+  },
+  {
+    id:'luma', name:'LUMA', icon:'💎', ac:'#22d3ee',
+    pitch:'Luma Dream Machine. Ray-tracing quality renders. Best for architectural and landscape segments — stunning physical light.',
+    price:'from $9.99/mo', tag:'DREAM', tagBg:'rgba(34,211,238,0.15)', tagCol:'#22d3ee',
+    sponsored:false, affiliate:'https://lumalabs.ai',
+    promptStyle:'Luma Dream Machine ray-traced quality, photorealistic light and shadow, cinematic depth of field'
+  },
+  {
+    id:'nanobanana', name:'NANO BANANA', icon:'🍌', ac:'#facc15',
+    pitch:'The wildcard. Nano Banana runs lighter models on-device — zero latency, zero cloud. Perfect for real-time segment previews.',
+    price:'open source', tag:'EDGE AI', tagBg:'rgba(250,204,21,0.15)', tagCol:'#facc15',
+    sponsored:false, affiliate:'#',
+    promptStyle:'lightweight generative AI style, fast render quality, creative interpretation, stylised cinematic still'
+  }
+];
+
+var _aiActive   = null; // currently selected tool
+var _aiSegIdx   = -1;
+var _aiPreviews = {}; // cache: toolId → imgUrl
+
+function openAIShowcase() {
+  _aiSegIdx = currentSeg;
+  _aiActive = null;
+
+  // Mirror the paused video into the canvas
+  var canvasVid = document.getElementById('ai-canvas-video');
+  if (currentFilm && _aiSegIdx >= 0) {
+    canvasVid.src = currentFilm.path + 'seg_' + String(_aiSegIdx).padStart(4,'0') + '.mp4';
+    canvasVid.currentTime = 3; // jump to middle of segment for better preview frame
+  }
+
+  document.getElementById('ai-seg-num').textContent = String(_aiSegIdx).padStart(4,'0');
+  document.getElementById('ai-seg-desc').textContent =
+    currentFilm ? (currentFilm.title + '  ·  ' + fmt(_aiSegIdx*10) + ' — ' + fmt(_aiSegIdx*10+10)) : '';
+
+  document.getElementById('ai-preview-img').src = '';
+  document.getElementById('ai-preview-img').classList.remove('loaded');
+  document.getElementById('ai-generating').classList.remove('open');
+  document.getElementById('ai-use-btn').textContent = 'SELECT A TOOL ABOVE';
+  document.getElementById('ai-use-btn').style.borderColor = '#222';
+  document.getElementById('ai-use-btn').style.color = '#333';
+
+  buildAICards();
+  document.getElementById('ai-showcase').classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  // Auto-generate Grok preview immediately
+  setTimeout(function(){ generatePreview(AI_TOOLS[0]); }, 400);
+}
+
+function buildAICards() {
+  var container = document.getElementById('ai-cards');
+  container.innerHTML = '';
+  AI_TOOLS.forEach(function(tool) {
+    var card = document.createElement('div');
+    card.className = 'ai-card';
+    card.id = 'aic-' + tool.id;
+    card.style.setProperty('--ac', tool.ac);
+    card.style.borderColor = '#1a1a1a';
+
+    card.innerHTML =
+      (tool.sponsored ? '<div class="ai-sponsored">FEATURED</div>' : '') +
+      '<div class="ai-card-top">' +
+        '<div class="ai-card-icon">' + tool.icon + '</div>' +
+        '<div class="ai-card-name" style="color:' + tool.ac + '">' + tool.name + '</div>' +
+        '<div class="ai-card-tag" style="background:' + tool.tagBg + ';color:' + tool.tagCol + '">' + tool.tag + '</div>' +
+      '</div>' +
+      '<div class="ai-card-pitch">' + tool.pitch + '</div>' +
+      '<div class="ai-card-price" style="color:' + tool.ac + '">' + tool.price + '</div>' +
+      '<div class="ai-card-preview" id="prev-' + tool.id + '" onclick="event.stopPropagation();generatePreview(AI_TOOLS.find(function(t){return t.id===\'' + tool.id + '\'}))">' +
+        '<img id="previmg-' + tool.id + '" src="" alt="">' +
+        '<div class="gen-label" id="genlbl-' + tool.id + '">▶ GENERATE PREVIEW</div>' +
+      '</div>';
+
+    card.onclick = function() { selectAITool(tool); };
+    container.appendChild(card);
+
+    // If cached preview exists, show it
+    if (_aiPreviews[tool.id]) showPreviewOnCard(tool.id, _aiPreviews[tool.id]);
+  });
+}
+
+function selectAITool(tool) {
+  _aiActive = tool;
+  document.querySelectorAll('.ai-card').forEach(function(c){ c.classList.remove('active'); c.style.borderColor='#1a1a1a'; });
+  var card = document.getElementById('aic-' + tool.id);
+  card.classList.add('active');
+  card.style.borderColor = tool.ac;
+
+  // Show this tool's preview on main canvas if available
+  if (_aiPreviews[tool.id]) {
+    var img = document.getElementById('ai-preview-img');
+    img.src = _aiPreviews[tool.id];
+    img.classList.add('loaded');
+  } else {
+    generatePreview(tool);
+  }
+
+  var btn = document.getElementById('ai-use-btn');
+  btn.textContent = 'USE ' + tool.name + ' ON THIS SEGMENT →';
+  btn.style.borderColor = tool.ac;
+  btn.style.color = tool.ac;
+}
+
+function generatePreview(tool) {
+  if (!currentFilm) return;
+
+  var lbl = document.getElementById('genlbl-' + tool.id);
+  if (lbl) { lbl.textContent = 'GENERATING…'; lbl.classList.add('loading'); }
+  document.getElementById('ai-generating').classList.add('open');
+
+  var prompt = 'Film still from "' + currentFilm.title + '" (' + currentFilm.year + '). '
+    + 'Scene at timestamp ' + fmt(_aiSegIdx*10) + '. '
+    + 'Reimagined in style: ' + tool.promptStyle + '. '
+    + 'Widescreen 16:9, atmospheric, no text, no UI elements.';
+
+  var fd = new FormData();
+  fd.append('prompt', prompt);
+  fd.append('style', tool.id);
+  fd.append('seg', String(_aiSegIdx).padStart(4,'0'));
+
+  fetch('ai_preview.php', { method:'POST', body:fd })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      document.getElementById('ai-generating').classList.remove('open');
+      if(lbl){ lbl.classList.remove('loading'); lbl.style.display='none'; }
+      if(d.ok && d.url){
+        _aiPreviews[tool.id] = d.url;
+        showPreviewOnCard(tool.id, d.url);
+        // If this is the active tool, show on canvas
+        if(_aiActive && _aiActive.id === tool.id){
+          var img = document.getElementById('ai-preview-img');
+          img.src = d.url;
+          img.onload = function(){ img.classList.add('loaded'); };
+        }
+      } else {
+        if(lbl){ lbl.textContent = '✗ API ERROR'; lbl.style.display=''; }
+      }
+    })
+    .catch(function(){
+      document.getElementById('ai-generating').classList.remove('open');
+      if(lbl){ lbl.classList.remove('loading'); lbl.textContent='✗ FAILED'; lbl.style.display=''; }
+    });
+}
+
+function showPreviewOnCard(toolId, url) {
+  var img = document.getElementById('previmg-' + toolId);
+  var lbl = document.getElementById('genlbl-' + toolId);
+  if(img){
+    img.src = url;
+    img.onload = function(){ img.classList.add('loaded'); if(lbl) lbl.style.display='none'; };
+  }
+}
+
+function confirmAITool() {
+  if(!_aiActive){ return; }
+  closeAIShowcase();
+  // Open QR payment at £9.99 for monthly sub (first use)
+  openQR(9.99, 'SUBSCRIBE — ' + _aiActive.name, _aiActive.pitch.split('.')[0], function(){
+    // Simulate AI generation — in prod: POST to generation endpoint
+    setState(_aiSegIdx, 'swapped');
+    var info = document.getElementById('cur-info');
+    if(info) info.textContent = _aiActive.name + ' replacing seg ' + String(_aiSegIdx).padStart(4,'0') + '…';
+    setTimeout(function(){
+      if(info) info.textContent = '✓ ' + _aiActive.name + ' segment live';
+    }, 3000);
+  });
+}
+
+function closeAIShowcase() {
+  document.getElementById('ai-showcase').classList.remove('open');
+  document.body.style.overflow = '';
+  var cv = document.getElementById('ai-canvas-video');
+  cv.pause(); cv.src = '';
+}
+
+// ── UNIVERSAL QR PAYMENT ──────────────────────────────────────────────────────
+var WALLETS = {
+  btc: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
+  xmr: '43tFMgBe2TzuHyBuqLkKp4JNNUapSnXSWR6pENWuBrdNqwMnGWHDgGwHJFCfVF5KHPtHNpJ3xV3SRtJFHuRgNuGEtw3o2j'
+};
+// Approximate rates — updated from API on open
+var RATES = { btc: 60000, xmr: 150 }; // GBP per coin
+var _qrCoin      = 'btc';
+var _qrAmountGBP = 0.30;
+var _qrTitle     = '';
+var _qrCallback  = null;
+var _qrPollTimer = null;
+var _qrTxBaseline = null; // tx count before payment
+
+function openQR(amountGBP, title, label, callback) {
+  _qrAmountGBP = amountGBP;
+  _qrTitle     = title;
+  _qrCallback  = callback;
+  _qrCoin      = 'btc';
+
+  document.getElementById('qr-title').textContent  = title;
+  document.getElementById('qr-label').textContent  = label;
+  document.getElementById('qr-gbp').textContent    = '£' + amountGBP.toFixed(2);
+  document.querySelectorAll('.qr-tab').forEach(function(t,i){ t.classList.toggle('active', i===0); });
+
+  // Fetch live BTC rate
+  fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,monero&vs_currencies=gbp')
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.bitcoin) RATES.btc = d.bitcoin.gbp;
+      if(d.monero)  RATES.xmr = d.monero.gbp;
+      renderQR();
+    })
+    .catch(function(){ renderQR(); }); // fallback to hardcoded rates
+
+  document.getElementById('qr-modal').classList.add('open');
+  setQRStatus('waiting');
+  startPaymentPolling();
+}
+
+function renderQR() {
+  var addr   = WALLETS[_qrCoin];
+  var rate   = RATES[_qrCoin] || 60000;
+  var amount = (_qrAmountGBP / rate).toFixed(8);
+  var uri    = _qrCoin === 'btc'
+    ? 'bitcoin:' + addr + '?amount=' + amount
+    : 'monero:'  + addr + '?tx_amount=' + amount;
+
+  document.getElementById('qr-img').src = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' + encodeURIComponent(uri);
+  document.getElementById('qr-addr').textContent = addr;
+  document.getElementById('qr-crypto-amt').textContent = '~' + parseFloat(amount).toFixed(6);
+  document.getElementById('qr-crypto-unit').textContent = _qrCoin.toUpperCase();
+}
+
+function switchQRCoin(coin) {
+  _qrCoin = coin;
+  document.querySelectorAll('.qr-tab').forEach(function(t){ t.classList.toggle('active', t.textContent.toLowerCase().indexOf(coin) > -1); });
+  renderQR();
+}
+
+function copyQRAddr() {
+  var addr = document.getElementById('qr-addr').textContent;
+  navigator.clipboard.writeText(addr).then(function(){
+    var el = document.getElementById('qr-addr');
+    var orig = el.textContent;
+    el.textContent = '✓ COPIED';
+    el.style.color = '#f59e0b';
+    setTimeout(function(){ el.textContent = orig; el.style.color = ''; }, 1500);
+  });
+}
+
+function setQRStatus(state, msg) {
+  var el = document.getElementById('qr-status');
+  el.className = 'qr-status ' + state;
+  if(state === 'waiting') el.innerHTML = '<span class="qr-pulse"></span>WAITING FOR PAYMENT…';
+  else if(state === 'checking') el.innerHTML = '<span class="qr-pulse"></span>CHECKING BLOCKCHAIN…';
+  else if(state === 'confirmed') el.innerHTML = '<span class="qr-pulse"></span>✓ PAYMENT CONFIRMED — UNLOCKING';
+  else if(state === 'error') el.innerHTML = '<span class="qr-pulse"></span>' + (msg || 'ERROR');
+}
+
+function startPaymentPolling() {
+  clearInterval(_qrPollTimer);
+  // Get baseline tx count for BTC address
+  _qrTxBaseline = null;
+  getAddrTxCount(WALLETS.btc, function(count){ _qrTxBaseline = count; });
+  // Poll every 8 seconds
+  _qrPollTimer = setInterval(function(){
+    if(!document.getElementById('qr-modal').classList.contains('open')){ clearInterval(_qrPollTimer); return; }
+    setQRStatus('checking');
+    checkPayment();
+  }, 8000);
+}
+
+function checkPayment() {
+  // Check via server-side proxy to avoid CORS (also works for XMR)
+  fetch('check_payment.php?coin=' + _qrCoin + '&addr=' + WALLETS[_qrCoin] + '&baseline=' + (_qrTxBaseline||0))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.paid){
+        clearInterval(_qrPollTimer);
+        setQRStatus('confirmed');
+        setTimeout(function(){
+          closeQR();
+          if(_qrCallback) _qrCallback();
+        }, 1500);
+      } else {
+        setQRStatus('waiting');
+      }
+    })
+    .catch(function(){ setQRStatus('waiting'); });
+}
+
+function getAddrTxCount(addr, cb) {
+  fetch('check_payment.php?coin=btc&addr=' + addr + '&baseline=0&count_only=1')
+    .then(function(r){ return r.json(); })
+    .then(function(d){ cb(d.tx_count || 0); })
+    .catch(function(){ cb(0); });
+}
+
+function closeQR() {
+  clearInterval(_qrPollTimer);
+  document.getElementById('qr-modal').classList.remove('open');
+}
+
+// ── STEM SEPARATION ───────────────────────────────────────────────────────────
+function doStemSep() {
+  if(currentSeg < 0){ alert('Play a segment first, then hit STRIP MUSIC.'); return; }
+  openQR(0.30, '♪ STRIP MUSIC', 'isolate vocals · remove background score · 30p', function(){
+    runStemSep(currentSeg);
+  });
+}
+
+function runStemSep(idx) {
+  var btn = document.getElementById('btn-stem');
+  var orig = btn.textContent;
+  btn.textContent = '♪ PROCESSING…';
+  btn.disabled = true;
+
+  var fd = new FormData();
+  fd.append('seg',  String(idx).padStart(4,'0'));
+  fd.append('film', currentFilm.id);
+
+  fetch('stem.php', { method:'POST', body: fd })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      btn.textContent = orig;
+      btn.disabled = false;
+      if(d.ok){
+        // offer download of stems
+        var a = document.createElement('a');
+        a.href = d.vocals_url;
+        a.download = 'seg_' + String(idx).padStart(4,'0') + '_vocals.mp3';
+        a.click();
+        if(d.music_url){
+          setTimeout(function(){
+            var b = document.createElement('a');
+            b.href = d.music_url; b.download = 'seg_' + String(idx).padStart(4,'0') + '_music.mp3';
+            b.click();
+          }, 800);
+        }
+      } else {
+        alert('Stem separation failed: ' + (d.error || 'unknown error'));
+      }
+    })
+    .catch(function(){
+      btn.textContent = orig; btn.disabled = false;
+      alert('Connection error — try again');
+    });
+}
+
+// ── EDIT ANY SEGMENT ──────────────────────────────────────────────────────────
+function openEditSeg(idx) {
+  if (!currentFilm) return;
+  currentSeg = idx;
+  // Open down modal directly on DIY
+  document.getElementById('dm-seg-info').textContent =
+    'SEG_' + String(idx).padStart(4,'0') + '  ·  ' + fmt(idx*10) + ' — ' + fmt(idx*10+10);
+  document.getElementById('upload-zone').classList.remove('open');
+  // Reset upload state
+  resetUploadZone();
+  // Show modal with just DIY expanded
+  document.getElementById('down-modal').classList.add('open');
+  // Auto-expand DIY
+  chooseDIY();
+}
+
+function resetUploadZone() {
+  uploadFile = null; uploadValid = false; uploadAudio = 'orig';
+  document.getElementById('uz-preview').classList.remove('open');
+  document.getElementById('uz-audio').classList.remove('open');
+  document.getElementById('uz-advert').classList.remove('open');
+  document.getElementById('uz-submit').classList.remove('open');
+  document.getElementById('uz-progress').classList.remove('open');
+  document.getElementById('uz-advert-body').classList.remove('open');
+  document.getElementById('uz-advert-chk').textContent = '';
+  advertMode = false; stealthLevel = 0;
+  document.querySelectorAll('.uz-stealth-opt').forEach(function(x,i){ x.classList.toggle('sel', i===0); });
+  document.getElementById('uz-brand').value = '';
+  document.getElementById('uz-message').value = '';
+  document.getElementById('aud-orig').classList.add('sel-aud');
+  document.getElementById('aud-own').classList.remove('sel-aud');
+  document.getElementById('uz-penny').classList.remove('open');
+}
+
+// ── ADVERTAINMENT ─────────────────────────────────────────────────────────────
+var advertMode   = false;
+var stealthLevel = 0; // 0=visible, 1=background, 2=subliminal
+// adData[segIdx] = {brand, message, stealth, impressions, detected, score}
+var adData = JSON.parse(localStorage.getItem('tf_addata') || '{}');
+
+function toggleAdvert() {
+  advertMode = !advertMode;
+  document.getElementById('uz-advert-chk').textContent = advertMode ? '✓' : '';
+  document.getElementById('uz-advert-body').classList.toggle('open', advertMode);
+}
+
+function selectStealth(lvl) {
+  stealthLevel = lvl;
+  [0,1,2].forEach(function(i){
+    document.getElementById('sl-'+i).classList.toggle('sel', i === lvl);
+  });
+}
+
+// Called after a segment is played — record impression + detect check
+function trackImpression(idx) {
+  if (!adData[idx]) return;
+  adData[idx].impressions = (adData[idx].impressions || 0) + 1;
+  updateAdScore(idx);
+  saveAdData();
+}
+
+// Called when thumbs-down on an advert segment — detected!
+function trackDetection(idx) {
+  if (!adData[idx]) return;
+  adData[idx].detected = (adData[idx].detected || 0) + 1;
+  updateAdScore(idx);
+  saveAdData();
+}
+
+function updateAdScore(idx) {
+  if (!adData[idx]) return;
+  var imp = adData[idx].impressions || 0;
+  var det = adData[idx].detected || 0;
+  var stealthBonus = [1, 1.5, 3][adData[idx].stealth || 0];
+  var passRate = imp > 0 ? Math.max(0, (imp - det) / imp) : 0;
+  adData[idx].score = Math.round(passRate * imp * stealthBonus * 10) / 10;
+
+  // Update tile score display
+  var scoreEl = document.getElementById('score-' + idx);
+  if (scoreEl && imp > 0) scoreEl.textContent = imp + 'imp';
+
+  // Update royalties (0.001p per undetected impression)
+  updateRoyalties();
+}
+
+function updateRoyalties() {
+  var total = 0;
+  Object.keys(adData).forEach(function(k) {
+    var d = adData[k];
+    var stealthMult = [1, 1.5, 3][d.stealth || 0];
+    total += ((d.impressions || 0) - (d.detected || 0)) * 0.001 * stealthMult;
+  });
+  total = Math.max(0, total);
+  var badge = document.getElementById('royalty-badge');
+  var val   = document.getElementById('rb-val');
+  if (total > 0 || Object.keys(adData).length > 0) {
+    badge.classList.add('active');
+    val.textContent = '£' + total.toFixed(4);
+  }
+}
+
+function saveAdData() { localStorage.setItem('tf_addata', JSON.stringify(adData)); }
+
+function showRoyaltyPanel() {
+  var lines = Object.keys(adData).map(function(k) {
+    var d = adData[k];
+    var pass = (d.impressions||0) - (d.detected||0);
+    var stealthMult = [1,1.5,3][d.stealth||0];
+    var earn = (pass * 0.001 * stealthMult).toFixed(4);
+    return 'SEG_' + String(k).padStart(4,'0') + ' · ' + (d.brand||'UNNAMED') + '\n' +
+           '  impressions: ' + (d.impressions||0) + ' · detected: ' + (d.detected||0) + ' · pass rate: ' + (d.impressions?Math.round(pass/d.impressions*100):0) + '%\n' +
+           '  stealth: ' + ['VISIBLE','BACKGROUND','SUBLIMINAL'][d.stealth||0] + ' ×' + stealthMult + ' · earned: £' + earn;
+  });
+  if (!lines.length) { alert('No advertainment segments yet.\nUpload a clip and tick "THIS CLIP CONTAINS AN ADVERT".'); return; }
+  alert('── ADVERTAINMENT ROYALTY REPORT ──\n\n' + lines.join('\n\n'));
+}
+
+// ── UPLOAD VALIDATION + FLOW ──────────────────────────────────────────────────
+var uploadFile = null;
+var uploadAudio = 'orig'; // 'orig' or 'own'
+var uploadValid = false;
+
+// drag-drop
+(function(){
+  var drop = document.getElementById('uz-drop');
+  drop.addEventListener('dragover', function(e){ e.preventDefault(); drop.classList.add('drag'); });
+  drop.addEventListener('dragleave', function(){ drop.classList.remove('drag'); });
+  drop.addEventListener('drop', function(e){
+    e.preventDefault(); drop.classList.remove('drag');
+    var f = e.dataTransfer.files[0];
+    if(f) processUploadFile(f);
+  });
+})();
+
+document.getElementById('upload-input').addEventListener('change', function() {
+  if (this.files[0]) processUploadFile(this.files[0]);
+});
+
+function processUploadFile(file) {
+  uploadFile = file;
+  uploadValid = false;
+  uploadAudio = 'orig';
+
+  // reset audio UI
+  document.getElementById('aud-orig').classList.add('sel-aud');
+  document.getElementById('aud-own').classList.remove('sel-aud');
+  document.getElementById('uz-penny').classList.remove('open');
+  document.getElementById('uz-submit').classList.remove('open');
+  document.getElementById('uz-progress').classList.remove('open');
+
+  var previewVid = document.getElementById('uz-preview-video');
+  var url = URL.createObjectURL(file);
+  previewVid.src = url;
+  document.getElementById('uz-preview').classList.add('open');
+
+  previewVid.onloadedmetadata = function() {
+    var dur   = previewVid.duration;
+    var w     = previewVid.videoWidth;
+    var h     = previewVid.videoHeight;
+    var sizeMB = (file.size / 1048576).toFixed(1);
+
+    // Target: match the original film's dims — we normalise server-side anyway
+    // Just need duration ~10s (allow 7-14s)
+    var durOk   = dur >= 5 && dur <= 14;
+    var sizeOk  = file.size < 200 * 1048576; // < 200MB
+    var typeOk  = file.type.startsWith('video/');
+
+    // Aspect ratio vs 16:9 — warn but don't block (server FFmpeg will crop/pad)
+    var ratio = w > 0 && h > 0 ? (w/h) : 0;
+    var is169 = Math.abs(ratio - 16/9) < 0.1;
+    var ratioLabel = w + '×' + h;
+    if(!is169 && w > 0) ratioLabel += ' ⚠ will be padded to 16:9';
+
+    var meta = document.getElementById('uz-meta');
+    meta.innerHTML =
+      '<div class="uz-meta-item ' + (durOk?'ok':'bad') + '">' + dur.toFixed(1) + 's' + (durOk?' ✓':' ✗ NEED 5–14s') + '</div>' +
+      '<div class="uz-meta-item ' + (is169?'ok':'warn') + '">' + ratioLabel + '</div>' +
+      '<div class="uz-meta-item ' + (sizeOk?'ok':'bad') + '">' + sizeMB + 'MB' + (sizeOk?' ✓':' ✗ TOO LARGE') + '</div>' +
+      '<div class="uz-meta-item ' + (typeOk?'ok':'bad') + '">' + (file.type||'unknown') + '</div>';
+
+    uploadValid = durOk && sizeOk && typeOk;
+
+    if(!durOk) {
+      var msg = document.getElementById('uz-progress');
+      msg.className = 'open';
+      msg.style.color = '#ef4444';
+      msg.textContent = 'CLIP IS ' + dur.toFixed(1) + 's — NEEDS TO BE 5–14s. TRIM IT FIRST.';
+      return;
+    }
+
+    document.getElementById('uz-audio').classList.add('open');
+    document.getElementById('uz-advert').classList.add('open');
+    document.getElementById('uz-submit').classList.add('open');
+    document.getElementById('uz-submit').disabled = false;
+  };
+}
+
+function selectAudio(choice) {
+  uploadAudio = choice;
+  document.getElementById('aud-orig').classList.toggle('sel-aud', choice === 'orig');
+  document.getElementById('aud-own').classList.toggle('sel-aud', choice === 'own');
+  document.getElementById('uz-penny').classList.toggle('open', choice === 'own');
+}
+
+function submitUpload() {
+  if (!uploadFile || !uploadValid) return;
+
+  // If paying for own audio, validate credit code
+  if (uploadAudio === 'own') {
+    var code = (document.getElementById('uz-penny-input').value || '').trim();
+    if (code.length < 4) {
+      alert('Enter your SF credit code to use your own audio (1 credit = 1p)');
+      return;
+    }
+  }
+
+  var segIdx = currentSeg;
+  var btn = document.getElementById('uz-submit');
+  var prog = document.getElementById('uz-progress');
+  btn.disabled = true;
+  prog.className = 'open';
+  prog.style.color = '#22c55e';
+  prog.textContent = 'UPLOADING…';
+
+  var fd = new FormData();
+  fd.append('video', uploadFile);
+  fd.append('seg', String(segIdx).padStart(4,'0'));
+  fd.append('film', currentFilm.id);
+  fd.append('audio', uploadAudio);
+  fd.append('credit', uploadAudio === 'own' ? (document.getElementById('uz-penny-input').value || '') : '');
+  fd.append('advert', advertMode ? '1' : '0');
+  fd.append('brand', document.getElementById('uz-brand').value || '');
+  fd.append('message', document.getElementById('uz-message').value || '');
+  fd.append('stealth', String(stealthLevel));
+
+  fetch('upload.php', { method:'POST', body: fd })
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      if (data.ok) {
+        prog.textContent = '✓ SEGMENT REPLACED — ' + data.msg;
+        // Track contribution for community unlock
+        if (currentFilm && currentFilm.id) {
+          tfContribs[currentFilm.id] = (tfContribs[currentFilm.id] || 0) + 1;
+          try { localStorage.setItem('tf_contribs', JSON.stringify(tfContribs)); } catch(e){}
+        }
+        var newState = (advertMode && (document.getElementById('uz-brand').value || document.getElementById('uz-message').value)) ? 'advert' : 'swapped';
+        if (newState === 'advert') {
+          adData[segIdx] = {
+            brand: document.getElementById('uz-brand').value,
+            message: document.getElementById('uz-message').value,
+            stealth: stealthLevel,
+            impressions: 0, detected: 0, score: 0
+          };
+          saveAdData();
+          updateRoyalties();
+        }
+        setState(segIdx, newState);
+        // reload the segment in player after short delay
+        setTimeout(function(){
+          closeDownModal();
+          playSeg(segIdx);
+        }, 1200);
+      } else {
+        prog.style.color = '#ef4444';
+        prog.textContent = '✗ ' + (data.error || 'Upload failed');
+        btn.disabled = false;
+      }
+    })
+    .catch(function(e) {
+      prog.style.color = '#ef4444';
+      prog.textContent = '✗ Network error — try again';
+      btn.disabled = false;
+    });
+}
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+function setState(idx, s) {
+  state[idx] = s;
+  var el = document.getElementById('seg-' + idx);
+  if (!el) return;
+  el.className = 'seg ' + s + (currentSeg === idx ? ' playing' : '');
+  el.querySelector('.seg-i').textContent = segIcon(s);
+  updateStats();
+}
+
+// ── PAYWALL ───────────────────────────────────────────────────────────────────
+function showPaywall(tier) {
+  document.getElementById('paywall').classList.add('open');
+  if (tier === 're') {
+    document.getElementById('pw-title').textContent = 'REVERSE ENTROPY PREMIUM';
+    document.getElementById('pw-t1').classList.remove('hi');
+  } else {
+    document.getElementById('pw-title').textContent = 'GROK SUPER';
+    document.getElementById('pw-t1').classList.add('hi');
+  }
+}
+function closePaywall() { document.getElementById('paywall').classList.remove('open'); }
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function fmt(s) {
+  var h=Math.floor(s/3600),m=Math.floor((s%3600)/60),ss=s%60;
+  return (h?pad(h)+':':'')+pad(m)+':'+pad(ss);
+}
+function pad(n){ return String(n).padStart(2,'0'); }
+function segIcon(s){ return s==='open'?'⚡':s==='swapped'?'◈':s==='advert'?'📡':''; }
+function updateStats() {
+  if (!state.length) return;
+  var o=0,sw=0,op=0;
+  state.forEach(function(s){ if(s==='original')o++; else if(s==='swapped')sw++; else op++; });
+  document.getElementById('s-orig').textContent=o;
+  document.getElementById('s-swap').textContent=sw;
+  document.getElementById('s-open').textContent=op;
+}
+
+// ── CINEMA PRE-SCREEN ──────────────────────────────────────────────────────────
+var PRESCREEN_PLAYLIST = 'PLjSIFz5mCBhkhbZlnjhV-mtiYK777dJLd';
+var PRESCREEN_VIDEOS   = [
+  'ULoK2TY5wKw','KwZdo4tvoMM'
+  // more auto-discovered from playlist on play
+];
+var _preIdx = -1;
+var _pendingFilm = null;
+var _skipTimer   = null;
+var _cinemaOpen  = false;
+
+// Wrap selectFilm to show pre-screen first
+var _selectFilmReal = selectFilm;
+selectFilm = function(film) {
+  if (film.unfiltered && userTier === 'free') { showPaywall('grok'); return; }
+  if (!film.segs) { showComingSoonModal(film); return; }
+  showCinema(film);
+};
+
+function showCinema(film) {
+  _pendingFilm = film;
+  _cinemaOpen  = true;
+
+  // Set title card
+  document.getElementById('ctc-title-text').textContent = film.title.toUpperCase();
+  document.getElementById('ctc-year-text').textContent  = film.year + '  ·  PUBLIC DOMAIN';
+
+  // Reset curtains to closed
+  var cl = document.getElementById('curtain-l');
+  var cr = document.getElementById('curtain-r');
+  cl.classList.remove('open');
+  cr.classList.remove('open');
+
+  // Reset skip
+  var skip = document.getElementById('cinema-skip');
+  skip.classList.remove('visible');
+
+  // Show title card briefly, then open curtains + start video
+  var tc = document.getElementById('cinema-title-card');
+  tc.classList.remove('show');
+
+  // Pick a different pre-screen video each time
+  var nextIdx;
+  do { nextIdx = Math.floor(Math.random() * PRESCREEN_VIDEOS.length); }
+  while (PRESCREEN_VIDEOS.length > 1 && nextIdx === _preIdx);
+  _preIdx = nextIdx;
+  var vid = PRESCREEN_VIDEOS[nextIdx];
+
+  // mute=1 required for autoplay on mobile — user can unmute via tap-to-start
+  var isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+  var ytSrc = 'https://www.youtube.com/embed/' + vid +
+    '?autoplay=1&controls=0&rel=0&modestbranding=1&enablejsapi=1&iv_load_policy=3&disablekb=1' +
+    '&list=' + PRESCREEN_PLAYLIST + '&loop=0&mute=1';
+  document.getElementById('cinema-yt').src = ytSrc;
+
+  // On mobile show tap-to-start after curtains open (gives user a way to unmute)
+  if (isMobile) {
+    setTimeout(function(){
+      document.getElementById('cinema-tap').classList.add('show');
+    }, 2200);
+  }
+
+  // Open the screen
+  document.getElementById('cinema-screen').classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  // Title card on for 1.8s, then open curtains
+  tc.classList.add('show');
+  setTimeout(function() {
+    tc.classList.remove('show');
+    setTimeout(function() {
+      cl.classList.add('open');
+      cr.classList.add('open');
+    }, 400);
+  }, 1800);
+
+  // Fade in skip button after 4s
+  _skipTimer = setTimeout(function() {
+    skip.classList.add('visible');
+  }, 4000);
+
+  // Auto-skip after video duration (90s max fallback)
+  // YouTube API postMessage listener
+  window._ytDone = false;
+}
+
+// Listen for YouTube player state via postMessage
+window.addEventListener('message', function(e) {
+  try {
+    var d = JSON.parse(e.data);
+    if (d.event === 'onStateChange' && d.info === 0 && _cinemaOpen) {
+      // video ended
+      skipCinema();
+    }
+  } catch(err) {}
+});
+
+function tapToStart() {
+  document.getElementById('cinema-tap').classList.remove('show');
+  // reload iframe without mute — user gesture allows unmuted playback
+  var iframe = document.getElementById('cinema-yt');
+  iframe.src = iframe.src.replace('mute=1','mute=0');
+  document.getElementById('cinema-skip').classList.add('visible');
+}
+
+function skipCinema() {
+  if (!_cinemaOpen) return;
+  _cinemaOpen = false;
+  clearTimeout(_skipTimer);
+  document.getElementById('cinema-tap').classList.remove('show');
+
+  var cl = document.getElementById('curtain-l');
+  var cr = document.getElementById('curtain-r');
+  var tc = document.getElementById('cinema-title-card');
+  var skip = document.getElementById('cinema-skip');
+
+  skip.classList.remove('visible');
+
+  // Close curtains back in
+  cl.classList.remove('open');
+  cr.classList.remove('open');
+
+  // Show title card again during curtain close
+  document.getElementById('ctc-title-text').textContent = _pendingFilm.title.toUpperCase();
+  document.getElementById('ctc-year-text').textContent  = _pendingFilm.year + '  ·  PUBLIC DOMAIN';
+  setTimeout(function() { tc.classList.add('show'); }, 300);
+
+  // After curtains fully closed, load film + close screen
+  setTimeout(function() {
+    document.getElementById('cinema-screen').classList.remove('open');
+    document.getElementById('cinema-yt').src = '';
+    tc.classList.remove('show');
+    document.body.style.overflow = '';
+    // Actually load the film
+    _selectFilmReal(_pendingFilm);
+  }, 1600);
+}
+
+// Auto-select Last Man on Earth on load — goes through cinema pre-screen
+selectFilm(FILMS[0]);
+
+// ── PREMIUM UNLOCK ─────────────────────────────────────────────────────────────
+var PREMIUM_FILMS = FILMS.filter(function(f){ return f.unfiltered; });
+var unlockedFilms = JSON.parse(localStorage.getItem('tf_unlocked') || '[]');
+var ulSelectedFilm = null;
+var ulSelectedMethod = null;
+
+// Build film picker inside unlock modal
+(function buildFilmPicker(){
+  var list = document.getElementById('ul-film-list');
+  PREMIUM_FILMS.forEach(function(f){
+    var div = document.createElement('div');
+    div.className = 'ul-film' + (unlockedFilms.indexOf(f.id) > -1 ? ' selected' : '');
+    div.id = 'ulf-' + f.id;
+    div.innerHTML =
+      '<div class="ul-film-dot"></div>' +
+      '<div class="ul-film-name">' + f.title.toUpperCase() + '</div>' +
+      '<div class="ul-film-year">' + f.year + '</div>';
+    div.onclick = function(){
+      if(unlockedFilms.indexOf(f.id) > -1){ return; } // already owned
+      document.querySelectorAll('.ul-film').forEach(function(x){ x.classList.remove('selected'); });
+      div.classList.add('selected');
+      ulSelectedFilm = f;
+      updateUnlockCTA();
+    };
+    list.appendChild(div);
+  });
+})();
+
+function selectMethod(m){
+  ulSelectedMethod = m;
+  document.querySelectorAll('.ul-method').forEach(function(x){ x.classList.remove('sel'); });
+  document.getElementById('m-'+m).classList.add('sel');
+  // hide all details
+  ['credits-detail','xmr-detail','btc-detail'].forEach(function(id){ document.getElementById(id).classList.remove('open'); });
+  // show relevant detail
+  if(m==='credits') document.getElementById('credits-detail').classList.add('open');
+  if(m==='xmr')     document.getElementById('xmr-detail').classList.add('open');
+  if(m==='btc')     document.getElementById('btc-detail').classList.add('open');
+  updateUnlockCTA();
+}
+
+function updateUnlockCTA(){
+  var cta = document.getElementById('ul-cta');
+  if(ulSelectedFilm && ulSelectedMethod){
+    cta.disabled = false;
+    var labels = {credits:'PAY WITH SF CREDITS', xmr:'I\'VE SENT XMR · UNLOCK', btc:'I\'VE SENT BTC · UNLOCK'};
+    cta.textContent = labels[ulSelectedMethod] || 'UNLOCK — £1';
+  } else {
+    cta.disabled = true;
+    cta.textContent = 'SELECT FILM + PAYMENT METHOD';
+  }
+}
+
+function doUnlock(){
+  if(!ulSelectedFilm || !ulSelectedMethod) return;
+
+  if(ulSelectedMethod === 'credits'){
+    var code = (document.getElementById('credits-input').value || '').trim().toUpperCase();
+    // Basic validation — accept any 6+ char alphanumeric code for demo
+    if(code.length < 4){
+      alert('Enter your SF credits code from shortfactory.shop');
+      return;
+    }
+    grantUnlock(ulSelectedFilm);
+    return;
+  }
+
+  // Crypto — show success + flag as pending manual verification
+  var pending = JSON.parse(localStorage.getItem('tf_pending') || '[]');
+  pending.push({ film: ulSelectedFilm.id, method: ulSelectedMethod, ts: Date.now() });
+  localStorage.setItem('tf_pending', JSON.stringify(pending));
+
+  // For demo: grant immediately on crypto selection (real version: webhook/manual verify)
+  grantUnlock(ulSelectedFilm);
+}
+
+function grantUnlock(film){
+  if(unlockedFilms.indexOf(film.id) === -1) unlockedFilms.push(film.id);
+  localStorage.setItem('tf_unlocked', JSON.stringify(unlockedFilms));
+
+  // Update the film card in carousel — remove lock
+  var card = document.getElementById('card-' + film.id);
+  if(card){
+    var lockEl = card.querySelector('.card-lock');
+    if(lockEl) lockEl.remove();
+    var tagEl = card.querySelector('.card-tag');
+    if(tagEl){ tagEl.className = 'card-tag tag-free'; tagEl.textContent = '▶ UNLOCKED'; }
+  }
+
+  // Also update the film object so selectFilm works
+  film.unfiltered = false;
+
+  // Show success screen
+  document.getElementById('ul-main').style.display = 'none';
+  document.getElementById('ul-success').style.display = 'block';
+  document.getElementById('ul-success-film').textContent = film.title.toUpperCase() + '  ·  ' + film.year;
+
+  // Update pill
+  updatePremiumPill();
+}
+
+function closeUnlockAndPlay(){
+  closeUnlock();
+  if(ulSelectedFilm) selectFilm(ulSelectedFilm);
+}
+
+function openUnlock(){
+  // Check if already have unlocks — still show to allow buying more
+  document.getElementById('ul-main').style.display = 'block';
+  document.getElementById('ul-success').style.display = 'none';
+  ulSelectedFilm = null;
+  ulSelectedMethod = null;
+  document.querySelectorAll('.ul-method').forEach(function(x){ x.classList.remove('sel'); });
+  ['credits-detail','xmr-detail','btc-detail'].forEach(function(id){ document.getElementById(id).classList.remove('open'); });
+  document.getElementById('ul-cta').disabled = true;
+  document.getElementById('ul-cta').textContent = 'SELECT FILM + PAYMENT METHOD';
+  document.getElementById('unlock-modal').classList.add('open');
+}
+
+function closeUnlock(){ document.getElementById('unlock-modal').classList.remove('open'); }
+
+function updatePremiumPill(){
+  var pill = document.getElementById('premium-pill');
+  var owned = unlockedFilms.length;
+  if(owned >= PREMIUM_FILMS.length){
+    pill.className = 'unlocked';
+    pill.querySelector('.pp-label').textContent = 'ALL PREMIUM FILMS UNLOCKED';
+    pill.querySelector('.pp-price').textContent = '✓ FULL ACCESS';
+    pill.onclick = null;
+  } else if(owned > 0){
+    pill.querySelector('.pp-label').textContent = owned + ' FILM' + (owned>1?'S':'') + ' UNLOCKED — UNLOCK MORE';
+    pill.querySelector('.pp-price').textContent = '+ £1 PER FILM';
+  }
+}
+
+function copyAddr(id, btn){
+  var txt = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(txt).then(function(){
+    var orig = btn.textContent;
+    btn.textContent = 'COPIED';
+    btn.style.borderColor = '#f59e0b';
+    btn.style.color = '#f59e0b';
+    setTimeout(function(){ btn.textContent = orig; btn.style.borderColor=''; btn.style.color=''; }, 1500);
+  });
+}
+
+// Restore ad score displays on grid build
+function restoreAdScores() {
+  Object.keys(adData).forEach(function(k) {
+    var scoreEl = document.getElementById('score-' + k);
+    var imp = adData[k].impressions || 0;
+    if (scoreEl && imp > 0) scoreEl.textContent = imp + 'imp';
+    if (state[k] !== undefined) state[k] = 'advert';
+    var el = document.getElementById('seg-' + k);
+    if (el) { el.className = 'seg advert'; el.querySelector('.seg-i').textContent = '📡'; }
+  });
+}
+
+// Restore unlocked state on load
+(function restoreUnlocks(){
+  unlockedFilms.forEach(function(id){
+    var f = FILMS.find(function(x){ return x.id === id; });
+    if(f){ f.unfiltered = false; }
+    var card = document.getElementById('card-' + id);
+    if(card){
+      var lockEl = card.querySelector('.card-lock');
+      if(lockEl) lockEl.remove();
+      var tagEl = card.querySelector('.card-tag');
+      if(tagEl){ tagEl.className = 'card-tag tag-free'; tagEl.textContent = '▶ UNLOCKED'; }
+    }
+  });
+  updatePremiumPill();
+  updateRoyalties();
+})();
+
+// ── COMMUNITY UNLOCK (Coming Soon Modal) ─────────────────────────────────────
+var tfContribs = {};
+var tfReserved = {};
+var csCurrentFilm = null;
+try { tfContribs = JSON.parse(localStorage.getItem('tf_contribs') || '{}'); } catch(e){}
+try { tfReserved = JSON.parse(localStorage.getItem('tf_reserved') || '{}'); } catch(e){}
+
+function showComingSoonModal(film) {
+  csCurrentFilm = film;
+  var myContribs = tfContribs['lastman'] || 0;
+  var isReserved = !!tfReserved[film.id];
+
+  document.getElementById('cs-film-name').textContent = film.title;
+  document.getElementById('cs-film-dir').textContent = film.director || '';
+  document.getElementById('cs-contribs').textContent = myContribs;
+  var fill = document.getElementById('cs-prog-fill');
+  if (fill) fill.style.width = (myContribs >= 1 ? '100' : '0') + '%';
+
+  var claimBtn = document.getElementById('cs-claim-btn');
+  var contribBtn = document.getElementById('cs-contrib-btn');
+  var reservedMsg = document.getElementById('cs-reserved-msg');
+
+  if (isReserved) {
+    claimBtn.style.display = 'none';
+    contribBtn.style.display = 'none';
+    if (reservedMsg) reservedMsg.style.display = 'block';
+  } else if (myContribs >= 1) {
+    claimBtn.style.display = 'block';
+    contribBtn.style.display = 'none';
+    if (reservedMsg) reservedMsg.style.display = 'none';
+  } else {
+    claimBtn.style.display = 'none';
+    contribBtn.style.display = 'block';
+    if (reservedMsg) reservedMsg.style.display = 'none';
+  }
+
+  document.getElementById('cs-modal').classList.add('open');
+}
+
+function claimUnlock() {
+  if (!csCurrentFilm) return;
+  tfReserved[csCurrentFilm.id] = true;
+  try { localStorage.setItem('tf_reserved', JSON.stringify(tfReserved)); } catch(e){}
+  document.getElementById('cs-claim-btn').style.display = 'none';
+  var reservedMsg = document.getElementById('cs-reserved-msg');
+  if (reservedMsg) reservedMsg.style.display = 'block';
+  // Award 50 SFT note — visual only for now
+  var note = document.getElementById('cs-sft-note');
+  if (note) { note.textContent = '✓ RESERVED — you\'ll be first in when ' + csCurrentFilm.title + ' launches'; note.style.color = '#22c55e'; }
+}
+
+function closeCSModal() {
+  document.getElementById('cs-modal').classList.remove('open');
+  csCurrentFilm = null;
+}
+
+function contributeToLastman() {
+  closeCSModal();
+  // Switch to Last Man on Earth so user can upload
+  var lastman = FILMS.find(function(f){ return f.id === 'lastman'; });
+  if (lastman) selectFilm(lastman);
+}
+</script>
+</body>
+</html>

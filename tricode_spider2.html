@@ -335,6 +335,7 @@ let laptopTweenT=0;
 let winFlashed=false;
 let recognition=null;
 let orient={alpha:0,beta:0,gamma:0};  // gyroscope
+let laptopNodes=[null,null,null];     // nodes placed on laptop — rendered as AR targets
 let vertexLocked=[false,false,false]; // per-vertex ding fired
 let pingTimer=null;
 let lastPingScore=0;
@@ -539,6 +540,36 @@ function draw(){
     ctx.shadowColor='#FFC72C';ctx.shadowBlur=16;ctx.stroke();ctx.shadowBlur=0;
   }
 
+  // ── Laptop nodes as AR targets on camera overlay ─────────────────
+  if(laptopNodes.some(Boolean)){
+    const NODE_COLS=['rgba(255,199,44,1)','rgba(44,255,100,1)','rgba(80,160,255,1)'];
+    laptopNodes.forEach(function(n,i){
+      if(!n) return;
+      const nx=n.x*cv.width, ny=n.y*cv.height;
+      const col=NODE_COLS[i];
+      // Outer pulsing ring
+      const pulse=0.5+0.5*Math.sin(now/380+i*2.1);
+      ctx.beginPath(); ctx.arc(nx,ny,28+8*pulse,0,Math.PI*2);
+      ctx.strokeStyle=col.replace(',1)',','+(0.2*pulse).toFixed(2)+')');
+      ctx.lineWidth=1; ctx.stroke();
+      // Crosshair
+      ctx.strokeStyle=col.replace(',1)',',0.45)'); ctx.lineWidth=0.8;
+      ctx.beginPath(); ctx.moveTo(nx-20,ny); ctx.lineTo(nx+20,ny); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(nx,ny-20); ctx.lineTo(nx,ny+20); ctx.stroke();
+      // Centre dot
+      ctx.beginPath(); ctx.arc(nx,ny,10,0,Math.PI*2);
+      ctx.fillStyle=col; ctx.shadowColor=col; ctx.shadowBlur=16; ctx.fill(); ctx.shadowBlur=0;
+      ctx.fillStyle='#000'; ctx.font='bold 8px Courier New';
+      ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(String(i+1),nx,ny);
+      // Link line: phone corner → laptop node
+      if(locked&&homeVerts&&homeVerts[i]){
+        ctx.beginPath(); ctx.moveTo(homeVerts[i].x,homeVerts[i].y); ctx.lineTo(nx,ny);
+        ctx.strokeStyle=col.replace(',1)',',0.22)'); ctx.lineWidth=1;
+        ctx.setLineDash([3,8]); ctx.stroke(); ctx.setLineDash([]);
+      }
+    });
+  }
+
   // If seeking — show detected reflection outline
   if(seeking){
     const det=detectReflection();
@@ -701,12 +732,13 @@ function startSyncFast(){
         if(!mirrorMode&&(!tweening||tweenT>=0.95)){targetVerts=lp;tweenT=0;tweening=true;convergeLocked=false;}
         if(state.laptop.tweenT!==undefined) laptopTweenT=state.laptop.tweenT;
       }
-      // Node 1 from pair3
-      if(state.laptop&&state.laptop.node1){
-        const n=state.laptop.node1;
+      // Nodes from laptop pair
+      if(state.laptop&&state.laptop.nodes){
+        laptopNodes=state.laptop.nodes;
+        const placed=laptopNodes.filter(Boolean).length;
         const nb=document.getElementById('node-box');
         nb.style.display='block';
-        nb.textContent='NODE 1   X: '+n.x+'   Y: '+n.y+'   ('+Math.round(n.x*W)+'px, '+Math.round(n.y*H)+'px)';
+        nb.textContent=placed===3?'HANDSHAKE READY — ALL 3 NODES SET':placed+' OF 3 LAPTOP NODES SET';
       }
     }).catch(function(){});
   },interval);

@@ -19,14 +19,14 @@ if($_SERVER['REQUEST_METHOD']==='GET'){
 
 $raw = file_get_contents('php://input');
 $data = json_decode($raw, true);
-if(!$data || empty($data['side']) || empty($data['verts'])){
+if(!$data || empty($data['side'])){
   echo json_encode(['ok'=>false,'err'=>'bad data']); exit;
 }
 $state = file_exists($file) ? json_decode(file_get_contents($file), true) : [];
 if(!is_array($state)) $state = [];
 $side = ($data['side']==='phone') ? 'phone' : 'laptop';
 $state[$side] = [
-  'verts'       => $data['verts'],
+  'verts'       => $data['verts']??null,
   'tweenT'      => (float)($data['tweenT']??0),
   'orient'      => $data['orient']??null,
   'orientDelta' => $data['orientDelta']??null,
@@ -34,6 +34,12 @@ $state[$side] = [
   'nodes'       => $data['nodes']??null,
   'nodesLocked' => (bool)($data['nodesLocked']??false),
   'node1'       => $data['node1']??null,
+  'nodeA'       => $data['nodeA']??null,
+  'nodeB'       => $data['nodeB']??null,
+  'nodeC'       => $data['nodeC']??null,
+  'game'        => $data['game']??null,
+  'dots'        => $data['dots']??null,
+  'pairs'       => $data['pairs']??null,
   'ts'          => time(),
 ];
 file_put_contents($file, json_encode($state));

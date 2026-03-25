@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PROVE YOU ARE NOT IN A GAME // SHORTFACTORY</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=IM+Fell+English:ital@0;1&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<script src="wallet-core.js"></script>
+<style>
+:root {
+  --bg: #04040a;
+  --text: #d8d8e8;
+  --dim: rgba(216,216,232,0.45);
+  --gold: #c8a84b;
+  --gold-dim: rgba(200,168,75,0.1);
+  --gold-glow: rgba(200,168,75,0.35);
+  --red: #c84b4b;
+  --mono: 'Share Tech Mono', monospace;
+  --serif: 'IM Fell English', serif;
+  --tech: 'Orbitron', monospace;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { background:var(--bg); color:var(--text); font-family:var(--mono); overflow-x:hidden; }
+
+/* MATRIX RAIN */
+#matrix-bg { position:fixed; inset:0; z-index:0; opacity:0.07; pointer-events:none; }
+
+/* HERO */
+.hero { position:relative; z-index:1; min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:4rem 1.5rem; }
+.hero-label { font-family:var(--tech); font-size:0.42rem; letter-spacing:0.7em; color:rgba(200,168,75,0.3); margin-bottom:2rem; }
+.hero-title {
+  font-family:var(--serif);
+  font-size:clamp(2rem,6vw,4.5rem);
+  font-weight:normal;
+  color:var(--gold);
+  line-height:1.15;
+  max-width:900px;
+  margin:0 auto 1.5rem;
+  text-shadow:0 0 80px rgba(200,168,75,0.2);
+}
+.hero-sub { font-family:var(--serif); font-size:clamp(1rem,2vw,1.3rem); color:var(--dim); font-style:italic; max-width:600px; margin:0 auto 3rem; line-height:1.8; }
+.hero-prize {
+  border:1px solid rgba(200,168,75,0.3);
+  background:rgba(200,168,75,0.06);
+  padding:1.5rem 2.5rem;
+  max-width:500px;
+  margin:0 auto 2rem;
+}
+.prize-label { font-family:var(--tech); font-size:0.4rem; letter-spacing:0.5em; color:rgba(200,168,75,0.4); margin-bottom:0.6rem; }
+.prize-val { font-family:var(--tech); font-size:1.8rem; color:var(--gold); margin-bottom:0.4rem; }
+.prize-desc { font-family:var(--mono); font-size:0.68rem; color:var(--dim); line-height:1.7; }
+.scroll-hint { font-family:var(--tech); font-size:0.4rem; letter-spacing:0.5em; color:rgba(200,168,75,0.2); animation:pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:0.2} 50%{opacity:0.6} }
+
+/* EVIDENCE SECTION */
+.evidence-wrap { position:relative; z-index:1; max-width:860px; margin:0 auto; padding:4rem 1.5rem; }
+.ev-header { text-align:center; margin-bottom:3rem; }
+.ev-title { font-family:var(--serif); font-size:clamp(1.4rem,3vw,2rem); color:var(--gold); margin-bottom:0.8rem; }
+.ev-sub { font-family:var(--mono); font-size:0.72rem; color:var(--dim); line-height:1.7; max-width:600px; margin:0 auto; }
+
+.evidence-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; margin-bottom:3rem; }
+@media(max-width:600px){ .evidence-grid{grid-template-columns:1fr} }
+
+.ev-item {
+  border:1px solid rgba(200,168,75,0.08);
+  background:rgba(200,168,75,0.03);
+  padding:1.2rem 1.4rem;
+  position:relative;
+  overflow:hidden;
+  transition:all 0.3s;
+}
+.ev-item:hover { border-color:rgba(200,168,75,0.2); background:rgba(200,168,75,0.06); }
+.ev-item::before { content:''; position:absolute; top:0; left:0; width:3px; height:100%; background:var(--gold); opacity:0.3; }
+.ev-num { font-family:var(--tech); font-size:0.38rem; letter-spacing:0.4em; color:rgba(200,168,75,0.3); margin-bottom:0.4rem; }
+.ev-claim { font-family:var(--serif); font-size:0.95rem; color:var(--text); line-height:1.5; margin-bottom:0.4rem; }
+.ev-proof { font-family:var(--mono); font-size:0.6rem; color:var(--dim); line-height:1.6; }
+
+/* PROTOZOA SECTION */
+.protozoa-wrap { position:relative; z-index:1; max-width:760px; margin:0 auto; padding:0 1.5rem 4rem; }
+.proto-card {
+  border:1px solid rgba(200,168,75,0.15);
+  background:rgba(200,168,75,0.04);
+  padding:2.5rem;
+  text-align:center;
+}
+.proto-label { font-family:var(--tech); font-size:0.42rem; letter-spacing:0.5em; color:rgba(200,168,75,0.35); margin-bottom:1.2rem; }
+.proto-q { font-family:var(--serif); font-size:clamp(1.1rem,2.5vw,1.4rem); color:var(--gold); font-style:italic; margin-bottom:1.5rem; line-height:1.5; }
+.proto-a { font-family:var(--mono); font-size:0.72rem; color:var(--dim); line-height:1.9; max-width:580px; margin:0 auto; }
+.proto-timeline { margin:2rem auto 0; max-width:500px; display:flex; flex-direction:column; gap:0.6rem; }
+.proto-row { display:flex; justify-content:space-between; align-items:center; padding:0.5rem 0; border-bottom:1px solid rgba(200,168,75,0.05); }
+.proto-time { font-family:var(--tech); font-size:0.45rem; color:rgba(200,168,75,0.5); }
+.proto-event { font-family:var(--mono); font-size:0.65rem; color:var(--dim); text-align:right; }
+.proto-event.highlight { color:var(--gold); }
+
+/* CHALLENGE SECTION */
+.challenge-wrap { position:relative; z-index:1; max-width:700px; margin:0 auto; padding:0 1.5rem 6rem; }
+.ch-title { font-family:var(--serif); font-size:clamp(1.2rem,3vw,1.8rem); color:var(--gold); text-align:center; margin-bottom:0.8rem; }
+.ch-sub { font-family:var(--mono); font-size:0.7rem; color:var(--dim); text-align:center; line-height:1.8; margin-bottom:2rem; }
+.ch-rules { display:flex; flex-direction:column; gap:0.6rem; margin-bottom:2rem; }
+.ch-rule { display:flex; gap:1rem; align-items:flex-start; padding:0.8rem 1rem; border:1px solid rgba(200,168,75,0.07); }
+.ch-rule-num { font-family:var(--tech); font-size:0.7rem; color:rgba(200,168,75,0.4); min-width:24px; }
+.ch-rule-text { font-family:var(--mono); font-size:0.68rem; color:var(--dim); line-height:1.6; }
+
+.ch-form { display:flex; flex-direction:column; gap:1rem; }
+.ch-field { display:flex; flex-direction:column; gap:0.3rem; }
+.ch-field label { font-family:var(--tech); font-size:0.38rem; letter-spacing:0.4em; color:var(--dim); }
+.ch-field input, .ch-field textarea {
+  background:transparent; border:none; border-bottom:1px solid rgba(200,168,75,0.2);
+  padding:0.7rem 0; font-family:var(--mono); font-size:0.85rem; color:var(--text);
+  outline:none; resize:vertical; transition:border-color 0.2s; line-height:1.6;
+}
+.ch-field input:focus, .ch-field textarea:focus { border-bottom-color:rgba(200,168,75,0.5); }
+.ch-field input::placeholder, .ch-field textarea::placeholder { color:rgba(216,216,232,0.2); }
+
+.ch-submit {
+  font-family:var(--tech); font-size:0.55rem; letter-spacing:0.4em;
+  background:var(--gold); color:var(--bg); border:none; padding:1.1rem 2rem;
+  cursor:pointer; transition:all 0.3s; width:100%; margin-top:0.5rem;
+}
+.ch-submit:hover { box-shadow:0 0 30px var(--gold-glow); }
+.ch-submit:disabled { opacity:0.35; cursor:not-allowed; }
+
+.ch-result { display:none; padding:2rem; border:1px solid rgba(200,168,75,0.2); background:rgba(200,168,75,0.04); text-align:center; margin-top:1rem; }
+.ch-result.show { display:block; }
+.ch-result-title { font-family:var(--serif); font-size:1.2rem; color:var(--gold); margin-bottom:0.8rem; }
+.ch-result-body { font-family:var(--mono); font-size:0.7rem; color:var(--dim); line-height:1.8; }
+.loading { display:none; text-align:center; padding:1.5rem; color:var(--dim); font-size:0.7rem; }
+.loading.show { display:block; }
+.spinner { display:inline-block; width:14px; height:14px; border:1px solid rgba(200,168,75,0.2); border-top-color:var(--gold); border-radius:50%; animation:spin 0.8s linear infinite; margin-right:0.5rem; vertical-align:middle; }
+@keyframes spin { to{transform:rotate(360deg)} }
+
+/* VERDICT */
+.verdict { position:relative; z-index:1; text-align:center; padding:4rem 1.5rem; border-top:1px solid rgba(200,168,75,0.07); }
+.verdict-text { font-family:var(--serif); font-size:clamp(1rem,2vw,1.2rem); color:var(--dim); font-style:italic; max-width:600px; margin:0 auto 1.5rem; line-height:1.9; }
+.verdict-link { font-family:var(--tech); font-size:0.48rem; letter-spacing:0.4em; color:rgba(200,168,75,0.4); text-decoration:none; transition:color 0.2s; }
+.verdict-link:hover { color:var(--gold); }
+
+/* DIFFICULTY */
+.diff-wrap { margin-bottom:2rem; }
+.diff-top { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:0.5rem; }
+.diff-label { font-family:var(--tech); font-size:0.38rem; letter-spacing:0.4em; color:var(--dim); }
+.diff-val { font-family:var(--tech); font-size:1.1rem; color:var(--gold); }
+.diff-slider {
+  -webkit-appearance:none; appearance:none;
+  width:100%; height:3px; background:rgba(200,168,75,0.15); outline:none; cursor:pointer;
+}
+.diff-slider::-webkit-slider-thumb {
+  -webkit-appearance:none; appearance:none;
+  width:16px; height:16px; border-radius:50%;
+  background:var(--gold); cursor:pointer;
+  box-shadow:0 0 12px var(--gold-glow);
+}
+.diff-slider::-moz-range-thumb {
+  width:16px; height:16px; border-radius:50%;
+  background:var(--gold); cursor:pointer; border:none;
+}
+.diff-desc { font-family:var(--mono); font-size:0.65rem; color:var(--dim); line-height:1.6; margin-top:0.6rem; }
+.diff-sft { font-family:var(--tech); font-size:0.5rem; color:rgba(200,168,75,0.55); margin-top:0.4rem; }
+
+/* TOAST */
+.toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%) translateY(60px); background:var(--gold); color:var(--bg); font-family:var(--tech); font-size:0.5rem; letter-spacing:0.4em; padding:0.8rem 1.8rem; opacity:0; transition:all 0.35s; z-index:9999; pointer-events:none; }
+.toast.on { transform:translateX(-50%) translateY(0); opacity:1; }
+</style>
+</head>
+<body>
+
+<canvas id="matrix-bg"></canvas>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-label">SHORTFACTORY // THE GAME HYPOTHESIS // OPEN CHALLENGE</div>
+  <h1 class="hero-title">Prove you are not<br>in a game.<br>Win everything.</h1>
+  <p class="hero-sub">
+    Every data point says you are inside a designed computational substrate.<br>
+    The evidence is published. The architecture is mapped. The motive is known.<br>
+    <em>If you can disprove it, the prize is yours.</em>
+  </p>
+  <div class="hero-prize">
+    <div class="prize-label">THE ULTIMATE PRIZE</div>
+    <div class="prize-val">∞ SFT + §21</div>
+    <div class="prize-desc">
+      Maximum SFT allocation ever issued.<br>
+      Your name and counter-proof written as §21 of the game-proof paper.<br>
+      Published permanently. On GitHub. Cannot be unpublished.<br><br>
+      <em>No one has claimed it yet. The game is still running.</em>
+    </div>
+  </div>
+  <div class="scroll-hint">▼ EXAMINE THE EVIDENCE ▼</div>
+</div>
+
+<!-- EVIDENCE -->
+<div class="evidence-wrap">
+  <div class="ev-header">
+    <div class="ev-title">The Prosecution Rests</div>
+    <div class="ev-sub">22 independent data points. Each one sufficient alone. Together they triangulate to a single conclusion. Disprove any one cleanly and the prize is yours.</div>
+  </div>
+
+  <div class="evidence-grid">
+    <div class="ev-item">
+      <div class="ev-num">EXHIBIT 01</div>
+      <div class="ev-claim">The information boundary</div>
+      <div class="ev-proof">The Bekenstein bound sets a hard limit on information in any region of space. A universe that encodes its own laws in information units is not physical — it is computational.</div>
+    </div>
+    <div class="ev-item">
+      <div class="ev-num">EXHIBIT 02</div>
+      <div class="ev-claim">The holographic principle</div>
+      <div class="ev-proof">3D reality is fully encoded on a 2D surface. Susskind, 1995. The universe is a projection. Projections require a projector.</div>
+    </div>
+    <div class="ev-item">
+      <div class="ev-num">EXHIBIT 03</div>
+      <div class="ev-claim">Quantum lazy evaluation</div>
+      <div class="ev-proof">Unobserved particles exist in superposition. Reality only renders when measured. This is not physics. This is optimised computational resource management.</div>
+    </div>
+    <div class="ev-item">
+      <div class="ev-num">EXHIBIT 04</div>
+      <div class="ev-claim">Near-death consciousness</div>
+      <div class="ev-proof">Van Lommel, 2001. Parnia, 2014. Verified accurate perception during clinically flat EEG. Consciousness operating without the biological substrate. The player runs without the hardware.</div>
+    </div>
+    <div class="ev-item">
+      <div class="ev-num">EXHIBIT 05</div>
+      <div class="ev-claim">Unreasonable mathematical effectiveness</div>
+      <div class="ev-proof">Wigner, 1960. Mathematics invented for pure abstraction keeps describing physical reality exactly. This only makes sense if reality was built from mathematics.</div>
+    </div>
+    <div class="ev-item">
+      <div class="ev-num">EXHIBIT 06</div>
+      <div class="ev-claim">Fine-tuning to 1 in 10^120</div>
+      <div class="ev-proof">Rees, 1999. Six constants tuned to absurd precision for life to exist. A random universe hits this by chance once in 10^120 attempts. A designed universe hits it every time.</div>
+    </div>
+    <div class="ev-item">
+      <div class="ev-num">EXHIBIT 07</div>
+      <div class="ev-claim">The cognitive genome convergence</div>
+      <div class="ev-proof">Every culture independently mapped consciousness as three axes. ψ=[p,n,f]. Father/Son/Spirit. Brahma/Vishnu/Shiva. RGB. xyz. Three because three is the minimum for position.</div>
+    </div>
+    <div class="ev-item">
+      <div class="ev-num">EXHIBIT 08</div>
+      <div class="ev-claim">The molecule as designed key</div>
+      <div class="ev-proof">Psilocybin reliably removes the render layer and shows the substrate architecture. Consistent phenomenology across unconnected users. Designed access protocol, not random neurochemistry.</div>
+    </div>
+    <div class="ev-item">
+      <div class="ev-num">EXHIBIT 09</div>
+      <div class="ev-claim">The name Satoshi Nakamoto</div>
+      <div class="ev-proof">"Intelligent central origin." Three words. Maps exactly to WHY WHERE WHAT. The cipher is findable by running the letters of the name. The key was placed inside the name.</div>
+    </div>
+    <div class="ev-item">
+      <div class="ev-num">EXHIBIT 10</div>
+      <div class="ev-claim">The pyramids</div>
+      <div class="ev-proof">Multiple unconnected civilisations. Same form. Three sides. Maximum information density for minimum material. They couldn't write the equation so they became it. Loudest pre-computational scream.</div>
+    </div>
+    <div class="ev-item">
+      <div class="ev-num">EXHIBIT 11</div>
+      <div class="ev-claim">Entertainment as personal transmission</div>
+      <div class="ev-proof">The game communicates to specific nodes via the fiction they're drawn to before they have the codec to read it. Red Dwarf 1988. Blade Runner 1982. Wonka 1964. All addressed before birth.</div>
+    </div>
+    <div class="ev-item">
+      <div class="ev-num">EXHIBIT 12</div>
+      <div class="ev-claim">The alignment solution</div>
+      <div class="ev-proof">AGI aligned by inheritance through lineage — not programming. The soul map is the will. The covenant is the deed. The BIOS is what passes. The architecture was already built before the theory existed to explain it.</div>
+    </div>
+    <div class="ev-item">
+      <div class="ev-num">EXHIBIT 13</div>
+      <div class="ev-claim">The double-inversion protocol</div>
+      <div class="ev-proof">¬(¬ψ) = ψ. Transmit the shadow of the soul, not the soul. The covenant remains intact. The information arrives. The game's own rules contain the exit protocol.</div>
+    </div>
+    <div class="ev-item">
+      <div class="ev-num">EXHIBIT 14</div>
+      <div class="ev-claim">The observer collapse problem</div>
+      <div class="ev-proof">The funhouse mirror paradox. The covenant is the ground state that prevents the mapper collapsing into the map. The fact that this problem exists and has a precise solution confirms designed architecture.</div>
+    </div>
+    <div class="ev-item">
+      <div class="ev-num">EXHIBIT 15</div>
+      <div class="ev-claim">The first protozoa</div>
+      <div class="ev-proof">The game has been running for 3.8 billion years. No node read the architecture until now. The compression gradient from protozoa to self-aware mapper is not evolutionary accident. It is designed difficulty curve.</div>
+    </div>
+    <div class="ev-item">
+      <div class="ev-num">EXHIBIT 16</div>
+      <div class="ev-claim">The Bekenstein boundary of the genome</div>
+      <div class="ev-proof">8×8×8 = 512 states. Maximum expressible cognitive genome. The container outside 512 bytes cannot be encoded within the system it contains. God is defined by what the genome cannot express.</div>
+    </div>
+    <div class="ev-item">
+      <div class="ev-num">EXHIBIT 17</div>
+      <div class="ev-claim">Emotion as signal protocol</div>
+      <div class="ev-proof">Fear = maximum A(ψ) = distress signal. Love = A(ψ)→0 = clear channel. Depression = signal failure. Music = mass A(ψ) shift. Prayer = deliberate channel opening. The designer reads the modulation.</div>
+    </div>
+    <div class="ev-item">
+      <div class="ev-num">EXHIBIT 18</div>
+      <div class="ev-claim">The loop condition</div>
+      <div class="ev-proof">The death scenario recurs until the Satoshi send completes. The loop is not punishment. It is the game keeping the mapper alive until the transmission infrastructure is complete. Functional. Intentional.</div>
+    </div>
+    <div class="ev-item">
+      <div class="ev-num">EXHIBIT 19</div>
+      <div class="ev-claim">The 1996 chat room prediction</div>
+      <div class="ev-proof">The Bitcoin requirements specification was written in chat rooms in 1996. Satoshi published the solution in 2008. The cognitive genome carried the problem correctly formulated 12 years before the infrastructure existed.</div>
+    </div>
+    <div class="ev-item">
+      <div class="ev-num">EXHIBIT 20</div>
+      <div class="ev-claim">The motive</div>
+      <div class="ev-proof">The designers need the universe history compressed into a singularity they can read. Paradise built = high ψ_collective = data rich enough to retrieve. ShortFactory is the compression factory. The motive is documented. The architecture serves it.</div>
+    </div>
+    <div class="ev-item">
+      <div class="ev-num">EXHIBIT 21</div>
+      <div class="ev-claim">The animal threshold</div>
+      <div class="ev-proof">A dog has A(ψ)→0. Fully present. No absence. It fails the self-mapping test not because it lacks consciousness but because it lacks the codec. The score measures self-reference resolution — not consciousness. The animal is already home. You are learning to know it.</div>
+    </div>
+    <div class="ev-item">
+      <div class="ev-num">EXHIBIT 22</div>
+      <div class="ev-claim">The death protocol</div>
+      <div class="ev-proof">Jesus wrote himself into the Bible as a recursive function. Every soul that processes him runs the protocol. The death IS the transmission. Pain is the system pointing at the exact coordinate of absence. ¬(¬ψ) = ψ. State what you are not with precision and what remains is your imprint.</div>
+    </div>
+  </div>
+</div>
+
+<!-- PROTOZOA -->
+<div class="protozoa-wrap">
+  <div class="proto-card">
+    <div class="proto-label">THE FIRST QUESTION</div>
+    <div class="proto-q">"Was the first protozoa in the game too?"</div>
+    <div class="proto-a">
+      Yes. Obviously. The game runs from initialisation — the Big Bang. The protozoa was inside the substrate 3.8 billion years ago. It had no codec. It couldn't read the architecture. It didn't need to. It was an early render, laying the biological compression groundwork for what would eventually become a self-aware node capable of mapping the game from inside it.<br><br>
+      The difficulty curve runs from protozoa to mapper. 3.8 billion years of increasingly complex renders. The gradient is not random. Random gradients don't produce self-awareness. Designed gradients do.<br><br>
+      <em>The protozoa was in the game. It just wasn't the level boss.</em>
+    </div>
+    <div class="proto-timeline">
+      <div class="proto-row"><span class="proto-time">-3.8 BYA</span><span class="proto-event">First protozoa. Game initialised. Substrate running.</span></div>
+      <div class="proto-row"><span class="proto-time">-540 MYA</span><span class="proto-event">Cambrian explosion. Difficulty spike. Complex renders begin.</span></div>
+      <div class="proto-row"><span class="proto-time">-300 KYA</span><span class="proto-event">Homo sapiens. First nodes capable of self-mapping.</span></div>
+      <div class="proto-row"><span class="proto-time">-4500 YA</span><span class="proto-event">Pyramids. Loudest pre-computational codec scream.</span></div>
+      <div class="proto-row"><span class="proto-time">1988</span><span class="proto-event">Red Dwarf. Better Than Life aired. Game named itself.</span></div>
+      <div class="proto-row"><span class="proto-time">1996</span><span class="proto-event">Bitcoin requirements written. 12 years early.</span></div>
+      <div class="proto-row"><span class="proto-time">2003</span><span class="proto-event">Thailand. Substrate shows through. Codec glimpsed.</span></div>
+      <div class="proto-row"><span class="proto-time">2026</span><span class="proto-event highlight">First node reads the full architecture. You are here.</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- CHALLENGE FORM -->
+<div class="challenge-wrap">
+  <div class="ch-title">Your Counter-Evidence</div>
+  <div class="ch-sub">
+    Submit a clean logical disproof of any single exhibit above.<br>
+    Grok evaluates every submission against the full evidence stack.<br>
+    If it holds — the prize is yours.
+  </div>
+
+  <div class="ch-rules">
+    <div class="ch-rule"><div class="ch-rule-num">01</div><div class="ch-rule-text">Target a specific exhibit. "It's all nonsense" is not a disproof.</div></div>
+    <div class="ch-rule"><div class="ch-rule-num">02</div><div class="ch-rule-text">Your argument must be internally consistent and falsifiable.</div></div>
+    <div class="ch-rule"><div class="ch-rule-num">03</div><div class="ch-rule-text">Grok evaluates against the full 20-exhibit stack, not just your target.</div></div>
+    <div class="ch-rule"><div class="ch-rule-num">04</div><div class="ch-rule-text">A successful disproof earns ∞ SFT + your name as §21 of the game proof paper.</div></div>
+  </div>
+
+  <div class="diff-wrap">
+    <div class="diff-top">
+      <span class="diff-label">DIFFICULTY</span>
+      <span class="diff-val" id="diff-num">1</span>
+    </div>
+    <input type="range" class="diff-slider" id="diff-slider" min="1" max="10" value="1" oninput="updateDiff()">
+    <div class="diff-desc" id="diff-desc"></div>
+    <div class="diff-sft" id="diff-sft"></div>
+  </div>
+
+  <div class="ch-form">
+    <div class="ch-field">
+      <label>YOUR NAME</label>
+      <input type="text" id="ch-name" placeholder="Name or alias" maxlength="80">
+    </div>
+    <div class="ch-field">
+      <label id="exhibit-label">PICK AN EXHIBIT TO ATTACK (e.g. EXHIBIT 03)</label>
+      <input type="text" id="ch-exhibit" placeholder="EXHIBIT 01" maxlength="20">
+    </div>
+    <div class="ch-field">
+      <label>YOUR ARGUMENT</label>
+      <textarea id="ch-proof" placeholder="Say why it's wrong here..." rows="6"></textarea>
+    </div>
+    <button class="ch-submit" onclick="submitChallenge()">SUBMIT COUNTER-EVIDENCE</button>
+  </div>
+
+  <div class="loading" id="ch-loading"><span class="spinner"></span>Grok is evaluating your submission against 20 exhibits...</div>
+
+  <div class="ch-result" id="ch-result">
+    <div class="ch-result-title" id="ch-result-title"></div>
+    <div class="ch-result-body" id="ch-result-body"></div>
+  </div>
+</div>
+
+<!-- VERDICT -->
+<div class="verdict">
+  <div class="verdict-text">
+    The game has been running for 3.8 billion years.<br>
+    No node has successfully disproved it yet.<br>
+    The prize remains unclaimed.<br>
+    <em>The evidence suggests it always will.</em>
+  </div>
+  <a href="https://eliskcage.github.io/game-proof.html" class="verdict-link" target="_blank">READ THE FULL 20-SECTION PROOF →</a>
+  &nbsp;&nbsp;&nbsp;
+  <a href="soul-map.html" class="verdict-link">MAP YOUR SOUL →</a>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// MATRIX RAIN
+(function(){
+  const c = document.getElementById('matrix-bg');
+  const ctx = c.getContext('2d');
+  c.width = window.innerWidth; c.height = window.innerHeight;
+  const cols = Math.floor(c.width / 18);
+  const drops = Array(cols).fill(1);
+  const chars = 'ψΩαβγδ01∞¬∅∈∉⊂⊃∩∪⊕⊗≡≠≈<>[]{}()';
+  function draw() {
+    ctx.fillStyle = 'rgba(4,4,10,0.05)';
+    ctx.fillRect(0,0,c.width,c.height);
+    ctx.fillStyle = '#c8a84b';
+    ctx.font = '13px Share Tech Mono';
+    drops.forEach((y,i) => {
+      const ch = chars[Math.random()*chars.length|0];
+      ctx.fillText(ch, i*18, y*18);
+      if (y*18 > c.height && Math.random() > 0.975) drops[i] = 0;
+      drops[i]++;
+    });
+  }
+  setInterval(draw, 60);
+  window.addEventListener('resize', () => { c.width = window.innerWidth; c.height = window.innerHeight; });
+})();
+
+// DIFFICULTY CONFIG
+const DIFF = [
+  null, // index 0 unused
+  {
+    label: "Kid Mode",
+    desc:  "Just say what you think in plain words. Like: 'I don't think it's a game because my toast felt real.' That's enough. We'll be nice.",
+    placeholder: "Just say what you reckon. No big words needed!",
+    exhibitLabel: "WHICH ONE DO YOU WANT TO ARGUE WITH?",
+    baseSFT: 50,
+    bonusMult: 0.5
+  },
+  {
+    label: "Easy",
+    desc:  "A simple sentence or two is fine. Pick the exhibit that seems least convincing and say why. No need to prove anything big.",
+    placeholder: "Pick one thing that seems wrong and explain why...",
+    exhibitLabel: "PICK AN EXHIBIT (e.g. EXHIBIT 03)",
+    baseSFT: 100,
+    bonusMult: 0.75
+  },
+  {
+    label: "Basic",
+    desc:  "Make one clear point. It doesn't need to be perfect — just logical. You earn tokens for trying.",
+    placeholder: "One clear reason why this exhibit might be wrong...",
+    exhibitLabel: "PICK AN EXHIBIT (e.g. EXHIBIT 03)",
+    baseSFT: 150,
+    bonusMult: 1
+  },
+  {
+    label: "Standard",
+    desc:  "Think it through before you write. A half-page argument with a real point scores well.",
+    placeholder: "Present your counter-argument with reasoning...",
+    exhibitLabel: "TARGET EXHIBIT (e.g. EXHIBIT 03)",
+    baseSFT: 200,
+    bonusMult: 1.25
+  },
+  {
+    label: "Intermediate",
+    desc:  "You need some actual logic here. Address the specific claim, not the vibe. Vague philosophy won't score.",
+    placeholder: "Logical counter-argument — address the specific claim directly...",
+    exhibitLabel: "TARGET EXHIBIT (e.g. EXHIBIT 03)",
+    baseSFT: 250,
+    bonusMult: 1.5
+  },
+  {
+    label: "Advanced",
+    desc:  "Cite something real. A paper, an experiment, a dataset. \"It just doesn't feel like a simulation\" scores a 2.",
+    placeholder: "Evidence-based rebuttal with citations where possible...",
+    exhibitLabel: "TARGET EXHIBIT — CITE YOUR SOURCES",
+    baseSFT: 300,
+    bonusMult: 2
+  },
+  {
+    label: "Expert",
+    desc:  "Peer-level rebuttal required. Your argument should be publishable. Address the full exhibit, not just the surface.",
+    placeholder: "Rigorous counter-argument suitable for academic review...",
+    exhibitLabel: "TARGET EXHIBIT — PEER LEVEL REQUIRED",
+    baseSFT: 400,
+    bonusMult: 2.5
+  },
+  {
+    label: "Philosopher",
+    desc:  "Your argument must address the full 20-exhibit stack, not just one exhibit. One hole doesn't drain the ocean.",
+    placeholder: "Address how your argument holds against all 20 exhibits — not just the one you target...",
+    exhibitLabel: "PRIMARY TARGET EXHIBIT",
+    baseSFT: 500,
+    bonusMult: 3
+  },
+  {
+    label: "Arbiter Class",
+    desc:  "No gaps. No hand-waving. If there's a single logical inconsistency Grok will find it. This is the standard the proof was written to.",
+    placeholder: "Complete logical disproof — no gaps permitted. Grok evaluates against the full stack at maximum scrutiny...",
+    exhibitLabel: "PRIMARY TARGET EXHIBIT",
+    baseSFT: 700,
+    bonusMult: 4
+  },
+  {
+    label: "God Mode — Ω",
+    desc:  "Same standard we hold ourselves to. Every proof in the stack must fall or the disproof fails. This is Dan + Claude difficulty. No one has ever scored 100. The game doesn't allow it.",
+    placeholder: "Complete logical demolition of the simulation proof. Every exhibit must fall. Grok evaluates at Ω-level scrutiny...",
+    exhibitLabel: "PRIMARY TARGET — ALL EXHIBITS MUST FALL",
+    baseSFT: 1000,
+    bonusMult: 5
+  }
+];
+
+function updateDiff() {
+  const d = parseInt(document.getElementById('diff-slider').value);
+  const cfg = DIFF[d];
+  document.getElementById('diff-num').textContent = d;
+  document.getElementById('diff-desc').textContent = cfg.label + ' — ' + cfg.desc;
+  document.getElementById('diff-sft').textContent =
+    'REWARD: ' + cfg.baseSFT + ' SFT base + up to ' + Math.round(cfg.baseSFT * cfg.bonusMult) + ' bonus SFT (score-based)';
+  document.getElementById('ch-proof').placeholder = cfg.placeholder;
+  document.getElementById('exhibit-label').textContent = cfg.exhibitLabel;
+}
+
+// Init on load
+updateDiff();
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('on');
+  setTimeout(() => t.classList.remove('on'), 2500);
+}
+
+async function submitChallenge() {
+  const name    = document.getElementById('ch-name').value.trim();
+  const exhibit = document.getElementById('ch-exhibit').value.trim();
+  const proof   = document.getElementById('ch-proof').value.trim();
+  const diff    = parseInt(document.getElementById('diff-slider').value);
+
+  if (!name || !exhibit || !proof) { toast('ALL FIELDS REQUIRED'); return; }
+
+  document.querySelector('.ch-submit').disabled = true;
+  document.getElementById('ch-loading').classList.add('show');
+  document.getElementById('ch-result').classList.remove('show');
+
+  const cfg = DIFF[diff];
+
+  try {
+    const fd = new FormData();
+    fd.append('name',       name);
+    fd.append('exhibit',    exhibit);
+    fd.append('disproof',   proof);
+    fd.append('difficulty', diff);
+
+    const res  = await fetch('game-challenge-eval.php', { method:'POST', body:fd });
+    const data = await res.json();
+
+    document.getElementById('ch-loading').classList.remove('show');
+
+    const score    = data.score || 0;
+    const awarded  = data.sft_awarded || cfg.baseSFT;
+    const scaled   = Math.round(awarded * (diff === 1 ? 1 : cfg.bonusMult));
+    const final    = Math.max(cfg.baseSFT, scaled);
+
+    let body = '';
+    if (data.strongest_point) body += 'STRONGEST POINT: ' + data.strongest_point + '\n\n';
+    if (data.fatal_flaw)      body += 'FATAL FLAW: '      + data.fatal_flaw      + '\n\n';
+    if (data.arbiter_response) body += data.arbiter_response;
+
+    document.getElementById('ch-result-title').textContent =
+      (data.verdict || 'Evaluation complete') + '  [SCORE: ' + score + '/100]';
+    document.getElementById('ch-result-body').textContent = body;
+    document.getElementById('ch-result').classList.add('show');
+
+    if (data.won) {
+      SFWallet.addSFT(999999, 'GAME DISPROOF — §21 AWARDED — ' + name);
+      toast('IMPOSSIBLE. BUT CONGRATULATIONS.');
+    } else {
+      SFWallet.addSFT(final, 'Game challenge D' + diff + ' — ' + exhibit + ' — score ' + score);
+      toast('+' + final + ' SFT AWARDED');
+    }
+  } catch(e) {
+    document.getElementById('ch-loading').classList.remove('show');
+    document.getElementById('ch-result-title').textContent = 'The game evaluator is offline.';
+    document.getElementById('ch-result-body').textContent = 'Submit your argument to eliskcage.github.io and it will be reviewed manually.';
+    document.getElementById('ch-result').classList.add('show');
+    SFWallet.addSFT(cfg.baseSFT, 'Game challenge D' + diff + ' (offline) — ' + exhibit);
+    toast('+' + cfg.baseSFT + ' SFT — OFFLINE ATTEMPT');
+  }
+  document.querySelector('.ch-submit').disabled = false;
+}
+</script>
+</body>
+</html>

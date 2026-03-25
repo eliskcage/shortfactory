@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>TRICODE PHONE</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; touch-action:none; }
+body { background:#050505; overflow:hidden; font-family:'Courier New',monospace; }
+#cam { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; opacity:0.5; }
+#cv  { position:fixed; inset:0; width:100%; height:100%; }
+#msg {
+  position:fixed; bottom:28px; left:0; right:0;
+  text-align:center; font-size:8px; letter-spacing:3px;
+  color:rgba(255,199,44,.5); pointer-events:none;
+}
+</style>
+</head>
+<body>
+<video id="cam" autoplay playsinline muted></video>
+<canvas id="cv"></canvas>
+<div id="msg">HOLD FINGER TO CHARGE NODE B</div>
+
+<script data-cfasync="false">
+'use strict';
+const SYNC_ID = 'tricode_link';
+const cv      = document.getElementById('cv');
+const ctx     = cv.getContext('2d');
+const cam     = document.getElementById('cam');
+const msgEl   = document.getElementById('msg');
+
+let holding   = false;
+let holdStart = 0;
+let holdPos   = null;
+let nodeB     = null;
+let nodeC     = null;   // purple — second hold after B
+let nodeA     = null;
+let cursor    = null;   // live desktop cursor
+let orient    = {beta:0, gamma:0, alpha:0};
+let pairs     = [];
+let matchScore= 0;
+let gameState = null;  // received from desktop
+
+// Camera — skip if in iframe
+const inIframe = (window.self !== window.top);
+if(inIframe){
+  cam.style.display='none';
+} else {
+  (async()=>{
+    try {
+      const s = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});
+      cam.srcObject=s; await cam.play();
+    } catch(e){ msgEl.textContent='NO CAMERA'; }
+  })();
+  // Gyro
+  if(typeof DeviceOrientationEvent!=='undefined' && typeof DeviceOrientationEvent.requestPermission!=='function'){
+    window.addEventListener('deviceorientation',function(e){
+      orient.beta  = Math.round(e.beta  || 0);
+      orient.gamma = Math.round(e.gamma || 0);
+      orient.alpha = Math.round(e.alpha || 0);
+    });
+  }
+}
+
+// ── Touch hold ────────────────────────────────────────────────────────
+cv.addEventListener('touchstart', function(e){
+  e.preventDefault();
+  const t = e.touches[0];
+  holding   = true;
+  holdStart = Date.now();
+  holdPos   = {x:t.clientX, y:t.clientY};
+}, {passive:false});
+
+cv.addEventListener('touchmove', function(e){
+  e.preventDefault();
+  if(holding){ const t=e.touches[0]; holdPos={x:t.clientX,y:t.clientY}; }
+}, {passive:false});
+
+cv.addEventListener('touchend', function(e){
+  e.preventDefault();
+  if(!holding) return;
+  holding = false;
+  const held = Date.now() - holdStart;
+  if(held < 180){ holdPos=null; return; }
+  const pos = {x:+(holdPos.x/window.innerWidth).toFixed(4), y:+(holdPos.y/window.innerHeight).toFixed(4)};
+  holdPos = null;
+  if(!nodeB){ nodeB=pos; msgEl.textContent='NODE B PLANTED — LINKING...'; }
+  else       { nodeC=pos; msgEl.textContent='NODE C PLANTED — TRIANGLE ACTIVE'; }
+  push();
+}, {passive:false});
+
+// Click support for iframe/desktop testing
+cv.addEventListener('mousedown', function(e){
+  holding=true; holdStart=Date.now(); holdPos={x:e.clientX,y:e.clientY};
+});
+cv.addEventListener('mousemove', function(e){ if(holding) holdPos={x:e.clientX,y:e.clientY}; });
+cv.addEventListener('mouseup', function(e){
+  if(!holding) return; holding=false;
+  const held=Date.now()-holdStart; if(held<180){holdPos=null;return;}
+  const pos={x:+(holdPos.x/window.innerWidth).toFixed(4),y:+(holdPos.y/window.innerHeight).toFixed(4)};
+  holdPos=null;
+  if(!nodeB){ nodeB=pos; msgEl.textContent='NODE B PLANTED — LINKING...'; }
+  else       { nodeC=pos; msgEl.textContent='NODE C PLANTED — TRIANGLE ACTIVE'; }
+  push();
+});
+
+function push(){
+  fetch('/soul/tricode_sync.php?id='+SYNC_ID,{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({side:'phone', nodeB:nodeB, nodeC:nodeC, orient:orient, pairs:pairs})
+  }).catch(function(){});
+}
+function pushPairs(){
+  fetch('/soul/tricode_sync.php?id='+SYNC_ID,{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({side:'phone', nodeB:nodeB, nodeC:nodeC, orient:orient, pairs:pairs})
+  }).catch(function(){});
+}
+
+// ── Push orient live every 80ms when linked ───────────────────────────
+setInterval(function(){
+  if(nodeB && nodeA){
+    fetch('/soul/tricode_sync.php?id='+SYNC_ID,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({side:'phone', nodeB:nodeB, orient:orient})
+    }).catch(function(){});
+  }
+},80);
+
+// ── Poll desktop node A ───────────────────────────────────────────────
+function poll(){
+  fetch('/soul/tricode_sync.php?id='+SYNC_ID+'&t='+Date.now())
+  .then(function(r){return r.json();})
+  .then(function(s){
+    if(s.laptop){
+      if(s.laptop.cursor) cursor = s.laptop.cursor;
+      if(s.laptop.nodeA)  nodeA  = s.laptop.nodeA;
+      if(s.laptop.nodeC && !nodeC) nodeC = s.laptop.nodeC;
+      if(s.laptop.game) gameState = s.laptop.game;
+      if(!nodeB) msgEl.textContent = nodeA ? 'NODE A LOCKED — HOLD TO PLANT B' : 'CURSOR LIVE — HOLD TO PLANT B';
+    }
+  }).catch(function(){});
+}
+setInterval(poll, 350);
+
+// ── Draw ──────────────────────────────────────────────────────────────
+function draw(){
+  cv.width  = window.innerWidth;
+  cv.height = window.innerHeight;
+  ctx.clearRect(0,0,cv.width,cv.height);
+  const now = Date.now();
+  const W   = cv.width, H = cv.height;
+
+  // ── Charging node (holding) ──
+  if(holding && holdPos){
+    const charge = Math.min(1,(now-holdStart)/800);
+    const r = 14 + charge*18;
+    for(let i=0;i<4;i++){
+      const phase = ((now/120 + i*0.25) % 1);
+      const rr = r + phase*60*charge;
+      const alpha = (1-phase)*0.55*charge;
+      ctx.beginPath(); ctx.arc(holdPos.x,holdPos.y,rr,0,Math.PI*2);
+      const red=Math.round(80+175*charge), grn=Math.round(160-120*charge);
+      ctx.strokeStyle='rgba('+red+','+grn+',255,'+alpha.toFixed(2)+')';
+      ctx.lineWidth=1.5; ctx.stroke();
+    }
+    const red2=Math.round(80+175*charge), grn2=Math.round(160-120*charge);
+    ctx.beginPath(); ctx.arc(holdPos.x,holdPos.y,r,0,Math.PI*2);
+    ctx.fillStyle='rgba('+red2+','+grn2+',255,0.95)';
+    ctx.shadowColor='rgba('+red2+','+grn2+',255,1)';
+    ctx.shadowBlur=22+charge*20; ctx.fill(); ctx.shadowBlur=0;
+    ctx.fillStyle='#fff'; ctx.font='bold 9px Courier New';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('B', holdPos.x, holdPos.y);
+  }
+
+  // ── Planted Node B ──
+  if(nodeB && !holding){
+    const bx=nodeB.x*W, by=nodeB.y*H;
+    const p=0.5+0.5*Math.sin(now/480);
+    ctx.beginPath(); ctx.arc(bx,by,26+8*p,0,Math.PI*2);
+    ctx.strokeStyle='rgba(80,160,255,'+(0.2*p).toFixed(2)+')'; ctx.lineWidth=1.5; ctx.stroke();
+    ctx.beginPath(); ctx.arc(bx,by,14,0,Math.PI*2);
+    ctx.fillStyle='rgba(80,160,255,1)'; ctx.shadowColor='rgba(80,160,255,1)'; ctx.shadowBlur=22; ctx.fill(); ctx.shadowBlur=0;
+    ctx.fillStyle='#fff'; ctx.font='bold 10px Courier New';
+    ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('B',bx,by);
+  }
+
+  // ── Live cursor dot (always drawn when cursor exists) ──
+  if(cursor){
+    const cx=cursor.x*W, cy=cursor.y*H;
+    const p=0.5+0.5*Math.sin(now/300);
+    // Pulsing ring
+    ctx.beginPath(); ctx.arc(cx,cy,18*p,0,Math.PI*2);
+    ctx.strokeStyle='rgba(255,255,255,'+(0.25*p).toFixed(2)+')'; ctx.lineWidth=1; ctx.stroke();
+    // Crosshair arms
+    ctx.strokeStyle='rgba(255,255,255,0.7)'; ctx.lineWidth=1.2;
+    ctx.beginPath(); ctx.moveTo(cx-14,cy); ctx.lineTo(cx+14,cy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx,cy-14); ctx.lineTo(cx,cy+14); ctx.stroke();
+    // Centre dot
+    ctx.beginPath(); ctx.arc(cx,cy,3,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,255,255,0.9)'; ctx.fill();
+  }
+
+  // ── Cursor → Node A link beam (2-way bridge) ──
+  if(cursor && nodeA){
+    const cx=cursor.x*W, cy=cursor.y*H;
+    const ax=nodeA.x*W, ay=nodeA.y*H;
+    const dist=Math.hypot(cx-ax,cy-ay);
+    const angle=Math.atan2(cy-ay,cx-ax);
+    // Glow beam
+    const lp=0.4+0.3*Math.sin(now/350);
+    ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(cx,cy);
+    ctx.strokeStyle='rgba(255,199,44,'+lp.toFixed(2)+')';
+    ctx.lineWidth=1.5; ctx.setLineDash([5,8]); ctx.stroke(); ctx.setLineDash([]);
+    // Flowing dots along beam
+    for(let i=0;i<3;i++){
+      const t=((now/500+i*0.33)%1);
+      const fx=ax+Math.cos(angle)*dist*t, fy=ay+Math.sin(angle)*dist*t;
+      ctx.beginPath(); ctx.arc(fx,fy,2,0,Math.PI*2);
+      ctx.fillStyle='rgba(255,199,44,'+(Math.sin(t*Math.PI)*0.8).toFixed(2)+')'; ctx.fill();
+    }
+  }
+
+  // ── Node A ghost ──
+  if(nodeA){
+    const ax=nodeA.x*W, ay=nodeA.y*H;
+    const p=0.3+0.2*Math.sin(now/700);
+    ctx.strokeStyle='rgba(255,199,44,'+p.toFixed(2)+')'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(ax-18,ay); ctx.lineTo(ax+18,ay); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ax,ay-18); ctx.lineTo(ax,ay+18); ctx.stroke();
+    ctx.beginPath(); ctx.arc(ax,ay,22,0,Math.PI*2);
+    ctx.strokeStyle='rgba(255,199,44,'+(p*0.4).toFixed(2)+')';
+    ctx.setLineDash([3,6]); ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  // ── B → active A line ──
+  const activeA = nodeA || cursor;
+  if(activeA && nodeB && !holding){
+    const ax=activeA.x*W, ay=activeA.y*H;
+    const bx=nodeB.x*W+orient.gamma*W*0.006, by=nodeB.y*H+orient.beta*H*0.006;
+    const locked = !!nodeA;
+    ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(bx,by);
+    ctx.strokeStyle=locked?'rgba(255,199,44,0.6)':'rgba(255,255,255,0.3)';
+    ctx.lineWidth=locked?2:1; ctx.setLineDash([6,10]); ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  // ── Line — gyro-driven 3D ray ──
+  if(nodeA && nodeB && !holding){
+    const ax  = nodeA.x * W;
+    const ay  = nodeA.y * H;
+    const bx0 = nodeB.x * W;
+    const by0 = nodeB.y * H;
+    const gx  = bx0 + (orient.gamma * W * 0.006);
+    const gy  = by0 + (orient.beta  * H * 0.006);
+    const tilt= Math.max(0.3, Math.min(2.5, 1 + orient.beta * 0.012));
+    const dist= Math.hypot(gx-ax, gy-ay);
+    const angle=Math.atan2(gy-ay, gx-ax);
+
+    // Match score — how close are A and B in normalised space
+    const normDist = Math.hypot(nodeA.x - nodeB.x, nodeA.y - nodeB.y);
+    matchScore = Math.max(0, 1 - normDist / 0.15); // 0=far, 1=matched
+
+    // Colour: blue → yellow → green based on match
+    const r = Math.round(80  + (175 - 80)  * (1-matchScore));
+    const g = Math.round(160 + (255 - 160) * matchScore);
+    const b = Math.round(255 * (1-matchScore));
+    const lineCol = 'rgba('+r+','+g+','+b+',';
+
+    const lp = 0.5+0.3*Math.sin(now/400);
+    ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(gx,gy);
+    ctx.strokeStyle = lineCol+(lp.toFixed(2))+')';
+    ctx.lineWidth = Math.max(0.8, 3*tilt); ctx.setLineDash([8,14]); ctx.stroke(); ctx.setLineDash([]);
+
+    // Flowing dots — speed up as match improves
+    const speed = 600 - matchScore*400;
+    for(let i=0;i<5;i++){
+      const t  = ((now/speed + i*0.2)%1);
+      const fx = ax+Math.cos(angle)*dist*t, fy=ay+Math.sin(angle)*dist*t;
+      const fa = Math.sin(t*Math.PI)*0.9;
+      ctx.beginPath(); ctx.arc(fx,fy,2+tilt*Math.sin(t*Math.PI),0,Math.PI*2);
+      ctx.fillStyle=lineCol+fa.toFixed(2)+')'; ctx.fill();
+    }
+
+    // B endpoint
+    ctx.beginPath(); ctx.arc(gx,gy,10,0,Math.PI*2);
+    ctx.fillStyle=lineCol+'0.9)'; ctx.shadowColor=lineCol+'1)'; ctx.shadowBlur=18; ctx.fill(); ctx.shadowBlur=0;
+
+    // GREEN LOCK — if matched, show lock ring and allow saving pair
+    if(matchScore > 0.85){
+      ctx.beginPath(); ctx.arc(gx,gy,22+4*Math.sin(now/200),0,Math.PI*2);
+      ctx.strokeStyle='rgba(44,255,100,0.8)'; ctx.lineWidth=2; ctx.stroke();
+      const msg = pairs.length+'/3 LOCKED — HOLD NEW SPOT FOR NEXT PAIR';
+      msgEl.style.color='rgba(44,255,100,0.9)';
+      msgEl.textContent = msg;
+      // Auto-lock this pair
+      if(!pairs.find(function(p){return Math.hypot(p.a.x-nodeA.x,p.a.y-nodeA.y)<0.02;})){
+        pairs.push({a:{x:nodeA.x,y:nodeA.y}, b:{x:nodeB.x,y:nodeB.y}, orient:{...orient}});
+        pushPairs();
+      }
+    } else {
+      msgEl.style.color='rgba(255,199,44,0.5)';
+      msgEl.textContent='ALIGN B WITH A · '+Math.round(matchScore*100)+'% · β'+orient.beta+'° γ'+orient.gamma+'°';
+    }
+
+    // Locked pairs — draw as green dots
+    pairs.forEach(function(p){
+      const px=p.a.x*W, py=p.a.y*H;
+      ctx.beginPath(); ctx.arc(px,py,8,0,Math.PI*2);
+      ctx.fillStyle='rgba(44,255,100,0.7)'; ctx.fill();
+      ctx.fillStyle='#000'; ctx.font='bold 7px Courier New';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(pairs.indexOf(p)+1, px, py);
+    });
+
+    if(pairs.length>=3){
+      msgEl.style.color='rgba(44,255,100,1)';
+      msgEl.textContent='PERSPECTIVE SOLVED — '+pairs.length+' PAIRS LOCKED';
+    }
+  }
+
+  // ── Node C — purple ───────────────────────────────────────────────────
+  if(nodeC){
+    const cx2=nodeC.x*W, cy2=nodeC.y*H;
+    const p=0.5+0.5*Math.sin(now/530);
+    ctx.beginPath(); ctx.arc(cx2,cy2,26+8*p,0,Math.PI*2);
+    ctx.strokeStyle='rgba(180,80,255,'+(0.2*p).toFixed(2)+')'; ctx.lineWidth=1.5; ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx2,cy2,14,0,Math.PI*2);
+    ctx.fillStyle='rgba(180,80,255,1)'; ctx.shadowColor='rgba(180,80,255,1)'; ctx.shadowBlur=22; ctx.fill(); ctx.shadowBlur=0;
+    ctx.fillStyle='#fff'; ctx.font='bold 10px Courier New';
+    ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('C',cx2,cy2);
+  }
+
+  // ── Triangle A-B-C ────────────────────────────────────────────────────
+  if(nodeA && nodeB && nodeC){
+    const ax=nodeA.x*W, ay=nodeA.y*H;
+    const bx=nodeB.x*W+orient.gamma*W*0.006, by=nodeB.y*H+orient.beta*H*0.006;
+    const cx2=nodeC.x*W, cy2=nodeC.y*H;
+    // Faint fill
+    ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(bx,by); ctx.lineTo(cx2,cy2); ctx.closePath();
+    ctx.fillStyle='rgba(180,80,255,0.07)'; ctx.fill();
+    // Purple edges A-C and B-C
+    const tp=0.4+0.3*Math.sin(now/450);
+    [[ax,ay,cx2,cy2],[bx,by,cx2,cy2]].forEach(function(seg){
+      ctx.beginPath(); ctx.moveTo(seg[0],seg[1]); ctx.lineTo(seg[2],seg[3]);
+      ctx.strokeStyle='rgba(180,80,255,'+tp.toFixed(2)+')';
+      ctx.lineWidth=1.5; ctx.setLineDash([5,9]); ctx.stroke(); ctx.setLineDash([]);
+    });
+    // Centroid + area
+    const gx=(ax+bx+cx2)/3, gy=(ay+by+cy2)/3;
+    const area=Math.abs((bx-ax)*(cy2-ay)-(cx2-ax)*(by-ay))/2;
+    ctx.font='7px Courier New'; ctx.fillStyle='rgba(180,80,255,0.8)'; ctx.textAlign='center';
+    ctx.fillText('▲ '+Math.round(area)+'px²', gx, gy);
+  }
+
+  // ── GAME HUD ─────────────────────────────────────────────────────────
+  if(gameState && gameState.state==='active'){
+    const timeLeft = Math.max(0, gameState.deadline - now);
+    const frac = timeLeft / 8000;
+    const urgent = frac < 0.35;
+
+    // Timer bar — top of screen
+    const barCol = urgent ? 'rgba(255,80,80,0.9)' : 'rgba(44,255,100,0.85)';
+    ctx.fillStyle='rgba(255,255,255,0.08)'; ctx.fillRect(0,0,W,6);
+    ctx.fillStyle=barCol; ctx.fillRect(0,0,W*frac,6);
+
+    // Urgency screen edge glow
+    if(urgent){
+      const up=0.5+0.5*Math.sin(now/90);
+      const grad=ctx.createRadialGradient(W/2,H/2,H*0.3,W/2,H/2,H*0.8);
+      grad.addColorStop(0,'rgba(255,80,80,0)');
+      grad.addColorStop(1,'rgba(255,80,80,'+(0.2*up).toFixed(2)+')');
+      ctx.fillStyle=grad; ctx.fillRect(0,0,W,H);
+    }
+
+    // Round + score top bar
+    ctx.font='bold 10px Courier New'; ctx.fillStyle=barCol; ctx.textAlign='center';
+    ctx.fillText('R'+(gameState.round+1)+'/3  ·  '+(timeLeft/1000).toFixed(1)+'s  ·  '+gameState.score+' PTS', W/2, 22);
+
+    // Match % live
+    if(matchScore>0){
+      const mc=matchScore>0.85?'rgba(44,255,100,1)':'rgba(255,199,44,0.8)';
+      ctx.font='bold 14px Courier New'; ctx.fillStyle=mc; ctx.textAlign='center';
+      ctx.fillText(Math.round(matchScore*100)+'%', W/2, H-48);
+    }
+  }
+
+  if(gameState && gameState.state==='done'){
+    ctx.font='bold 11px Courier New'; ctx.fillStyle='rgba(44,255,100,0.9)'; ctx.textAlign='center';
+    ctx.fillText('CALIBRATED · '+gameState.score+' PTS', W/2, 22);
+  }
+
+  // Green flash on pair lock (matchScore just crossed 0.85)
+  if(matchScore>0.85 && nodeA && nodeB && gameState && gameState.state==='active'){
+    const fa=0.15+0.1*Math.sin(now/100);
+    ctx.fillStyle='rgba(44,255,100,'+fa.toFixed(2)+')'; ctx.fillRect(0,0,W,H);
+  }
+
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>

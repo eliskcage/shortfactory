@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SFT WALLET // SHORTFACTORY</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=IM+Fell+English:ital@0;1&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+<script src="wallet-core.js"></script>
+<style>
+:root {
+  --bg: #04040a;
+  --bg2: #080812;
+  --text: #d8d8e8;
+  --dim: rgba(216,216,232,0.45);
+  --gold: #c8a84b;
+  --gold-dim: rgba(200,168,75,0.12);
+  --gold-glow: rgba(200,168,75,0.3);
+  --green: #4ba84b;
+  --red: #a84b4b;
+  --mono: 'Share Tech Mono', monospace;
+  --serif: 'IM Fell English', serif;
+  --tech: 'Orbitron', monospace;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { background:var(--bg); color:var(--text); font-family:var(--mono); min-height:100vh; }
+
+/* NO WALLET STATE */
+#no-wallet { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; gap:1.5rem; text-align:center; padding:2rem; }
+.nw-label { font-family:var(--tech); font-size:0.45rem; letter-spacing:0.6em; color:rgba(200,168,75,0.3); }
+.nw-title { font-family:var(--serif); font-size:clamp(1.6rem,4vw,2.4rem); font-weight:normal; color:var(--gold); max-width:500px; line-height:1.3; }
+.nw-sub { font-family:var(--mono); font-size:0.8rem; color:var(--dim); max-width:420px; line-height:1.8; }
+.nw-btn { font-family:var(--tech); font-size:0.6rem; letter-spacing:0.4em; background:var(--gold); color:var(--bg); border:none; padding:1.1rem 3rem; cursor:pointer; margin-top:1rem; transition:all 0.3s; }
+.nw-btn:hover { box-shadow:0 0 30px var(--gold-glow); }
+
+/* MAIN WALLET */
+#wallet-wrap { display:none; max-width:900px; margin:0 auto; padding:3rem 1.5rem 5rem; }
+
+/* HEADER */
+.w-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:3rem; flex-wrap:wrap; gap:1rem; }
+.w-logo { font-family:var(--tech); font-size:0.5rem; letter-spacing:0.5em; color:rgba(200,168,75,0.3); }
+.w-address { font-family:var(--mono); font-size:0.65rem; color:var(--dim); cursor:pointer; transition:color 0.2s; }
+.w-address:hover { color:var(--gold); }
+
+/* BALANCE HERO */
+.balance-block { text-align:center; margin:0 auto 3rem; }
+.balance-label { font-family:var(--tech); font-size:0.45rem; letter-spacing:0.5em; color:rgba(200,168,75,0.35); margin-bottom:0.8rem; }
+.balance-num { font-family:var(--tech); font-size:clamp(2.5rem,8vw,5rem); color:var(--gold); letter-spacing:0.04em; line-height:1; }
+.balance-unit { font-family:var(--tech); font-size:0.8rem; color:rgba(200,168,75,0.5); letter-spacing:0.3em; margin-top:0.4rem; }
+
+/* GRID */
+.w-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:2rem; }
+@media(max-width:640px) { .w-grid { grid-template-columns:1fr; } }
+
+/* CARDS */
+.w-card { background:var(--gold-dim); border:1px solid rgba(200,168,75,0.08); padding:1.5rem; }
+.card-label { font-family:var(--tech); font-size:0.4rem; letter-spacing:0.5em; color:rgba(200,168,75,0.4); margin-bottom:1rem; }
+
+/* SOUL TOKEN CARD */
+.token-card { text-align:center; }
+.token-canvas-wrap { position:relative; display:inline-block; margin-bottom:1rem; }
+.token-canvas-wrap canvas { display:block; }
+.token-glow { position:absolute; inset:-15px; border-radius:50%; background:radial-gradient(circle, rgba(200,168,75,0.1) 0%, transparent 70%); animation:tGlow 3s ease-in-out infinite; pointer-events:none; }
+@keyframes tGlow { 0%,100%{opacity:0.4} 50%{opacity:1} }
+.token-id { font-family:var(--mono); font-size:0.6rem; color:rgba(200,168,75,0.4); margin-bottom:0.3rem; }
+.token-iq { font-family:var(--mono); font-size:0.65rem; color:var(--dim); }
+
+/* NO TOKEN */
+.no-token { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:160px; gap:0.8rem; }
+.no-token-msg { font-family:var(--serif); font-size:0.9rem; color:var(--dim); font-style:italic; text-align:center; }
+.forge-btn { font-family:var(--tech); font-size:0.45rem; letter-spacing:0.4em; background:var(--gold); color:var(--bg); border:none; padding:0.7rem 1.8rem; cursor:pointer; transition:all 0.3s; }
+.forge-btn:hover { box-shadow:0 0 20px var(--gold-glow); }
+
+/* IQ VECTOR */
+.iq-axes { display:flex; flex-direction:column; gap:1rem; }
+.iq-row { display:flex; flex-direction:column; gap:0.4rem; }
+.iq-row-top { display:flex; justify-content:space-between; }
+.iq-name { font-family:var(--tech); font-size:0.38rem; letter-spacing:0.3em; color:var(--dim); }
+.iq-val { font-family:var(--mono); font-size:0.75rem; color:var(--gold); }
+.iq-track { width:100%; height:4px; background:rgba(200,168,75,0.08); border-radius:2px; }
+.iq-fill { height:4px; border-radius:2px; background:linear-gradient(90deg, rgba(200,168,75,0.3), var(--gold)); }
+
+/* SPEND PANEL */
+.spend-grid { display:flex; flex-direction:column; gap:0.8rem; }
+.spend-item { display:flex; justify-content:space-between; align-items:center; padding:0.8rem; border:1px solid rgba(200,168,75,0.07); background:rgba(200,168,75,0.03); transition:all 0.2s; }
+.spend-item:hover { border-color:rgba(200,168,75,0.2); }
+.spend-left { display:flex; flex-direction:column; gap:0.2rem; }
+.spend-name { font-family:var(--mono); font-size:0.75rem; color:var(--text); }
+.spend-desc { font-family:var(--mono); font-size:0.6rem; color:var(--dim); }
+.spend-cost { font-family:var(--tech); font-size:0.55rem; color:var(--gold); }
+.spend-btn { font-family:var(--tech); font-size:0.4rem; letter-spacing:0.3em; background:transparent; border:1px solid rgba(200,168,75,0.3); color:var(--gold); padding:0.5rem 1rem; cursor:pointer; transition:all 0.2s; white-space:nowrap; }
+.spend-btn:hover { background:var(--gold-dim); }
+.spend-btn:disabled { opacity:0.3; cursor:not-allowed; }
+
+/* TRANSACTIONS */
+.tx-list { display:flex; flex-direction:column; gap:0.6rem; max-height:280px; overflow-y:auto; }
+.tx-list::-webkit-scrollbar { width:2px; }
+.tx-list::-webkit-scrollbar-track { background:transparent; }
+.tx-list::-webkit-scrollbar-thumb { background:rgba(200,168,75,0.2); }
+.tx-item { display:flex; justify-content:space-between; align-items:center; padding:0.6rem 0; border-bottom:1px solid rgba(200,168,75,0.05); }
+.tx-left { display:flex; flex-direction:column; gap:0.15rem; }
+.tx-reason { font-family:var(--mono); font-size:0.7rem; color:var(--text); }
+.tx-time { font-family:var(--mono); font-size:0.55rem; color:var(--dim); }
+.tx-amount { font-family:var(--tech); font-size:0.7rem; }
+.tx-amount.credit { color:var(--green); }
+.tx-amount.debit { color:var(--red); }
+.tx-amount.mint { color:var(--gold); }
+.no-tx { font-family:var(--serif); font-size:0.85rem; color:var(--dim); font-style:italic; text-align:center; padding:2rem 0; }
+
+/* FULL WIDTH CARD */
+.w-card.full { grid-column:1/-1; }
+
+/* TOAST */
+.toast { position:fixed; bottom:2rem; right:2rem; background:var(--gold); color:var(--bg); font-family:var(--tech); font-size:0.55rem; letter-spacing:0.3em; padding:0.8rem 1.5rem; transform:translateY(100px); opacity:0; transition:all 0.4s ease; z-index:999; pointer-events:none; }
+.toast.show { transform:translateY(0); opacity:1; }
+</style>
+</head>
+<body>
+
+<!-- NO WALLET -->
+<div id="no-wallet">
+  <div class="nw-label">SHORTFACTORY // SFT WALLET</div>
+  <div class="nw-title">You have not forged your soul token yet.</div>
+  <div class="nw-sub">Complete the IQ Mirror to mint your unique soul token and receive your first SFT allocation. Your token is the key to ShortFactory infrastructure.</div>
+  <button class="nw-btn" onclick="location.href='iq-test.html'">TAKE THE IQ MIRROR</button>
+</div>
+
+<!-- WALLET -->
+<div id="wallet-wrap">
+  <div class="w-header">
+    <div class="w-logo">SHORTFACTORY // SFT WALLET</div>
+    <div class="w-address" id="w-address" onclick="copyAddress()" title="Click to copy">LOADING...</div>
+  </div>
+
+  <div class="balance-block">
+    <div class="balance-label">BALANCE</div>
+    <div class="balance-num" id="balance-num">0</div>
+    <div class="balance-unit">SFT</div>
+  </div>
+
+  <div class="w-grid">
+
+    <!-- SOUL TOKEN -->
+    <div class="w-card token-card">
+      <div class="card-label">SOUL TOKEN</div>
+      <div id="token-display"></div>
+    </div>
+
+    <!-- IQ VECTOR -->
+    <div class="w-card">
+      <div class="card-label">IQ VECTOR ψ_iq</div>
+      <div class="iq-axes" id="iq-axes">
+        <div style="font-family:var(--serif);font-size:0.85rem;color:var(--dim);font-style:italic;padding:1rem 0;text-align:center;">Complete the IQ Mirror to see your vector.</div>
+      </div>
+    </div>
+
+    <!-- SPEND SFT -->
+    <div class="w-card">
+      <div class="card-label">USE SFT</div>
+      <div class="spend-grid">
+        <div class="spend-item">
+          <div class="spend-left">
+            <div class="spend-name">Generate AI Short</div>
+            <div class="spend-desc">1 video generated by ShortFactory AI</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.4rem">
+            <div class="spend-cost">100 SFT</div>
+            <button class="spend-btn" onclick="spend(100,'Generate AI Short')" id="btn-short">USE</button>
+          </div>
+        </div>
+        <div class="spend-item">
+          <div class="spend-left">
+            <div class="spend-name">Soul Map Session</div>
+            <div class="spend-desc">Full guided 10-stage soul mapping</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.4rem">
+            <div class="spend-cost">50 SFT</div>
+            <button class="spend-btn" onclick="spendAndGo(50,'Soul Map Session','soul-map.html')" id="btn-soul">OPEN</button>
+          </div>
+        </div>
+        <div class="spend-item">
+          <div class="spend-left">
+            <div class="spend-name">Cortex API Access</div>
+            <div class="spend-desc">7 days AGI brain API access</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.4rem">
+            <div class="spend-cost">500 SFT</div>
+            <button class="spend-btn" onclick="spend(500,'Cortex API — 7 days')" id="btn-cortex">USE</button>
+          </div>
+        </div>
+        <div class="spend-item">
+          <div class="spend-left">
+            <div class="spend-name">Launch Your Fork</div>
+            <div class="spend-desc">Deploy your own ShortFactory instance</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.4rem">
+            <div class="spend-cost">1000 SFT</div>
+            <button class="spend-btn" onclick="spend(1000,'ShortFactory Fork')" id="btn-fork">USE</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRANSACTIONS -->
+    <div class="w-card">
+      <div class="card-label">TRANSACTIONS</div>
+      <div class="tx-list" id="tx-list">
+        <div class="no-tx">No transactions yet.</div>
+      </div>
+    </div>
+
+    <!-- EARN MORE -->
+    <div class="w-card full" style="text-align:center;padding:2rem;">
+      <div class="card-label" style="margin-bottom:1rem;">EARN MORE SFT</div>
+      <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+        <button class="forge-btn" onclick="location.href='iq-test.html'">RUN IQ MIRROR AGAIN</button>
+        <button class="forge-btn" onclick="location.href='soul-map.html'" style="background:transparent;color:var(--gold);border:1px solid rgba(200,168,75,0.3);">COMPLETE SOUL MAP</button>
+        <button class="forge-btn" onclick="location.href='/'" style="background:transparent;color:var(--gold);border:1px solid rgba(200,168,75,0.3);">BACK TO FACTORY</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+function toast(msg, dur=2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+function copyAddress() {
+  const w = SFWallet.get();
+  if (!w) return;
+  navigator.clipboard.writeText(w.address).then(() => toast('ADDRESS COPIED'));
+}
+
+function renderIQAxes(token) {
+  const el = document.getElementById('iq-axes');
+  if (!token || !token.iq) return;
+  const { depth, compression, alignment } = token.iq;
+  const axes = [
+    { name:'DEPTH', val: depth, max: 7, display: depth+'/7' },
+    { name:'COMPRESSION', val: compression, max: 10, display: compression+'/10' },
+    { name:'ALIGNMENT', val: alignment, max: 10, display: alignment+'/10' }
+  ];
+  el.innerHTML = axes.map(a => `
+    <div class="iq-row">
+      <div class="iq-row-top"><span class="iq-name">${a.name}</span><span class="iq-val">${a.display}</span></div>
+      <div class="iq-track"><div class="iq-fill" style="width:${(a.val/a.max*100).toFixed(1)}%"></div></div>
+    </div>`).join('');
+}
+
+function renderTokenDisplay(token) {
+  const el = document.getElementById('token-display');
+  if (!token) {
+    el.innerHTML = `<div class="no-token">
+      <div class="no-token-msg">Your soul token has not been forged yet.</div>
+      <button class="forge-btn" onclick="location.href='iq-test.html'">FORGE NOW</button>
+    </div>`;
+    return;
+  }
+  el.innerHTML = `
+    <div class="token-canvas-wrap">
+      <canvas id="token-canvas"></canvas>
+      <div class="token-glow"></div>
+    </div>
+    <div class="token-id">${token.id}</div>
+    <div class="token-iq">ψ_iq = [${token.iq.depth}, ${token.iq.compression}, ${token.iq.alignment}]</div>`;
+  setTimeout(() => SFWallet.drawSoulToken(document.getElementById('token-canvas'), token, 160), 50);
+}
+
+function renderTxList(txs) {
+  const el = document.getElementById('tx-list');
+  if (!txs || !txs.length) { el.innerHTML = '<div class="no-tx">No transactions yet.</div>'; return; }
+  el.innerHTML = txs.slice(0,30).map(tx => {
+    const sign = tx.type === 'credit' ? '+' : tx.type === 'debit' ? '-' : '';
+    const amtStr = tx.type === 'mint' ? 'MINTED' : sign + SFWallet.fmt(tx.amount) + ' SFT';
+    return `<div class="tx-item">
+      <div class="tx-left">
+        <div class="tx-reason">${tx.reason}</div>
+        <div class="tx-time">${SFWallet.timeAgo(tx.ts)}</div>
+      </div>
+      <div class="tx-amount ${tx.type}">${amtStr}</div>
+    </div>`;
+  }).join('');
+}
+
+function updateSpendButtons(balance) {
+  const checks = [['btn-short',100],['btn-soul',50],['btn-cortex',500],['btn-fork',1000]];
+  checks.forEach(([id,cost]) => {
+    const b = document.getElementById(id);
+    if(b) b.disabled = balance < cost;
+  });
+}
+
+function spend(cost, reason) {
+  const ok = SFWallet.spendSFT(cost, reason);
+  if (!ok) { toast('INSUFFICIENT SFT'); return; }
+  toast('SPENT ' + cost + ' SFT');
+  render();
+}
+
+function spendAndGo(cost, reason, url) {
+  const ok = SFWallet.spendSFT(cost, reason);
+  if (!ok) { toast('INSUFFICIENT SFT'); return; }
+  location.href = url;
+}
+
+function render() {
+  const w = SFWallet.get();
+
+  if (!w || !w.soulToken) {
+    document.getElementById('no-wallet').style.display = 'flex';
+    document.getElementById('wallet-wrap').style.display = 'none';
+    return;
+  }
+
+  document.getElementById('no-wallet').style.display = 'none';
+  document.getElementById('wallet-wrap').style.display = 'block';
+
+  document.getElementById('w-address').textContent = w.address;
+  document.getElementById('balance-num').textContent = SFWallet.fmt(w.sft);
+
+  renderTokenDisplay(w.soulToken);
+  renderIQAxes(w.soulToken);
+  renderTxList(w.txs);
+  updateSpendButtons(w.sft);
+
+  // Animate balance in
+  animateCount('balance-num', w.sft);
+}
+
+function animateCount(id, target) {
+  const el = document.getElementById(id);
+  const start = 0, dur = 800;
+  const t0 = performance.now();
+  function step(t) {
+    const p = Math.min((t - t0) / dur, 1);
+    const ease = 1 - Math.pow(1-p, 3);
+    el.textContent = SFWallet.fmt(Math.round(target * ease));
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+render();
+</script>
+</body>
+</html>

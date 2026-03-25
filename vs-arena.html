@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ADVANCED VS // IQ MIRROR // SHORTFACTORY</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=IM+Fell+English:ital@0;1&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<script src="wallet-core.js"></script>
+<style>
+:root {
+  --bg: #04040a;
+  --text: #d8d8e8;
+  --dim: rgba(216,216,232,0.45);
+  --gold: #c8a84b;
+  --gold-dim: rgba(200,168,75,0.1);
+  --gold-glow: rgba(200,168,75,0.35);
+  --red: #c84b4b;
+  --red-dim: rgba(200,75,75,0.1);
+  --mono: 'Share Tech Mono', monospace;
+  --serif: 'IM Fell English', serif;
+  --tech: 'Orbitron', monospace;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { background:var(--bg); color:var(--text); font-family:var(--mono); min-height:100vh; overflow-x:hidden; }
+
+/* GRID LINES */
+.grid-bg {
+  position:fixed; inset:0; pointer-events:none; z-index:0;
+  background-image:
+    linear-gradient(rgba(200,168,75,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(200,168,75,0.03) 1px, transparent 1px);
+  background-size:60px 60px;
+}
+
+/* SCAN LINE */
+.scanline {
+  position:fixed; top:0; left:0; right:0; height:3px;
+  background:linear-gradient(90deg, transparent, rgba(200,168,75,0.4), transparent);
+  animation:scan 4s linear infinite; pointer-events:none; z-index:1;
+}
+@keyframes scan { from{top:0} to{top:100vh} }
+
+/* MAIN */
+main { position:relative; z-index:2; max-width:800px; margin:0 auto; padding:5rem 1.5rem 6rem; }
+
+/* HEADER */
+.vs-header { text-align:center; margin-bottom:4rem; }
+.vs-overline { font-family:var(--tech); font-size:0.42rem; letter-spacing:0.7em; color:rgba(200,168,75,0.3); margin-bottom:1.5rem; }
+.vs-logo {
+  font-family:var(--tech); font-size:clamp(2rem,7vw,4.5rem); font-weight:900;
+  color:var(--gold); letter-spacing:0.1em; line-height:1;
+  text-shadow:0 0 60px rgba(200,168,75,0.3), 0 0 120px rgba(200,168,75,0.1);
+  margin-bottom:0.5rem;
+}
+.vs-sub { font-family:var(--serif); font-size:clamp(0.9rem,2vw,1.1rem); color:var(--dim); font-style:italic; line-height:1.7; max-width:550px; margin:0 auto 2rem; }
+
+/* VERSUS SPLIT */
+.vs-split {
+  display:grid; grid-template-columns:1fr auto 1fr;
+  gap:1rem; align-items:center; margin-bottom:3rem;
+}
+.vs-side {
+  border:1px solid; padding:1.8rem 1.2rem; text-align:center;
+  display:flex; flex-direction:column; gap:0.6rem;
+}
+.vs-side.left { border-color:rgba(200,168,75,0.2); background:rgba(200,168,75,0.04); }
+.vs-side.right { border-color:rgba(200,75,75,0.2); background:rgba(200,75,75,0.04); }
+.vs-side-label { font-family:var(--tech); font-size:0.4rem; letter-spacing:0.5em; color:var(--dim); }
+.vs-side-icon { font-size:2.5rem; }
+.vs-side-name { font-family:var(--serif); font-size:1rem; line-height:1.3; }
+.vs-side.left .vs-side-name { color:var(--gold); }
+.vs-side.right .vs-side-name { color:var(--red); }
+.vs-side-desc { font-family:var(--mono); font-size:0.62rem; color:var(--dim); line-height:1.6; }
+.vs-divider { font-family:var(--tech); font-size:1.8rem; color:rgba(200,168,75,0.3); text-align:center; }
+
+/* MECHANICS */
+.mechanics { margin-bottom:3rem; }
+.mech-title { font-family:var(--tech); font-size:0.45rem; letter-spacing:0.5em; color:rgba(200,168,75,0.35); margin-bottom:1.5rem; }
+.mech-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; }
+@media(max-width:550px){ .mech-grid{grid-template-columns:1fr} .vs-split{grid-template-columns:1fr;} .vs-divider{transform:rotate(90deg);} }
+.mech-item { padding:1rem 1.2rem; border:1px solid rgba(200,168,75,0.07); background:rgba(200,168,75,0.03); }
+.mech-item-label { font-family:var(--tech); font-size:0.38rem; letter-spacing:0.4em; color:rgba(200,168,75,0.35); margin-bottom:0.4rem; }
+.mech-item-val { font-family:var(--serif); font-size:0.95rem; color:var(--text); line-height:1.5; }
+.mech-item-val strong { color:var(--gold); font-style:normal; font-family:var(--tech); font-size:0.75rem; letter-spacing:0.1em; }
+
+/* UNDER CONSTRUCTION */
+.under-con {
+  border:1px solid rgba(200,168,75,0.15);
+  padding:2.5rem; text-align:center; margin-bottom:3rem;
+  position:relative; overflow:hidden;
+}
+.under-con::before {
+  content:''; position:absolute; inset:0;
+  background:repeating-linear-gradient(
+    -45deg,
+    transparent, transparent 10px,
+    rgba(200,168,75,0.02) 10px, rgba(200,168,75,0.02) 20px
+  );
+}
+.con-label { font-family:var(--tech); font-size:0.5rem; letter-spacing:0.6em; color:var(--gold); margin-bottom:1rem; position:relative; }
+.con-title { font-family:var(--serif); font-size:1.4rem; color:var(--dim); font-style:italic; margin-bottom:0.8rem; position:relative; }
+.con-body { font-family:var(--mono); font-size:0.7rem; color:rgba(216,216,232,0.35); line-height:1.8; max-width:500px; margin:0 auto; position:relative; }
+
+/* IOU SECTION */
+.iou-section { border:1px solid rgba(200,168,75,0.2); background:rgba(200,168,75,0.04); padding:2rem; margin-bottom:2rem; }
+.iou-label { font-family:var(--tech); font-size:0.42rem; letter-spacing:0.5em; color:rgba(200,168,75,0.4); margin-bottom:1.2rem; }
+.iou-explain { font-family:var(--serif); font-size:0.95rem; color:var(--dim); font-style:italic; line-height:1.7; margin-bottom:1.5rem; }
+.iou-fields { display:flex; flex-direction:column; gap:0.8rem; margin-bottom:1.5rem; }
+.iou-field { display:flex; flex-direction:column; gap:0.3rem; }
+.iou-field label { font-family:var(--tech); font-size:0.38rem; letter-spacing:0.4em; color:var(--dim); }
+.iou-field input {
+  background:transparent; border:none; border-bottom:1px solid rgba(200,168,75,0.2);
+  padding:0.6rem 0; font-family:var(--mono); font-size:0.85rem; color:var(--text);
+  outline:none; transition:border-color 0.2s;
+}
+.iou-field input:focus { border-bottom-color:rgba(200,168,75,0.5); }
+.iou-field input::placeholder { color:rgba(216,216,232,0.2); }
+.iou-preview {
+  background:rgba(0,0,0,0.4); border:1px solid rgba(200,168,75,0.1);
+  padding:1rem; font-family:var(--mono); font-size:0.62rem;
+  color:rgba(200,168,75,0.5); line-height:1.8; margin-bottom:1.5rem;
+  word-break:break-all; display:none; max-height:120px; overflow:hidden;
+  position:relative;
+}
+.iou-preview::after {
+  content:''; position:absolute; bottom:0; left:0; right:0; height:40px;
+  background:linear-gradient(transparent, rgba(0,0,0,0.4));
+}
+.iou-preview.show { display:block; }
+.iou-btn {
+  font-family:var(--tech); font-size:0.55rem; letter-spacing:0.4em;
+  background:var(--gold); color:var(--bg); border:none; padding:1rem 2rem;
+  cursor:pointer; width:100%; transition:all 0.3s;
+}
+.iou-btn:hover { box-shadow:0 0 30px var(--gold-glow); }
+.iou-btn:disabled { opacity:0.35; cursor:not-allowed; }
+
+/* CONFIRM */
+.iou-confirm { display:none; text-align:center; padding:1.5rem 0; flex-direction:column; gap:0.8rem; align-items:center; }
+.iou-confirm.show { display:flex; }
+.confirm-icon { font-size:2.5rem; }
+.confirm-title { font-family:var(--serif); font-size:1.1rem; color:var(--gold); }
+.confirm-body { font-family:var(--mono); font-size:0.68rem; color:var(--dim); line-height:1.8; max-width:420px; }
+.confirm-code { font-family:var(--mono); font-size:0.65rem; color:rgba(200,168,75,0.4); word-break:break-all; background:rgba(0,0,0,0.4); padding:0.6rem; border:1px solid rgba(200,168,75,0.08); max-width:100%; }
+
+/* BACK */
+.back-row { text-align:center; margin-top:2rem; }
+.back-link { font-family:var(--tech); font-size:0.45rem; letter-spacing:0.4em; color:rgba(200,168,75,0.3); text-decoration:none; cursor:pointer; transition:color 0.2s; }
+.back-link:hover { color:var(--gold); }
+
+/* TOAST */
+.toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%) translateY(60px); background:var(--gold); color:var(--bg); font-family:var(--tech); font-size:0.5rem; letter-spacing:0.4em; padding:0.8rem 1.8rem; opacity:0; transition:all 0.35s; z-index:999; pointer-events:none; white-space:nowrap; }
+.toast.on { transform:translateX(-50%) translateY(0); opacity:1; }
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+<div class="scanline"></div>
+
+<main>
+
+  <div class="vs-header">
+    <div class="vs-overline">SHORTFACTORY // IQ MIRROR</div>
+    <div class="vs-logo">ADVANCED VS</div>
+    <div class="vs-sub">
+      Two minds. Same questions. Highest compression wins.<br>
+      The reflection does not forgive average answers.
+    </div>
+  </div>
+
+  <!-- SPLIT -->
+  <div class="vs-split">
+    <div class="vs-side left">
+      <div class="vs-side-label">CHALLENGER</div>
+      <div class="vs-side-icon">🧠</div>
+      <div class="vs-side-name">You</div>
+      <div class="vs-side-desc">Your compression. Your depth. Your alignment with the reflection. The only variable you control.</div>
+    </div>
+    <div class="vs-divider">VS</div>
+    <div class="vs-side right">
+      <div class="vs-side-label">OPPONENT</div>
+      <div class="vs-side-icon">👤</div>
+      <div class="vs-side-name">Another Soul</div>
+      <div class="vs-side-desc">A matched player. Same levels. Same reflection. Different compression. One winner.</div>
+    </div>
+  </div>
+
+  <!-- MECHANICS -->
+  <div class="mechanics">
+    <div class="mech-title">HOW IT WORKS</div>
+    <div class="mech-grid">
+      <div class="mech-item">
+        <div class="mech-item-label">FORMAT</div>
+        <div class="mech-item-val">7 levels. Same questions. Simultaneous. The AI evaluates both responses side by side.</div>
+      </div>
+      <div class="mech-item">
+        <div class="mech-item-label">SCORING</div>
+        <div class="mech-item-val">Compression quality + alignment with the reflection. <strong>WINNER TAKES ALL.</strong></div>
+      </div>
+      <div class="mech-item">
+        <div class="mech-item-label">REWARD</div>
+        <div class="mech-item-val">Winner earns <strong>x2 SFT</strong> — double the standard IQ Mirror award. Maximum 2,200 SFT per run.</div>
+      </div>
+      <div class="mech-item">
+        <div class="mech-item-label">LEVEL SKIP</div>
+        <div class="mech-item-val">Victory grants <strong>1 LEVEL SKIP CREDIT</strong> toward the final currency tier. Non-transferable. Immutable.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- UNDER CONSTRUCTION -->
+  <div class="under-con">
+    <div class="con-label">⚡ ARENA STATUS: UNDER CONSTRUCTION ⚡</div>
+    <div class="con-title">The arena is being built.</div>
+    <div class="con-body">
+      The VS Arena matchmaking system, live opponent pairing, and real-time compression comparison engine are not yet deployed. The architecture is correct. The build is in progress.<br><br>
+      Claim your IOU below. When the arena goes live, your credits will be verified and applied to your wallet automatically.
+    </div>
+  </div>
+
+  <!-- IOU SECTION -->
+  <div class="iou-section">
+    <div class="iou-label">CLAIM YOUR IOU — ADVANCED VS PRE-REGISTRATION</div>
+    <div class="iou-explain">
+      The arena is not live yet — but your intent is real and your credits are real. Download your encrypted IOU file now. It will be verified against the blockchain when the VS Arena launches. Keep the file. It is your proof of claim.
+    </div>
+
+    <div class="iou-fields">
+      <div class="iou-field">
+        <label>YOUR NAME (as it will appear on your soul token)</label>
+        <input type="text" id="iou-name" placeholder="Daniel Chipchase" maxlength="60" oninput="updatePreview()">
+      </div>
+      <div class="iou-field">
+        <label>OPPONENT NAME (leave blank for open matchmaking)</label>
+        <input type="text" id="iou-opponent" placeholder="open matchmaking" maxlength="60" oninput="updatePreview()">
+      </div>
+    </div>
+
+    <div class="iou-preview" id="iou-preview"></div>
+
+    <button class="iou-btn" id="iou-btn" onclick="generateIOU()" disabled>
+      GENERATE & DOWNLOAD IOU FILE
+    </button>
+
+    <div class="iou-confirm" id="iou-confirm">
+      <div class="confirm-icon">📄</div>
+      <div class="confirm-title">IOU Generated</div>
+      <div class="confirm-body">Your encrypted .sft file has been downloaded. Store it safely — it is your proof of claim for the VS Arena reward. Your verification hash is:</div>
+      <div class="confirm-code" id="confirm-hash"></div>
+    </div>
+  </div>
+
+  <div class="back-row">
+    <a class="back-link" onclick="history.back()">← BACK TO IQ MIRROR</a>
+    &nbsp;&nbsp;&nbsp;
+    <a class="back-link" href="wallet.html">OPEN WALLET →</a>
+  </div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ---- SATOSHI CIPHER (Vigenere ASCII 32-126) ----
+function satoshiEncrypt(text, key) {
+  const range = 95;
+  let out = '';
+  for (let i = 0; i < text.length; i++) {
+    const c = text.charCodeAt(i) - 32;
+    const k = key.charCodeAt(i % key.length) - 32;
+    out += String.fromCharCode(((c + k) % range) + 32);
+  }
+  return btoa(unescape(encodeURIComponent(out)));
+}
+
+function simpleHash(str) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = (h * 0x01000193) >>> 0;
+  }
+  return h.toString(16).toUpperCase().padStart(8,'0');
+}
+
+function buildIOU(name, opponent) {
+  const w = SFWallet.get();
+  const walletAddr = w ? w.address : 'NO_WALLET';
+  const tokenId = w && w.soulToken ? w.soulToken.id : 'NO_TOKEN';
+  const iqVec = w && w.soulToken ? w.soulToken.iq : { depth:0, compression:0, alignment:0 };
+  const sftOwed = ((iqVec.depth * 100) + (iqVec.compression * 20) + (iqVec.alignment * 20)) * 2;
+  const ts = new Date().toISOString();
+
+  const payload = {
+    type: 'SFT_IOU',
+    version: '1.0',
+    issued_at: ts,
+    issued_by: 'ShortFactory VS Arena — Pre-Registration',
+    wallet_address: walletAddr,
+    soul_token_id: tokenId,
+    challenger_name: name || 'Anonymous',
+    opponent_name: opponent || 'open_matchmaking',
+    sft_owed: sftOwed,
+    level_skip_credits: 1,
+    reason: 'Advanced VS IQ Mirror — Arena Pre-Registration',
+    iq_vector: iqVec,
+    status: 'PENDING_VERIFICATION',
+    verification_url: 'https://www.shortfactory.shop/vs-arena.html',
+    note: 'This IOU will be verified and credited when the VS Arena goes live. Keep this file. It is your proof of claim.',
+    cipher: 'satoshi-vigenere-ascii-32-126',
+    encrypted: true
+  };
+
+  const json = JSON.stringify(payload, null, 2);
+  const hash = simpleHash(json + walletAddr + ts);
+  payload.hash = hash;
+
+  return { payload, json: JSON.stringify(payload, null, 2), hash, sftOwed, walletAddr };
+}
+
+function updatePreview() {
+  const name = document.getElementById('iou-name').value.trim();
+  const opponent = document.getElementById('iou-opponent').value.trim();
+  const btn = document.getElementById('iou-btn');
+  const preview = document.getElementById('iou-preview');
+
+  btn.disabled = !name;
+
+  if (name) {
+    const { json } = buildIOU(name, opponent);
+    // Show partial encrypted preview
+    const key = (SFWallet.get() || { address: 'SHORTFACTORY' }).address;
+    const encrypted = satoshiEncrypt(json, key);
+    preview.textContent = encrypted.substring(0, 200) + '...';
+    preview.classList.add('show');
+  } else {
+    preview.classList.remove('show');
+  }
+}
+
+function generateIOU() {
+  const name = document.getElementById('iou-name').value.trim();
+  const opponent = document.getElementById('iou-opponent').value.trim();
+  if (!name) { toast('Enter your name first'); return; }
+
+  const { payload, hash, sftOwed, walletAddr } = buildIOU(name, opponent);
+  const json = JSON.stringify(payload, null, 2);
+
+  // Encrypt with Satoshi cipher, key = wallet address
+  const key = walletAddr !== 'NO_WALLET' ? walletAddr : 'SHORTFACTORY_VS';
+  const encrypted = satoshiEncrypt(json, key);
+
+  // Wrap in .sft envelope
+  const envelope = {
+    format: 'SFT_ENCRYPTED_IOU',
+    version: '1.0',
+    key_hint: walletAddr.substring(0, 6) + '...',
+    cipher: 'satoshi-vigenere-ascii-32-126-base64',
+    payload: encrypted,
+    verification_hash: hash
+  };
+
+  const fileContent = JSON.stringify(envelope, null, 2);
+  const ts = Date.now();
+  const filename = `iou-${walletAddr.substring(0,8)}-${ts}.sft`;
+
+  // Download
+  const blob = new Blob([fileContent], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+
+  // Award IOU SFT as pending credit in wallet
+  SFWallet.addSFT(0, 'IOU issued: ' + sftOwed + ' SFT pending — VS Arena');
+
+  // Show confirm
+  document.getElementById('confirm-hash').textContent = hash;
+  document.getElementById('iou-confirm').classList.add('show');
+  document.getElementById('iou-btn').disabled = true;
+  document.getElementById('iou-btn').textContent = 'IOU GENERATED ✓';
+
+  toast('IOU DOWNLOADED — ' + filename);
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('on');
+  setTimeout(() => t.classList.remove('on'), 2800);
+}
+
+// Pre-fill name from wallet if available
+window.addEventListener('load', () => {
+  const w = SFWallet.get();
+  if (w && w.soulToken && w.soulToken.name && w.soulToken.name !== 'Anonymous') {
+    document.getElementById('iou-name').value = w.soulToken.name;
+    updatePreview();
+  }
+});
+</script>
+</body>
+</html>
