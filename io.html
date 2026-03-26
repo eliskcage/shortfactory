@@ -288,86 +288,239 @@ html,body{width:100%;height:100%;background:#e8e8ec;overflow:hidden;font-family:
 </div><!-- /stage -->
 
 <script>
-// ── CARD FLOW DEFINITION ─────────────────────────────────────────────────
-// Each node: id, leftNext, rightNext, leftLabel, rightLabel
-var FLOW = {
-  '0':  { l:'1',  r:'1',  ll:'Tell me more',   rl:'Let\'s go' },
-  '1':  { l:'2b', r:'2a', ll:'Explore',         rl:'Build' },
-  '2a': { l:'3',  r:'3',  ll:'Skip',            rl:'Map my soul →' },
-  '2b': { l:'4',  r:'4',  ll:'The codec',       rl:'Prove the game →' },
-  '3':  { l:'4',  r:'5',  ll:'The codec',       rl:'See the lab →' },
-  '4':  { l:'5',  r:'5',  ll:'The lab',         rl:'Open .shop →' },
-  '5':  { l:'0',  r:'0',  ll:'Start over',      rl:'Open .shop →' },
+// ── STATIC SEED CARDS (shown before AI kicks in) ─────────────────────────
+var SEED = {
+  '0':  { title:'The factory is open.', body:'Interconnected media. AGI tools. Soul maps. Left or right — you pick the direction.', leftLabel:'Tell me more', rightLabel:"Let's go", leftHint:'How does this work', rightHint:'Jump straight in' },
+  '1':  { title:'Are you here to build or explore?', body:'Builders get the AGI stack. Explorers get the games, films, and the proof.', leftLabel:'Explore', rightLabel:'Build', leftHint:'Games, films, theory', rightHint:'Soul maps, AGI tools' },
 };
 
-var LINKS = {
-  '2a': { r: 'https://www.shortfactory.shop/soul-upload.html' },
-  '2b': { r: 'https://www.shortfactory.shop/game-proof.html' },
-  '5':  { r: 'https://www.shortfactory.shop', l: 'https://www.shortfactory.shop' },
-  '4':  { r: 'https://www.shortfactory.shop/#codec', l: 'https://www.shortfactory.shop/#codec' },
-};
+var choiceHistory = [];   // e.g. ['start','explore','game-proof']
+var cardIndex     = 0;
+var aiEnabled     = true;
+var generating    = false;
 
-var history = ['0'];
-var current = '0';
+// ── AI CARD GENERATION ───────────────────────────────────────────────────
+function buildContext(){
+  if(!choiceHistory.length) return 'user just arrived at ShortFactory';
+  return 'user chose: ' + choiceHistory.join(' → ');
+}
 
-function getCard(id){ return document.querySelector('.card[data-id="'+id+'"]'); }
+function generateAICard(dir, callback){
+  if(!aiEnabled || generating){ callback(null); return; }
+  generating = true;
+  showGenerating(true);
 
-function showCard(id, dir){
-  var prev = getCard(current);
-  var next = getCard(id);
-  if(!next) return;
+  fetch('/card-proxy.php', {
+    method:  'POST',
+    headers: {'Content-Type':'application/json'},
+    body:    JSON.stringify({ choices: choiceHistory, context: buildContext() })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    generating = false;
+    showGenerating(false);
+    if(d && d.title && d.body){
+      callback(d);
+    } else {
+      callback(null);
+    }
+  })
+  .catch(function(){
+    generating = false;
+    showGenerating(false);
+    callback(null);
+  });
+}
 
-  // exit previous
-  prev.classList.remove('active');
-  prev.classList.add(dir === 'right' ? 'hidden-left' : 'hidden-right');
+function showGenerating(on){
+  var cl = document.getElementById('choice-left');
+  var cr = document.getElementById('choice-right');
+  if(on){
+    cl.style.opacity = '0.35';
+    cr.style.opacity = '0.35';
+    document.getElementById('left-label').textContent  = '...';
+    document.getElementById('right-label').textContent = '...';
+  } else {
+    cl.style.opacity = '';
+    cr.style.opacity = '';
+  }
+}
 
-  // enter next
-  next.classList.remove('hidden-left','hidden-right');
-  next.classList.add('active');
+// ── CARD RENDERING ───────────────────────────────────────────────────────
+function renderAICard(data, dir){
+  var stack = document.getElementById('card-stack');
 
-  current = id;
-  updateChoices();
+  // Remove any old AI card
+  var old = stack.querySelector('.card.ai-card');
+  if(old) old.remove();
+
+  // Build new card
+  var card = document.createElement('div');
+  card.className = 'card ai-card ' + (dir === 'right' ? 'hidden-right' : 'hidden-left');
+  card.dataset.id = 'ai-' + cardIndex;
+
+  var icon = data.icon || '◈';
+  var model = data.model || 'ai';
+  card.innerHTML =
+    '<div class="card-icon">' + icon + '</div>' +
+    '<div class="card-label" style="color:rgba(0,0,0,0.15);">AI · ' + model + '</div>' +
+    '<div class="card-title">' + escHtml(data.title) + '</div>' +
+    '<div class="card-body">' + escHtml(data.body) + '</div>' +
+    (data.detail ? '<div class="card-detail">' + data.detail + '</div>' : '');
+
+  // Deactivate current active card
+  var active = stack.querySelector('.card.active');
+  if(active){
+    active.classList.remove('active');
+    active.classList.add(dir === 'right' ? 'hidden-left' : 'hidden-right');
+  }
+
+  stack.appendChild(card);
+  requestAnimationFrame(function(){
+    card.classList.remove('hidden-left','hidden-right');
+    card.classList.add('active');
+  });
+
+  // Update choices
+  document.getElementById('left-label').textContent  = data.leftLabel  || 'Go left';
+  document.getElementById('right-label').textContent = data.rightLabel || 'Go right';
+
   updateDots();
 }
 
+function escHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── SEED CARD DISPLAY ────────────────────────────────────────────────────
+function showSeedCard(id, dir){
+  var data = SEED[id];
+  if(!data) return;
+  var prev = document.querySelector('.card.active');
+  var next = document.querySelector('.card[data-id="'+id+'"]');
+  if(!next || !prev) return;
+  prev.classList.remove('active');
+  prev.classList.add(dir === 'right' ? 'hidden-left' : 'hidden-right');
+  next.classList.remove('hidden-left','hidden-right');
+  next.classList.add('active');
+  document.getElementById('left-label').textContent  = data.leftLabel;
+  document.getElementById('right-label').textContent = data.rightLabel;
+  updateDots();
+}
+
+// ── CHOICE HANDLERS ──────────────────────────────────────────────────────
 function chooseLeft(){
-  var node = FLOW[current];
-  if(!node) return;
-  if(LINKS[current] && LINKS[current].l){
-    window.open(LINKS[current].l,'_blank');
+  if(generating) return;
+  cardIndex++;
+
+  // First two cards are seeded
+  if(cardIndex === 1){
+    choiceHistory.push('explore');
+    showSeedCard('1','left');
     return;
   }
-  history.push(current);
-  showCard(node.l, 'left');
+  if(cardIndex === 2 && !document.querySelector('.card.ai-card')){
+    choiceHistory.push('left');
+  } else {
+    var ll = document.getElementById('left-label').textContent;
+    if(ll && ll !== '...') choiceHistory.push(ll.toLowerCase());
+    // Check if it's a link card
+    if(ll && (ll.toLowerCase().includes('shop') || ll.toLowerCase().includes('open'))){
+      window.open('https://www.shortfactory.shop','_blank');
+      return;
+    }
+    if(ll && ll.toLowerCase().includes('soul')){
+      window.open('https://www.shortfactory.shop/soul-upload.html','_blank');
+      return;
+    }
+    if(ll && ll.toLowerCase().includes('proof') || ll && ll.toLowerCase().includes('game')){
+      window.open('https://www.shortfactory.shop/game-proof.html','_blank');
+      return;
+    }
+  }
+
+  generateAICard('left', function(d){
+    if(d){ renderAICard(d, 'left'); }
+    else {
+      // Fallback: loop to card 0
+      choiceHistory = [];
+      cardIndex = 0;
+      var active = document.querySelector('.card.active');
+      var seed0  = document.querySelector('.card[data-id="0"]');
+      if(active && seed0 && active !== seed0){
+        active.classList.remove('active');
+        active.classList.add('hidden-right');
+        if(active.classList.contains('ai-card')) setTimeout(function(){ active.remove(); }, 400);
+        seed0.classList.remove('hidden-left','hidden-right');
+        seed0.classList.add('active');
+        document.getElementById('left-label').textContent  = SEED['0'].leftLabel;
+        document.getElementById('right-label').textContent = SEED['0'].rightLabel;
+        updateDots();
+      }
+    }
+  });
 }
 
 function chooseRight(){
-  var node = FLOW[current];
-  if(!node) return;
-  if(LINKS[current] && LINKS[current].r){
-    window.open(LINKS[current].r,'_blank');
+  if(generating) return;
+  cardIndex++;
+
+  // First two cards are seeded
+  if(cardIndex === 1){
+    choiceHistory.push('build');
+    showSeedCard('1','right');
     return;
   }
-  history.push(current);
-  showCard(node.r, 'right');
-}
+  if(cardIndex === 2 && !document.querySelector('.card.ai-card')){
+    choiceHistory.push('right');
+  } else {
+    var rl = document.getElementById('right-label').textContent;
+    if(rl && rl !== '...') choiceHistory.push(rl.toLowerCase());
+    if(rl && (rl.toLowerCase().includes('shop') || rl.toLowerCase().includes('open'))){
+      window.open('https://www.shortfactory.shop','_blank');
+      return;
+    }
+    if(rl && rl.toLowerCase().includes('soul')){
+      window.open('https://www.shortfactory.shop/soul-upload.html','_blank');
+      return;
+    }
+    if(rl && (rl.toLowerCase().includes('proof') || rl.toLowerCase().includes('game'))){
+      window.open('https://www.shortfactory.shop/game-proof.html','_blank');
+      return;
+    }
+  }
 
-function updateChoices(){
-  var node = FLOW[current];
-  if(!node) return;
-  document.getElementById('left-label').textContent  = node.ll;
-  document.getElementById('right-label').textContent = node.rl;
+  generateAICard('right', function(d){
+    if(d){ renderAICard(d, 'right'); }
+    else {
+      choiceHistory = [];
+      cardIndex = 0;
+      var active = document.querySelector('.card.active');
+      var seed0  = document.querySelector('.card[data-id="0"]');
+      if(active && seed0 && active !== seed0){
+        active.classList.remove('active');
+        active.classList.add('hidden-left');
+        if(active.classList.contains('ai-card')) setTimeout(function(){ active.remove(); }, 400);
+        seed0.classList.remove('hidden-left','hidden-right');
+        seed0.classList.add('active');
+        document.getElementById('left-label').textContent  = SEED['0'].leftLabel;
+        document.getElementById('right-label').textContent = SEED['0'].rightLabel;
+        updateDots();
+      }
+    }
+  });
 }
 
 function updateDots(){
-  var ids = Object.keys(FLOW);
   var dots = document.getElementById('dots');
   dots.innerHTML = '';
-  ids.forEach(function(id){
+  // Show up to 8 dots representing journey depth
+  var depth = Math.min(choiceHistory.length + 1, 8);
+  for(var i = 0; i < depth; i++){
     var d = document.createElement('div');
-    d.className = 'dot' + (id === current ? ' active' : '');
+    d.className = 'dot' + (i === depth-1 ? ' active' : '');
     dots.appendChild(d);
-  });
+  }
 }
 
 // ── SWIPE GESTURE ────────────────────────────────────────────────────────
@@ -391,14 +544,15 @@ function updateClock(){
 updateClock();
 setInterval(updateClock, 30000);
 
-// ── KEYBOARD ────────────────────────────────────────────────────────────
+// ── KEYBOARD ─────────────────────────────────────────────────────────────
 document.addEventListener('keydown', function(e){
   if(e.key === 'ArrowLeft')  chooseLeft();
   if(e.key === 'ArrowRight') chooseRight();
 });
 
 // ── INIT ─────────────────────────────────────────────────────────────────
-updateChoices();
+document.getElementById('left-label').textContent  = SEED['0'].leftLabel;
+document.getElementById('right-label').textContent = SEED['0'].rightLabel;
 updateDots();
 </script>
 </body>
