@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ShortFactory — Company Valuation v3</title>
+<title>ShortFactory — Company Valuation v5</title>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-1XY2CNLJCE"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1XY2CNLJCE');</script>
 <style>
@@ -115,16 +115,18 @@ footer strong{color:var(--gold)}
   <div class="nav-logo">ShortFactory</div>
   <div class="nav-links">
     <a href="/portfolio.html">Portfolio</a>
+    <a href="/satoshi-cypher.html">⬡ Black Box</a>
+    <a href="/visa-card.html">💳 Visa Steps</a>
     <a href="/about.html">About</a>
     <a href="/lobby.html">Lobby</a>
   </div>
-  <div class="nav-ver">VALUATION V3 · 22 MAR 2026</div>
+  <div class="nav-ver">VALUATION V5 · 30 MAR 2026</div>
 </nav>
 
 <div class="hero">
   <div class="hero-eyebrow">Company Valuation Report</div>
   <h1>SHORT<span>FACTORY</span></h1>
-  <div class="hero-date">Version 3 · 22 March 2026 · Confidential</div>
+  <div class="hero-date">Version 5 · 30 March 2026 · Confidential</div>
   <div class="reveal-bar">
     <input type="password" id="keyInput" placeholder="Enter reveal key..." onkeydown="if(event.key==='Enter')tryReveal()" autocomplete="off" />
     <button class="reveal-btn" onclick="tryReveal()">REVEAL →</button>
@@ -135,10 +137,10 @@ footer strong{color:var(--gold)}
 <!-- CENTRAL ESTIMATE -->
 <div class="central-wrap">
   <div class="central-card">
-    <div class="central-label">V3 Central Estimate</div>
+    <div class="central-label">V5 Central Estimate</div>
     <div class="central-value encrypted" id="centralVal"></div>
     <div class="central-sub" id="centralSub">Four-methodology weighted average · All figures GBP</div>
-    <div class="central-delta" id="centralDelta" style="display:none">▲ +131% since V2 (16 Mar 2026)</div>
+    <div class="central-delta" id="centralDelta" style="display:none">▲ +25% since V4 (28 Mar 2026)</div>
   </div>
 </div>
 
@@ -167,14 +169,14 @@ footer strong{color:var(--gold)}
       <div class="method-name">Revenue Multiple (Projected)</div>
       <div class="method-range encrypted" id="m3-range"></div>
       <div class="method-central encrypted" id="m3-central"></div>
-      <div class="method-note">10× projected Year 1 ARR from: Kinetic Pro subscriptions, SFT token economy, Imaginator API, D4D dare commissions, Testing Lobby royalties.</div>
+      <div class="method-note">10× projected Year 1 ARR from: Satoshi Cypher API £79/mo licences, Kinetic Pro subscriptions, SFT token economy, Imaginator API, D4D dare commissions, Testing Lobby royalties.</div>
     </div>
 
     <div class="method-card" style="border-color:rgba(245,197,24,.2)">
       <div class="method-name" style="color:var(--gold)">Strategic / IP Value ★</div>
       <div class="method-range encrypted" id="m4-range"></div>
       <div class="method-central encrypted" id="m4-central"></div>
-      <div class="method-note">5 patents filed (3 AGI-foundational). Live self-modifying AGI brain. Undisclosed quantum cipher concept. ALIVE sovereign form. Dominant driver of V3 uplift.</div>
+      <div class="method-note">8 patents/concepts (5 filed, 3 in progress). 3D Satoshi Cypher Black Box discovered 30 Mar 2026 — temporal encryption-as-a-service, banks + AI pipelines, patent pending. Living Equation 39 claims published. ORCID verified. Visa card issuer route now open. Dominant driver of V5 uplift.</div>
     </div>
 
   </div>
@@ -199,12 +201,26 @@ footer strong{color:var(--gold)}
     <div class="history-delta delta-up">▲ +63%</div>
     <div class="history-note">Patent GB2605434.6 live demo. Logo Genetics showpiece. 4 patents total. Material equations.</div>
   </div>
-  <div class="history-row" style="border-bottom:none">
-    <div class="history-ver" style="color:var(--green)">V3</div>
+  <div class="history-row">
+    <div class="history-ver" style="color:var(--dim)">V3</div>
     <div class="history-date">22 Mar 2026</div>
-    <div class="history-val" id="v3-hist" style="color:var(--green);font-family:monospace;font-size:11px"></div>
-    <div class="history-delta delta-up" id="v3-delta" style="display:none">▲ +131%</div>
+    <div class="history-val" style="color:var(--dim)">£1,500,000</div>
+    <div class="history-delta delta-up">▲ +131%</div>
     <div class="history-note">5 patents (3 AGI-foundational). Visual Cortex 65K nodes live. Testing Lobby. Clock Ring concept. ALIVE final form.</div>
+  </div>
+  <div class="history-row">
+    <div class="history-ver">V4</div>
+    <div class="history-date">28 Mar 2026</div>
+    <div class="history-val" id="v4-hist" style="font-family:monospace;font-size:11px"></div>
+    <div class="history-delta delta-up" id="v4-delta" style="display:none">▲ +33%</div>
+    <div class="history-note">D4D shipped live (Stripe + IPFS + Grok). ORCID verified. 4 Zenodo DOIs. Living Equation 39 claims published. Architecture of Man as Code. Digital Spine + Chromatic Deception concepts filed.</div>
+  </div>
+  <div class="history-row" style="border-bottom:none">
+    <div class="history-ver" style="color:var(--green)">V5</div>
+    <div class="history-date">30 Mar 2026</div>
+    <div class="history-val" id="v5-hist" style="color:var(--green);font-family:monospace;font-size:11px"></div>
+    <div class="history-delta delta-up" id="v5-delta" style="display:none">▲ +25%</div>
+    <div class="history-note">Satoshi Cypher 3D Black Box discovered + shipped. Control panel live (Copilot). API revenue stream open — £79/mo enterprise licences. Visa card issuer route mapped. Patent pending: Computanium 3D Programming.</div>
   </div>
 </div>
 
@@ -275,6 +291,18 @@ footer strong{color:var(--gold)}
       </div>
     </div>
 
+    <div class="patent-row filed" style="border-left:3px solid #4fc3f7;background:rgba(79,195,247,.03)">
+      <div>
+        <div class="patent-num" style="color:#4fc3f7">ELISKCAGE-BB-001</div>
+        <div class="patent-badge" style="background:rgba(79,195,247,.1);color:#4fc3f7;border:1px solid rgba(79,195,247,.3)">PENDING</div>
+      </div>
+      <div class="patent-body">
+        <div class="patent-title">Computanium 3D Programming — Temporal Black Box Encryption</div>
+        <div class="patent-meta">Discovered: 30 Mar 2026 · Filing in progress · Inventor: Daniel Chipchase · Computanium 3D Programming</div>
+        <div class="patent-claims" style="color:#4fc3f7">3D rotating temporal cipher sphere · code exists only as coordinate floats · HMAC-signed payloads · self-destructing time-locked execution · soul key = cipher key · enterprise API: banks + AI pipelines</div>
+      </div>
+    </div>
+
     <div class="patent-row" style="border-left:3px solid var(--dim);opacity:.5">
       <div>
         <div class="patent-num" style="color:var(--dim)">UNDISCLOSED</div>
@@ -305,7 +333,9 @@ footer strong{color:var(--gold)}
     <div class="asset-item"><div class="asset-name">Voice Contract</div><div class="asset-val">Spoken terms → genomic glyph SVG · beta</div></div>
     <div class="asset-item"><div class="asset-name">Trump v Deep State</div><div class="asset-val">Playable game v2.9 · viral content engine</div></div>
     <div class="asset-item"><div class="asset-name">Imaginator</div><div class="asset-val">Stills → YouTube Shorts · Google auth pipeline</div></div>
-    <div class="asset-item"><div class="asset-name">Dares4Dosh</div><div class="asset-val">React 19 dare feed · Soul Forge · 5-game soul mint</div></div>
+    <div class="asset-item highlight"><div class="asset-name">✓ Dares4Dosh LIVE</div><div class="asset-val">stinkindigger.info · Stripe live · IPFS · Grok · 27 Mar 2026</div></div>
+    <div class="asset-item"><div class="asset-name">ORCID Academic ID</div><div class="asset-val">0009-0003-9001-2493 · 4 Zenodo DOIs · verified identity</div></div>
+    <div class="asset-item"><div class="asset-name">Living Equation</div><div class="asset-val">39 claims published · soul vector · Claim 39 · prior art timestamped</div></div>
     <div class="asset-item"><div class="asset-name">Screensaver</div><div class="asset-val">Distributed GPU/CPU computing · WebGL art</div></div>
     <div class="asset-item"><div class="asset-name">ComicVID</div><div class="asset-val">Video→halftone codec · IPFS persistence</div></div>
     <div class="asset-item"><div class="asset-name">Fuel Dashboard</div><div class="asset-val">Crypto funding cockpit · 10 wallet QRs · BIP39</div></div>
@@ -313,7 +343,10 @@ footer strong{color:var(--gold)}
     <div class="asset-item"><div class="asset-name">2 VPS Servers</div><div class="asset-val">82.165.134.4 + 185.230.216.235 · Cloudflare CDN</div></div>
     <div class="asset-item"><div class="asset-name">CF Workers (4)</div><div class="asset-val">ai-leads · ai-image · ai-chat · D1 database</div></div>
     <div class="asset-item"><div class="asset-name">50+ Products</div><div class="asset-val">420+ files · 75MB · 43 days building</div></div>
-    <div class="asset-item"><div class="asset-name">Satoshi Cipher</div><div class="asset-val">Vigenere ASCII 32-126 · vault · pairing · contracts</div></div>
+    <div class="asset-item highlight"><div class="asset-name" style="color:#4fc3f7">⬛ Satoshi Cypher API</div><div class="asset-val">3D black box · HMAC · temporal locks · £79/mo · enterprise</div></div>
+    <div class="asset-item highlight"><div class="asset-name" style="color:#4fc3f7">Black Box Control Panel</div><div class="asset-val">Full API dashboard · shipped by Copilot · 30 Mar 2026</div></div>
+    <div class="asset-item"><div class="asset-name">💳 Visa Steps Roadmap</div><div class="asset-val">Stripe Issuing + BIN sponsors · card issuer route mapped</div></div>
+    <div class="asset-item"><div class="asset-name">Satoshi Cipher (2D)</div><div class="asset-val">Vigenere ASCII 32-126 · vault · pairing · contracts</div></div>
   </div>
 </div>
 
@@ -385,17 +418,18 @@ function satoshiDecode(text, key) {
 
 // ── PLAINTEXT VALUES (rendered as cipher until key entered) ───────────────────
 const VALUES = {
-  central:     '£1,500,000',
-  m1_range:    '£320,000 — £550,000',
-  m1_central:  'Central: £435,000',
-  m2_range:    '£500,000 — £1,500,000',
-  m2_central:  'Central: £1,000,000',
-  m3_range:    '£180,000 — £600,000',
-  m3_central:  'Central: £390,000',
-  m4_range:    '£1,200,000 — £5,000,000',
-  m4_central:  'Central: £2,500,000',
-  v3_hist:     '£1,500,000',
-  undisclosed: 'PASSWORD REFUSAL SERVICE — ALIVE final form: creature holds all keys, no passwords, biometric soul glyph identity, Satoshi vault, NO button. CLOCK RING QUANTUM NAVIGATOR — BIP39 superposition geometry, infinite nested clock faces, inversion past singularity, quantum Computanium navigation, golden zip at game center. RIPPLE GENOME FULL THEORY — consciousness equations, ocean floor model, precognitive pattern recognition, triangulation confirmation protocol.'
+  central:     '£2,500,000',
+  m1_range:    '£420,000 — £680,000',
+  m1_central:  'Central: £550,000',
+  m2_range:    '£600,000 — £2,000,000',
+  m2_central:  'Central: £1,300,000',
+  m3_range:    '£250,000 — £900,000',
+  m3_central:  'Central: £575,000',
+  m4_range:    '£2,000,000 — £8,000,000',
+  m4_central:  'Central: £4,000,000',
+  v4_hist:     '£2,000,000',
+  v5_hist:     '£2,500,000',
+  undisclosed: 'PASSWORD REFUSAL SERVICE — ALIVE final form: creature holds all keys, no passwords, biometric soul glyph identity, Satoshi vault, NO button. CLOCK RING QUANTUM NAVIGATOR — BIP39 superposition geometry, infinite nested clock faces, inversion past singularity, quantum Computanium navigation, golden zip at game center. RIPPLE GENOME FULL THEORY — consciousness equations, ocean floor model, precognitive pattern recognition, triangulation confirmation protocol. CHROMATIC DECEPTION ARCHITECTURE — lies as colours, frequency deviation of deceptive speech, co-invented with Robert Andersson. DIGITAL SPINE PROTOCOL — spinal nerve frequency to digital emotional-state codec, co-invented with Robert Andersson. SATOSHI CYPHER 3D BLACK BOX — temporal sphere cipher, soul key = cipher key, T0 microsecond seed, code exists only as coordinate floats, self-destructs after temporal window, enterprise API for banks and AI pipelines.'
 };
 
 const KEY = 'SKYDADDY';
@@ -405,7 +439,8 @@ function encodeAll() {
   Object.keys(VALUES).forEach(k => {
     const el = document.getElementById(k === 'central' ? 'centralVal' :
       k === 'undisclosed' ? 'undisclosed-cipher' :
-      k === 'v3_hist' ? 'v3-hist' :
+      k === 'v4_hist' ? 'v4-hist' :
+      k === 'v5_hist' ? 'v5-hist' :
       k.replace('_','-'));
     if (el) el.textContent = satoshi(VALUES[k], KEY);
   });
@@ -451,10 +486,15 @@ function revealAll() {
     if (el) { el.textContent = VALUES[key]; el.className = el.className.replace(' encrypted','').replace('encrypted',''); }
   });
 
-  const vh = document.getElementById('v3-hist');
-  vh.textContent = VALUES.v3_hist;
-  vh.style.cssText = 'color:var(--green);font-size:14px;font-weight:800';
-  document.getElementById('v3-delta').style.display = 'inline-block';
+  const vh = document.getElementById('v4-hist');
+  vh.textContent = VALUES.v4_hist;
+  vh.style.cssText = 'font-size:14px;font-weight:800;color:#e2e8f0';
+  document.getElementById('v4-delta').style.display = 'inline-block';
+
+  const v5h = document.getElementById('v5-hist');
+  v5h.textContent = VALUES.v5_hist;
+  v5h.style.cssText = 'color:var(--green);font-size:14px;font-weight:800';
+  document.getElementById('v5-delta').style.display = 'inline-block';
 
   const uc = document.getElementById('undisclosed-cipher');
   uc.textContent = VALUES.undisclosed;

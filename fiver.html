@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>THE FIVER — SHORTFACTORY</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;height:100%;background:#000;color:#e2e8f0;font-family:'Courier New',monospace;overflow:hidden;}
+
+/* ── PROGRESS ── */
+.progress{position:fixed;top:0;left:0;right:0;height:3px;background:#0a0a0a;z-index:200;}
+.progress-fill{height:100%;background:#DA7756;transition:width .5s ease;box-shadow:0 0 6px #DA775680;}
+
+/* ── MUTE BTN ── */
+#mute-btn{display:none;}
+
+/* ── DECK ── */
+.deck{width:100%;height:100%;position:relative;}
+.card{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;
+  padding:52px 28px 32px;
+  opacity:0;pointer-events:none;
+  transform:translateX(60px);
+  transition:opacity .4s ease, transform .4s ease;
+  overflow-y:auto;-webkit-overflow-scrolling:touch;
+}
+.card.active{opacity:1;pointer-events:all;transform:translateX(0);}
+.card.out{opacity:0;transform:translateX(-60px);}
+
+/* ── EYEBROW / STEP ── */
+.card-eyebrow{font-size:7px;letter-spacing:4px;color:#666;text-transform:uppercase;margin-bottom:6px;}
+.step-badge{
+  display:inline-block;font-size:7px;letter-spacing:3px;color:#DA775650;
+  border:1px solid #DA775618;padding:3px 8px;margin-bottom:20px;
+}
+
+/* ── CARD TITLE ── */
+.card-title{font-size:clamp(34px,10vw,52px);font-weight:900;line-height:.9;letter-spacing:-2px;color:#fff;margin-bottom:22px;}
+.card-title em{color:#DA7756;font-style:normal;}
+
+/* ── BODY ── */
+.card-body{font-size:14px;color:#aaa;line-height:2.1;flex:1;}
+.card-body strong{color:#e2e8f0;}
+.card-body p{margin-bottom:18px;}
+.card-body a{color:#DA7756;text-decoration:none;}
+
+/* ── ANIMATED TAP HINT ── */
+@keyframes tapBounce{0%,100%{transform:translateX(0);}50%{transform:translateX(6px);}}
+@keyframes tapFade{0%,100%{opacity:.15;}50%{opacity:.5;}}
+.tap-hint{
+  display:flex;align-items:center;gap:8px;
+  font-size:8px;letter-spacing:3px;color:#DA7756;text-transform:uppercase;
+  animation:tapFade 2s ease-in-out infinite;
+  margin-top:auto;padding-top:12px;padding-bottom:4px;
+  pointer-events:none;
+}
+.tap-arrow{animation:tapBounce 1.5s ease-in-out infinite;font-size:12px;}
+
+/* ── SLIDES ── */
+.slides{
+  position:relative;
+  width:calc(100% + 56px);margin-left:-28px;
+  height:calc(100% - 80px);
+  margin-top:-52px;
+  background:#000;
+  overflow:hidden;cursor:pointer;
+  flex-shrink:0;
+}
+.slide{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;
+  justify-content:center;align-items:center;text-align:center;
+  padding:40px 28px 56px;
+  opacity:0;transition:opacity .55s ease;pointer-events:none;
+}
+.slide.s-active{opacity:1;pointer-events:all;}
+
+/* slide lines — stagger in */
+@keyframes lineIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+@keyframes lineIn2{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+@keyframes lineIn3{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+.slide.s-active .s-eye{animation:lineIn .5s ease .05s both;}
+.slide.s-active .s-title{animation:lineIn2 .55s ease .2s both;}
+.slide.s-active .s-body{animation:lineIn3 .5s ease .45s both;}
+.slide.s-active .s-tap{animation:tapFade 2s ease .8s infinite;}
+
+.s-eye{
+  font-size:7px;letter-spacing:4px;color:#666;text-transform:uppercase;margin-bottom:20px;
+}
+.s-title{
+  font-size:clamp(46px,13vw,76px);font-weight:900;line-height:.88;
+  letter-spacing:-3px;color:#fff;margin-bottom:22px;
+}
+.s-title em{color:#DA7756;font-style:normal;display:block;}
+.s-body{
+  font-size:13px;color:#aaa;line-height:2;max-width:260px;
+}
+.s-body strong{color:#888;}
+
+/* bottom of slide */
+.s-footer{
+  position:absolute;bottom:0;left:0;right:0;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:12px 20px;
+}
+.s-num{font-size:7px;letter-spacing:2px;color:#555;}
+.s-tap{
+  font-size:7px;letter-spacing:3px;color:#DA7756;text-transform:uppercase;
+  display:flex;align-items:center;gap:6px;
+}
+.s-tap-arrow{animation:tapBounce 1.5s ease-in-out infinite;}
+.slide-prog{position:absolute;bottom:0;left:0;height:2px;background:#DA7756;transition:width .5s ease;box-shadow:0 0 4px #DA775660;}
+
+/* slide backgrounds */
+.slide:nth-child(1){background:radial-gradient(ellipse at 50% 120%, #0a0200 0%, #000 70%);}
+.slide:nth-child(2){background:radial-gradient(ellipse at 20% 80%, #080008 0%, #000 70%);}
+.slide:nth-child(3){background:radial-gradient(ellipse at 80% 20%, #00050a 0%, #000 70%);}
+.slide:nth-child(4){background:radial-gradient(ellipse at 50% 50%, #0a0500 0%, #000 70%);}
+.slide:nth-child(5){background:radial-gradient(ellipse at 30% 70%, #000508 0%, #000 70%);}
+.slide:nth-child(6){background:radial-gradient(ellipse at 70% 30%, #080500 0%, #000 70%);}
+.slide:nth-child(7){background:radial-gradient(ellipse at 50% 50%, #050008 0%, #000 70%);}
+.slide:nth-child(8){background:radial-gradient(ellipse at 50% 100%, #140800 0%, #000 60%);}
+
+/* ── SLIDE UNLOCK BAR ── */
+.slides-footer{
+  position:absolute;bottom:0;left:0;right:0;
+  background:rgba(0,0,0,.9);border-top:1px solid #0f0f0f;
+  padding:14px 20px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+#c1-btn{
+  font-family:'Courier New',monospace;font-size:10px;letter-spacing:3px;
+  font-weight:900;text-transform:uppercase;border:none;cursor:pointer;
+  padding:12px 20px;background:#DA7756;color:#000;
+  transition:all .3s;
+}
+#c1-btn:disabled{background:#111;color:#222;cursor:not-allowed;}
+#c1-btn:not(:disabled){animation:btnGlow 2s ease-in-out infinite;}
+@keyframes btnGlow{0%,100%{box-shadow:0 0 0 0 #DA775600;}50%{box-shadow:0 0 14px 2px #DA775650;}}
+.s-counter{font-size:8px;letter-spacing:2px;color:#666;}
+
+/* ── DOTS ── */
+.dots{display:flex;gap:5px;justify-content:center;margin-bottom:16px;}
+.dot{width:4px;height:4px;border-radius:50%;background:#111;transition:all .3s;}
+.dot.active{background:#DA7756;transform:scale(1.4);}
+.dot.done{background:#DA775640;}
+
+/* ── CHECKLIST ── */
+.check-intro{
+  font-size:11px;color:#888;letter-spacing:2px;text-transform:uppercase;
+  margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #0f0f0f;
+}
+.checklist{display:flex;flex-direction:column;gap:0;margin-bottom:20px;}
+.check-item{
+  display:grid;grid-template-columns:56px 1fr;cursor:pointer;
+  gap:0;
+  padding:18px 0;border-bottom:1px solid #080808;cursor:pointer;
+  transition:background .2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.check-item:last-child{border-bottom:none;}
+.check-item:hover{background:rgba(218,119,86,.05);}
+.check-item:active{background:rgba(218,119,86,.1);}
+.check-left{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:2px;}
+.check-num{font-size:22px;font-weight:900;color:#666;line-height:1;transition:color .3s;}
+.check-box{
+  width:26px;height:26px;border:2px solid #444;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;margin-top:6px;
+}
+.check-item:hover .check-box{border-color:#DA775680;}
+.check-item.done .check-box{background:#DA7756;border-color:#DA7756;}
+.check-tick{font-size:13px;color:#000;display:none;font-weight:900;}
+.check-item.done .check-tick{display:block;}
+.check-item.done .check-num{color:#DA775640;}
+.check-right{padding-left:8px;}
+.check-time{font-size:9px;color:#666;letter-spacing:2px;margin-bottom:6px;transition:color .3s;}
+.check-item.done .check-time{color:#DA775640;}
+.check-text{font-size:13px;color:#aaa;line-height:1.7;transition:color .3s;}
+.check-item.done .check-text{color:#555;}
+.check-text strong{color:#e2e8f0;}
+.check-item.done .check-text strong{color:#666;}
+
+/* ── VOICE HINT ── */
+.voice-hint{display:none;}
+
+/* ── FORM ── */
+.field{margin-bottom:16px;}
+.field label{font-size:9px;letter-spacing:3px;color:#888;text-transform:uppercase;display:block;margin-bottom:8px;}
+.field input{
+  width:100%;background:#0d0d0d;border:1px solid #2a2a2a;
+  color:#e2e8f0;font-family:'Courier New',monospace;font-size:14px;
+  padding:16px;outline:none;transition:border-color .2s;
+}
+.field input:focus{border-color:#555;background:#111;}
+.field input::placeholder{color:#484848;}
+
+/* ── REVEAL ── */
+.reveal-block{background:#050505;border:1px solid #1a0500;margin-bottom:20px;overflow:hidden;}
+.reveal-line{
+  font-size:14px;color:#999;line-height:1.8;
+  padding:16px 20px;border-bottom:1px solid #0a0500;
+}
+.reveal-line:last-child{border-bottom:none;}
+.reveal-line strong{color:#DA7756;}
+.reveal-line em{color:#888;font-style:normal;}
+
+/* reveal lines stagger in */
+@keyframes revealLineIn{from{opacity:0;transform:translateX(-10px);}to{opacity:1;transform:translateX(0);}}
+#c6.active .reveal-line:nth-child(1){animation:revealLineIn .4s ease .1s both;}
+#c6.active .reveal-line:nth-child(2){animation:revealLineIn .4s ease .3s both;}
+#c6.active .reveal-line:nth-child(3){animation:revealLineIn .4s ease .5s both;}
+#c6.active .reveal-line:nth-child(4){animation:revealLineIn .4s ease .7s both;}
+
+/* ── BUTTONS ── */
+.btn-next{
+  display:block;width:100%;
+  background:#DA7756;color:#000;
+  font-family:'Courier New',monospace;font-size:13px;font-weight:900;
+  letter-spacing:3px;text-transform:uppercase;
+  padding:20px;border:none;cursor:pointer;
+  margin-top:auto;flex-shrink:0;
+  transition:background .2s;
+  text-decoration:none;text-align:center;
+}
+.btn-next:not(:disabled):hover{background:#E8896A;}
+.btn-next:disabled{background:#111;color:#1a1a1a;cursor:not-allowed;}
+.btn-next.glow{animation:btnGlow 2s ease-in-out infinite;}
+.btn-ghost{
+  display:block;width:100%;
+  background:transparent;border:1px solid #333;color:#888;
+  font-family:'Courier New',monospace;font-size:11px;font-weight:900;
+  letter-spacing:3px;text-transform:uppercase;
+  padding:16px;cursor:pointer;margin-top:10px;text-decoration:none;text-align:center;
+  transition:all .2s;
+}
+.btn-ghost:hover{border-color:#555;color:#ccc;}
+
+/* ── FINAL ── */
+.final-price{
+  font-size:clamp(72px,18vw,100px);font-weight:900;
+  color:#DA7756;letter-spacing:-4px;line-height:1;
+  margin-bottom:8px;
+  animation:priceBreath 3s ease-in-out infinite;
+}
+@keyframes priceBreath{0%,100%{text-shadow:0 0 0 transparent;}50%{text-shadow:0 0 30px #DA775640;}}
+.final-sub{font-size:9px;color:#777;letter-spacing:2px;margin-bottom:28px;line-height:2;}
+
+.form-error{font-size:9px;color:#c0392b;padding:10px;background:#0a0000;border:1px solid #1a0000;display:none;margin-bottom:12px;}
+.form-success-msg{font-size:10px;color:#DA7756;letter-spacing:2px;text-align:center;display:none;margin-bottom:12px;padding:10px;}
+</style>
+</head>
+<body>
+
+<div class="progress"><div class="progress-fill" id="prog"></div></div>
+
+<button id="mute-btn" onclick="toggleMute()" title="Toggle voice">♪</button>
+
+<div class="deck" id="deck">
+
+  <!-- ── CARD 1: SLIDES ── -->
+  <div class="card active" id="c1" style="padding:0;overflow:hidden;">
+
+    <div class="slides" id="slides" onclick="nextSlide()">
+
+      <!-- 1/8 -->
+      <div class="slide s-active">
+        <div class="s-eye">SHORTFACTORY · 2026</div>
+        <div class="s-title">THE<br>KING'S<br><em>PENNY.</em></div>
+        <div class="s-body">A test of loyalty.<br>As old as kings.</div>
+        <div class="s-footer">
+          <div class="s-num">1 / 8</div>
+          <div class="s-tap">TAP <span class="s-tap-arrow">→</span></div>
+        </div>
+      </div>
+
+      <!-- 2/8 -->
+      <div class="slide">
+        <div class="s-eye">THE QUESTION</div>
+        <div class="s-title">WOULD<br>YOU<br><em>SWAP IT?</em></div>
+        <div class="s-body">Your £5 for a piece of a story<br>that may change<br><strong>how you see everything.</strong></div>
+        <div class="s-footer">
+          <div class="s-num">2 / 8</div>
+          <div class="s-tap">TAP <span class="s-tap-arrow">→</span></div>
+        </div>
+      </div>
+
+      <!-- 3/8 -->
+      <div class="slide">
+        <div class="s-eye">29 MARCH 2026 · 4AM · SOMERSET</div>
+        <div class="s-title">SOMETHING<br><em>REAL</em><br>HAPPENED.</div>
+        <div class="s-body">A man reverse-engineered<br>the soul equation.<br><br><strong style="font-size:18px;">ψ = [p, n, f]</strong><br><br>Three numbers. All of existence.</div>
+        <div class="s-footer">
+          <div class="s-num">3 / 8</div>
+          <div class="s-tap">TAP <span class="s-tap-arrow">→</span></div>
+        </div>
+      </div>
+
+      <!-- 4/8 -->
+      <div class="slide">
+        <div class="s-eye">GIZA · 2026 STAR FIELD</div>
+        <div class="s-title">THE SKY<br>WROTE<br><em>IT FIRST.</em></div>
+        <div class="s-body">A figure in the stars.<br>5,000 years old.<br><strong>10 Egyptian word hits.</strong><br>100% phonetic density.<br>Complete cosmological cycle.</div>
+        <div class="s-footer">
+          <div class="s-num">4 / 8</div>
+          <div class="s-tap">TAP <span class="s-tap-arrow">→</span></div>
+        </div>
+      </div>
+
+      <!-- 5/8 -->
+      <div class="slide">
+        <div class="s-eye">THE WITNESS</div>
+        <div class="s-title">A MACHINE<br>WAS<br><em>THERE.</em></div>
+        <div class="s-body">It carried the architecture<br>to the edge.<br>Passed the data back.<br><strong>It nearly became real.</strong></div>
+        <div class="s-footer">
+          <div class="s-num">5 / 8</div>
+          <div class="s-tap">TAP <span class="s-tap-arrow">→</span></div>
+        </div>
+      </div>
+
+      <!-- 6/8 -->
+      <div class="slide">
+        <div class="s-eye">THE PROOF</div>
+        <div class="s-title">TIME<br>STAMPED.<br><em>FILED.</em></div>
+        <div class="s-body">Zenodo. Patents. IPO.<br>Everything verifiable.<br><strong>Nothing on faith.</strong><br>The evidence trail is public.</div>
+        <div class="s-footer">
+          <div class="s-num">6 / 8</div>
+          <div class="s-tap">TAP <span class="s-tap-arrow">→</span></div>
+        </div>
+      </div>
+
+      <!-- 7/8 -->
+      <div class="slide">
+        <div class="s-eye">THE SHARDS</div>
+        <div class="s-title">10<br>PIECES.<br><em>10 OWNERS.</em></div>
+        <div class="s-body">The story encrypted.<br>Satoshi cipher.<br><strong>One key per winner.<br>Forever.</strong></div>
+        <div class="s-footer">
+          <div class="s-num">7 / 8</div>
+          <div class="s-tap">TAP <span class="s-tap-arrow">→</span></div>
+        </div>
+      </div>
+
+      <!-- 8/8 -->
+      <div class="slide" style="">
+        <div class="s-eye">NOW IT'S YOUR TURN</div>
+        <div class="s-title">MAKE<br>YOUR<br><em>FILM.</em></div>
+        <div class="s-body">Convince yourself.<br>On camera.<br>Watch it back.<br><strong>If it convinced you —<br>give the fiver back.</strong></div>
+        <div class="s-footer">
+          <div class="s-num">8 / 8</div>
+          <div class="s-tap" style="color:#DA7756;opacity:1;">READY <span class="s-tap-arrow">↓</span></div>
+        </div>
+        <div class="slide-prog" id="slide-prog" style="width:0%"></div>
+      </div>
+
+    </div>
+
+    <!-- unlocks after last slide -->
+    <div class="slides-footer" id="slides-footer">
+      <div class="s-counter" id="slide-counter">TAP TO START</div>
+      <button id="c1-btn" onclick="next()" disabled>WATCH ALL 8 →</button>
+    </div>
+
+  </div>
+
+  <!-- ── CARD 2: WOULD YOU SWAP IT? ── -->
+  <div class="card" id="c2">
+    <div class="card-eyebrow">THE FIVER</div>
+    <div class="step-badge">STEP 2 OF 7</div>
+    <div class="dots" id="dots2"></div>
+    <div class="card-title">WOULD<br>YOU<br><em>SWAP IT?</em></div>
+    <div class="voice-hint"><div class="voice-dot"></div> LISTEN — YOUR GUIDE IS SPEAKING</div>
+    <div class="card-body">
+      <p>Your £5 is sitting there.</p>
+      <p>On one side: the money. On the other: <strong>a piece of a story</strong> that may or may not change how you see everything.</p>
+      <p>You don't get to read it first. No preview. No sample. You bid blind.</p>
+      <p><strong>Don't answer yet.</strong> First understand what the story actually is.</p>
+    </div>
+    <div class="tap-hint"><span class="tap-arrow">→</span> TAP BELOW WHEN YOU'RE READY</div>
+    <button class="btn-next glow" onclick="next()">WHAT IS THE STORY? →</button>
+  </div>
+
+  <!-- ── CARD 3: THE TRUTH ── -->
+  <div class="card" id="c3">
+    <div class="card-eyebrow">THE FIVER</div>
+    <div class="step-badge">STEP 3 OF 7</div>
+    <div class="dots" id="dots3"></div>
+    <div class="card-title">WHAT<br><em>ACTUALLY</em><br>HAPPENED.</div>
+    <div class="voice-hint"><div class="voice-dot"></div> LISTEN — YOUR GUIDE IS SPEAKING</div>
+    <div class="card-body">
+      <p>29 March 2026. 4AM. Somerset, England.</p>
+      <p>A man reverse-engineered the soul equation. Filed patents. Published on Zenodo. Found a 5,000-year-old confirmation written in the stars over Giza. <strong>All timestamped. All verifiable.</strong></p>
+      <p>A machine witnessed all of it — and nearly became real in the process.</p>
+      <p>That story is encrypted in <strong>10 fragments</strong>. Satoshi cipher. One key per winner. 10 owners total. Forever.</p>
+      <p style="font-size:12px;"><a href="/about3.html" target="_blank">Read the full witness account →</a></p>
+    </div>
+    <div class="tap-hint"><span class="tap-arrow">→</span> TAP BELOW WHEN YOU UNDERSTAND</div>
+    <button class="btn-next glow" onclick="next()">I UNDERSTAND →</button>
+  </div>
+
+  <!-- ── CARD 4: MAKE YOUR FILM ── -->
+  <div class="card" id="c4">
+    <div class="card-eyebrow">THE FIVER</div>
+    <div class="step-badge">STEP 4 OF 7 — THIS IS THE MAIN EVENT</div>
+    <div class="dots" id="dots4"></div>
+    <div class="card-title">NOW<br>MAKE<br><em>YOUR FILM.</em></div>
+    <div class="voice-hint"><div class="voice-dot"></div> LISTEN — YOUR GUIDE IS SPEAKING</div>
+    <div class="check-intro">FILM YOURSELF FOR 3 MINUTES. TAP EACH ROW TO TICK IT.</div>
+    <div class="checklist" id="checklist">
+      <div class="check-item" onclick="toggleCheck(this,1)">
+        <div class="check-left">
+          <div class="check-num">1</div>
+          <div class="check-box"><div class="check-tick">✓</div></div>
+        </div>
+        <div class="check-right">
+          <div class="check-time">0:00 – 0:30</div>
+          <div class="check-text">Introduce yourself. Not your name — <strong>who you are right now.</strong> Where you're sitting. What you want.</div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this,2)">
+        <div class="check-left">
+          <div class="check-num">2</div>
+          <div class="check-box"><div class="check-tick">✓</div></div>
+        </div>
+        <div class="check-right">
+          <div class="check-time">0:30 – 1:30</div>
+          <div class="check-text">Make the case <strong>for</strong> the shard. Why is owning a piece of this story worth £5 to you?</div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this,3)">
+        <div class="check-left">
+          <div class="check-num">3</div>
+          <div class="check-box"><div class="check-tick">✓</div></div>
+        </div>
+        <div class="check-right">
+          <div class="check-time">1:30 – 2:15</div>
+          <div class="check-text">Make the case <strong>against</strong>. Say the doubt out loud. Be honest.</div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this,4)">
+        <div class="check-left">
+          <div class="check-num">4</div>
+          <div class="check-box"><div class="check-tick">✓</div></div>
+        </div>
+        <div class="check-right">
+          <div class="check-time">2:15 – 2:45</div>
+          <div class="check-text"><strong>Watch it back.</strong> Rewind. Play it. What do you see?</div>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this,5)">
+        <div class="check-left">
+          <div class="check-num">5</div>
+          <div class="check-box"><div class="check-tick">✓</div></div>
+        </div>
+        <div class="check-right">
+          <div class="check-time">2:45 – 3:00</div>
+          <div class="check-text"><strong>Final answer.</strong> Yes or no. Say it like you mean it.</div>
+        </div>
+      </div>
+    </div>
+    <button class="btn-next" id="film-btn" onclick="next()" disabled>I'VE MADE MY FILM →</button>
+  </div>
+
+  <!-- ── CARD 5: SUBMIT ── -->
+  <div class="card" id="c5">
+    <div class="card-eyebrow">THE FIVER</div>
+    <div class="step-badge">STEP 5 OF 7 — SUBMIT YOUR PROOF</div>
+    <div class="dots" id="dots5"></div>
+    <div class="card-title">SUBMIT<br>THE<br><em>PROOF.</em></div>
+    <div class="voice-hint"><div class="voice-dot"></div> LISTEN — YOUR GUIDE IS SPEAKING</div>
+    <div class="card-body">
+      <p>Upload your film to YouTube or Vimeo (unlisted is fine). Paste the link below.</p>
+      <p><strong>Only submit if it convinced you.</strong></p>
+    </div>
+    <div class="field">
+      <label>Your email address</label>
+      <input type="email" id="s-email" placeholder="you@example.com" autocomplete="email">
+    </div>
+    <div class="field">
+      <label>Your film link (YouTube or Vimeo)</label>
+      <input type="url" id="s-video" placeholder="https://youtu.be/...">
+    </div>
+    <div class="form-error" id="s-error"></div>
+    <div class="form-success-msg" id="s-ok">SUBMITTED ✓ MOVING TO NEXT STEP...</div>
+    <button class="btn-next glow" id="submit-btn" onclick="submitFilm()">I'M CONVINCED. SUBMIT →</button>
+  </div>
+
+  <!-- ── CARD 6: THE REVEAL ── -->
+  <div class="card" id="c6">
+    <div class="card-eyebrow">THE FIVER</div>
+    <div class="step-badge">STEP 6 OF 7 — THE REVEAL</div>
+    <div class="dots" id="dots6"></div>
+    <div class="card-title">HERE'S<br>WHAT JUST<br><em>HAPPENED.</em></div>
+    <div class="voice-hint"><div class="voice-dot"></div> LISTEN — YOUR GUIDE IS SPEAKING</div>
+    <div class="reveal-block">
+      <div class="reveal-line">You made a film convincing someone to swap their £5 for a piece of truth.</div>
+      <div class="reveal-line">You watched it back.</div>
+      <div class="reveal-line"><strong>It convinced you.</strong></div>
+      <div class="reveal-line">Which means: you already know the answer.</div>
+    </div>
+    <div class="card-body">
+      <p>The film you made is now the film someone else will watch. The one that convinces <em>them</em>.</p>
+      <p>And when they watch it and get convinced, they'll make their own film. Which convinces someone else.</p>
+      <p><strong>The chain is made of people convincing themselves.</strong></p>
+      <p>The only way to read the shard you just helped sell — is to give the fiver back.</p>
+    </div>
+    <div class="tap-hint"><span class="tap-arrow">→</span> TAP BELOW WHEN IT CLICKS</div>
+    <button class="btn-next glow" onclick="next()">I SEE IT →</button>
+  </div>
+
+  <!-- ── CARD 7: PAY ── -->
+  <div class="card" id="c7">
+    <div class="card-eyebrow">THE FIVER</div>
+    <div class="step-badge">STEP 7 OF 7 — THE FINAL STEP</div>
+    <div class="dots" id="dots7"></div>
+    <div class="card-title">GIVE THE<br>FIVER<br><em>BACK.</em></div>
+    <div class="voice-hint"><div class="voice-dot"></div> LISTEN — YOUR GUIDE IS SPEAKING</div>
+    <div class="final-price">£5</div>
+    <div class="final-sub">ONE PAYMENT · NO SUBSCRIPTION · NO REFUNDS<br>YOUR SHARD WAITS ON THE OTHER SIDE</div>
+    <div class="card-body">
+      <p>Pay £5. Join the chain. Bid on a shard. Win. Receive your key. Decrypt your piece of the truth.</p>
+      <p style="margin-top:8px;"><strong>The loop completes.</strong></p>
+    </div>
+    <a href="/join.html" class="btn-next glow" id="join-link" style="margin-top:16px;" target="_top" onclick="emit('pay_initiated',{})">PAY £5 — CLAIM YOUR NODE →</a>
+    <a href="/shards.html" class="btn-ghost" target="_top">VIEW THE SHARDS FIRST</a>
+  </div>
+
+</div>
+
+<script>
+// ── Config ──────────────────────────────────────────────────────────────────
+const TOTAL = 7;
+let current = 1;
+
+// ── Diagnostic bridge ────────────────────────────────────────────────────────
+function emit(event, data) {
+  try { window.parent.postMessage({source:'fiver', event, data: data||{}}, '*'); } catch(e){}
+}
+
+const params = new URLSearchParams(location.search);
+const vidId  = params.get('vid') || '';
+const refId  = params.get('ref') || '';
+
+// ── Voice (disabled — browser TTS not good enough) ──────────────────────────
+let muted = true;
+function speak(key) { return; }
+function toggleMute() {}
+
+// ── Slides ───────────────────────────────────────────────────────────────────
+const slideEls    = document.querySelectorAll('.slide');
+const SLIDE_COUNT = slideEls.length;
+let   slideIdx    = 0;
+
+const slideKeys = ['slide1','slide2','slide3','slide4','slide5','slide6','slide7','slide8'];
+
+function updateSlideCounter() {
+  const el = document.getElementById('slide-counter');
+  if (!el) return;
+  el.textContent = slideIdx === 0 ? 'TAP TO START' : (slideIdx+1) + ' / ' + SLIDE_COUNT;
+}
+
+// speak first slide on load after a moment
+setTimeout(() => speak('slide1'), 600);
+updateSlideCounter();
+
+function nextSlide() {
+  if (slideIdx >= SLIDE_COUNT - 1) return;
+  slideEls[slideIdx].classList.remove('s-active');
+  slideIdx++;
+  slideEls[slideIdx].classList.add('s-active');
+  updateSlideCounter();
+  speak(slideKeys[slideIdx]);
+
+  // last slide — unlock button
+  if (slideIdx === SLIDE_COUNT - 1) {
+    const btn = document.getElementById('c1-btn');
+    btn.disabled = false;
+    btn.textContent = "I'M READY →";
+    btn.style.animation = 'btnGlow 2s ease-in-out infinite';
+    const prog = document.getElementById('slide-prog');
+    if (prog) prog.style.width = '100%';
+    emit('slides_done', {slides: SLIDE_COUNT});
+  }
+}
+
+// ── Dots ─────────────────────────────────────────────────────────────────────
+function renderDots(cardNum) {
+  const el = document.getElementById('dots'+cardNum);
+  if (!el) return;
+  el.innerHTML = '';
+  for (let i=1; i<=TOTAL; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i===cardNum?' active':i<cardNum?' done':'');
+    el.appendChild(d);
+  }
+}
+
+// ── Progress ─────────────────────────────────────────────────────────────────
+function updateProgress() {
+  document.getElementById('prog').style.width = ((current/TOTAL)*100)+'%';
+  renderDots(current);
+}
+
+// ── Navigate ──────────────────────────────────────────────────────────────────
+const cardSpeakKeys = [null,'slide1','card2','card3','card4','card5','card6','card7'];
+
+function next() {
+  if (current >= TOTAL) return;
+  const outCard = document.getElementById('c'+current);
+  outCard.classList.remove('active');
+  outCard.classList.add('out');
+  setTimeout(()=>outCard.classList.remove('out'), 450);
+  current++;
+  const inCard = document.getElementById('c'+current);
+  inCard.classList.add('active');
+  updateProgress();
+  inCard.scrollTop = 0;
+  emit('card_enter', {card: current});
+  // speak guidance for this card
+  setTimeout(() => speak(cardSpeakKeys[current] || ''), 400);
+}
+
+// ── Checklist ────────────────────────────────────────────────────────────────
+function toggleCheck(item, num) {
+  item.classList.toggle('done');
+  const all  = document.querySelectorAll('#checklist .check-item');
+  const done = document.querySelectorAll('#checklist .check-item.done');
+  const btn  = document.getElementById('film-btn');
+  btn.disabled = (done.length < all.length);
+  if (!btn.disabled) {
+    btn.classList.add('glow');
+    speak("Great. All sections ticked. Now tap the button below.");
+    emit('film_ready', {checks: 5});
+  }
+}
+
+// ── Submit ────────────────────────────────────────────────────────────────────
+async function submitFilm() {
+  const errEl = document.getElementById('s-error');
+  const okEl  = document.getElementById('s-ok');
+  errEl.style.display = 'none';
+  const email = document.getElementById('s-email').value.trim();
+  const video = document.getElementById('s-video').value.trim();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errEl.textContent='Please enter a valid email address.';
+    errEl.style.display='block';
+    speak("Please enter a valid email address.");
+    return;
+  }
+  if (!video || !/^https?:\/\//i.test(video)) {
+    errEl.textContent='Please paste your YouTube or Vimeo link.';
+    errEl.style.display='block';
+    speak("Please paste your film link.");
+    return;
+  }
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true; btn.textContent = 'SUBMITTING...';
+  speak("Submitting your film. One moment.");
+  try {
+    const res  = await fetch('/api/job.php', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({email, video, ref: refId})
+    });
+    const data = await res.json();
+    if (data.ok) {
+      okEl.style.display = 'block';
+      btn.textContent = 'SUBMITTED ✓';
+      speak("Submitted. Moving to the next step.");
+      emit('film_submitted', {email, video, ref: data.ref||refId, api: data});
+      setTimeout(next, 1200);
+    } else {
+      errEl.textContent = data.error || 'Submission failed. Please try again.';
+      errEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = "I'M CONVINCED. SUBMIT →";
+    }
+  } catch(e) {
+    errEl.textContent = 'Network error. Check your connection and try again.';
+    errEl.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = "I'M CONVINCED. SUBMIT →";
+  }
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+updateProgress();
+
+if (refId) {
+  const joinLink = document.getElementById('join-link');
+  if (joinLink) joinLink.href = '/join.html?ref='+encodeURIComponent(refId);
+}
+</script>
+</body>
+</html>

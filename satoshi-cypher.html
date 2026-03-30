@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Satoshi Cypher — Control Panel</title>
+  <style>
+    :root {
+      --bg: #07070d;
+      --surface: #0d0d18;
+      --surface2: #141425;
+      --border: #1c1c2e;
+      --border-hi: #2e2e48;
+      --orange: #f7931a;
+      --cyan: #4fc3f7;
+      --green: #51cf66;
+      --red: #ff6b6b;
+      --yellow: #ffd43b;
+      --txt: #e2e8f0;
+      --muted: #94a3b8;
+      --dim: #475569;
+      --shadow: 0 4px 24px rgba(0,0,0,.6);
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--txt);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+    /* ── header ── */
+    .hdr{display:flex;align-items:center;gap:12px;padding:0 20px;height:56px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;z-index:100}
+    .logo{display:flex;align-items:center;gap:8px;font-size:17px;font-weight:700;color:var(--orange);white-space:nowrap;letter-spacing:.4px}
+    .logo-hex{font-size:22px}
+    .ver{font-size:10px;font-weight:700;padding:2px 6px;background:rgba(247,147,26,.15);color:var(--orange);border-radius:4px}
+    .hdr-space{flex:1}
+    .conn-bar{display:flex;align-items:center;gap:8px}
+    .conn-bar input{background:var(--surface2);border:1px solid var(--border-hi);border-radius:6px;color:var(--txt);padding:5px 10px;font-size:12px;outline:none;transition:border-color .2s}
+    .conn-bar input:focus{border-color:var(--orange);box-shadow:0 0 0 2px rgba(247,147,26,.15)}
+    #inp-base{width:200px}
+    #inp-key{width:160px;font-family:monospace}
+    .dot{width:9px;height:9px;border-radius:50%;background:var(--dim);transition:background .3s,box-shadow .3s}
+    .dot.ok{background:var(--green);box-shadow:0 0 8px rgba(81,207,102,.6)}
+    .dot.err{background:var(--red);box-shadow:0 0 8px rgba(255,107,107,.6)}
+    .dot.busy{background:var(--yellow);animation:blink 1s infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+
+    /* ── layout ── */
+    .layout{display:flex;flex:1;overflow:hidden}
+
+    /* ── sidebar ── */
+    .sidebar{width:190px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:10px 6px;gap:3px;flex-shrink:0}
+    .nb{display:flex;align-items:center;gap:9px;padding:9px 12px;border:none;background:transparent;color:var(--muted);cursor:pointer;border-radius:7px;font-size:13px;font-weight:500;text-align:left;transition:all .18s;white-space:nowrap;width:100%}
+    .nb:hover{background:var(--surface2);color:var(--txt)}
+    .nb.on{background:rgba(247,147,26,.12);color:var(--orange)}
+    .nb-ic{font-size:15px}
+    .sb-foot{margin-top:auto;padding:8px 12px;font-size:10px;color:var(--dim);line-height:1.6}
+
+    /* ── main ── */
+    .main{flex:1;overflow-y:auto;padding:22px}
+
+    /* ── tabs ── */
+    .tab{display:none}
+    .tab.on{display:block}
+
+    /* ── cards ── */
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:18px;margin-bottom:14px}
+    .ct{font-size:14px;font-weight:600;color:var(--txt);margin-bottom:14px;display:flex;align-items:center;gap:7px}
+    .cs{font-size:12px;color:var(--muted);margin-bottom:14px}
+
+    /* ── grid helpers ── */
+    .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+    .g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
+
+    /* ── stat cards ── */
+    .sc{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:18px;text-align:center}
+    .sv{font-size:28px;font-weight:700;color:var(--orange);font-family:monospace}
+    .sl{font-size:12px;color:var(--muted);margin-top:4px}
+
+    /* ── buttons ── */
+    .btn{padding:7px 15px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .18s}
+    .bp{background:var(--orange);color:#000}.bp:hover{background:#e0840f;box-shadow:0 0 18px rgba(247,147,26,.35)}
+    .bs{background:var(--surface2);color:var(--txt);border:1px solid var(--border-hi)}.bs:hover{border-color:var(--orange);color:var(--orange)}
+    .bc{background:var(--cyan);color:#000}.bc:hover{box-shadow:0 0 18px rgba(79,195,247,.35)}
+    .btn:disabled{opacity:.45;cursor:not-allowed}
+
+    /* ── forms ── */
+    .fg{margin-bottom:12px}
+    .fl{display:block;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+    input[type=text],input[type=password],input[type=url],input[type=number],textarea,select{width:100%;background:var(--surface2);border:1px solid var(--border-hi);border-radius:6px;color:var(--txt);padding:7px 11px;font-size:12px;outline:none;transition:border-color .2s}
+    input:focus,textarea:focus,select:focus{border-color:var(--orange);box-shadow:0 0 0 2px rgba(247,147,26,.12)}
+    textarea{resize:vertical;font-family:'Courier New',monospace;font-size:11px;min-height:90px}
+
+    /* ── badges ── */
+    .bd{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700}
+    .bd-ok{background:rgba(81,207,102,.15);color:var(--green)}
+    .bd-warn{background:rgba(255,212,59,.15);color:var(--yellow)}
+    .bd-err{background:rgba(255,107,107,.15);color:var(--red)}
+    .bd-info{background:rgba(79,195,247,.15);color:var(--cyan)}
+
+    /* ── code block ── */
+    .cb{background:#050508;border:1px solid var(--border);border-radius:6px;padding:11px;font-family:'Courier New',monospace;font-size:11px;color:var(--cyan);white-space:pre-wrap;word-break:break-all;max-height:260px;overflow-y:auto}
+
+    /* ── alerts ── */
+    .al{padding:11px 13px;border-radius:7px;font-size:12px;margin-bottom:11px;display:flex;align-items:flex-start;gap:9px;line-height:1.5}
+    .al-warn{background:rgba(255,212,59,.07);border:1px solid rgba(255,212,59,.22);color:var(--yellow)}
+    .al-info{background:rgba(79,195,247,.07);border:1px solid rgba(79,195,247,.22);color:var(--cyan)}
+    .al-ok{background:rgba(81,207,102,.07);border:1px solid rgba(81,207,102,.22);color:var(--green)}
+    .al-err{background:rgba(255,107,107,.07);border:1px solid rgba(255,107,107,.22);color:var(--red)}
+
+    /* ── security items ── */
+    .sec-item{display:flex;align-items:flex-start;gap:13px;padding:13px;background:var(--surface2);border-radius:8px;margin-bottom:9px;border:1px solid var(--border)}
+    .sec-ic{font-size:19px;flex-shrink:0;margin-top:2px}
+    .sec-t{font-size:13px;font-weight:600;color:var(--txt);margin-bottom:3px}
+    .sec-d{font-size:11px;color:var(--muted);line-height:1.5}
+
+    /* ── pricing ── */
+    .pc{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;text-align:center;position:relative;transition:transform .2s,border-color .2s}
+    .pc:hover{transform:translateY(-3px)}
+    .pc.feat{border-color:var(--orange);box-shadow:0 0 22px rgba(247,147,26,.25)}
+    .pc-badge{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--orange);color:#000;padding:2px 11px;border-radius:10px;font-size:10px;font-weight:700}
+    .pc-tier{font-size:13px;color:var(--muted);margin-bottom:7px}
+    .pc-price{font-size:32px;font-weight:700;color:var(--txt)}
+    .pc-price span{font-size:14px;color:var(--muted);font-weight:400}
+    .pc-feats{list-style:none;margin:16px 0;text-align:left}
+    .pc-feats li{padding:5px 0;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px;border-bottom:1px solid var(--border)}
+    .pc-feats li:last-child{border-bottom:none}
+
+    /* ── audit table ── */
+    .atbl{width:100%;border-collapse:collapse;font-size:11px}
+    .atbl th{text-align:left;padding:8px 11px;background:var(--surface2);color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
+    .atbl td{padding:8px 11px;border-bottom:1px solid var(--border);color:var(--muted);font-family:monospace}
+    .atbl tr:hover td{background:var(--surface2)}
+
+    /* ── checklist ── */
+    .cli{display:flex;align-items:flex-start;gap:9px;padding:7px 0;font-size:12px;color:var(--muted);border-bottom:1px solid var(--border)}
+    .cli:last-child{border-bottom:none}
+    .cli-ic{font-size:13px;flex-shrink:0;margin-top:1px}
+
+    /* ── toasts ── */
+    #toasts{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:7px}
+    .toast{padding:10px 14px;border-radius:7px;font-size:12px;font-weight:500;animation:tslide .3s ease;max-width:280px;box-shadow:var(--shadow)}
+    .t-ok{background:rgba(81,207,102,.15);border:1px solid var(--green);color:var(--green)}
+    .t-err{background:rgba(255,107,107,.15);border:1px solid var(--red);color:var(--red)}
+    .t-info{background:rgba(79,195,247,.15);border:1px solid var(--cyan);color:var(--cyan)}
+    @keyframes tslide{from{transform:translateX(80px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+    /* ── misc ── */
+    .row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+    .pg-title{font-size:22px;font-weight:700;color:var(--txt);margin-bottom:3px}
+    .pg-sub{font-size:13px;color:var(--muted);margin-bottom:20px}
+    .divider{height:1px;background:var(--border);margin:14px 0}
+    .sec-head{font-size:11px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.9px;margin-bottom:10px}
+    ::-webkit-scrollbar{width:5px;height:5px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-thumb{background:var(--border-hi);border-radius:3px}
+    ::-webkit-scrollbar-thumb:hover{background:var(--dim)}
+
+    /* ── UK buy button ── */
+    .btn-uk{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:8px 15px;margin-top:8px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid #cf142b;background:#012169;color:#fff;letter-spacing:.5px;transition:all .2s}
+    .btn-uk:hover{background:#cf142b;box-shadow:0 0 18px rgba(207,20,43,.5);transform:translateY(-1px)}
+  </style>
+</head>
+<body>
+
+<div id="toasts"></div>
+
+<!-- GITHUB PAGES SETUP BANNER (hidden by default, shown by JS) -->
+<div id="gh-banner" style="display:none;background:rgba(247,147,26,.08);border-bottom:1px solid rgba(247,147,26,.3);padding:9px 20px;font-size:12px;color:var(--orange);align-items:center;gap:10px;flex-shrink:0">
+  <span>⬡</span>
+  <strong>Welcome!</strong> This UI is hosted on GitHub Pages.
+  Enter your Satoshi Cypher API server URL and key in the header to connect.
+  <a href="https://github.com/eliskcage/satoshi-cypher#running-the-api" target="_blank" style="color:var(--cyan);margin-left:4px">How to run your own server →</a>
+  <button onclick="document.getElementById('gh-banner').style.display='none'" style="margin-left:auto;background:transparent;border:none;color:var(--dim);cursor:pointer;font-size:14px">✕</button>
+</div>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="logo"><span class="logo-hex">⬡</span>Satoshi Cypher</div>
+  <div class="ver">v1.1.0</div>
+  <div class="hdr-space"></div>
+  <div class="conn-bar">
+    <label style="font-size:11px;color:var(--dim);white-space:nowrap">API Endpoint</label>
+    <input type="url" id="inp-base" placeholder="https://your-api-server" />
+    <input type="password" id="inp-key" placeholder="API Key" />
+    <a href="/visa-card.html" style="font-size:11px;color:var(--orange);text-decoration:none;padding:4px 10px;border-radius:5px;border:1px solid rgba(247,147,26,.4);white-space:nowrap;transition:all .18s" onmouseover="this.style.background='rgba(247,147,26,.1)'" onmouseout="this.style.background='transparent'">💳 Visa Steps</a>
+    <button class="btn bs" onclick="saveConn();checkHealth()">Connect</button>
+    <div class="dot busy" id="hdot" title="Not checked"></div>
+  </div>
+</header>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <button class="nb on" onclick="showTab('dash',this)"><span class="nb-ic">🏠</span>Dashboard</button>
+    <button class="nb" onclick="showTab('box',this)"><span class="nb-ic">⬛</span>Black Box</button>
+    <button class="nb" onclick="showTab('keys',this)"><span class="nb-ic">🔑</span>Key Manager</button>
+    <button class="nb" onclick="showTab('audit',this)"><span class="nb-ic">📋</span>Audit Trail</button>
+    <button class="nb" onclick="showTab('sec',this)"><span class="nb-ic">🛡️</span>Security</button>
+    <button class="nb" onclick="showTab('visa',this)"><span class="nb-ic">💳</span>Visa Ready</button>
+    <div class="sb-foot">
+      Satoshi Cypher<br>Control Panel<br>
+      <span style="color:var(--orange)">⬡</span> Temporal Black Box
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- ══════════════ TAB: DASHBOARD ══════════════ -->
+    <div id="tab-dash" class="tab on">
+      <div class="pg-title">⬡ System Dashboard</div>
+      <div class="pg-sub">Real-time status of your Temporal Black Box deployment.</div>
+
+      <div class="g4" style="margin-bottom:14px">
+        <div class="sc"><div class="sv" id="st-health">—</div><div class="sl">System Health</div></div>
+        <div class="sc"><div class="sv" id="st-enc">0</div><div class="sl">Session Encodes</div></div>
+        <div class="sc"><div class="sv" id="st-dec">0</div><div class="sl">Session Decodes</div></div>
+        <div class="sc"><div class="sv" style="color:var(--cyan)" id="st-score">75%</div><div class="sl">Security Score</div></div>
+      </div>
+
+      <div class="g2">
+        <div class="card">
+          <div class="ct">🔌 Connection Status</div>
+          <div id="conn-detail" class="cs">Configure your API endpoint above and click Connect.</div>
+          <div class="row" style="margin-top:10px">
+            <button class="btn bs" onclick="checkHealth()">Ping Health</button>
+            <button class="btn bs" onclick="runQuickTest()">⚡ Quick Test</button>
+          </div>
+          <div id="qtest-result" style="margin-top:12px"></div>
+        </div>
+        <div class="card">
+          <div class="ct">ℹ️ About Satoshi Cypher</div>
+          <div class="al al-info">
+            <span>⚡</span>
+            <span>Temporal black-box banking security. Ciphers are valid only within a configurable time window — after expiry, no key, no code.</span>
+          </div>
+          <div class="al al-ok">
+            <span>✅</span>
+            <span>v1.1.0 adds HMAC payload signing, hot key reload, and a persistent audit log. Three of the eight known issues are now resolved.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ct">🗺️ What's New in v1.1.0</div>
+        <div class="g3">
+          <div>
+            <div class="sec-head">✅ HMAC Payload Signing</div>
+            <div class="cs">Every encoded cipher now includes an HMAC-SHA256 tag. The decode endpoint verifies it before execution — tampered blobs are rejected.</div>
+          </div>
+          <div>
+            <div class="sec-head">✅ Hot Key Reload</div>
+            <div class="cs">Update <code style="color:var(--cyan)">API_KEYS</code> in your environment and call <code style="color:var(--cyan)">/api/keys/reload</code> — no server restart required.</div>
+          </div>
+          <div>
+            <div class="sec-head">✅ Audit Trail</div>
+            <div class="cs">Every encode, decode, rejection and key-reload event is logged to <code style="color:var(--cyan)">/api/audit</code> with timestamps and key hints.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ TAB: BLACK BOX ══════════════ -->
+    <div id="tab-box" class="tab">
+      <div class="pg-title">⬛ Temporal Black Box</div>
+      <div class="pg-sub">Plug in any compatible compute API endpoint — your own server, a hosted instance, or a third-party deployment.</div>
+
+      <!-- Compute Source -->
+      <div class="card">
+        <div class="ct">🔌 Compute Source</div>
+        <div class="cs">Point the Black Box at any Satoshi Cypher API. The connection settings are shared with the header bar.</div>
+        <div class="g2">
+          <div class="fg">
+            <label class="fl">API Base URL</label>
+            <input type="url" id="bb-base" placeholder="http://localhost:8000" oninput="syncBase(this.value)" />
+          </div>
+          <div class="fg">
+            <label class="fl">API Key</label>
+            <input type="password" id="bb-key" placeholder="Your API key" oninput="syncKey(this.value)" />
+          </div>
+        </div>
+        <div class="row">
+          <button class="btn bp" onclick="saveConn();checkHealth()">Test Connection</button>
+          <div id="bb-conn-status" style="font-size:12px;color:var(--muted)">Not tested.</div>
+        </div>
+      </div>
+
+      <div class="g2">
+        <!-- Encode Panel -->
+        <div class="card">
+          <div class="ct">🔐 Encode</div>
+          <div class="fg">
+            <label class="fl">Source Code</label>
+            <textarea id="enc-src" rows="6" placeholder="Enter code to obfuscate...">def satoshi_god_mode():
+    print("Hello from the Temporal Fortress")
+    return 1337
+
+print(satoshi_god_mode())</textarea>
+          </div>
+          <button class="btn bp" onclick="doEncode()" id="enc-btn">Encode →</button>
+          <div id="enc-result" style="margin-top:12px"></div>
+        </div>
+
+        <!-- Decode Panel -->
+        <div class="card">
+          <div class="ct">🔓 Decode</div>
+          <div class="fg">
+            <label class="fl">Cipher JSON</label>
+            <textarea id="dec-cipher" rows="5" placeholder='{"points":[...],"t0":...,"rotation_rate":0.0}'></textarea>
+          </div>
+          <div class="fg">
+            <label class="fl">HMAC Tag <span style="color:var(--green);font-weight:400">(auto-populated after encode)</span></label>
+            <input type="text" id="dec-hmac" placeholder="Leave empty to skip integrity check" style="font-family:monospace;font-size:11px" />
+          </div>
+          <button class="btn bc" onclick="doDecode()" id="dec-btn">Decode &amp; Execute →</button>
+          <div id="dec-result" style="margin-top:12px"></div>
+        </div>
+      </div>
+
+      <!-- Cipher Inspector -->
+      <div class="card">
+        <div class="ct">🔍 Cipher Inspector</div>
+        <div class="cs">Paste a cipher JSON below to inspect its structure and validate the HMAC tag.</div>
+        <div class="fg">
+          <textarea id="insp-in" rows="4" placeholder='Paste cipher JSON here...'></textarea>
+        </div>
+        <button class="btn bs" onclick="inspectCipher()">Inspect</button>
+        <div id="insp-out" style="margin-top:12px"></div>
+      </div>
+    </div>
+
+    <!-- ══════════════ TAB: KEY MANAGER ══════════════ -->
+    <div id="tab-keys" class="tab">
+      <div class="pg-title">🔑 Key Manager</div>
+      <div class="pg-sub">Manage API keys without restarting the server. Requires v1.1.0+.</div>
+
+      <div class="al al-info">
+        <span>ℹ️</span>
+        <span>Keys are loaded from the <code style="color:var(--cyan)">API_KEYS</code> environment variable (comma-separated). To add or revoke keys: update the variable, then click <strong>Hot Reload Keys</strong> below.</span>
+      </div>
+
+      <div class="g2">
+        <div class="card">
+          <div class="ct">🔄 Hot Reload</div>
+          <div class="cs">Reload keys from environment without restarting. Your current key must still be valid to call this endpoint.</div>
+          <button class="btn bp" onclick="doReloadKeys()" id="reload-btn">Hot Reload Keys</button>
+          <div id="reload-result" style="margin-top:12px"></div>
+        </div>
+        <div class="card">
+          <div class="ct">⚠️ Multi-Worker Note</div>
+          <div class="al al-warn">
+            <span>⚠️</span>
+            <span>In a multi-worker deployment (<code>API_WORKERS &gt; 1</code>), this endpoint only updates the worker that handles the request. For full consistency across all workers, restart the server after updating the environment.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ct">📖 Key Rotation Guide</div>
+        <ol style="padding-left:20px;font-size:13px;color:var(--muted);line-height:2">
+          <li>Generate a new strong key: <code style="color:var(--cyan)">python -c "import secrets; print(secrets.token_urlsafe(32))"</code></li>
+          <li>Append it to your <code style="color:var(--cyan)">API_KEYS</code> env variable (keep the old key temporarily): <code style="color:var(--cyan)">API_KEYS=old-key,new-key</code></li>
+          <li>Call <strong>Hot Reload Keys</strong> above — both keys are now valid.</li>
+          <li>Distribute the new key to all clients.</li>
+          <li>Once all clients have switched, remove the old key from <code style="color:var(--cyan)">API_KEYS</code>.</li>
+          <li>Call <strong>Hot Reload Keys</strong> again — old key is now revoked.</li>
+        </ol>
+      </div>
+
+      <div class="card">
+        <div class="ct">📦 Environment Template</div>
+        <div class="cb"># .env — key configuration example
+API_KEYS=key-alpha-abc123,key-beta-def456
+
+# Generate a new key:
+# python -c "import secrets; print('key-'+secrets.token_urlsafe(24))"
+
+# After updating, call POST /api/keys/reload?api_key=your-current-key</div>
+      </div>
+    </div>
+
+    <!-- ══════════════ TAB: AUDIT TRAIL ══════════════ -->
+    <div id="tab-audit" class="tab">
+      <div class="pg-title">📋 Audit Trail</div>
+      <div class="pg-sub">Immutable event log for every encode, decode, rejection, and key-reload. Newest first.</div>
+
+      <div class="al al-info">
+        <span>ℹ️</span>
+        <span>The audit log is stored in-memory (rolling 10 000 entries). For regulatory/compliance use, forward application logs to an external SIEM — every audit event is also emitted as a structured log line.</span>
+      </div>
+
+      <div class="card">
+        <div class="row" style="margin-bottom:14px">
+          <button class="btn bp" onclick="fetchAudit()">↺ Refresh</button>
+          <select id="audit-limit" style="width:120px">
+            <option value="50">Last 50</option>
+            <option value="100" selected>Last 100</option>
+            <option value="500">Last 500</option>
+          </select>
+          <button class="btn bs" onclick="exportAudit()">⬇ Export JSON</button>
+          <label style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px">
+            <input type="checkbox" id="audit-auto" onchange="toggleAutoRefresh(this.checked)" /> Auto-refresh (30s)
+          </label>
+          <div id="audit-status" style="font-size:12px;color:var(--muted);margin-left:auto"></div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="atbl">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Event</th>
+                <th>Key</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody id="audit-body">
+              <tr><td colspan="4" style="text-align:center;padding:20px;color:var(--dim)">Click Refresh to load audit events.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ TAB: SECURITY ══════════════ -->
+    <div id="tab-sec" class="tab">
+      <div class="pg-title">🛡️ Security Status</div>
+      <div class="pg-sub">Status of all eight known issues. Three are resolved in v1.1.0.</div>
+
+      <div class="g3" style="margin-bottom:14px">
+        <div class="sc"><div class="sv" style="color:var(--green)">3</div><div class="sl">Issues Resolved</div></div>
+        <div class="sc"><div class="sv" style="color:var(--yellow)">5</div><div class="sl">Known / Roadmap</div></div>
+        <div class="sc"><div class="sv" style="color:var(--cyan)">75%</div><div class="sl">Security Score</div></div>
+      </div>
+
+      <!-- Issue 1: Rate Limiting -->
+      <div class="sec-item">
+        <span class="sec-ic">⚠️</span>
+        <div>
+          <div class="row" style="margin-bottom:4px">
+            <div class="sec-t">Rate Limiting — In-Memory / Single-Process</div>
+            <span class="bd bd-warn">KNOWN LIMITATION</span>
+          </div>
+          <div class="sec-d">
+            <code>_rate_store</code> lives in-process. With <code>API_WORKERS &gt; 1</code> or multiple instances behind a load balancer, limits are not globally enforced.
+            <strong>Fix:</strong> Replace <code>_rate_store</code> with a Redis backend (e.g. <code>redis-py</code> + <code>RATE_LIMIT_REDIS_URL</code> env var). This is on the Phase 1 roadmap.
+          </div>
+        </div>
+      </div>
+
+      <!-- Issue 2: Key Rotation -->
+      <div class="sec-item">
+        <span class="sec-ic">✅</span>
+        <div>
+          <div class="row" style="margin-bottom:4px">
+            <div class="sec-t">API Key Rotation — Requires Server Restart</div>
+            <span class="bd bd-ok">FIXED IN v1.1.0</span>
+          </div>
+          <div class="sec-d">
+            <code>POST /api/keys/reload</code> re-reads <code>API_KEYS</code> from the environment without a restart. See the Key Manager tab for the full rotation guide.
+          </div>
+        </div>
+      </div>
+
+      <!-- Issue 3: PRNG -->
+      <div class="sec-item">
+        <span class="sec-ic">⚠️</span>
+        <div>
+          <div class="row" style="margin-bottom:4px">
+            <div class="sec-t">random.Random — Mersenne Twister (Not CSPRNG)</div>
+            <span class="bd bd-warn">PHASE 1 ROADMAP</span>
+          </div>
+          <div class="sec-d">
+            The seed is derived from <code>HMAC-SHA256(MASTER_SECRET, timestamp)</code> which is cryptographically strong, but the Mersenne Twister shuffle has known statistical periodicity.
+            <strong>Phase 1 fix:</strong> Replace the per-character jitter with HMAC-derived byte offsets so no PRNG state is exposed.
+          </div>
+        </div>
+      </div>
+
+      <!-- Issue 4: exec() sandbox -->
+      <div class="sec-item">
+        <span class="sec-ic">⚠️</span>
+        <div>
+          <div class="row" style="margin-bottom:4px">
+            <div class="sec-t">exec() Sandbox — Soft Restriction</div>
+            <span class="bd bd-warn">KNOWN LIMITATION</span>
+          </div>
+          <div class="sec-d">
+            Restricting <code>__builtins__</code> blocks obvious vectors but attribute-based class-hierarchy traversal (<code>__class__.__bases__</code>, <code>__subclasses__</code>) remains possible via permitted objects.
+            <strong>Rule:</strong> Only decode cipher data you produced and trust. Never decode untrusted third-party blobs. Phase 3 plans a subprocess-isolated sandbox.
+          </div>
+        </div>
+      </div>
+
+      <!-- Issue 5: Payload auth -->
+      <div class="sec-item">
+        <span class="sec-ic">✅</span>
+        <div>
+          <div class="row" style="margin-bottom:4px">
+            <div class="sec-t">Payload Authentication — No HMAC/Signature</div>
+            <span class="bd bd-ok">FIXED IN v1.1.0</span>
+          </div>
+          <div class="sec-d">
+            Every <code>/encode</code> response now includes an <code>hmac_tag</code> (HMAC-SHA256 over <code>points + t0 + rotation_rate</code>). The <code>/decode</code> endpoint verifies this tag before execution — tampered cipher blobs are rejected with <code>400 Bad Request</code>.
+          </div>
+        </div>
+      </div>
+
+      <!-- Issue 6: Audit trail -->
+      <div class="sec-item">
+        <span class="sec-ic">✅</span>
+        <div>
+          <div class="row" style="margin-bottom:4px">
+            <div class="sec-t">No Persistent Audit Trail</div>
+            <span class="bd bd-ok">FIXED IN v1.1.0</span>
+          </div>
+          <div class="sec-d">
+            <code>GET /api/audit</code> returns a rolling 10 000-entry log of all encode, decode, rejection, and key-reload events. Every entry is also emitted as a structured log line so an external SIEM can capture it. For regulatory use, forward <code>AUDIT</code>-prefixed log lines to your compliance pipeline.
+          </div>
+        </div>
+      </div>
+
+      <!-- Issue 7: HTTPS -->
+      <div class="sec-item">
+        <span class="sec-ic">⚠️</span>
+        <div>
+          <div class="row" style="margin-bottom:4px">
+            <div class="sec-t">No HTTPS in Application Layer</div>
+            <span class="bd bd-warn">PROXY REQUIRED</span>
+          </div>
+          <div class="sec-d">
+            The server binds plain HTTP. TLS must be terminated at a reverse proxy before internet exposure. Quick start with Caddy:
+            <pre style="margin-top:6px;font-size:10px;color:var(--cyan);line-height:1.6">your.domain {
+    reverse_proxy localhost:8000
+}</pre>
+            or nginx: <code>ssl_certificate</code> + <code>proxy_pass http://127.0.0.1:8000</code>.
+          </div>
+        </div>
+      </div>
+
+      <!-- Issue 8: Test suite -->
+      <div class="sec-item">
+        <span class="sec-ic">⚠️</span>
+        <div>
+          <div class="row" style="margin-bottom:4px">
+            <div class="sec-t">No Automated Test Suite</div>
+            <span class="bd bd-warn">KNOWN LIMITATION</span>
+          </div>
+          <div class="sec-d">
+            <code>main.py</code> provides a manual smoke test only. No pytest suite exists yet — any refactor carries unverified risk.
+            Use the <strong>⚡ Quick Test</strong> button on the Dashboard to run a live encode/decode round-trip.
+            A formal pytest suite covering the core engine and API endpoints is on the Phase 1 roadmap.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ TAB: VISA READINESS ══════════════ -->
+    <div id="tab-visa" class="tab">
+      <div class="pg-title">💳 Visa-Ready Licensing</div>
+      <div class="pg-sub">Payment infrastructure readiness and licensing tiers — your path to becoming Stripe-grade.</div>
+
+      <!-- PCI Readiness Checklist -->
+      <div class="card">
+        <div class="ct">🏦 Payment Infrastructure Readiness</div>
+        <div class="cs">Status of the technical requirements for operating a paid API service and onboarding a card payment processor (Stripe, Visa, etc.).</div>
+
+        <div class="cli"><span class="cli-ic">✅</span><div><strong>API Authentication</strong> — SHA-256 hashed API keys, never stored in plain text.</div></div>
+        <div class="cli"><span class="cli-ic">✅</span><div><strong>Cipher Integrity</strong> — HMAC-SHA256 payload signing on every encode/decode (v1.1.0).</div></div>
+        <div class="cli"><span class="cli-ic">✅</span><div><strong>Audit Logging</strong> — All events logged with timestamps and key hints; SIEM-forwardable.</div></div>
+        <div class="cli"><span class="cli-ic">✅</span><div><strong>Rate Limiting</strong> — Per-key throttling prevents abuse (in-memory; Redis for multi-node).</div></div>
+        <div class="cli"><span class="cli-ic">✅</span><div><strong>Error Sanitisation</strong> — No stack traces in API responses.</div></div>
+        <div class="cli"><span class="cli-ic">✅</span><div><strong>Secret Isolation</strong> — <code>MASTER_SECRET</code> lives in environment variables only.</div></div>
+        <div class="cli"><span class="cli-ic">✅</span><div><strong>Key Rotation</strong> — Zero-downtime hot-reload endpoint (v1.1.0).</div></div>
+        <div class="cli"><span class="cli-ic">⚠️</span><div><strong>HTTPS / TLS</strong> — Required before accepting payment data. Terminate at reverse proxy (nginx / Caddy / ALB).</div></div>
+        <div class="cli"><span class="cli-ic">⚠️</span><div><strong>Multi-Factor Admin Auth</strong> — Admin actions currently protected by API key only. MFA planned for Phase 4 dashboard.</div></div>
+        <div class="cli"><span class="cli-ic">⚠️</span><div><strong>PCI DSS Formal Compliance</strong> — Requires third-party QSA audit. Technical foundation is in place; paperwork is not yet filed.</div></div>
+        <div class="cli"><span class="cli-ic">⚠️</span><div><strong>HSM Key Storage</strong> — <code>MASTER_SECRET</code> currently in software memory. FIPS 140-2 L3 HSM integration is Phase 3.</div></div>
+        <div class="cli"><span class="cli-ic">⚠️</span><div><strong>Automated Test Suite</strong> — Required for SOC 2 / ISO 27001. Pytest suite is Phase 1 roadmap.</div></div>
+
+        <div class="divider"></div>
+        <div class="row">
+          <span class="bd bd-ok">7 / 12 Ready</span>
+          <span style="font-size:12px;color:var(--muted)">Complete the ⚠️ items before submitting a Stripe or Visa merchant application.</span>
+        </div>
+      </div>
+
+      <!-- Licensing Tiers -->
+      <div class="ct" style="margin-bottom:14px">🎯 Licensing Tiers</div>
+      <div class="g3" style="margin-bottom:20px">
+
+        <!-- Free -->
+        <div class="pc">
+          <div class="pc-tier">Free</div>
+          <div class="pc-price">$0 <span>/ month</span></div>
+          <ul class="pc-feats">
+            <li><span>✅</span>60 requests/min community key</li>
+            <li><span>✅</span>Access to public API</li>
+            <li><span>✅</span>Full documentation</li>
+            <li><span>✅</span>Community support (issues)</li>
+            <li><span>❌</span>SLA / uptime guarantee</li>
+            <li><span>❌</span>Custom temporal window</li>
+            <li><span>❌</span>Dedicated infrastructure</li>
+          </ul>
+          <button class="btn bs" style="width:100%" onclick="toast('Open an issue on GitHub to request a free-tier key.','info')">Get Free Key</button>
+        </div>
+
+        <!-- Standard — FEATURED -->
+        <div class="pc feat">
+          <div class="pc-badge">MOST POPULAR</div>
+          <div class="pc-tier">Standard</div>
+          <div class="pc-price">$99 <span>/ month</span></div>
+          <ul class="pc-feats">
+            <li><span>✅</span>1 000 requests/min dedicated key</li>
+            <li><span>✅</span>99.5% uptime SLA</li>
+            <li><span>✅</span>Custom <code>MAX_VALID_WINDOW_SEC</code></li>
+            <li><span>✅</span>Priority support (24h response)</li>
+            <li><span>✅</span>Audit log export API</li>
+            <li><span>✅</span>Dedicated rate-limit bucket</li>
+            <li><span>❌</span>HSM / on-premise deployment</li>
+          </ul>
+          <button class="btn bp" style="width:100%" onclick="openLicenseInquiry('standard')">Upgrade to Standard</button>
+          <button class="btn-uk" onclick="openUKLicence()">🇬🇧 UK LICENCE — £79/mo</button>
+        </div>
+
+        <!-- Enterprise -->
+        <div class="pc">
+          <div class="pc-tier">Enterprise</div>
+          <div class="pc-price">Custom <span>pricing</span></div>
+          <ul class="pc-feats">
+            <li><span>✅</span>Unlimited requests</li>
+            <li><span>✅</span>99.99% uptime SLA</li>
+            <li><span>✅</span>Private on-premise deployment</li>
+            <li><span>✅</span>FIPS 140-2 L3 HSM integration</li>
+            <li><span>✅</span>M-of-N threshold decryption</li>
+            <li><span>✅</span>Compliance docs (SOC 2 / ISO)</li>
+            <li><span>✅</span>Dedicated solutions engineer</li>
+          </ul>
+          <button class="btn bc" style="width:100%" onclick="openLicenseInquiry('enterprise')">Contact Sales</button>
+        </div>
+      </div>
+
+      <!-- Stripe Integration Prep -->
+      <div class="card">
+        <div class="ct">💳 Stripe Integration Readiness</div>
+        <div class="cs">Steps to add card payment processing and become a licensed API service.</div>
+        <div class="g2">
+          <div>
+            <div class="sec-head">Immediate Actions</div>
+            <div class="cli"><span class="cli-ic">1️⃣</span><div>Terminate TLS at your reverse proxy — Stripe requires HTTPS for all webhooks.</div></div>
+            <div class="cli"><span class="cli-ic">2️⃣</span><div>Register a Stripe account at <strong>stripe.com</strong> and complete business verification.</div></div>
+            <div class="cli"><span class="cli-ic">3️⃣</span><div>Create a <strong>Stripe Product</strong> for each tier (Free / Standard / Enterprise) with recurring price IDs.</div></div>
+            <div class="cli"><span class="cli-ic">4️⃣</span><div>Add a <strong>checkout session endpoint</strong> to the API that creates Stripe checkout sessions and returns a URL.</div></div>
+            <div class="cli"><span class="cli-ic">5️⃣</span><div>Implement a <strong>Stripe webhook handler</strong> for <code>customer.subscription.created</code> → provision API key, <code>customer.subscription.deleted</code> → revoke key.</div></div>
+          </div>
+          <div>
+            <div class="sec-head">Phase 4 Roadmap Items</div>
+            <div class="cli"><span class="cli-ic">🗓️</span><div>Admin dashboard with self-serve key management and billing portal.</div></div>
+            <div class="cli"><span class="cli-ic">🗓️</span><div>Usage metering: report per-key request counts to Stripe for usage-based billing.</div></div>
+            <div class="cli"><span class="cli-ic">🗓️</span><div>Webhook callbacks on encode/decode events for SIEM / compliance pipelines.</div></div>
+            <div class="cli"><span class="cli-ic">🗓️</span><div>Docker Compose + Kubernetes Helm chart for zero-touch customer self-hosting.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- License Inquiry Form -->
+      <div class="card" id="license-form-card">
+        <div class="ct">📩 License Inquiry</div>
+        <div class="cs">Open a GitHub issue with the details below — we'll respond within 24 hours.</div>
+        <div class="g2">
+          <div class="fg"><label class="fl">Organisation / Name</label><input type="text" id="li-org" placeholder="Acme Bank Ltd." /></div>
+          <div class="fg"><label class="fl">Email</label><input type="text" id="li-email" placeholder="cto@acmebank.example" /></div>
+        </div>
+        <div class="fg"><label class="fl">Tier of Interest</label>
+          <select id="li-tier">
+            <option value="standard">Standard ($99/mo)</option>
+            <option value="enterprise">Enterprise (custom)</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">Use Case / Notes</label>
+          <textarea id="li-notes" rows="3" placeholder="Brief description of your use case and expected request volume..."></textarea>
+        </div>
+        <button class="btn bp" onclick="submitLicenseInquiry()">Generate GitHub Issue Text</button>
+        <div id="li-result" style="margin-top:12px"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// State
+// ─────────────────────────────────────────────────────────────────────────────
+const S = {
+  apiBase: '',
+  apiKey: '',
+  encodes: 0,
+  decodes: 0,
+  lastCipher: null,
+  lastHmac: null,
+  auditTimer: null,
+  maxValidWindowSec: 3600,  // updated from /health on connect
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Init
+// ─────────────────────────────────────────────────────────────────────────────
+(function init() {
+  const storedBase = localStorage.getItem('sc-base') || guessBase();
+  const storedKey  = localStorage.getItem('sc-key') || '';
+  S.apiBase = storedBase;
+  S.apiKey  = storedKey;
+  document.getElementById('inp-base').value = storedBase;
+  document.getElementById('inp-key').value  = storedKey;
+  document.getElementById('bb-base').value  = storedBase;
+  document.getElementById('bb-key').value   = storedKey;
+  // Show setup banner when on GitHub Pages with no stored API URL
+  if (window.location.origin.includes('github.io') && !localStorage.getItem('sc-base')) {
+    const banner = document.getElementById('gh-banner');
+    if (banner) banner.style.display = 'flex';
+  }
+  checkHealth();
+})();
+
+function guessBase() {
+  const o = window.location.origin;
+  // When served from GitHub Pages (github.io) the API lives elsewhere — return empty
+  // so the user is prompted to enter their own server URL.
+  if (o && o.includes('github.io')) return '';
+  // When served from shortfactory.shop, proxy is at /satoshi-api
+  if (o && o.includes('shortfactory.shop')) return 'https://shortfactory.shop/satoshi-api';
+  // When served by the FastAPI server itself (same origin) use that origin.
+  if (o && !o.startsWith('file://') && o !== 'null') return o;
+  return 'http://localhost:8000';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Navigation
+// ─────────────────────────────────────────────────────────────────────────────
+function showTab(id, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(b => b.classList.remove('on'));
+  document.getElementById('tab-' + id).classList.add('on');
+  if (btn) btn.classList.add('on');
+  if (id === 'audit') fetchAudit();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Connection settings
+// ─────────────────────────────────────────────────────────────────────────────
+function saveConn() {
+  S.apiBase = (document.getElementById('inp-base').value ||
+               document.getElementById('bb-base').value || '').replace(/\/$/, '');
+  S.apiKey  =  document.getElementById('inp-key').value ||
+               document.getElementById('bb-key').value || '';
+  localStorage.setItem('sc-base', S.apiBase);
+  localStorage.setItem('sc-key',  S.apiKey);
+  document.getElementById('inp-base').value = S.apiBase;
+  document.getElementById('inp-key').value  = S.apiKey;
+  document.getElementById('bb-base').value  = S.apiBase;
+  document.getElementById('bb-key').value   = S.apiKey;
+}
+
+function syncBase(v) {
+  S.apiBase = v.replace(/\/$/, '');
+  document.getElementById('inp-base').value = S.apiBase;
+  localStorage.setItem('sc-base', S.apiBase);
+}
+function syncKey(v) {
+  S.apiKey = v;
+  document.getElementById('inp-key').value = S.apiKey;
+  localStorage.setItem('sc-key', S.apiKey);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// API helper
+// ─────────────────────────────────────────────────────────────────────────────
+async function api(path, method = 'GET', body = null) {
+  const url = S.apiBase + path;
+  const opts = { method, headers: {} };
+  if (body) {
+    opts.headers['Content-Type'] = 'application/json';
+    opts.body = JSON.stringify(body);
+  }
+  const r = await fetch(url, opts);
+  const json = await r.json().catch(() => ({ detail: 'Non-JSON response' }));
+  if (!r.ok) throw Object.assign(new Error(json.detail || r.statusText), { status: r.status, data: json });
+  return json;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Health check
+// ─────────────────────────────────────────────────────────────────────────────
+async function checkHealth() {
+  const dot = document.getElementById('hdot');
+  const detail = document.getElementById('conn-detail');
+  const bbStatus = document.getElementById('bb-conn-status');
+  dot.className = 'dot busy';
+  try {
+    const r = await api('/health');
+    dot.className = 'dot ok';
+    S.maxValidWindowSec = r.max_valid_window_sec || 3600;
+    const msg = `✅ Connected to ${S.apiBase} — version ${r.version || '?'}, status: ${r.status}`;
+    if (detail) detail.textContent = msg;
+    if (bbStatus) { bbStatus.textContent = '✅ Connected'; bbStatus.style.color = 'var(--green)'; }
+    document.getElementById('st-health').textContent = 'OK';
+    document.getElementById('st-health').style.color = 'var(--green)';
+  } catch (e) {
+    dot.className = 'dot err';
+    const msg = `❌ Cannot reach ${S.apiBase} — ${e.message}`;
+    if (detail) detail.textContent = msg;
+    if (bbStatus) { bbStatus.textContent = '❌ Unreachable'; bbStatus.style.color = 'var(--red)'; }
+    document.getElementById('st-health').textContent = 'ERR';
+    document.getElementById('st-health').style.color = 'var(--red)';
+  }
+}
+setInterval(checkHealth, 60000);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Quick test
+// ─────────────────────────────────────────────────────────────────────────────
+async function runQuickTest() {
+  const el = document.getElementById('qtest-result');
+  el.innerHTML = '<span style="color:var(--yellow)">⏳ Running encode → decode round-trip…</span>';
+  try {
+    const enc = await api('/encode', 'POST', { api_key: S.apiKey, source_code: 'print("satoshi_test_ok")' });
+    const dec = await api('/decode', 'POST', {
+      api_key: S.apiKey,
+      cipher: { points: enc.points, t0: enc.t0, rotation_rate: enc.rotation_rate },
+      hmac_tag: enc.hmac_tag,
+    });
+    if (dec.success) {
+      el.innerHTML = '<span style="color:var(--green)">✅ Round-trip successful — encode + decode passed with HMAC verification.</span>';
+      toast('Quick test passed ✅', 'ok');
+    } else {
+      el.innerHTML = '<span style="color:var(--red)">❌ Decode returned success=false.</span>';
+    }
+  } catch (e) {
+    el.innerHTML = `<span style="color:var(--red)">❌ Test failed: ${e.message}</span>`;
+    toast('Quick test failed: ' + e.message, 'err');
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Encode
+// ─────────────────────────────────────────────────────────────────────────────
+async function doEncode() {
+  const src = document.getElementById('enc-src').value.trim();
+  if (!src) { toast('Source code is empty.', 'err'); return; }
+  if (!S.apiKey) { toast('Enter an API key first.', 'err'); return; }
+  const btn = document.getElementById('enc-btn');
+  const res = document.getElementById('enc-result');
+  btn.disabled = true; btn.textContent = 'Encoding…';
+  res.innerHTML = '';
+  try {
+    const r = await api('/encode', 'POST', { api_key: S.apiKey, source_code: src });
+    S.lastCipher = { points: r.points, t0: r.t0, rotation_rate: r.rotation_rate };
+    S.lastHmac   = r.hmac_tag;
+    // Auto-populate decode fields
+    document.getElementById('dec-cipher').value = JSON.stringify(S.lastCipher, null, 2);
+    document.getElementById('dec-hmac').value   = r.hmac_tag;
+    S.encodes++;
+    document.getElementById('st-enc').textContent = S.encodes;
+    res.innerHTML = `
+      <div class="al al-ok" style="margin-bottom:8px">
+        <span>✅</span>
+        <span>Encoded ${r.points.length} points · t0=${r.t0.toFixed(3)} · rotation=${r.rotation_rate}</span>
+      </div>
+      <div style="margin-bottom:6px;font-size:11px;color:var(--muted)">HMAC Tag (copy this!):</div>
+      <div class="cb" style="word-break:break-all;font-size:10px">${r.hmac_tag}</div>
+      <button class="btn bs" style="margin-top:8px;font-size:11px" onclick="copyCipher()">📋 Copy Cipher JSON</button>`;
+    toast('Encoded successfully ✅', 'ok');
+  } catch (e) {
+    res.innerHTML = `<div class="al al-err"><span>❌</span><span>${e.message}</span></div>`;
+    toast('Encode failed: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Encode →';
+  }
+}
+
+function copyCipher() {
+  if (!S.lastCipher) return;
+  const payload = JSON.stringify({ ...S.lastCipher, hmac_tag: S.lastHmac }, null, 2);
+  navigator.clipboard.writeText(payload).then(() => toast('Cipher JSON copied 📋', 'info'));
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Decode
+// ─────────────────────────────────────────────────────────────────────────────
+async function doDecode() {
+  const raw = document.getElementById('dec-cipher').value.trim();
+  const hmacTag = document.getElementById('dec-hmac').value.trim() || null;
+  if (!raw) { toast('Paste a cipher JSON first.', 'err'); return; }
+  if (!S.apiKey) { toast('Enter an API key first.', 'err'); return; }
+  let cipher;
+  try { cipher = JSON.parse(raw); } catch { toast('Invalid JSON in cipher field.', 'err'); return; }
+  // Strip hmac_tag if it was embedded in the JSON
+  const { hmac_tag: embeddedTag, ...cipherOnly } = cipher;
+  const tagToSend = hmacTag || embeddedTag || null;
+
+  const btn = document.getElementById('dec-btn');
+  const res = document.getElementById('dec-result');
+  btn.disabled = true; btn.textContent = 'Decoding…';
+  res.innerHTML = '';
+  try {
+    const body = { api_key: S.apiKey, cipher: cipherOnly };
+    if (tagToSend) body.hmac_tag = tagToSend;
+    const r = await api('/decode', 'POST', body);
+    S.decodes++;
+    document.getElementById('st-dec').textContent = S.decodes;
+    if (r.success) {
+      res.innerHTML = `<div class="al al-ok"><span>✅</span><span>${r.message}${tagToSend ? ' (HMAC verified)' : ' (no HMAC tag supplied)'}</span></div>`;
+      toast('Decode successful ✅', 'ok');
+    } else {
+      res.innerHTML = `<div class="al al-warn"><span>⚠️</span><span>${r.message}</span></div>`;
+    }
+  } catch (e) {
+    const code = e.status;
+    if (code === 400) {
+      res.innerHTML = `<div class="al al-err"><span>🚫</span><span>Integrity check failed — HMAC mismatch. Cipher may be tampered.</span></div>`;
+    } else if (code === 410) {
+      res.innerHTML = `<div class="al al-err"><span>⏰</span><span>Temporal window expired. This cipher can no longer be decoded.</span></div>`;
+    } else {
+      res.innerHTML = `<div class="al al-err"><span>❌</span><span>${e.message}</span></div>`;
+    }
+    toast('Decode failed: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Decode & Execute →';
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Cipher Inspector
+// ─────────────────────────────────────────────────────────────────────────────
+function inspectCipher() {
+  const raw = document.getElementById('insp-in').value.trim();
+  const out = document.getElementById('insp-out');
+  if (!raw) { toast('Paste a cipher JSON first.', 'err'); return; }
+  let c;
+  try { c = JSON.parse(raw); } catch { out.innerHTML = '<div class="al al-err"><span>❌</span><span>Invalid JSON.</span></div>'; return; }
+  const now = Date.now() / 1000;
+  const elapsed = c.t0 ? (now - c.t0) : null;
+  const expired = elapsed !== null && elapsed > S.maxValidWindowSec;
+  out.innerHTML = `
+    <div class="g2">
+      <div>
+        <div class="sec-head">Structure</div>
+        <table style="font-size:12px;width:100%;border-collapse:collapse">
+          <tr><td style="padding:4px 8px;color:var(--muted)">Points</td><td style="padding:4px 8px;color:var(--cyan)">${Array.isArray(c.points) ? c.points.length + ' floats' : '—'}</td></tr>
+          <tr><td style="padding:4px 8px;color:var(--muted)">t0 (UTC)</td><td style="padding:4px 8px;color:var(--cyan)">${c.t0 ? new Date(c.t0*1000).toISOString() : '—'}</td></tr>
+          <tr><td style="padding:4px 8px;color:var(--muted)">Rotation rate</td><td style="padding:4px 8px;color:var(--cyan)">${c.rotation_rate ?? '—'}</td></tr>
+          <tr><td style="padding:4px 8px;color:var(--muted)">HMAC tag</td><td style="padding:4px 8px;color:${c.hmac_tag ? 'var(--green)' : 'var(--dim)'}">${c.hmac_tag ? '✅ present' : '⚠️ absent'}</td></tr>
+          <tr><td style="padding:4px 8px;color:var(--muted)">Age</td><td style="padding:4px 8px;color:${expired ? 'var(--red)' : 'var(--green)'}">${elapsed !== null ? Math.round(elapsed) + 's' + (expired ? ' (EXPIRED)' : ' (valid)') : '—'}</td></tr>
+        </table>
+      </div>
+      <div>
+        <div class="sec-head">First 5 points</div>
+        <div class="cb">${Array.isArray(c.points) ? c.points.slice(0,5).join('\n') : 'N/A'}</div>
+      </div>
+    </div>`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Key reload
+// ─────────────────────────────────────────────────────────────────────────────
+async function doReloadKeys() {
+  if (!S.apiKey) { toast('Enter your current API key first.', 'err'); return; }
+  const btn = document.getElementById('reload-btn');
+  const res = document.getElementById('reload-result');
+  btn.disabled = true; btn.textContent = 'Reloading…';
+  res.innerHTML = '';
+  try {
+    const r = await api(`/api/keys/reload?api_key=${encodeURIComponent(S.apiKey)}`, 'POST');
+    res.innerHTML = `<div class="al al-ok"><span>✅</span><span>${r.message}</span></div>`;
+    toast('Keys reloaded: ' + r.reloaded + ' active.', 'ok');
+  } catch (e) {
+    res.innerHTML = `<div class="al al-err"><span>❌</span><span>${e.message}</span></div>`;
+    toast('Reload failed: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Hot Reload Keys';
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Audit trail
+// ─────────────────────────────────────────────────────────────────────────────
+let _auditData = [];
+
+async function fetchAudit() {
+  if (!S.apiKey) { toast('Enter your API key to load audit events.', 'err'); return; }
+  const limit = document.getElementById('audit-limit').value;
+  const status = document.getElementById('audit-status');
+  status.textContent = '⏳ Loading…';
+  try {
+    const r = await api(`/api/audit?api_key=${encodeURIComponent(S.apiKey)}&limit=${limit}`);
+    _auditData = r.entries;
+    renderAuditTable(r.entries);
+    status.textContent = `${r.entries.length} / ${r.total} entries · ${new Date().toLocaleTimeString()}`;
+  } catch (e) {
+    status.textContent = '❌ ' + e.message;
+    toast('Audit fetch failed: ' + e.message, 'err');
+  }
+}
+
+function renderAuditTable(entries) {
+  const tbody = document.getElementById('audit-body');
+  if (!entries.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--dim)">No audit events yet.</td></tr>';
+    return;
+  }
+  const evtColor = { encode: 'var(--cyan)', decode: 'var(--green)', decode_rejected: 'var(--red)', decode_expired: 'var(--yellow)', keys_reload: 'var(--orange)' };
+  tbody.innerHTML = entries.map(e => {
+    const details = Object.entries(e).filter(([k]) => !['ts','event','key'].includes(k)).map(([k,v]) => `${k}=${JSON.stringify(v)}`).join(' ');
+    return `<tr>
+      <td>${e.ts.replace('T',' ').slice(0,22)}</td>
+      <td style="color:${evtColor[e.event]||'var(--muted)'}"><strong>${e.event}</strong></td>
+      <td>${e.key}</td>
+      <td>${details}</td>
+    </tr>`;
+  }).join('');
+}
+
+function toggleAutoRefresh(on) {
+  if (on) {
+    S.auditTimer = setInterval(fetchAudit, 30000);
+    toast('Auto-refresh enabled (30s)', 'info');
+  } else {
+    clearInterval(S.auditTimer);
+    toast('Auto-refresh disabled', 'info');
+  }
+}
+
+function exportAudit() {
+  if (!_auditData.length) { toast('No audit data to export. Click Refresh first.', 'err'); return; }
+  const blob = new Blob([JSON.stringify(_auditData, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `satoshi-audit-${Date.now()}.json`;
+  a.click();
+  toast('Audit log exported 📄', 'ok');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// License inquiry
+// ─────────────────────────────────────────────────────────────────────────────
+function openUKLicence() {
+  document.getElementById('li-tier').value = 'standard';
+  document.getElementById('li-org').value = '';
+  document.getElementById('li-email').value = '';
+  document.getElementById('li-notes').value = 'UK licence — £79/month equivalent (GBP). Please send Stripe payment link.';
+  showTab('visa', null);
+  document.querySelectorAll('.nb').forEach(b => b.classList.remove('on'));
+  document.querySelectorAll('.nb')[5].classList.add('on');
+  setTimeout(() => document.getElementById('license-form-card').scrollIntoView({ behavior: 'smooth' }), 100);
+  toast('🇬🇧 UK licence inquiry — fill in your details below', 'info');
+}
+
+function openLicenseInquiry(tier) {
+  document.getElementById('li-tier').value = tier;
+  document.getElementById('license-form-card').scrollIntoView({ behavior: 'smooth' });
+  showTab('visa', document.querySelector('.nb:last-of-type'));
+  // Re-show the visa tab button as active
+  document.querySelectorAll('.nb').forEach(b => b.classList.remove('on'));
+  document.querySelectorAll('.nb')[5].classList.add('on');
+}
+
+function submitLicenseInquiry() {
+  const org   = document.getElementById('li-org').value.trim()   || '(not provided)';
+  const email = document.getElementById('li-email').value.trim() || '(not provided)';
+  const tier  = document.getElementById('li-tier').value;
+  const notes = document.getElementById('li-notes').value.trim() || '(none)';
+  const title = `LICENSING: ${tier} tier inquiry from ${org}`;
+  const body  = `**Organisation:** ${org}\n**Contact email:** ${email}\n**Tier:** ${tier}\n\n**Use case / notes:**\n${notes}\n\n---\n*Generated by Satoshi Cypher Control Panel v1.1.0*`;
+  const url   = `https://github.com/eliskcage/satoshi-cypher/issues/new?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
+  document.getElementById('li-result').innerHTML = `
+    <div class="al al-ok">
+      <span>✅</span>
+      <div>GitHub issue draft ready. <a href="${url}" target="_blank" style="color:var(--orange)">Open issue on GitHub →</a></div>
+    </div>
+    <div class="cb" style="margin-top:8px;font-size:10px">${title}</div>`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Toasts
+// ─────────────────────────────────────────────────────────────────────────────
+function toast(msg, type = 'info') {
+  const c = document.getElementById('toasts');
+  const t = document.createElement('div');
+  t.className = `toast t-${type}`;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 4000);
+}
+</script>
+</body>
+</html>

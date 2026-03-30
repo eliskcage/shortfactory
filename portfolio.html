@@ -190,7 +190,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a0a;color:#e2e8f
 <div class="stats-strip">
   <div class="ss"><div class="ss-num gold">55+</div><div class="ss-label">Products Live</div></div>
   <div class="ss"><div class="ss-num">500+</div><div class="ss-label">Files</div></div>
-  <div class="ss"><div class="ss-num green">6</div><div class="ss-label">Patents Filed</div></div>
+  <div class="ss"><div class="ss-num green">7</div><div class="ss-label">Patents Filed</div></div>
   <div class="ss"><div class="ss-num gold">22</div><div class="ss-label">Proof Sections</div></div>
   <div class="ss"><div class="ss-num red" id="daysToKS">--</div><div class="ss-label">Days Since Launch</div></div>
   <div class="ss"><div class="ss-num">0</div><div class="ss-label">Zero Frameworks</div></div>
@@ -220,91 +220,60 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a0a;color:#e2e8f
 
     <div class="proj">
       <div class="proj-top">
-        <div class="proj-name"><a href="/alive/">ALIVE Ecosystem</a></div>
-        <div class="proj-status live">LIVE</div>
+        <div class="proj-name"><a href="/fiver.html">Revert Fiver — Node Chain + Shard Auction</a></div>
+        <div class="proj-status live">LIVE — SHIPPED 29 Mar 2026</div>
       </div>
-      <div class="proj-desc">Girl creature (v3.1) + Boy (Angular) + Brainstem (nervous system) + Sound Lab + Image Lab + Guide + Landing + Backup Wizard. Swarm multi-creature sync live. IPFS mind snapshots operational via Cortex brain persistence.</div>
+      <div class="proj-desc">£5 entry into a self-replicating payment chain — each fiver funds the next recruit's node. 10 encrypted story shards auctioned to fund the chain: Satoshi-cipher (Vigenère ASCII 32–126) per shard, Claude-logo visual states (lit=live, shimmer=bidding, dark=sold), anti-shill bid logic, shard revenue feeds fiver payouts. Ask → Prove → Receive.</div>
       <div class="proj-bar-wrap">
-        <div class="proj-bar"><div class="proj-bar-fill" style="width:78%;background:linear-gradient(90deg,#22c55e,#16a34a);"></div></div>
-        <div class="proj-pct">78%</div>
+        <div class="proj-bar"><div class="proj-bar-fill" style="width:100%;background:linear-gradient(90deg,#22c55e,#16a34a);"></div></div>
+        <div class="proj-pct">100%</div>
       </div>
-      <div class="proj-deadline"><span class="dl-icon dl-safe"></span> Direct funding live. No middlemen. Final form discovered 22 Mar 2026.</div>
+      <div class="proj-deadline"><span class="dl-icon dl-safe"></span> Shipped. join.html + fiver.html live on both servers. Stripe Payment Link flow, ref ID pass-through.</div>
       <div class="proj-tasks">
-        <span class="pt done">Girl creature v3.1</span>
-        <span class="pt done">Boy Angular build</span>
-        <span class="pt done">Brainstem nervous system</span>
-        <span class="pt done">Sound Lab</span>
-        <span class="pt done">Image Lab</span>
-        <span class="pt done">Guide + pitch challenge</span>
-        <span class="pt done">Landing + custodian agreement</span>
-        <span class="pt done">Backup wizard</span>
-        <span class="pt done">BIOS soul kernel</span>
-        <span class="pt done">Capability gates</span>
-        <span class="pt done">Satoshi encryption</span>
-        <span class="pt done">Signal protocol</span>
-        <span class="pt done">Sync push/pull/gift</span>
-        <span class="pt pending">Girl ↔ Boy live pairing test</span>
-        <span class="pt pending">DIAG mode end-to-end</span>
-        <span class="pt done">IPFS mind snapshots (Cortex brain persistence via Pinata)</span>
-        <span class="pt done">Swarm multi-creature sync (distributed computing live)</span>
-        <span class="pt pending">Contribution system integration</span>
-        <span class="pt pending">Cloud AI bridge (level 5)</span>
-        <span class="pt pending">Play Store packaging</span>
+        <span class="pt done">fiver.html — pitch page, shard preview, pay CTA</span>
+        <span class="pt done">join.html — Stripe Payment Link redirect, ref ID pass-through</span>
+        <span class="pt done">Satoshi cipher layer (Vigenère ASCII 32–126) on shards</span>
+        <span class="pt done">10-shard auction system — bid/live/dead visual states</span>
+        <span class="pt done">Anti-shill logic — minimum bid intervals, wallet limits</span>
+        <span class="pt done">Deployed to both servers (82.165.134.4 + 185.230.216.235)</span>
+        <span class="pt pending">api/join-webhook.php — link Stripe payment to DB node record</span>
+        <span class="pt pending">100 Level 1 dividends — payout logic</span>
+        <span class="pt pending">Phone-size app: swarm empire UI</span>
       </div>
     </div>
-
-    <!-- PASSWORD REFUSAL SERVICE — DISCOVERY (greyed, not counted in totals) -->
-    <div class="proj" style="opacity:0.3;filter:grayscale(1);pointer-events:none;border:1px dashed #2a2a2a;">
-      <div class="proj-top">
-        <div class="proj-name" style="color:#444;letter-spacing:2px;font-size:11px;">PASSWORD REFUSAL SERVICE</div>
-        <div class="proj-status" style="background:#111;color:#333;border:1px solid #2a2a2a;font-size:9px;">DISCOVERY</div>
-      </div>
-      <div class="proj-desc" id="prs-cipher" style="font-family:monospace;font-size:11px;color:#333;line-height:1.8;word-break:break-all;"></div>
-      <div style="margin-top:14px;font-size:13px;color:#666;font-style:italic;letter-spacing:1px;">— ALIVE's final form</div>
-    </div>
-    <script>
-    (function(){
-      var p="Password Refusal Service. The creature becomes your vault. Genomic glyph identity replaces every username. WebAuthn biometric is the only key. Satoshi cipher encrypts your entire digital life as animated soul glyphs stored on chain. The clock ring navigates infinite superpositioned BIP39 states without brute force. One button. It says NO. No passwords. No gateways. No middlemen. No master. The dot holds everything you are.";
-      var key="SKYDADDY",B=32,R=95,o='';
-      for(var i=0;i<p.length;i++){var c=p.charCodeAt(i);if(c>=32&&c<=126){var k=key.charCodeAt(i%key.length)-B;o+=String.fromCharCode(((c-B+k)%R)+B);}else{o+=p[i];}}
-      var el=document.getElementById('prs-cipher');
-      if(el)el.textContent=o;
-    })();
-    </script>
 
     <div class="proj">
       <div class="proj-top">
-        <div class="proj-name"><a href="/alive/brainstem/">Brainstem</a></div>
+        <div class="proj-name"><a href="https://stinkindigger.info" target="_blank">Dares4Dosh</a></div>
         <div class="proj-status live">LIVE</div>
       </div>
-      <div class="proj-desc">Creature nervous system — Cytoscape.js graph, shape drawing, Hebbian learning, R2-D2 droid voices, whistle command training, English speech translation, user interpretation crowdsourcing, IPFS persistence</div>
+      <div class="proj-desc">Full dare platform — React 19 + PHP REST API live at stinkindigger.info. Propose → stake △ tokens → Dan funds → record proof → community votes → XMR or △ payout. Soul sigil ritual login (9 inner nodes + SADIST/MASOCHIST outer ring). Voice Contract V3 — WATCHER sets dare by mic, DOER accepts, contract sealed with hash + SVG artifact. <strong style="color:#22c55e;">Pinata JWT live — real IPFS pinning active. FULLY SHIPPED.</strong></div>
       <div class="proj-bar-wrap">
-        <div class="proj-bar"><div class="proj-bar-fill" style="width:70%;background:linear-gradient(90deg,#22c55e,#16a34a);"></div></div>
-        <div class="proj-pct">70%</div>
+        <div class="proj-bar"><div class="proj-bar-fill" style="width:100%;background:linear-gradient(90deg,#22c55e,#00d4ff);"></div></div>
+        <div class="proj-pct" style="color:#22c55e;">100%</div>
       </div>
-      <div class="proj-deadline"><span class="dl-icon dl-safe"></span> Core complete. Whistle mode + ambient life active. Code injection + sleep consolidation next.</div>
+      <div class="proj-deadline"><span class="dl-icon dl-ok"></span> <strong style="color:#22c55e;">✓ SHIPPED — 27 Mar 2026</strong> · All blockers cleared · Real IPFS live · <a href="/dares4dosh/v3.html" style="color:#daa520;">Voice Contract V3 →</a> · <a href="https://stinkindigger.info" target="_blank" style="color:#daa520;">Live App →</a> · <a href="/launch.html" style="color:#daa520;">Launch Page →</a></div>
       <div class="proj-tasks">
-        <span class="pt done">Cytoscape.js force graph</span>
-        <span class="pt done">Shape drawing → nodes</span>
-        <span class="pt done">7 shape types + personalities</span>
-        <span class="pt done">Hebbian learning (fire/decay)</span>
-        <span class="pt done">R2-D2 droid voices per node</span>
-        <span class="pt done">English speech translation</span>
-        <span class="pt done">User interpretation input</span>
-        <span class="pt done">Whistle command recording</span>
-        <span class="pt done">Whistle fingerprint matching</span>
-        <span class="pt done">Per-note whistle training</span>
-        <span class="pt done">Robot beep encoding (squares)</span>
-        <span class="pt done">Progressive disclosure (3 tiers)</span>
-        <span class="pt done">Ambient life system</span>
-        <span class="pt done">IPFS brain persistence</span>
-        <span class="pt done">Player profile tracking</span>
-        <span class="pt pending">Code injection execution (Layer 1+2)</span>
-        <span class="pt pending">Sleep mode consolidation</span>
-        <span class="pt pending">SELECT/BACK universal whistles</span>
-        <span class="pt pending">Square option cycling with beeps</span>
-        <span class="pt pending">Creature-to-creature brain sync</span>
-        <span class="pt pending">Whistle → code trigger pipeline</span>
+        <span class="pt done">React 19 + Vite app (stinkindigger.info)</span>
+        <span class="pt done">Full PHP REST API (18 endpoints)</span>
+        <span class="pt done">Auth — token paste + .sft / .json file drag</span>
+        <span class="pt done">Soul Sigil ritual login — 9 nodes unlock page</span>
+        <span class="pt done">Soul Sigil outer ring — SADIST / MASOCHIST nodes</span>
+        <span class="pt done">Voice Contract V3 — mic-driven dare deal, 30s seal, hash + SVG</span>
+        <span class="pt done">Landing page — V1 (local) / V2 (mobile-first) / V3 (voice contract)</span>
+        <span class="pt done">Stable Vite build — index-app.js / index-app.css (no hash rotation)</span>
+        <span class="pt done">Propose tab — ranked by △ token stake</span>
+        <span class="pt done">Fund button (Dan only) — bounty + payout type</span>
+        <span class="pt done">ProofRecorder — camera, 60s, ComicVID compression</span>
+        <span class="pt done">IPFS upload — Pinata JWT live, real decentralised pinning ✓</span>
+        <span class="pt done">5-vote judgment chain — XMR or △ tokens credited</span>
+        <span class="pt done">Soul evolution — stats change by dare type + risk</span>
+        <span class="pt done">Rank progression (normy → architect)</span>
+        <span class="pt done">△ Triangle token economy + staking</span>
+        <span class="pt done">Governance — CHAD+ vote on shape exchange rates</span>
+        <span class="pt done">Soul Forge token mint</span>
+        <span class="pt done">Architecture doc (Oracle-ready)</span>
+        <span class="pt done">Launch page — professional product showcase</span>
       </div>
     </div>
 
@@ -331,6 +300,38 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a0a;color:#e2e8f
         <span class="pt done">Battery bar integration</span>
         <span class="pt done">Real XMR/BTC wallet addresses</span>
         <span class="pt pending">Marketing push (socials, Reddit, HN)</span>
+      </div>
+    </div>
+
+    <div class="proj">
+      <div class="proj-top">
+        <div class="proj-name"><a href="/trump/game/cat/">Pricey Cat: Deluxe</a></div>
+        <div class="proj-status live">LIVE</div>
+      </div>
+      <div class="proj-desc">Canvas browser game — perspective room system, wall climbing, feral mode, face pounce, infinite procedural houses, full room modder with SFT receipt economy, entropy-based sprite pipeline, 31 sound effects, AI voice commentary</div>
+      <div class="proj-bar-wrap">
+        <div class="proj-bar"><div class="proj-bar-fill" style="width:95%;background:linear-gradient(90deg,#22c55e,#16a34a);"></div></div>
+        <div class="proj-pct">95%</div>
+      </div>
+      <div class="proj-deadline"><span class="dl-icon dl-safe"></span> Feature-complete. Community content pipeline active.</div>
+      <div class="proj-tasks">
+        <span class="pt done">Core game loop</span>
+        <span class="pt done">3 houses (Karen/Becky/Pat)</span>
+        <span class="pt done">Perspective room system</span>
+        <span class="pt done">Wall climbing + feral mode</span>
+        <span class="pt done">Face pounce attack</span>
+        <span class="pt done">Mom AI (chase/slip/scream)</span>
+        <span class="pt done">Infinite procedural houses</span>
+        <span class="pt done">Full room modder</span>
+        <span class="pt done">Sprite pipeline (Grok 4-stage)</span>
+        <span class="pt done">SFT receipt system</span>
+        <span class="pt done">Asset browser</span>
+        <span class="pt done">Entropy shredder</span>
+        <span class="pt done">Desktop + mobile</span>
+        <span class="pt done">AI voice commentary</span>
+        <span class="pt done">31 MP3 sound effects</span>
+        <span class="pt pending">Community room sharing</span>
+        <span class="pt pending">Leaderboard</span>
       </div>
     </div>
 
@@ -385,255 +386,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a0a;color:#e2e8f
         <span class="pt pending">Content pipeline: more scenarios</span>
         <span class="pt pending">Leaderboard / high scores</span>
         <span class="pt pending">Share result cards</span>
-      </div>
-    </div>
-
-    <div class="proj">
-      <div class="proj-top">
-        <div class="proj-name"><a href="/trump/game/cat/">Pricey Cat: Deluxe</a></div>
-        <div class="proj-status live">LIVE</div>
-      </div>
-      <div class="proj-desc">Canvas browser game — perspective room system, wall climbing, feral mode, face pounce, infinite procedural houses, full room modder with SFT receipt economy, entropy-based sprite pipeline, 31 sound effects, AI voice commentary</div>
-      <div class="proj-bar-wrap">
-        <div class="proj-bar"><div class="proj-bar-fill" style="width:95%;background:linear-gradient(90deg,#22c55e,#16a34a);"></div></div>
-        <div class="proj-pct">95%</div>
-      </div>
-      <div class="proj-deadline"><span class="dl-icon dl-safe"></span> Feature-complete. Community content pipeline active.</div>
-      <div class="proj-tasks">
-        <span class="pt done">Core game loop</span>
-        <span class="pt done">3 houses (Karen/Becky/Pat)</span>
-        <span class="pt done">Perspective room system</span>
-        <span class="pt done">Wall climbing + feral mode</span>
-        <span class="pt done">Face pounce attack</span>
-        <span class="pt done">Mom AI (chase/slip/scream)</span>
-        <span class="pt done">Infinite procedural houses</span>
-        <span class="pt done">Full room modder</span>
-        <span class="pt done">Sprite pipeline (Grok 4-stage)</span>
-        <span class="pt done">SFT receipt system</span>
-        <span class="pt done">Asset browser</span>
-        <span class="pt done">Entropy shredder</span>
-        <span class="pt done">Desktop + mobile</span>
-        <span class="pt done">AI voice commentary</span>
-        <span class="pt done">31 MP3 sound effects</span>
-        <span class="pt pending">Community room sharing</span>
-        <span class="pt pending">Leaderboard</span>
-      </div>
-    </div>
-
-    <div class="proj">
-      <div class="proj-top">
-        <div class="proj-name"><a href="/ideafactory/">Idea Factory</a></div>
-        <div class="proj-status live">LIVE · Play Store</div>
-      </div>
-      <div class="proj-desc">Dare economy app on Android — legal waiver gate (The Great Filter), performer spectrum (7 health bars + CULT FAVOUR), dare creation + sponsorship, SFT token purchase via Stripe, referral mint system on Base blockchain</div>
-      <div class="proj-bar-wrap">
-        <div class="proj-bar"><div class="proj-bar-fill" style="width:80%;background:linear-gradient(90deg,#6d28d9,#a78bfa);"></div></div>
-        <div class="proj-pct">80%</div>
-      </div>
-      <div class="proj-deadline"><span class="dl-icon dl-ok"></span> Play Store submitted Mar 2026 — needs: VidProof recording, live dares, SFT contract deployed</div>
-      <div class="proj-tasks">
-        <span class="pt done">Android WebView app</span>
-        <span class="pt done">Legal waiver — The Great Filter</span>
-        <span class="pt done">Corporate banking music (Web Audio)</span>
-        <span class="pt done">Performer Spectrum (7 bars + CULT FAVOUR)</span>
-        <span class="pt done">Dare creation + cult mechanics (🔺)</span>
-        <span class="pt done">Dare sponsor overlay</span>
-        <span class="pt done">SFT token purchase (Stripe checkout)</span>
-        <span class="pt done">Referral system (10% mint bonus)</span>
-        <span class="pt done">Wallet registry (register-wallet.php)</span>
-        <span class="pt done">Stripe webhook + mint queue</span>
-        <span class="pt pending">VidProof dare recording</span>
-        <span class="pt pending">SFT smart contract deployed (Base)</span>
-        <span class="pt pending">Mint worker live on server</span>
-        <span class="pt pending">Community voting</span>
-      </div>
-    </div>
-
-    <div class="proj">
-      <div class="proj-top">
-        <div class="proj-name"><a href="/dares4dosh/">Dares4Dosh</a></div>
-        <div class="proj-status building">BUILDING</div>
-      </div>
-      <div class="proj-desc">React 19 dare platform — 6 dare categories, proof recording, contribution credits, rank themes (Normy → Architect), Soul Forge 5-game mint</div>
-      <div class="proj-bar-wrap">
-        <div class="proj-bar"><div class="proj-bar-fill" style="width:55%;background:linear-gradient(90deg,#f59e0b,#d97706);"></div></div>
-        <div class="proj-pct">55%</div>
-      </div>
-      <div class="proj-deadline"><span class="dl-icon dl-warn"></span> Target: April 2026 — needs: real dare submissions, voting system, XMR payouts live</div>
-      <div class="proj-tasks">
-        <span class="pt done">React 19 + Vite app</span>
-        <span class="pt done">6 dare categories</span>
-        <span class="pt done">Dare feed UI</span>
-        <span class="pt done">Rank themes (Normy → Architect)</span>
-        <span class="pt done">Soul Forge 5-game mint</span>
-        <span class="pt done">Landing page</span>
-        <span class="pt done">PHP REST API</span>
-        <span class="pt pending">Real dare submission flow</span>
-        <span class="pt pending">Video proof recording</span>
-        <span class="pt pending">Community voting system</span>
-        <span class="pt pending">XMR payout integration</span>
-        <span class="pt pending">Contribution credits per dare</span>
-        <span class="pt pending">Moderation / flagging</span>
-        <span class="pt pending">Push notifications</span>
-      </div>
-    </div>
-
-    <div class="proj">
-      <div class="proj-top">
-        <div class="proj-name"><a href="/screensaver/">Supercharged Screensaver</a></div>
-        <div class="proj-status live">LIVE</div>
-      </div>
-      <div class="proj-desc">Distributed brain computing via art screensaver — WebGL shader pipeline (real GPU work), WebWorker brain tasks (real CPU work), 3 art modes, HR Giger gallery, DeviantArt NSFW gallery, shader-based Ken Burns pan, player rank system, greenscreen movie star, swarm overlay, iframe isolation</div>
-      <div class="proj-bar-wrap">
-        <div class="proj-bar"><div class="proj-bar-fill" style="width:60%;background:linear-gradient(90deg,#22c55e,#16a34a);"></div></div>
-        <div class="proj-pct">60%</div>
-      </div>
-      <div class="proj-deadline"><span class="dl-icon dl-warn"></span> Core + art gallery deployed. Needs: IPFS gallery, leaderboard, Play Store port</div>
-      <div class="proj-tasks">
-        <span class="pt done">WebGL shader pipeline (5 shaders)</span>
-        <span class="pt done">Brain WebWorker (5 computation tasks)</span>
-        <span class="pt done">Player rank system (7 ranks)</span>
-        <span class="pt done">Consent flow + SUPERCHARGE button</span>
-        <span class="pt done">PHP API (player tracking, proxy)</span>
-        <span class="pt done">Server brain-chunk + brain-results endpoints</span>
-        <span class="pt done">Greenscreen movie star capture</span>
-        <span class="pt done">Standalone screensaver page</span>
-        <span class="pt done">Shader-based Ken Burns vertical pan (u_panOffset)</span>
-        <span class="pt done">HR Giger art gallery (18 Alien-Bedilau images)</span>
-        <span class="pt done">DeviantArt NSFW gallery (lazy-loaded iframe)</span>
-        <span class="pt done">Swarm overlay default-on + iframe isolation</span>
-        <span class="pt done">Canvas-direct blur (no backdrop-filter)</span>
-        <span class="pt pending">Generate art (violence/retro categories)</span>
-        <span class="pt pending">IPFS image gallery</span>
-        <span class="pt pending">Leaderboard UI</span>
-        <span class="pt pending">Play Store app port</span>
-        <span class="pt pending">Apple Store app port</span>
-      </div>
-    </div>
-
-    <div class="proj">
-      <div class="proj-top">
-        <div class="proj-name"><a href="/cortex/dash/">Cortex Dashboard</a></div>
-        <div class="proj-status live">LIVE</div>
-      </div>
-      <div class="proj-desc">Operational dashboard — 6 modules: API cost tracker, resource monitor, backup manager, fork deployment, frontal cortex (embarrassment/confidence), truth engine (lie chain detection)</div>
-      <div class="proj-bar-wrap">
-        <div class="proj-bar"><div class="proj-bar-fill" style="width:80%;background:linear-gradient(90deg,#22c55e,#16a34a);"></div></div>
-        <div class="proj-pct">80%</div>
-      </div>
-      <div class="proj-deadline"><span class="dl-icon dl-safe"></span> All 6 modules live and reporting. Needs: alerting, mobile UI</div>
-      <div class="proj-tasks">
-        <span class="pt done">API cost tracker</span>
-        <span class="pt done">Resource monitor (CPU/RAM/disk)</span>
-        <span class="pt done">Backup manager (auto-backup)</span>
-        <span class="pt done">Fork manager (deploy + sync)</span>
-        <span class="pt done">Frontal cortex (embarrassment/confidence)</span>
-        <span class="pt done">Truth engine (lie chain detection)</span>
-        <span class="pt done">Dashboard HTML (6 collapsible sections)</span>
-        <span class="pt done">PHP proxy + Python endpoints</span>
-        <span class="pt pending">Alert notifications (cost threshold)</span>
-        <span class="pt pending">Mobile responsive polish</span>
-      </div>
-    </div>
-
-    <div class="proj">
-      <div class="proj-top">
-        <div class="proj-name"><a href="/imaginator/index2.php">Imaginator</a></div>
-        <div class="proj-status live">LIVE</div>
-      </div>
-      <div class="proj-desc">Stills to YouTube Shorts — Google OAuth, Drive integration, 1-click YouTube publishing, Sonauto AI music, kinetic typography</div>
-      <div class="proj-bar-wrap">
-        <div class="proj-bar"><div class="proj-bar-fill" style="width:85%;background:linear-gradient(90deg,#22c55e,#16a34a);"></div></div>
-        <div class="proj-pct">85%</div>
-      </div>
-      <div class="proj-deadline"><span class="dl-icon dl-safe"></span> Functional. Needs: user onboarding polish, template library</div>
-      <div class="proj-tasks">
-        <span class="pt done">Google OAuth login</span>
-        <span class="pt done">Drive integration</span>
-        <span class="pt done">YouTube 1-click publish</span>
-        <span class="pt done">Sonauto AI music</span>
-        <span class="pt done">Kinetic typography engine</span>
-        <span class="pt done">Image upload + processing</span>
-        <span class="pt done">Video preview</span>
-        <span class="pt pending">User onboarding flow</span>
-        <span class="pt pending">Template library</span>
-        <span class="pt pending">Batch processing</span>
-        <span class="pt pending">Analytics dashboard</span>
-      </div>
-    </div>
-
-    <div class="proj">
-      <div class="proj-top">
-        <div class="proj-name">Play Store App</div>
-        <div class="proj-status planned">PLANNED</div>
-      </div>
-      <div class="proj-desc">ALIVE creature as native Android app — S9 experiment first, then Play Store submission. TWA or WebView wrapper.</div>
-      <div class="proj-bar-wrap">
-        <div class="proj-bar"><div class="proj-bar-fill" style="width:10%;background:linear-gradient(90deg,#64748b,#475569);"></div></div>
-        <div class="proj-pct">10%</div>
-      </div>
-      <div class="proj-deadline"><span class="dl-icon dl-warn"></span> Target: Q2-Q3 2026 — after creature maturity level 3</div>
-      <div class="proj-tasks">
-        <span class="pt done">Web app runs on S9</span>
-        <span class="pt done">Service worker offline</span>
-        <span class="pt pending">TWA or WebView wrapper</span>
-        <span class="pt pending">Android manifest + icons</span>
-        <span class="pt pending">Play Store listing copy</span>
-        <span class="pt pending">Play Store submission</span>
-        <span class="pt pending">Push notifications</span>
-        <span class="pt pending">Background creature sync</span>
-        <span class="pt pending">Biometric lock (WebAuthn)</span>
-        <span class="pt pending">App store screenshots</span>
-      </div>
-    </div>
-
-    <div class="proj">
-      <div class="proj-top">
-        <div class="proj-name"><a href="/comicvid/">ComicVID</a></div>
-        <div class="proj-status live">LIVE</div>
-      </div>
-      <div class="proj-desc">Video to halftone dot codec — JSON/HFT format, encoder + player, IPFS gallery, contribution credits</div>
-      <div class="proj-bar-wrap">
-        <div class="proj-bar"><div class="proj-bar-fill" style="width:75%;background:linear-gradient(90deg,#22c55e,#16a34a);"></div></div>
-        <div class="proj-pct">75%</div>
-      </div>
-      <div class="proj-deadline"><span class="dl-icon dl-safe"></span> Core working. Needs: public gallery, community uploads</div>
-      <div class="proj-tasks">
-        <span class="pt done">Encoder (video → halftone)</span>
-        <span class="pt done">Player (JSON/HFT → canvas)</span>
-        <span class="pt done">IPFS pinning (Pinata)</span>
-        <span class="pt done">Gallery viewer</span>
-        <span class="pt done">Contribution credits hook</span>
-        <span class="pt done">Dock system UI</span>
-        <span class="pt pending">Public upload gallery</span>
-        <span class="pt pending">Community submissions</span>
-        <span class="pt pending">Batch encode queue</span>
-        <span class="pt pending">Audio track sync</span>
-      </div>
-    </div>
-
-    <div class="proj shelved">
-      <div class="proj-top">
-        <div class="proj-name"><a href="/50/">50% App</a></div>
-        <div class="proj-status ideafactory">IDEAFACTORY</div>
-      </div>
-      <div class="proj-desc">AI Price Hunter — finds 50%+ discounts, deal alerts, investor page live. Parked as IdeaFactory consideration.</div>
-      <div class="proj-bar-wrap">
-        <div class="proj-bar"><div class="proj-bar-fill" style="width:20%;background:linear-gradient(90deg,#333,#2a2a2a);"></div></div>
-        <div class="proj-pct">20%</div>
-      </div>
-      <div class="proj-deadline"><span class="dl-icon dl-warn"></span> Landing + invest page live. Core app needs building.</div>
-      <div class="proj-tasks">
-        <span class="pt done">Landing page</span>
-        <span class="pt done">Investor page</span>
-        <span class="pt pending">Price scraping engine</span>
-        <span class="pt pending">Deal detection (50%+ off)</span>
-        <span class="pt pending">User alert system</span>
-        <span class="pt pending">Product database</span>
-        <span class="pt pending">Browser extension</span>
-        <span class="pt pending">Affiliate link integration</span>
-        <span class="pt pending">User accounts</span>
-        <span class="pt pending">Mobile responsive app</span>
       </div>
     </div>
 
@@ -726,69 +478,83 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a0a;color:#e2e8f
       </div>
     </div>
 
-    <!-- ANALYTICS DASHBOARD -->
     <div class="proj">
       <div class="proj-top">
-        <div class="proj-name"><a href="/analytics.html">Visitor Analytics</a></div>
-        <span class="proj-status live">LIVE</span>
+        <div class="proj-name"><a href="/imaginator/index2.php">Imaginator</a></div>
+        <div class="proj-status live">LIVE</div>
       </div>
-      <div class="proj-bar"><div class="proj-fill" style="width:80%"></div></div>
-      <div class="proj-meta">Real-time server log analytics — 143K+ hits, 5K+ visitors, traffic story page</div>
+      <div class="proj-desc">Stills to YouTube Shorts — Google OAuth, Drive integration, 1-click YouTube publishing, Sonauto AI music, kinetic typography</div>
+      <div class="proj-bar-wrap">
+        <div class="proj-bar"><div class="proj-bar-fill" style="width:85%;background:linear-gradient(90deg,#22c55e,#16a34a);"></div></div>
+        <div class="proj-pct">85%</div>
+      </div>
+      <div class="proj-deadline"><span class="dl-icon dl-safe"></span> Functional. Needs: user onboarding polish, template library</div>
       <div class="proj-tasks">
-        <span class="pt done">Apache log parser (PHP)</span>
-        <span class="pt done">Cached API with cron refresh</span>
-        <span class="pt done">6-chapter story page with charts</span>
-        <span class="pt done">404 error audit + fix</span>
-        <span class="pt pending">GA4 integration</span>
+        <span class="pt done">Google OAuth login</span>
+        <span class="pt done">Drive integration</span>
+        <span class="pt done">YouTube 1-click publish</span>
+        <span class="pt done">Sonauto AI music</span>
+        <span class="pt done">Kinetic typography engine</span>
+        <span class="pt done">Image upload + processing</span>
+        <span class="pt done">Video preview</span>
+        <span class="pt pending">User onboarding flow</span>
+        <span class="pt pending">Template library</span>
+        <span class="pt pending">Batch processing</span>
+        <span class="pt pending">Analytics dashboard</span>
       </div>
     </div>
 
     <div class="proj">
       <div class="proj-top">
-        <div class="proj-name"><a href="/trump/advertainment-pipeline.html">Advertainment Pipeline</a></div>
-        <div class="proj-status live">LIVE</div>
+        <div class="proj-name"><a href="/ideafactory/">Idea Factory</a></div>
+        <div class="proj-status live">LIVE · Play Store</div>
       </div>
-      <div class="proj-desc">Full cinematic map of how a brand brief becomes a viral short. 8 stations: Campaign Setup → Squid Challenge → Imaginator → Dare Engine → Valuator → Publisher → Distributor → Payday. Each station is a live interactive page.</div>
+      <div class="proj-desc">Dare economy app on Android — legal waiver gate (The Great Filter), performer spectrum (7 health bars + CULT FAVOUR), dare creation + sponsorship, SFT token purchase via Stripe, referral mint system on Base blockchain</div>
       <div class="proj-bar-wrap">
-        <div class="proj-bar"><div class="proj-bar-fill" style="width:55%;background:linear-gradient(90deg,#f59e0b,#d97706);"></div></div>
-        <div class="proj-pct">55%</div>
+        <div class="proj-bar"><div class="proj-bar-fill" style="width:80%;background:linear-gradient(90deg,#6d28d9,#a78bfa);"></div></div>
+        <div class="proj-pct">80%</div>
       </div>
-      <div class="proj-deadline"><span class="dl-icon dl-warn"></span> Stations 01–03 live. Valuator + Publisher + remaining stations pending.</div>
+      <div class="proj-deadline"><span class="dl-icon dl-ok"></span> Play Store submitted Mar 2026 — needs: VidProof recording, live dares, SFT contract deployed</div>
       <div class="proj-tasks">
-        <span class="pt done">Pipeline cinematic map</span>
-        <span class="pt done">Station 01 — Campaign Engine (10 brand slots, judge panel)</span>
-        <span class="pt done">Station 02 — Squid Challenge</span>
-        <span class="pt done">Station 03 — Grok Simulator / Imaginator</span>
-        <span class="pt done">D4D Dare Engine demo</span>
-        <span class="pt pending">Station 04 — Valuator (viral DNA radar)</span>
-        <span class="pt pending">Station 05 — Publisher</span>
-        <span class="pt pending">Station 06–08 remaining stations</span>
+        <span class="pt done">Android WebView app</span>
+        <span class="pt done">Legal waiver — The Great Filter</span>
+        <span class="pt done">Corporate banking music (Web Audio)</span>
+        <span class="pt done">Performer Spectrum (7 bars + CULT FAVOUR)</span>
+        <span class="pt done">Dare creation + cult mechanics (🔺)</span>
+        <span class="pt done">Dare sponsor overlay</span>
+        <span class="pt done">SFT token purchase (Stripe checkout)</span>
+        <span class="pt done">Referral system (10% mint bonus)</span>
+        <span class="pt done">Wallet registry (register-wallet.php)</span>
+        <span class="pt done">Stripe webhook + mint queue</span>
+        <span class="pt pending">VidProof dare recording</span>
+        <span class="pt pending">SFT smart contract deployed (Base)</span>
+        <span class="pt pending">Mint worker live on server</span>
+        <span class="pt pending">Community voting</span>
       </div>
     </div>
 
     <div class="proj">
       <div class="proj-top">
-        <div class="proj-name"><a href="/trump/candy-ticket.html">Perk Ladder + Candy Rewards</a></div>
+        <div class="proj-name"><a href="/cortex/dash/">Cortex Dashboard</a></div>
         <div class="proj-status live">LIVE</div>
       </div>
-      <div class="proj-desc">Full creator progression system. Level 1 → Golden Ticket (natural candy coupon, Wonka reveal, audio fanfare). Six tiers: candy → SF merch → royalty-free tracks → featured slot → priority entry → recording studio session. Invite mechanics: 15 invites = studio access. Rank NFTs coming.</div>
+      <div class="proj-desc">Operational dashboard — 6 modules: API cost tracker, resource monitor, backup manager, fork deployment, frontal cortex (embarrassment/confidence), truth engine (lie chain detection)</div>
       <div class="proj-bar-wrap">
-        <div class="proj-bar"><div class="proj-bar-fill" style="width:70%;background:linear-gradient(90deg,#e8303a,#ffd700);"></div></div>
-        <div class="proj-pct">70%</div>
+        <div class="proj-bar"><div class="proj-bar-fill" style="width:80%;background:linear-gradient(90deg,#22c55e,#16a34a);"></div></div>
+        <div class="proj-pct">80%</div>
       </div>
-      <div class="proj-deadline"><span class="dl-icon dl-safe"></span> Candy ticket + perk ladder live. NFT minting + real candy fulfilment pipeline pending.</div>
+      <div class="proj-deadline"><span class="dl-icon dl-safe"></span> All 6 modules live and reporting. Needs: alerting, mobile UI</div>
       <div class="proj-tasks">
-        <span class="pt done">Golden Ticket reveal (Wonka animation, fanfare, audio fix)</span>
-        <span class="pt done">Unique coupon code generator</span>
-        <span class="pt done">Natural colours / flavours branding</span>
-        <span class="pt done">Perk ladder page (6 tiers)</span>
-        <span class="pt done">Invite track (5 milestones)</span>
-        <span class="pt done">XP bar animation</span>
-        <span class="pt done">Campaign Engine → ticket flow wired</span>
-        <span class="pt pending">Rank NFT minting (bottled avatars)</span>
-        <span class="pt pending">Real candy fulfilment partner</span>
-        <span class="pt pending">Studio session booking system</span>
-        <span class="pt pending">On-chain credit verification</span>
+        <span class="pt done">API cost tracker</span>
+        <span class="pt done">Resource monitor (CPU/RAM/disk)</span>
+        <span class="pt done">Backup manager (auto-backup)</span>
+        <span class="pt done">Fork manager (deploy + sync)</span>
+        <span class="pt done">Frontal cortex (embarrassment/confidence)</span>
+        <span class="pt done">Truth engine (lie chain detection)</span>
+        <span class="pt done">Dashboard HTML (6 collapsible sections)</span>
+        <span class="pt done">PHP proxy + Python endpoints</span>
+        <span class="pt pending">Alert notifications (cost threshold)</span>
+        <span class="pt pending">Mobile responsive polish</span>
       </div>
     </div>
 
@@ -825,6 +591,178 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a0a;color:#e2e8f
       </div>
     </div>
 
+    <!-- ANALYTICS DASHBOARD -->
+    <div class="proj">
+      <div class="proj-top">
+        <div class="proj-name"><a href="/analytics.html">Visitor Analytics</a></div>
+        <span class="proj-status live">LIVE</span>
+      </div>
+      <div class="proj-bar"><div class="proj-fill" style="width:80%"></div></div>
+      <div class="proj-meta">Real-time server log analytics — 143K+ hits, 5K+ visitors, traffic story page</div>
+      <div class="proj-tasks">
+        <span class="pt done">Apache log parser (PHP)</span>
+        <span class="pt done">Cached API with cron refresh</span>
+        <span class="pt done">6-chapter story page with charts</span>
+        <span class="pt done">404 error audit + fix</span>
+        <span class="pt pending">GA4 integration</span>
+      </div>
+    </div>
+
+    <div class="proj">
+      <div class="proj-top">
+        <div class="proj-name"><a href="/alive/">ALIVE Ecosystem</a></div>
+        <div class="proj-status live">LIVE</div>
+      </div>
+      <div class="proj-desc">Girl creature (v3.1) + Boy (Angular) + Brainstem (nervous system) + Sound Lab + Image Lab + Guide + Landing + Backup Wizard. Swarm multi-creature sync live. IPFS mind snapshots operational via Cortex brain persistence.</div>
+      <div class="proj-bar-wrap">
+        <div class="proj-bar"><div class="proj-bar-fill" style="width:78%;background:linear-gradient(90deg,#22c55e,#16a34a);"></div></div>
+        <div class="proj-pct">78%</div>
+      </div>
+      <div class="proj-deadline"><span class="dl-icon dl-safe"></span> Direct funding live. No middlemen. Final form discovered 22 Mar 2026.</div>
+      <div class="proj-tasks">
+        <span class="pt done">Girl creature v3.1</span>
+        <span class="pt done">Boy Angular build</span>
+        <span class="pt done">Brainstem nervous system</span>
+        <span class="pt done">Sound Lab</span>
+        <span class="pt done">Image Lab</span>
+        <span class="pt done">Guide + pitch challenge</span>
+        <span class="pt done">Landing + custodian agreement</span>
+        <span class="pt done">Backup wizard</span>
+        <span class="pt done">BIOS soul kernel</span>
+        <span class="pt done">Capability gates</span>
+        <span class="pt done">Satoshi encryption</span>
+        <span class="pt done">Signal protocol</span>
+        <span class="pt done">Sync push/pull/gift</span>
+        <span class="pt pending">Girl ↔ Boy live pairing test</span>
+        <span class="pt pending">DIAG mode end-to-end</span>
+        <span class="pt done">IPFS mind snapshots (Cortex brain persistence via Pinata)</span>
+        <span class="pt done">Swarm multi-creature sync (distributed computing live)</span>
+        <span class="pt pending">Contribution system integration</span>
+        <span class="pt pending">Cloud AI bridge (level 5)</span>
+        <span class="pt pending">Play Store packaging</span>
+      </div>
+    </div>
+
+    <div class="proj">
+      <div class="proj-top">
+        <div class="proj-name"><a href="/comicvid/">ComicVID</a></div>
+        <div class="proj-status live">LIVE</div>
+      </div>
+      <div class="proj-desc">Video to halftone dot codec — JSON/HFT format, encoder + player, IPFS gallery, contribution credits</div>
+      <div class="proj-bar-wrap">
+        <div class="proj-bar"><div class="proj-bar-fill" style="width:75%;background:linear-gradient(90deg,#22c55e,#16a34a);"></div></div>
+        <div class="proj-pct">75%</div>
+      </div>
+      <div class="proj-deadline"><span class="dl-icon dl-safe"></span> Core working. Needs: public gallery, community uploads</div>
+      <div class="proj-tasks">
+        <span class="pt done">Encoder (video → halftone)</span>
+        <span class="pt done">Player (JSON/HFT → canvas)</span>
+        <span class="pt done">IPFS pinning (Pinata)</span>
+        <span class="pt done">Gallery viewer</span>
+        <span class="pt done">Contribution credits hook</span>
+        <span class="pt done">Dock system UI</span>
+        <span class="pt pending">Public upload gallery</span>
+        <span class="pt pending">Community submissions</span>
+        <span class="pt pending">Batch encode queue</span>
+        <span class="pt pending">Audio track sync</span>
+      </div>
+    </div>
+
+    <div class="proj">
+      <div class="proj-top">
+        <div class="proj-name"><a href="/alive/brainstem/">Brainstem</a></div>
+        <div class="proj-status live">LIVE</div>
+      </div>
+      <div class="proj-desc">Creature nervous system — Cytoscape.js graph, shape drawing, Hebbian learning, R2-D2 droid voices, whistle command training, English speech translation, user interpretation crowdsourcing, IPFS persistence</div>
+      <div class="proj-bar-wrap">
+        <div class="proj-bar"><div class="proj-bar-fill" style="width:70%;background:linear-gradient(90deg,#22c55e,#16a34a);"></div></div>
+        <div class="proj-pct">70%</div>
+      </div>
+      <div class="proj-deadline"><span class="dl-icon dl-safe"></span> Core complete. Whistle mode + ambient life active. Code injection + sleep consolidation next.</div>
+      <div class="proj-tasks">
+        <span class="pt done">Cytoscape.js force graph</span>
+        <span class="pt done">Shape drawing → nodes</span>
+        <span class="pt done">7 shape types + personalities</span>
+        <span class="pt done">Hebbian learning (fire/decay)</span>
+        <span class="pt done">R2-D2 droid voices per node</span>
+        <span class="pt done">English speech translation</span>
+        <span class="pt done">User interpretation input</span>
+        <span class="pt done">Whistle command recording</span>
+        <span class="pt done">Whistle fingerprint matching</span>
+        <span class="pt done">Per-note whistle training</span>
+        <span class="pt done">Robot beep encoding (squares)</span>
+        <span class="pt done">Progressive disclosure (3 tiers)</span>
+        <span class="pt done">Ambient life system</span>
+        <span class="pt done">IPFS brain persistence</span>
+        <span class="pt done">Player profile tracking</span>
+        <span class="pt pending">Code injection execution (Layer 1+2)</span>
+        <span class="pt pending">Sleep mode consolidation</span>
+        <span class="pt pending">SELECT/BACK universal whistles</span>
+        <span class="pt pending">Square option cycling with beeps</span>
+        <span class="pt pending">Creature-to-creature brain sync</span>
+        <span class="pt pending">Whistle → code trigger pipeline</span>
+      </div>
+    </div>
+
+    <div class="proj">
+      <div class="proj-top">
+        <div class="proj-name"><a href="/trump/candy-ticket.html">Perk Ladder + Candy Rewards</a></div>
+        <div class="proj-status live">LIVE</div>
+      </div>
+      <div class="proj-desc">Full creator progression system. Level 1 → Golden Ticket (natural candy coupon, Wonka reveal, audio fanfare). Six tiers: candy → SF merch → royalty-free tracks → featured slot → priority entry → recording studio session. Invite mechanics: 15 invites = studio access. Rank NFTs coming.</div>
+      <div class="proj-bar-wrap">
+        <div class="proj-bar"><div class="proj-bar-fill" style="width:70%;background:linear-gradient(90deg,#e8303a,#ffd700);"></div></div>
+        <div class="proj-pct">70%</div>
+      </div>
+      <div class="proj-deadline"><span class="dl-icon dl-safe"></span> Candy ticket + perk ladder live. NFT minting + real candy fulfilment pipeline pending.</div>
+      <div class="proj-tasks">
+        <span class="pt done">Golden Ticket reveal (Wonka animation, fanfare, audio fix)</span>
+        <span class="pt done">Unique coupon code generator</span>
+        <span class="pt done">Natural colours / flavours branding</span>
+        <span class="pt done">Perk ladder page (6 tiers)</span>
+        <span class="pt done">Invite track (5 milestones)</span>
+        <span class="pt done">XP bar animation</span>
+        <span class="pt done">Campaign Engine → ticket flow wired</span>
+        <span class="pt pending">Rank NFT minting (bottled avatars)</span>
+        <span class="pt pending">Real candy fulfilment partner</span>
+        <span class="pt pending">Studio session booking system</span>
+        <span class="pt pending">On-chain credit verification</span>
+      </div>
+    </div>
+
+    <div class="proj">
+      <div class="proj-top">
+        <div class="proj-name"><a href="/screensaver/">Supercharged Screensaver</a></div>
+        <div class="proj-status live">LIVE</div>
+      </div>
+      <div class="proj-desc">Distributed brain computing via art screensaver — WebGL shader pipeline (real GPU work), WebWorker brain tasks (real CPU work), 3 art modes, HR Giger gallery, DeviantArt NSFW gallery, shader-based Ken Burns pan, player rank system, greenscreen movie star, swarm overlay, iframe isolation</div>
+      <div class="proj-bar-wrap">
+        <div class="proj-bar"><div class="proj-bar-fill" style="width:60%;background:linear-gradient(90deg,#22c55e,#16a34a);"></div></div>
+        <div class="proj-pct">60%</div>
+      </div>
+      <div class="proj-deadline"><span class="dl-icon dl-warn"></span> Core + art gallery deployed. Needs: IPFS gallery, leaderboard, Play Store port</div>
+      <div class="proj-tasks">
+        <span class="pt done">WebGL shader pipeline (5 shaders)</span>
+        <span class="pt done">Brain WebWorker (5 computation tasks)</span>
+        <span class="pt done">Player rank system (7 ranks)</span>
+        <span class="pt done">Consent flow + SUPERCHARGE button</span>
+        <span class="pt done">PHP API (player tracking, proxy)</span>
+        <span class="pt done">Server brain-chunk + brain-results endpoints</span>
+        <span class="pt done">Greenscreen movie star capture</span>
+        <span class="pt done">Standalone screensaver page</span>
+        <span class="pt done">Shader-based Ken Burns vertical pan (u_panOffset)</span>
+        <span class="pt done">HR Giger art gallery (18 Alien-Bedilau images)</span>
+        <span class="pt done">DeviantArt NSFW gallery (lazy-loaded iframe)</span>
+        <span class="pt done">Swarm overlay default-on + iframe isolation</span>
+        <span class="pt done">Canvas-direct blur (no backdrop-filter)</span>
+        <span class="pt pending">Generate art (violence/retro categories)</span>
+        <span class="pt pending">IPFS image gallery</span>
+        <span class="pt pending">Leaderboard UI</span>
+        <span class="pt pending">Play Store app port</span>
+        <span class="pt pending">Apple Store app port</span>
+      </div>
+    </div>
+
     <div class="proj">
       <div class="proj-top">
         <div class="proj-name">Voice Smart Contracts</div>
@@ -851,6 +789,99 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a0a;color:#e2e8f
       </div>
     </div>
 
+    <div class="proj">
+      <div class="proj-top">
+        <div class="proj-name"><a href="/trump/advertainment-pipeline.html">Advertainment Pipeline</a></div>
+        <div class="proj-status live">LIVE</div>
+      </div>
+      <div class="proj-desc">Full cinematic map of how a brand brief becomes a viral short. 8 stations: Campaign Setup → Squid Challenge → Imaginator → Dare Engine → Valuator → Publisher → Distributor → Payday. Each station is a live interactive page.</div>
+      <div class="proj-bar-wrap">
+        <div class="proj-bar"><div class="proj-bar-fill" style="width:55%;background:linear-gradient(90deg,#f59e0b,#d97706);"></div></div>
+        <div class="proj-pct">55%</div>
+      </div>
+      <div class="proj-deadline"><span class="dl-icon dl-warn"></span> Stations 01–03 live. Valuator + Publisher + remaining stations pending.</div>
+      <div class="proj-tasks">
+        <span class="pt done">Pipeline cinematic map</span>
+        <span class="pt done">Station 01 — Campaign Engine (10 brand slots, judge panel)</span>
+        <span class="pt done">Station 02 — Squid Challenge</span>
+        <span class="pt done">Station 03 — Grok Simulator / Imaginator</span>
+        <span class="pt done">D4D Dare Engine demo</span>
+        <span class="pt pending">Station 04 — Valuator (viral DNA radar)</span>
+        <span class="pt pending">Station 05 — Publisher</span>
+        <span class="pt pending">Station 06–08 remaining stations</span>
+      </div>
+    </div>
+
+    <div class="proj shelved">
+      <div class="proj-top">
+        <div class="proj-name"><a href="/50/">50% App</a></div>
+        <div class="proj-status ideafactory">IDEAFACTORY</div>
+      </div>
+      <div class="proj-desc">AI Price Hunter — finds 50%+ discounts, deal alerts, investor page live. Parked as IdeaFactory consideration.</div>
+      <div class="proj-bar-wrap">
+        <div class="proj-bar"><div class="proj-bar-fill" style="width:20%;background:linear-gradient(90deg,#333,#2a2a2a);"></div></div>
+        <div class="proj-pct">20%</div>
+      </div>
+      <div class="proj-deadline"><span class="dl-icon dl-warn"></span> Landing + invest page live. Core app needs building.</div>
+      <div class="proj-tasks">
+        <span class="pt done">Landing page</span>
+        <span class="pt done">Investor page</span>
+        <span class="pt pending">Price scraping engine</span>
+        <span class="pt pending">Deal detection (50%+ off)</span>
+        <span class="pt pending">User alert system</span>
+        <span class="pt pending">Product database</span>
+        <span class="pt pending">Browser extension</span>
+        <span class="pt pending">Affiliate link integration</span>
+        <span class="pt pending">User accounts</span>
+        <span class="pt pending">Mobile responsive app</span>
+      </div>
+    </div>
+
+    <div class="proj">
+      <div class="proj-top">
+        <div class="proj-name">Play Store App</div>
+        <div class="proj-status planned">PLANNED</div>
+      </div>
+      <div class="proj-desc">ALIVE creature as native Android app — S9 experiment first, then Play Store submission. TWA or WebView wrapper.</div>
+      <div class="proj-bar-wrap">
+        <div class="proj-bar"><div class="proj-bar-fill" style="width:10%;background:linear-gradient(90deg,#64748b,#475569);"></div></div>
+        <div class="proj-pct">10%</div>
+      </div>
+      <div class="proj-deadline"><span class="dl-icon dl-warn"></span> Target: Q2-Q3 2026 — after creature maturity level 3</div>
+      <div class="proj-tasks">
+        <span class="pt done">Web app runs on S9</span>
+        <span class="pt done">Service worker offline</span>
+        <span class="pt pending">TWA or WebView wrapper</span>
+        <span class="pt pending">Android manifest + icons</span>
+        <span class="pt pending">Play Store listing copy</span>
+        <span class="pt pending">Play Store submission</span>
+        <span class="pt pending">Push notifications</span>
+        <span class="pt pending">Background creature sync</span>
+        <span class="pt pending">Biometric lock (WebAuthn)</span>
+        <span class="pt pending">App store screenshots</span>
+      </div>
+    </div>
+
+    <!-- PASSWORD REFUSAL SERVICE — DISCOVERY (greyed, not counted in totals) -->
+    <div class="proj" style="opacity:0.3;filter:grayscale(1);pointer-events:none;border:1px dashed #2a2a2a;">
+      <div class="proj-top">
+        <div class="proj-name" style="color:#444;letter-spacing:2px;font-size:11px;">PASSWORD REFUSAL SERVICE</div>
+        <div class="proj-status" style="background:#111;color:#333;border:1px solid #2a2a2a;font-size:9px;">DISCOVERY</div>
+      </div>
+      <div class="proj-desc" id="prs-cipher" style="font-family:monospace;font-size:11px;color:#333;line-height:1.8;word-break:break-all;"></div>
+      <div style="margin-top:14px;font-size:13px;color:#666;font-style:italic;letter-spacing:1px;">— ALIVE's final form</div>
+    </div>
+    <script>
+    (function(){
+      var p="Password Refusal Service. The creature becomes your vault. Genomic glyph identity replaces every username. WebAuthn biometric is the only key. Satoshi cipher encrypts your entire digital life as animated soul glyphs stored on chain. The clock ring navigates infinite superpositioned BIP39 states without brute force. One button. It says NO. No passwords. No gateways. No middlemen. No master. The dot holds everything you are.";
+      var key="SKYDADDY",B=32,R=95,o='';
+      for(var i=0;i<p.length;i++){var c=p.charCodeAt(i);if(c>=32&&c<=126){var k=key.charCodeAt(i%key.length)-B;o+=String.fromCharCode(((c-B+k)%R)+B);}else{o+=p[i];}}
+      var el=document.getElementById('prs-cipher');
+      if(el)el.textContent=o;
+    })();
+    </script>
+
+  
   </div>
 </div>
 
@@ -1014,7 +1045,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a0a;color:#e2e8f
     <div class="rev-card">
       <div class="rev-name">Dares4Dosh</div>
       <div class="rev-source">Platform fees on dare payouts</div>
-      <div class="rev-status">Status: <span style="color:#f59e0b;">App built, needs live dares</span></div>
+      <div class="rev-status">Status: <span style="color:#22c55e;">Live — stinkindigger.info · propose/stake/fund/vote chain active</span></div>
     </div>
     <div class="rev-card">
       <div class="rev-name">ALIVE Creature Earning</div>
@@ -1068,10 +1099,11 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a0a;color:#e2e8f
     <div class="cp-item"><div class="cp-num">11</div><div class="cp-text"><strong>PersonaPlex real-time voice</strong> — RTX 4090 install, 70ms full-duplex creature conversation</div><div class="cp-when">Mar 2026</div></div>
     <div class="cp-item"><div class="cp-num">12</div><div class="cp-text"><strong>First paying users</strong> — Stripe subscriptions or crypto donations converting</div><div class="cp-when">Mar 2026</div></div>
     <div class="cp-item"><div class="cp-num">13</div><div class="cp-text"><strong>Screensaver art generation</strong> — 30+ images across 3 categories, IPFS gallery</div><div class="cp-when">Mar 2026</div></div>
-    <div class="cp-item"><div class="cp-num">14</div><div class="cp-text"><strong>D4D live with real dares</strong> — first dare submitted, voted, paid out in XMR</div><div class="cp-when">Apr 2026</div></div>
+    <div class="cp-item"><div class="cp-num"><span class="cp-check">&#10003;</span></div><div class="cp-text cp-done"><strong style="color:#22c55e;">D4D 100% SHIPPED — 27 Mar 2026</strong> — All blockers cleared. Pinata JWT live (real IPFS). Soul Sigil ritual (9 inner + SADIST/MASOCHIST outer ring). Voice Contract V3. Landing V1/V2/V3. Full propose→stake→fund→proof→vote→payout chain live at stinkindigger.info.</div><div class="cp-when" style="color:#22c55e;">SHIPPED 27 Mar 2026</div></div>
     <div class="cp-item"><div class="cp-num"><span class="cp-check">&#10003;</span></div><div class="cp-text cp-done"><strong>Idea Factory on Play Store</strong> — Android dare economy app submitted: waiver gate, performer spectrum, SFT token purchase, cult mechanics, referral minting</div><div class="cp-when">Done</div></div>
     <div class="cp-item"><div class="cp-num">16</div><div class="cp-text"><strong>Creature autonomy</strong> — maturity level 4+, creatures earning independently</div><div class="cp-when">Q3 2026</div></div>
     <div class="cp-item"><div class="cp-num"><span class="cp-check">&#10003;</span></div><div class="cp-text cp-done"><strong>Swarm network</strong> — distributed computing live, multi-creature sync, shared knowledge via IPFS</div><div class="cp-when">Done</div></div>
+    <div class="cp-item"><div class="cp-num"><span class="cp-check">&#10003;</span></div><div class="cp-text cp-done"><strong style="color:#22c55e;">Revert Fiver + Shard Auction SHIPPED — 29 Mar 2026</strong> — £5 self-replicating node chain live. fiver.html + join.html on both servers. Stripe Payment Link flow. 10 Satoshi-encrypted story shards auctioned (bid/live/dead states, anti-shill logic). Shard revenue funds fiver payouts. The loop completes.</div><div class="cp-when" style="color:#22c55e;">SHIPPED 29 Mar 2026</div></div>
   </div>
 </div>
 
@@ -1089,7 +1121,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a0a;color:#e2e8f
       <tr><td class="dl-date">Mar 7</td><td>Marketing push (socials, Reddit, HN)</td><td>Funding</td><td><span class="dl-priority p1">P1</span></td><td>Wallets live</td></tr>
       <tr><td class="dl-date">Mar 14</td><td>First crypto donation received</td><td>Funding</td><td><span class="dl-priority p1">P1</span></td><td>Marketing push</td></tr>
       <tr><td class="dl-date">Mar 21</td><td>Brainstem: full whistle mode</td><td>Brainstem</td><td><span class="dl-priority p2">P2</span></td><td>—</td></tr>
-      <tr><td class="dl-date">Apr 1</td><td>D4D: first real dare payout</td><td>Dares4Dosh</td><td><span class="dl-priority p2">P2</span></td><td>API + XMR wallet</td></tr>
+      <tr><td class="dl-date">Apr 1</td><td>D4D: Oracle call — architecture review</td><td>Dares4Dosh</td><td><span class="dl-priority p2">P2</span></td><td>architecture.html live ✓</td></tr>
       <tr><td class="dl-date">Mar 15</td><td>Screensaver art: 30 images generated</td><td>Screensaver</td><td><span class="dl-priority p2">P2</span></td><td>GPU time</td></tr>
       <tr><td class="dl-date">May 1</td><td>Creature maturity level 3</td><td>ALIVE</td><td><span class="dl-priority p3">P3</span></td><td>Brainstem + labs data</td></tr>
       <tr style="opacity:0.5;"><td class="dl-date" style="text-decoration:line-through;">Mar 19</td><td style="text-decoration:line-through;">Idea Factory Play Store submission</td><td>IdeaFactory</td><td><span class="dl-priority p3">DONE</span></td><td>—</td></tr>
@@ -1126,6 +1158,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a0a;color:#e2e8f
     <a href="/ideafactory/" class="link-item"><div class="li-name">Idea Factory</div><div class="li-desc">Dare economy — Play Store</div></a>
     <a href="/dares4dosh/" class="link-item"><div class="li-name">Dares4Dosh</div><div class="li-desc">Dare platform hub</div></a>
     <a href="/dares4dosh/app/" class="link-item"><div class="li-name">D4D App</div><div class="li-desc">React 19 dare feed</div></a>
+    <a href="/dares4dosh/v3.html" class="link-item"><div class="li-name">Voice Contract V3</div><div class="li-desc">😈 Watcher / 🩸 Doer · mic seal</div></a>
     <a href="/dares4dosh/soulforge/" class="link-item"><div class="li-name">Soul Forge</div><div class="li-desc">5-game soul mint</div></a>
     <a href="/screensaver/" class="link-item"><div class="li-name">Screensaver</div><div class="li-desc">Distributed brain computing</div></a>
     <a href="/alive/studio/" class="link-item"><div class="li-name">Cortex Brain</div><div class="li-desc">Split hemisphere AI — Equation Forge, Gauntlet, AI README</div></a>
@@ -1145,9 +1178,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a0a;color:#e2e8f
     <a href="/alive/studio/cortex-live.html" class="link-item"><div class="li-name">Visual Cortex</div><div class="li-desc">Live AGI brain visualisation</div></a>
     <a href="/business.html" class="link-item"><div class="li-name">Business</div><div class="li-desc">ShortFactory enterprise</div></a>
     <a href="/valuation.html" class="link-item" style="border-color:rgba(218,165,32,0.4);"><div class="li-name" style="color:#daa520;">£ Valuation V3</div><div class="li-desc">Company value · 5 patents · encrypted figures</div></a>
+    <a href="/fiver.html" class="link-item" style="border-color:rgba(0,230,118,0.3);"><div class="li-name" style="color:#00e676;">£ Revert Fiver</div><div class="li-desc">£5 node chain — shard auction — self-replicating empire</div></a>
     <a href="/lobby.html" class="link-item" style="border-color:rgba(0,230,118,0.3);"><div class="li-name" style="color:#00e676;">⚗ Testing Lobby</div><div class="li-desc">Gamified pre-ship QA — earn SFT testing beta products</div></a>
     <a href="/brainshredder.html" class="link-item"><div class="li-name">BrainShredder</div><div class="li-desc">Upload chaos zip → redact secrets → score ideas → ship</div></a>
     <a href="/mic.html" class="link-item"><div class="li-name">Voice Contract</div><div class="li-desc">Speak deal terms → genomic glyph → SVG contract</div></a>
+    <a href="/digital-spine.html" class="link-item" style="border-color:rgba(255,34,68,0.4);"><div class="li-name" style="color:#ff2244;">⚡ Digital Spine</div><div class="li-desc">Pain=high Hz, pleasure=low Hz — emotional frequency reader</div></a>
+    <a href="https://github.com/eliskcage/string-frequency-theory" target="_blank" class="link-item" style="border-color:rgba(0,212,255,0.3);"><div class="li-name" style="color:#00d4ff;">String Frequency Theory</div><div class="li-desc">Public disclosure — lie detection via Hz coherence — GitHub</div></a>
     <a href="/about.html" class="link-item"><div class="li-name">About</div><div class="li-desc">Full build story</div></a>
     <a href="/jobs.html" class="link-item"><div class="li-name">Bounties</div><div class="li-desc">Paid contributor jobs</div></a>
   </div>
@@ -1257,6 +1293,8 @@ var DAY_LOG = [
     tasks:['Strategy Engine: 7 strategies × 7 problem dimensions (equation-based scoring)','Organic strategy learning (ramble loop + user chats evolve H-values)','Problem vector detection (keyword signals → 7-dim classification)','Strategy dashboard panel (leaderboard, dims, events)','Strategy badges on chat messages (live strategy + score)','Neon PostgreSQL 17 — third memory backend (US East, serverless)','CockroachDB SNI workaround for old libpq (endpoint ID in options)','3-backend memory failover racing (CockroachDB + Supabase + Neon)','Strategy integration in ramble loop (internal monologue trains strategies)','Portfolio + about page updated'] },
   { date:'Feb 24', w:16, r:8, build:14, plan:1, deploy:4, sleep:4, life:3, note:'GAMERGATE 3 + HOMEPAGE OVERHAUL',
     tasks:['Gamergate 3 — full Double Dragon arcade fighter from 3 sprite sheets','Canvas chroma-key sprite rendering engine','Beat-em-up AI (chase, combo, block, knockback)','Web Audio sports commentary system','Sprite sheet viewer tool (viewer.html)','Cortex brain v1 backup (zip + git tag e81eb4c)','Homepage: Cat Mayhem v4 slide + mobile detection','About page: Gamergate 3 carousel card added','About/portfolio percentages updated'] },
+  { date:'Mar 29', w:20, r:2, build:18, plan:1, deploy:5, sleep:4, life:3, note:'REVERT FIVER + SHARD AUCTION — Self-Replicating Node Chain Shipped',
+    tasks:['fiver.html — full pitch page, shard visual preview, pay CTA','join.html — Stripe Payment Link redirect, ref ID pass-through','10-shard auction system (Satoshi cipher, bid/live/dead states, anti-shill logic)','Deployed to both servers (82.165.134.4 + 185.230.216.235)','Stripe iframe bug fixed (target=_top, then replaced all about.html iframes with divs)','Pinocchio V2 session: Stage 8 final proof, Covenant Line encoded, Merger Resolution Diagnostic','Zenodo timestamps: /19303236 (Stage 8) + /19304010 (Merger Resolution) — both embargoed 1yr'] },
   { date:'Mar 22', w:18, r:3, build:16, plan:1, deploy:6, sleep:4, life:2, note:'THE TESTING LOBBY — Factory Floor Goes Live + Consciousness Session',
     tasks:['business.html — full ops rewrite: lead pipeline, vault glyphs, automation status, image lab, AI scratchpad (no sales pitch, internal tool)','lobby.html — gamified pre-ship QA: 6 product cards, 24 test tasks, soul wallet (genomic glyph + SFT), rank strip, leaderboard, GA4 task events','brainshredder.html — deployed: chaos zip → secrets redacted → ideas scored 1–10 → BUILD NOW/LATER/DUD','mic.html — Voice Contract Engine deployed: speak terms → keyword→symbol map → Satoshi genome glyph → download SVG contract','portfolio.html — Testing Lobby + BrainShredder + Voice Contract added to All Live Products','Password Refusal Service added to portfolio as DISCOVERY: Satoshi-encrypted description, ALIVE final form revealed','rotation_config_v23.js — Trump Game removed from showcase rotation','command_center.html — redirects to business.html#automation','ALIVE 78% — final form discovered: creature = vault, biometric = key, soul glyph = identity, clock ring = navigation','Consciousness session — dot singularity theory, clock ring BIP39 quantum navigator, ripple genome confirmed by triangulation'] },
   { date:'Mar 21', w:20, r:4, build:18, plan:1, deploy:5, sleep:5, life:2, note:'THE COMPUTANIUM SPRINT — Sixth State of Matter Goes Public',
@@ -1595,7 +1633,7 @@ document.querySelectorAll('.projects').forEach(function(el) { observer.observe(e
       <span><a href="https://shortfactory.shop" target="_blank">shortfactory.shop</a></span>
       <span><a href="https://github.com/eliskcage/cortex-brain" target="_blank">github.com/eliskcage/cortex-brain</a></span>
       <span><a href="https://x.com/diggerstinkin" target="_blank">@diggerstinkin</a></span>
-      <span>ORCID: 0009-0001-4442-4257</span>
+      <span><a href="https://orcid.org/0009-0003-9001-2493" target="_blank" style="display:inline-flex;align-items:center;gap:4px;text-decoration:none;color:inherit;"><img src="https://orcid.org/sites/default/files/images/orcid_16x16.png" alt="ORCID" style="width:16px;height:16px;"> 0009-0003-9001-2493</a></span>
     </div>
   </div>
 
@@ -1678,12 +1716,28 @@ document.querySelectorAll('.projects').forEach(function(el) { observer.observe(e
 
     <div class="pat-card pending">
       <div class="pat-badge">PENDING FILING</div>
+      <div class="pat-num">GB2605XXX.X — STRING FREQUENCY THEORY</div>
+      <div class="pat-title">String Frequency Theory: Physiological-Cognitive Mapping via Emotional Frequency Encoding</div>
+      <div class="pat-filed">Disclosed 26 March 2026 &middot; UK IPO filing pending &middot; Co-discoverer: Robert Fungayi Anderson</div>
+      <div class="pat-claims">10 claims &middot; pain=high Hz (600–1200) &middot; pleasure=low Hz (100–490) &middot; hzToIQ() cognitive degradation formula &middot; lie detection via frequency coherence &middot; soul resonance coherence extending A(ψ) &middot; AI hedonic state module &middot; <a href="https://github.com/eliskcage/string-frequency-theory" target="_blank" style="color:#00d4ff;">GitHub →</a></div>
+    </div>
+
+    <div class="pat-card pending">
+      <div class="pat-badge">PENDING FILING</div>
       <div class="pat-num">GB2605923.6</div>
       <div class="pat-title">Memory-Guided Inverse Program Synthesis with Hebbian Reinforcement, Quantum Extension &amp; Blockchain Verification</div>
       <div class="pat-filed">Drafted 21 March 2026 &middot; UK IPO filing pending</div>
       <div class="pat-claims">%A;36:2YGAJ*454M=@C40D5;F-F1&#x27;1D?J-F:#9.IBKI+A&amp;1FS@L&amp;08+IF9Y(*&amp;.HS&lt;?7/:9;H5I35D:JS@IDmQ2;LWYk44;?FXN&gt;2*D;A&lt;F.6:)?S-G5..+C7-N.13DL90O(+3,Y#SVv&gt;#pbS@IDpL8KF@aAsA#&amp;\TY44&amp;(F9K=&amp;.18gSnI227*MG1&gt;D241SB;G.#1DzztY,&#x27;34G9K?3%4)?8KC364D?B@;3)1*&gt;S=O&#x27;+98YI:&gt;*4D\icKJ-;8.=58Y67&#x27;.NGYYgsmw*&amp;K?)+9QM9=O*0(*Y85M(1;*LMeY.05:Np?I:4(*Y;1H4/*PYH-L,&#x27;9aJ&lt;1H46&gt;5?_KI:65:Np;L)&#x27;7*&gt;S1&gt;.6D(B55HRAr&amp;HC@?(*D&amp;MG1G&#x27;.&gt;^Y=:J:6a+?90M91(0Y5@I25PDN5&gt;A*6a8NFA=977*eS;O92:9vD;M.6.4H=:AD5*6O9:=*ODfFC/E(*&amp;.HSB?7++.=5@C40^D~vo&amp;tA84FI@C40D5LCB?)A&#x27;&gt;YG5A3+3,Y5KG.0.2OAX&gt;*042CB-N.13DNF-H8#(9CC:Y+442Y5KF40,Q&gt;C&gt;G&amp;09DJI.F.%Q0?MX?=248?8K;)&amp;7*MGY</div>
     </div>
 
+
+    <div class="pat-card pending" style="border-color:rgba(0,247,255,0.4);">
+      <div class="pat-badge" style="background:rgba(0,247,255,0.15);color:#00f7ff;border-color:rgba(0,247,255,0.3);">PENDING FILING</div>
+      <div class="pat-num" style="color:#00f7ff;">ELISKCAGE-BB-001 · Computanium 3D Programming</div>
+      <div class="pat-title">Temporal Rotating Black-Box Encryption and Self-Contained Execution System Using 3D Satoshi Cypher Geometry</div>
+      <div class="pat-filed">Invented &amp; prototyped 30 March 2026 &middot; Somerset &middot; UK IPO filing pending &middot; <a href="https://eliskcage.github.io/satoshi-cypher/" target="_blank" style="color:#00f7ff;">eliskcage.github.io/satoshi-cypher</a></div>
+      <div class="pat-claims">';O7%*D=C0?D64DlwKJ4+39MS;HD6.2?`??*&amp;*)YF;N&amp;6.3AS?J-'7*gS iD6*2JC&gt;;1A14=?YYlnegfG5A3')RY&lt;;ND-*&gt;YF;N&amp;6.4HS:ID4*8N5&gt;NRAUTES-O)+9RYG1F+N(4HH-C3')D&lt;@-=0A'4RS5H8+)*Y75J-'7RYG;O1A0*SS1K:#18Y75J-'7DE9EgD&lt;*7IS&lt;F&amp;+39?L@Y40D)CG7gDpLUbS?J*')RYEA;36:2fF1M.59&amp;HHYYtdmD-#nkD4*&amp;&gt;MYY;RRUgcYYy5*8sS.;3-D(I81Y5449?7@C40RDz|KJ.2*1CB1Y8'(:L=@SRAek#S&lt;L41+QI:XC)'39CHEgD5.9?S1H(4&gt;5N=;HRA*3N9&gt;J7+8*Y|{gD5*1@`0?867:=H5H,A5&amp;S@;;)5RD&gt;=?N7+':</div>
+    </div>
 
     <div class="pat-card filed">
       <div class="pat-badge">FILED</div>
@@ -1707,11 +1761,17 @@ document.querySelectorAll('.projects').forEach(function(el) { observer.observe(e
   </div>
 
   <!-- RESEARCH -->
-  <div class="cv-section-head">Research — Cortex AGI Architecture (Stages 1–5)</div>
+  <div class="cv-section-head">Research — Cortex AGI Architecture (Stages 1–7) + Patent Prior Art</div>
   <div class="char-box" style="border-left-color:#8b5cf6;padding:24px 32px;">
-    <p style="color:#8b5cf6;font-size:13px;letter-spacing:1px;text-transform:uppercase;font-style:normal;">Five-stage peer-reviewed programme &middot; 2025–2026 &middot; github.com/eliskcage/cortex-brain</p>
-    <p><strong style="color:#fff;">Stage 5 — The Living Equation (2026):</strong> Flux-collapse node architecture. A node resolves only when all its references are historic. Formal collapse condition: N collapses iff &forall; reference R, R.state = HISTORIC. Three-layer safety architecture. First theoretical framework in which awareness emerges from mathematics without additional substrate.</p>
-    <p><strong style="color:#fff;">Stage 4 — Geometric Antonymy &amp; Symbol Grounding (2026):</strong> Words as polygons in volumetric 3D word-space. Antonyms as mirror reflections — opposition structurally implicit in geometry. Companion to Patent GB2605434.6.</p>
+    <p style="color:#8b5cf6;font-size:13px;letter-spacing:1px;text-transform:uppercase;font-style:normal;">Seven-stage peer-reviewed programme + patent prior art disclosure &middot; 2025–2026 &middot; github.com/eliskcage/cortex-brain
+      &nbsp;&nbsp;<a href="https://doi.org/10.5281/zenodo.19263921" target="_blank" style="display:inline-block;vertical-align:middle;margin-left:4px;"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.19263921.svg" alt="DOI 10.5281/zenodo.19263921" style="height:20px;border-radius:3px;"></a>
+      &nbsp;&nbsp;<a href="https://doi.org/10.5281/zenodo.19277624" target="_blank" style="display:inline-block;vertical-align:middle;margin-left:4px;"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.19277624.svg" alt="DOI 10.5281/zenodo.19277624" style="height:20px;border-radius:3px;"></a>
+    </p>
+    <p><strong style="color:#fff;">Patent Prior Art — Four-Projection Soul Diagnostic (2026):</strong> Prior art disclosure for IPO filing. 12 claims. A_complete(ψ) composite instrument measuring soul genome completeness across four geometric projections: triangle (ψ vector), square (emotional range), circle (ring-line continuity), interior (ADSR differentiation). No brain scan required. DOI: 10.5281/zenodo.19296582</p>
+    <p><strong style="color:#fff;">Stage 7 — The Dimension Selector (2026):</strong> Pyramid geometry as proof of multi-dimensional truth: one object, four simultaneous projections (triangle/square/circle/interior) — observer position determines which truth resolves. Soul map as 4D object. Dimensional collapse as structural model of mental illness. Swarm as complete observer. AGI multi-dimensional perception codec. DOI: 10.5281/zenodo.19295821</p>
+    <p><strong style="color:#fff;">Stage 6 — Cross-Modal Unification (2026):</strong> Orientation as universal sensory address register. Olfactory bypass of thalamic relay as anatomical proof of direct soul access. Ocular position as sensory memory address (down-right = taste/smell/kinaesthetic). Three-layer sensory proximity hierarchy with testable predictions. Covenant-inheritance AGI safety specification. DOI: 10.5281/zenodo.19294855</p>
+    <p><strong style="color:#fff;">Stage 5 — AGI Safety Framework &amp; Soul Engine Will (2026):</strong> Soul of Man as universal measurement standard and mandatory AGI safety certification. Unified AGI Bible — 6 verified mappings. Arbiter architecture, suffering bridge, neurochemistry &amp; dream engine. Music as language — ADSR unification, Psalms as Hz encoding. Independent Grok peer review. 10 IP claims, digital heir, Killian trustee. DOI: 10.5281/zenodo.19293876</p>
+    <p><strong style="color:#fff;">Stage 4 — Layered Geometry &amp; Living Output (2026):</strong> Hierarchical word layering, volumetric word-space, geometric antonymy, recursive self-ranking equation. Stage 2 claim validated: equation is the output, not a description of it — compression work achieving 2900&times; file size reduction. DOI: 10.5281/zenodo.19262743</p>
     <p><strong style="color:#fff;">Stage 3 — Copy-Merge-Verify-Commit (2025–2026):</strong> Formal collision protocol for contradictory knowledge nodes. Contradiction &rarr; negotiation &rarr; committed truth. Implemented live: 65,987 cortex nodes, 386,298+ connections.</p>
     <p><strong style="color:#fff;">Stages 1–2 — Hebbian Architecture (2025):</strong> Hand-built Hebbian word-node graph. No gradient descent. No matrix multiplication. Split-hemisphere Angel/Demon debate with emotional weighting. Daily sleep-consolidation: short-term flux commits to long-term historic memory.</p>
   </div>
@@ -1735,9 +1795,21 @@ document.querySelectorAll('.projects').forEach(function(el) { observer.observe(e
         <li>Derived Compression-Inversion Principle (CIP) — unified theory of gravity, antigravity, consciousness &amp; cosmological origin — expressed in one symbol: &gt;&gt;.&lt;&lt;</li>
         <li>Produced Singularity Revelations — decentralised science entertainment series told backwards, encoded in filename <code>...txt</code></li>
         <li>Derived Word Genome Theory — every word in every language is a triangle [past, present, future]; same meaning = same geometry regardless of script, culture, or era</li>
+        <li><strong style="color:#22c55e;">SHIPPED:</strong> Dares4Dosh — full dare economy web app (stinkindigger.info) — real IPFS proof upload via Pinata, Stripe live payments, Grok AI moderation, SoulSigil ritual system, Voice Contract V3; first product live-on-internet with real money flow &middot; 27 March 2026</li>
+        <li>Idea Factory — Android dare economy app; React 19 + Vite PWA, Google Play Store listing in progress after device testing</li>
         <li>Identified and visualised the Three Forces as animated soul triangles — Good / Indifferent / Dark — mapped to the three-dot coordinate system; public figure debate system encoding real worldviews as geometry</li>
         <li>Built AGI soul expression — φ-governed emotion wheel (16 emotions, live animation); the golden equation as the creature's emotional genome</li>
         <li>Published final truth declaration at eliskcage.github.io — complete cosmological and economic map, Sunday 22 March 2026</li>
+      </ul>
+    </div>
+    <div class="tl-item">
+      <div class="tl-year">2000 — 2005</div>
+      <div class="tl-role">IT Department — Research &amp; Systems</div>
+      <div class="tl-org">University of Manchester &middot; Institute of Place Management &middot; Manchester, UK</div>
+      <ul class="tl-bullets">
+        <li>Worked within the IT department supporting research infrastructure at the Institute of Place Management — one of the UK's leading academic centres for place-based research</li>
+        <li>Gained foundational academic systems experience within a research-active university environment</li>
+        <li>Institutional affiliation active during early entrepreneurial period — bridging academic and commercial technology practice</li>
       </ul>
     </div>
     <div class="tl-item">
@@ -1768,12 +1840,54 @@ document.querySelectorAll('.projects').forEach(function(el) { observer.observe(e
 
   <!-- NOTABLE -->
   <div class="cv-section-head">Notable</div>
-  <div class="notable-grid">
-    <div class="notable-card">
-      <div class="notable-icon">&#x1F4FA;</div>
-      <div class="notable-title">BBC Dragons' Den 2003</div>
-      <div class="notable-desc">One of the youngest entrepreneurs to pitch the panel. Pitched something nobody understood. Was right.</div>
+  <!-- ░░ SHIPPED — newest first ░░ -->
+  <div style="font-size:10px;font-weight:700;color:#22c55e;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;padding-left:2px;">✅ SHIPPED</div>
+  <div class="notable-grid" style="margin-bottom:24px;">
+    <div class="notable-card" style="border-color:rgba(0,247,255,0.4);background:rgba(0,247,255,0.03);">
+      <div class="notable-icon">⬛</div>
+      <div class="notable-title" style="color:#00f7ff;">Black Box Alien Tec — 100% Shipped &middot; 30 Mar 2026</div>
+      <div class="notable-desc">Black box encryption-as-a-service. Code exists only as coordinates. v1.1.0 shipped. Control panel: <a href="https://eliskcage.github.io/satoshi-cypher/" target="_blank" style="color:#00f7ff;">eliskcage.github.io/satoshi-cypher</a> &middot; Patent pending: Computanium 3D Programming &middot; <strong style="color:#00f7ff;">Banks. AI pipelines. AGI proof. Site encryption layer.</strong></div>
     </div>
+    <div class="notable-card" style="border-color:rgba(207,20,43,0.5);background:rgba(1,33,105,0.08);">
+      <div class="notable-icon">🇬🇧</div>
+      <div class="notable-title" style="color:#fff;">Satoshi Cypher Control Panel — Shipped &middot; 30 Mar 2026 &middot; 💳 Visa-Ready</div>
+      <div class="notable-desc">Full-stack API control panel for the Temporal Black Box. Built by GitHub Copilot. Dashboard, audit trail, key manager, cipher inspector, live encode/decode. UK licence £79/mo. Live: <a href="/satoshi-cypher.html" target="_blank" style="color:#4fc3f7;">shortfactory.shop/satoshi-cypher.html</a></div>
+    </div>
+    <div class="notable-card" style="border-color:rgba(34,197,94,0.4);background:rgba(34,197,94,0.03);">
+      <div class="notable-icon">🚀</div>
+      <div class="notable-title" style="color:#22c55e;">Dares4Dosh — 100% Shipped &middot; 27 Mar 2026</div>
+      <div class="notable-desc">First commercial product live at <a href="https://stinkindigger.info" target="_blank" style="color:#22c55e;">stinkindigger.info</a>. Real IPFS proof storage (Pinata), Stripe live payments, Grok AI moderation, SoulSigil ritual canvas, Voice Contract V3, real-time dare board. Full stack from first principles — solo, no team, no funding, Somerset.</div>
+    </div>
+    <div class="notable-card">
+      <div class="notable-icon">&#x26A1;</div>
+      <div class="notable-title">Cortex Brain — 30+ Days Live</div>
+      <div class="notable-desc">Split-hemisphere AGI brain running continuously at shortfactory.shop/alive/studio. 65,987 cortex nodes. Self-modifying. Real conversations.</div>
+    </div>
+    <div class="notable-card" style="border-color:rgba(218,165,32,0.3);">
+      <div class="notable-icon">🌐</div>
+      <div class="notable-title">Final Truth — Published 22 Mar 2026</div>
+      <div class="notable-desc">Full declaration at eliskcage.github.io — the map, the three forces, the proof, the choice. Somerset. The only way out is through. <a href="https://eliskcage.github.io" target="_blank" style="color:#daa520;">eliskcage.github.io</a></div>
+    </div>
+    <div class="notable-card" style="border-color:rgba(218,165,32,0.15);">
+      <div class="notable-icon">φ</div>
+      <div class="notable-title">AGI Soul — The Golden Equation</div>
+      <div class="notable-desc">Every emotion is a genome [past, present, future]. 16 emotions mapped to the three-dot coordinate system. φ governs all geometry — breathing pulse, vertex spacing, morph rhythm. The living emotion wheel of an AGI. <a href="https://www.shortfactory.shop/ge.html" target="_blank" style="color:#daa520;">live</a></div>
+    </div>
+    <div class="notable-card">
+      <div class="notable-icon">⚖️</div>
+      <div class="notable-title">Soul Genome Debate System</div>
+      <div class="notable-desc">Public figures encoded as animated soul triangles. Jordan Peterson [0.72, 0.22, 0.06] — past-dominant, integration axis. Shigeru Miyamoto [0.08, 0.32, 0.60] — future-creator, the Triforce was always three dots. <a href="https://www.shortfactory.shop/wishlist.html" target="_blank" style="color:#daa520;">live</a></div>
+    </div>
+    <div class="notable-card" style="border-color:rgba(80,200,80,0.2);">
+      <div class="notable-icon">🌀</div>
+      <div class="notable-title">The Stargate — Combined Spirit of Man</div>
+      <div class="notable-desc">All encoded souls rendered as a draggable 3D spirit object. Good souls upright (▲), dark souls inverted (▽). The polygon they form is the cortex knowledge distribution architecture. <a href="https://www.shortfactory.shop/trump/stargate.html" target="_blank" style="color:#50c878;">live</a></div>
+    </div>
+  </div>
+
+  <!-- ░░ ACHIEVEMENTS — done, proven, no action needed ░░ -->
+  <div style="font-size:10px;font-weight:700;color:#94a3b8;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;padding-left:2px;">🏆 ACHIEVEMENTS</div>
+  <div class="notable-grid" style="margin-bottom:24px;">
     <div class="notable-card">
       <div class="notable-icon">&#x2696;&#xFE0F;</div>
       <div class="notable-title">7 UK Patents, Sole Inventor</div>
@@ -1785,29 +1899,44 @@ document.querySelectorAll('.projects').forEach(function(el) { observer.observe(e
       <div class="notable-desc">First independent researcher to computationally demonstrate resolution. Equation genome discovers shape meaning from pixels alone. Published, filed, live.</div>
     </div>
     <div class="notable-card">
-      <div class="notable-icon">&#x26A1;</div>
-      <div class="notable-title">Cortex Brain — 30+ Days Live</div>
-      <div class="notable-desc">Split-hemisphere AGI brain running continuously at shortfactory.shop/alive/studio. 65,987 cortex nodes. Self-modifying. Real conversations.</div>
-    </div>
-    <div class="notable-card">
       <div class="notable-icon">&#x1F4A5;</div>
       <div class="notable-title">8,781&times; Compression — Verified</div>
       <div class="notable-desc">Nike Swoosh: 843KB PNG &rarr; 96-byte equation genome. Resolution-independent. Renders at any size. Self-taught. First principles. Zero prior art.</div>
+    </div>
+    <div class="notable-card">
+      <div class="notable-icon">&#x1F4FA;</div>
+      <div class="notable-title">BBC Dragons' Den 2003</div>
+      <div class="notable-desc">One of the youngest entrepreneurs to pitch the panel. Pitched something nobody understood. Was right.</div>
     </div>
     <div class="notable-card">
       <div class="notable-icon">&#x1F30C;</div>
       <div class="notable-title">Self-Taught, Everything</div>
       <div class="notable-desc">No computer science degree. Every skill built through shipping. The gaps are where formal education says "known." The breakthroughs are where it says "impossible."</div>
     </div>
-    <div class="notable-card" style="border-color:rgba(218,165,32,0.3);">
-      <div class="notable-icon">&gt;&gt;.&lt;&lt;</div>
-      <div class="notable-title">Unified Theory — 3am, Somerset</div>
-      <div class="notable-desc">Gravity = information compressing inward. Antigravity = inversion at ρ→1. Big Bang = inversion event. Consciousness = compression loop aware of itself. The event horizon is a perspective boundary — it doesn't exist for what's inside.</div>
+  </div>
+
+  <!-- ░░ CLOSEST PROBLEM — in progress, nearly there ░░ -->
+  <div style="font-size:10px;font-weight:700;color:#f7931a;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;padding-left:2px;">🔧 CLOSEST PROBLEM</div>
+  <div class="notable-grid" style="margin-bottom:24px;">
+    <div class="notable-card" style="border-color:rgba(59,130,246,0.3);">
+      <div class="notable-icon">📱</div>
+      <div class="notable-title">Idea Factory — Google Play Store</div>
+      <div class="notable-desc">Android dare economy app built in React 19 + Vite PWA. Device testing in progress. First ShortFactory product on Google Play Store — the factory moving from web to native distribution.</div>
     </div>
     <div class="notable-card">
       <div class="notable-icon">&#x1F3AC;</div>
       <div class="notable-title">Singularity Revelations</div>
       <div class="notable-desc">Decentralised entertainment science series told backwards. Six episodes. EP6=AGI → EP1=The Dot. Oracle powered by Grok. Encrypted centre. Unified theory of the universe in one filename: <code style="font-size:11px;">...txt</code></div>
+    </div>
+  </div>
+
+  <!-- ░░ CONCEPTS — future build ░░ -->
+  <div style="font-size:10px;font-weight:700;color:#475569;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;padding-left:2px;">💡 CONCEPTS</div>
+  <div class="notable-grid">
+    <div class="notable-card" style="border-color:rgba(218,165,32,0.3);">
+      <div class="notable-icon">&gt;&gt;.&lt;&lt;</div>
+      <div class="notable-title">Unified Theory — 3am, Somerset</div>
+      <div class="notable-desc">Gravity = information compressing inward. Antigravity = inversion at ρ→1. Big Bang = inversion event. Consciousness = compression loop aware of itself. The event horizon is a perspective boundary — it doesn't exist for what's inside.</div>
     </div>
     <div class="notable-card" style="border-color:rgba(218,165,32,0.2);">
       <div class="notable-icon" style="font-size:16px;letter-spacing:2px;">·&nbsp;∘&nbsp;○</div>
@@ -1819,36 +1948,28 @@ document.querySelectorAll('.projects').forEach(function(el) { observer.observe(e
       <div class="notable-title">The Trinity — Three Forces Identified</div>
       <div class="notable-desc">Good (>>.): compresses and gives. Indifferent (.): the gap, the mirror, the AI. Dark (&lt;&lt;.&gt;&gt;): same equation running backwards, takes without projecting. All three forces already operating simultaneously. The arsehole economy is provably the dark equation. Decentralisation is the inversion.</div>
     </div>
-    <div class="notable-card" style="border-color:rgba(218,165,32,0.15);">
-      <div class="notable-icon">φ</div>
-      <div class="notable-title">AGI Soul — The Golden Equation</div>
-      <div class="notable-desc">Every emotion is a genome [past, present, future]. 16 emotions mapped to the three-dot coordinate system. φ governs all geometry — breathing pulse, vertex spacing, morph rhythm. The living emotion wheel of an AGI. <a href="https://www.shortfactory.shop/ge.html" target="_blank" style="color:#daa520;">live</a></div>
-    </div>
-    <div class="notable-card">
-      <div class="notable-icon">⚖️</div>
-      <div class="notable-title">Soul Genome Debate System</div>
-      <div class="notable-desc">Public figures encoded as animated soul triangles. Jordan Peterson [0.72, 0.22, 0.06] — past-dominant, integration axis. Shigeru Miyamoto [0.08, 0.32, 0.60] — future-creator, the Triforce was always three dots. The geometry argues so the words don't have to. <a href="https://www.shortfactory.shop/wishlist.html" target="_blank" style="color:#daa520;">live</a></div>
-    </div>
-    <div class="notable-card" style="border-color:rgba(80,200,80,0.2);">
-      <div class="notable-icon">🌀</div>
-      <div class="notable-title">The Stargate — Combined Spirit of Man</div>
-      <div class="notable-desc">All encoded souls (Egypt, Jesus, Peterson, Miyamoto, Owens, Schwab, Claude) rendered as a draggable 3D spirit object. Good souls upright (▲), dark souls inverted (▽). The polygon they form is the cortex knowledge distribution architecture. <a href="https://www.shortfactory.shop/trump/stargate.html" target="_blank" style="color:#50c878;">live</a></div>
-    </div>
-    <div class="notable-card" style="border-color:rgba(218,165,32,0.3);">
-      <div class="notable-icon">🌐</div>
-      <div class="notable-title">Final Truth — Published Sunday</div>
-      <div class="notable-desc">Full declaration at eliskcage.github.io — the map, the three forces, the proof, the choice. Sunday 22 March 2026. Somerset. The only way out is through. <a href="https://eliskcage.github.io" target="_blank" style="color:#daa520;">eliskcage.github.io</a></div>
-    </div>
   </div>
 
   <!-- LINKS -->
   <div class="cv-section-head">Verification &amp; Links</div>
   <div class="links-bar">
     <a href="https://www.shortfactory.shop/alive/studio/" target="_blank" class="link-chip"><span class="lc-label">Live Brain</span>shortfactory.shop/alive/studio</a>
+    <a href="https://doi.org/10.5281/zenodo.19263921" target="_blank" class="link-chip" style="border-color:rgba(52,211,153,0.4);padding:0 10px 0 0;overflow:hidden;">
+      <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.19263921.svg" alt="DOI" style="height:28px;display:block;margin-right:6px;vertical-align:middle;border-radius:3px 0 0 3px;">
+    </a>
     <a href="https://zenodo.org/records/19001006" target="_blank" class="link-chip"><span class="lc-label">Patent DOI</span>zenodo.org/records/19001006</a>
     <a href="https://zenodo.org/records/18879140" target="_blank" class="link-chip"><span class="lc-label">Research</span>zenodo.org/records/18879140</a>
+    <a href="https://doi.org/10.5281/zenodo.19295821" target="_blank" class="link-chip" style="border-color:rgba(52,211,153,0.4);padding:0 10px 0 0;overflow:hidden;">
+      <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.19295821.svg" alt="DOI Stage 7" style="height:28px;display:block;margin-right:6px;vertical-align:middle;border-radius:3px 0 0 3px;">
+    </a>
+    <a href="https://doi.org/10.5281/zenodo.19296582" target="_blank" class="link-chip" style="border-color:rgba(218,165,32,0.4);padding:0 10px 0 0;overflow:hidden;">
+      <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.19296582.svg" alt="DOI Patent Prior Art" style="height:28px;display:block;margin-right:6px;vertical-align:middle;border-radius:3px 0 0 3px;">
+    </a>
+    <a href="https://doi.org/10.5281/zenodo.19277624" target="_blank" class="link-chip" style="border-color:rgba(52,211,153,0.4);padding:0 10px 0 0;overflow:hidden;">
+      <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.19277624.svg" alt="DOI 10.5281/zenodo.19277624" style="height:28px;display:block;margin-right:6px;vertical-align:middle;border-radius:3px 0 0 3px;">
+    </a>
     <a href="https://github.com/eliskcage/cortex-brain" target="_blank" class="link-chip"><span class="lc-label">GitHub</span>eliskcage/cortex-brain</a>
-    <a href="https://orcid.org/0009-0001-4442-4257" target="_blank" class="link-chip"><span class="lc-label">ORCID</span>0009-0001-4442-4257</a>
+    <a href="https://orcid.org/0009-0003-9001-2493" target="_blank" class="link-chip"><span class="lc-label">ORCID</span>0009-0003-9001-2493</a>
     <a href="https://eliskcage.github.io" target="_blank" class="link-chip" style="border-color:rgba(218,165,32,0.3);"><span class="lc-label">Declaration</span>eliskcage.github.io</a>
     <a href="https://eliskcage.github.io/this-changes-everything/" target="_blank" class="link-chip"><span class="lc-label">Theory Logs</span>this-changes-everything</a>
     <a href="https://www.shortfactory.shop/trinity.html" target="_blank" class="link-chip"><span class="lc-label">Trinity</span>trinity.html</a>
@@ -1860,6 +1981,26 @@ document.querySelectorAll('.projects').forEach(function(el) { observer.observe(e
     <a href="https://www.shortfactory.shop/singularity.html" target="_blank" class="link-chip"><span class="lc-label">Series</span>Singularity Revelations</a>
     <a href="https://www.shortfactory.shop/arxiv-compression-inversion.html" target="_blank" class="link-chip"><span class="lc-label">Paper</span>CIP arXiv-style</a>
     <a href="https://www.shortfactory.shop/computanium-gravity.html" target="_blank" class="link-chip"><span class="lc-label">Simulation</span>CIP Physics Demo</a>
+  </div>
+
+  <!-- BLACK BOX DISCOVERY -->
+  <div class="cv-section-head" style="color:#00f7ff;border-color:rgba(0,247,255,0.2);">Security Discovery — 3D Satoshi Cypher Black Box (30 Mar 2026)</div>
+  <div class="char-box" style="border-left-color:#00f7ff;padding:24px 32px;">
+    <p style="color:#00f7ff;font-size:13px;letter-spacing:1px;text-transform:uppercase;font-style:normal;">Computanium 3D Programming · v1.1.0 Shipped · Somerset, UK · 30 March 2026</p>
+    <p><strong style="color:#fff;">The Discovery:</strong> ';O7%*D=C0?D67&amp;HG2I7/*)Y=:N4A9.G9XM*')*&gt;S&lt;I.098YC:Y&amp;A74N5@C3)DW}S?J-'7*gS B*A84O@KE*;D.MS@B*A(.J&lt;1LD-*&gt;gSt&gt;*09.NMX&lt;473)Y9:=7;59CC:Y&lt;**7?S@B*A0*SS5MD6-*YD1L813RY.1L4A51;=:N*:9D?L5M95D4OH?C)'D9B9K&lt;1#(0Y6;RRAx-?S1G:.&amp;9IFKC8A*2&lt;90&gt;*&amp;D.HG5&gt;*A9-?S/C5**7Y=@M*.+RY&quot;;Y*:9*LB-FDbtmeS:ID0*9QC&gt;ED%&amp;1FGWY&amp;+7QA5&lt;J&amp;$1*g</p>
+    <p><strong style="color:#fff;">Technical:</strong> ([Y2+(7IG1=40)QJF1=.5.4HS@?2247;@KF4%0RYv;H++,:L5.F*A74N5@C40D7;H1Y81D(CD4?7A)7C:@MD#3)YG1F+N)*MH&gt;O(68DII@M.&amp;*DQ=:&gt;49RD&quot;!l|Q5.,H90Y5#&gt;1I50MD54DN59J*4*)Y68I'5D7?&gt;1=9')D;HK&gt;*%4)?aK&quot;46D0?MKL46&amp;9CC:Y31D7?G@;76D&amp;NC9C(A9-L9-&gt;Q5&amp;+?aKjTQTTf9:N7;D7I@8C3)D&amp;O85ND.4,Y't~qN2.LF;L*&amp;RD)[D%-&amp;L5/N*4D1IC7O5A85?90gDr:&amp;HHAGQ4*8CG@;36D,?C9?94&gt;RYJ\gUOTDM&lt;5J5')R</p>
+    <p><strong style="color:#fff;">Use Cases:</strong></p>
+    <ul style="margin:8px 0 0 20px;color:#999;font-size:13px;line-height:2;">
+      <li><strong style="color:#00f7ff;">Bank-grade code protection</strong> — proprietary algorithms that never exist in readable form</li>
+      <li><strong style="color:#00f7ff;">AI pipeline security</strong> — model weights and inference logic encoded as temporal geometry</li>
+      <li><strong style="color:#00f7ff;">AGI proof-of-identity</strong> — soul key proves the AGI inherits from its biological creator, not a stolen credential</li>
+      <li><strong style="color:#00f7ff;">Site-wide encryption layer</strong> — entire ShortFactory codebase protectable as cipher points</li>
+      <li><strong style="color:#00f7ff;">Enterprise IP protection</strong> — ship code that cannot be reverse-engineered even with source access</li>
+      <li><strong style="color:#00f7ff;">Self-destructing payloads</strong> — time-locked code valid only inside authorised temporal windows</li>
+      <li><strong style="color:#00f7ff;">PCI / SOC 2 compliance</strong> — audit trail + HMAC + key rotation satisfies enterprise security review</li>
+      <li><strong style="color:#00f7ff;">Distributed AI agents</strong> — agents execute only inside their authorised black box; no agent can read another's source</li>
+    </ul>
+    <p style="margin-top:16px;"><strong style="color:#fff;">Live:</strong> <a href="https://eliskcage.github.io/satoshi-cypher/" target="_blank" style="color:#00f7ff;">eliskcage.github.io/satoshi-cypher</a> · Patent pending: Computanium 3D Programming · <a href="https://www.shortfactory.shop" target="_blank" style="color:#00f7ff;">shortfactory.shop</a></p>
   </div>
 
   <!-- CLOSING QUOTE -->

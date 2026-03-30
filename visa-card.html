@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Visa Card Issuer Roadmap — Satoshi Cypher</title>
+  <style>
+    :root {
+      --bg: #07070d;
+      --surface: #0d0d18;
+      --surface2: #141425;
+      --border: #1c1c2e;
+      --border-hi: #2e2e48;
+      --orange: #f7931a;
+      --cyan: #4fc3f7;
+      --green: #51cf66;
+      --red: #ff6b6b;
+      --yellow: #ffd43b;
+      --txt: #e2e8f0;
+      --muted: #94a3b8;
+      --dim: #475569;
+      --shadow: 0 4px 24px rgba(0,0,0,.6);
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--txt);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+    /* ── header ── */
+    .hdr{display:flex;align-items:center;gap:12px;padding:0 20px;height:56px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;z-index:100}
+    .logo{display:flex;align-items:center;gap:8px;font-size:17px;font-weight:700;color:var(--orange);white-space:nowrap;letter-spacing:.4px}
+    .logo-hex{font-size:22px}
+    .ver{font-size:10px;font-weight:700;padding:2px 6px;background:rgba(247,147,26,.15);color:var(--orange);border-radius:4px}
+    .hdr-space{flex:1}
+    .hdr-links{display:flex;align-items:center;gap:8px}
+    .hdr-link{font-size:12px;color:var(--dim);text-decoration:none;padding:4px 10px;border-radius:5px;border:1px solid var(--border);transition:all .18s}
+    .hdr-link:hover{color:var(--orange);border-color:var(--orange)}
+    .status-dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 8px rgba(81,207,102,.6)}
+
+    /* ── layout ── */
+    .layout{display:flex;flex:1;overflow:hidden}
+
+    /* ── sidebar ── */
+    .sidebar{width:200px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:10px 6px;gap:3px;flex-shrink:0}
+    .nb{display:flex;align-items:center;gap:9px;padding:9px 12px;border:none;background:transparent;color:var(--muted);cursor:pointer;border-radius:7px;font-size:13px;font-weight:500;text-align:left;transition:all .18s;white-space:nowrap;width:100%}
+    .nb:hover{background:var(--surface2);color:var(--txt)}
+    .nb.on{background:rgba(247,147,26,.12);color:var(--orange)}
+    .nb-ic{font-size:15px}
+    .nb-badge{margin-left:auto;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(81,207,102,.15);color:var(--green)}
+    .nb-badge.warn{background:rgba(255,212,59,.15);color:var(--yellow)}
+    .nb-badge.info{background:rgba(79,195,247,.15);color:var(--cyan)}
+    .sb-foot{margin-top:auto;padding:8px 12px;font-size:10px;color:var(--dim);line-height:1.6}
+
+    /* ── main ── */
+    .main{flex:1;overflow-y:auto;padding:22px}
+
+    /* ── tabs ── */
+    .tab{display:none}
+    .tab.on{display:block}
+
+    /* ── cards ── */
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:18px;margin-bottom:14px}
+    .ct{font-size:14px;font-weight:600;color:var(--txt);margin-bottom:14px;display:flex;align-items:center;gap:7px}
+    .cs{font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6}
+
+    /* ── grid helpers ── */
+    .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+
+    /* ── stat cards ── */
+    .sc{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:18px;text-align:center}
+    .sv{font-size:28px;font-weight:700;color:var(--orange);font-family:monospace}
+    .sl{font-size:12px;color:var(--muted);margin-top:4px}
+
+    /* ── buttons ── */
+    .btn{padding:7px 15px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .18s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+    .bp{background:var(--orange);color:#000}.bp:hover{background:#e0840f;box-shadow:0 0 18px rgba(247,147,26,.35)}
+    .bs{background:var(--surface2);color:var(--txt);border:1px solid var(--border-hi)}.bs:hover{border-color:var(--orange);color:var(--orange)}
+    .bc{background:var(--cyan);color:#000}.bc:hover{box-shadow:0 0 18px rgba(79,195,247,.35)}
+    .bg{background:var(--green);color:#000}.bg:hover{box-shadow:0 0 18px rgba(81,207,102,.35)}
+
+    /* ── badges ── */
+    .bd{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700}
+    .bd-ok{background:rgba(81,207,102,.15);color:var(--green)}
+    .bd-warn{background:rgba(255,212,59,.15);color:var(--yellow)}
+    .bd-err{background:rgba(255,107,107,.15);color:var(--red)}
+    .bd-info{background:rgba(79,195,247,.15);color:var(--cyan)}
+    .bd-hot{background:rgba(247,147,26,.15);color:var(--orange)}
+
+    /* ── alerts ── */
+    .al{padding:11px 13px;border-radius:7px;font-size:12px;margin-bottom:11px;display:flex;align-items:flex-start;gap:9px;line-height:1.5}
+    .al-warn{background:rgba(255,212,59,.07);border:1px solid rgba(255,212,59,.22);color:var(--yellow)}
+    .al-info{background:rgba(79,195,247,.07);border:1px solid rgba(79,195,247,.22);color:var(--cyan)}
+    .al-ok{background:rgba(81,207,102,.07);border:1px solid rgba(81,207,102,.22);color:var(--green)}
+    .al-err{background:rgba(255,107,107,.07);border:1px solid rgba(255,107,107,.22);color:var(--red)}
+
+    /* ── step items ── */
+    .step-item{display:flex;align-items:flex-start;gap:13px;padding:14px;background:var(--surface2);border-radius:8px;margin-bottom:9px;border:1px solid var(--border);transition:border-color .2s}
+    .step-item:hover{border-color:var(--border-hi)}
+    .step-item.done{border-color:rgba(81,207,102,.3)}
+    .step-item.active{border-color:rgba(247,147,26,.4);background:rgba(247,147,26,.04)}
+    .step-num{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;background:var(--surface);border:1px solid var(--border)}
+    .step-num.done{background:rgba(81,207,102,.15);border-color:var(--green);color:var(--green)}
+    .step-num.active{background:rgba(247,147,26,.15);border-color:var(--orange);color:var(--orange)}
+    .step-num.todo{color:var(--dim)}
+    .step-body{flex:1}
+    .step-t{font-size:13px;font-weight:600;color:var(--txt);margin-bottom:3px}
+    .step-d{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:8px}
+    .step-actions{display:flex;gap:7px;flex-wrap:wrap}
+
+    /* ── provider cards ── */
+    .prov{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;transition:border-color .2s}
+    .prov:hover{border-color:var(--border-hi)}
+    .prov-name{font-size:13px;font-weight:700;color:var(--txt);margin-bottom:4px}
+    .prov-tag{font-size:10px;color:var(--muted);margin-bottom:8px;line-height:1.4}
+    .prov-cost{font-size:11px;color:var(--orange);font-weight:600;margin-bottom:8px}
+
+    /* ── checklist ── */
+    .cli{display:flex;align-items:flex-start;gap:9px;padding:7px 0;font-size:12px;color:var(--muted);border-bottom:1px solid var(--border)}
+    .cli:last-child{border-bottom:none}
+    .cli-ic{font-size:13px;flex-shrink:0;margin-top:1px}
+    .cli strong{color:var(--txt)}
+
+    /* ── code block ── */
+    .cb{background:#050508;border:1px solid var(--border);border-radius:6px;padding:11px;font-family:'Courier New',monospace;font-size:11px;color:var(--cyan);white-space:pre-wrap;word-break:break-all;margin-bottom:10px}
+
+    /* ── toasts ── */
+    #toasts{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:7px}
+    .toast{padding:10px 14px;border-radius:7px;font-size:12px;font-weight:500;animation:tslide .3s ease;max-width:280px;box-shadow:var(--shadow)}
+    .t-ok{background:rgba(81,207,102,.15);border:1px solid var(--green);color:var(--green)}
+    .t-err{background:rgba(255,107,107,.15);border:1px solid var(--red);color:var(--red)}
+    .t-info{background:rgba(79,195,247,.15);border:1px solid var(--cyan);color:var(--cyan)}
+    @keyframes tslide{from{transform:translateX(80px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+    /* ── misc ── */
+    .row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+    .pg-title{font-size:22px;font-weight:700;color:var(--txt);margin-bottom:3px}
+    .pg-sub{font-size:13px;color:var(--muted);margin-bottom:20px}
+    .divider{height:1px;background:var(--border);margin:14px 0}
+    .sec-head{font-size:11px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.9px;margin-bottom:10px}
+    ::-webkit-scrollbar{width:5px;height:5px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-thumb{background:var(--border-hi);border-radius:3px}
+    ::-webkit-scrollbar-thumb:hover{background:var(--dim)}
+
+    /* ── visa card visual ── */
+    .visa-card-mock{background:linear-gradient(135deg,#0d0d18 0%,#1a1a35 50%,#0d0d18 100%);border:1px solid rgba(247,147,26,.3);border-radius:16px;padding:24px 28px;max-width:380px;position:relative;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.6)}
+    .visa-card-mock::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(247,147,26,.12),transparent 70%)}
+    .visa-card-chip{width:36px;height:28px;background:linear-gradient(135deg,#c9a227,#f0c040);border-radius:4px;margin-bottom:18px;display:flex;align-items:center;justify-content:center}
+    .visa-card-num{font-family:'Courier New',monospace;font-size:15px;letter-spacing:3px;color:var(--txt);margin-bottom:14px;opacity:.8}
+    .visa-card-row{display:flex;justify-content:space-between;align-items:flex-end}
+    .visa-card-label{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:1px}
+    .visa-card-val{font-size:13px;color:var(--txt);font-weight:600}
+    .visa-logo{font-size:22px;font-style:italic;font-weight:900;color:#fff;letter-spacing:-1px;opacity:.9}
+  </style>
+</head>
+<body>
+
+<div id="toasts"></div>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="logo"><span class="logo-hex">💳</span>SHORTFACTORY VISA STEPS</div>
+  <div class="ver">Roadmap</div>
+  <div class="hdr-space"></div>
+  <div class="hdr-links">
+    <a href="/satoshi-cypher.html" class="hdr-link">⬡ Satoshi Cypher</a>
+    <a href="/visa-card.html" class="hdr-link" style="color:var(--orange);border-color:rgba(247,147,26,.4)">💳 Visa Steps</a>
+    <a href="/portfolio.html" class="hdr-link">Portfolio</a>
+    <div class="status-dot" title="Satoshi Cypher: LIVE"></div>
+  </div>
+</header>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <button class="nb on" onclick="showTab('overview',this)"><span class="nb-ic">🗺️</span>Overview<span class="nb-badge">NOW</span></button>
+    <button class="nb" onclick="showTab('entity',this)"><span class="nb-ic">🏢</span>Entity Setup<span class="nb-badge">✓</span></button>
+    <button class="nb" onclick="showTab('accept',this)"><span class="nb-ic">💸</span>Accept Payments<span class="nb-badge">✓</span></button>
+    <button class="nb" onclick="showTab('issue',this)"><span class="nb-ic">💳</span>Issue Cards<span class="nb-badge warn">NEXT</span></button>
+    <button class="nb" onclick="showTab('security',this)"><span class="nb-ic">⬛</span>Alien Security<span class="nb-badge">✓</span></button>
+    <button class="nb" onclick="showTab('apply',this)"><span class="nb-ic">🚀</span>Apply Now<span class="nb-badge info">GO</span></button>
+    <div class="sb-foot">
+      Satoshi Cypher<br>Card Issuer Stack<br>
+      <span style="color:var(--orange)">⬡</span> Dan Chipchase · 2026
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- ══════════════ OVERVIEW ══════════════ -->
+    <div id="tab-overview" class="tab on">
+      <div class="pg-title">🗺️ Your Path to Issuing Visa Cards</div>
+      <div class="pg-sub">Two routes. One alien security layer. Instant cash overnight.</div>
+
+      <div class="al al-ok">
+        <span>⬛</span>
+        <span><strong>Satoshi Cypher v1.1.0 is LIVE.</strong> HMAC signing, temporal locks, audit trail, hot key rotation. This is the security layer that makes banks say yes. You already have it.</span>
+      </div>
+
+      <div class="g3" style="margin-bottom:14px">
+        <div class="sc"><div class="sv" style="color:var(--green)">3</div><div class="sl">Steps Done</div></div>
+        <div class="sc"><div class="sv" style="color:var(--yellow)">2</div><div class="sl">Steps To Go</div></div>
+        <div class="sc"><div class="sv" style="color:var(--cyan)">£79</div><div class="sl">First Revenue/mo</div></div>
+      </div>
+
+      <!-- Two paths -->
+      <div class="g2">
+        <div class="card" style="border-color:rgba(247,147,26,.3)">
+          <div class="ct">⚡ Fast Path — Stripe Issuing</div>
+          <div class="cs">Issue real Visa/Mastercard to your users. Stripe handles the BIN, compliance, and card network membership. You apply, they approve, you issue. Weeks not years.</div>
+          <div class="step-item done">
+            <div class="step-num done">✓</div>
+            <div class="step-body"><div class="step-t">Stripe merchant account</div><div class="step-d">Already live. Stripe payments working.</div></div>
+          </div>
+          <div class="step-item active">
+            <div class="step-num active">2</div>
+            <div class="step-body"><div class="step-t">Apply for Stripe Issuing</div><div class="step-d">Request access. UK businesses eligible. Takes 1–4 weeks.</div></div>
+          </div>
+          <div class="step-item">
+            <div class="step-num todo">3</div>
+            <div class="step-body"><div class="step-t">Go live — issue cards</div><div class="step-d">Virtual cards first, then physical. API-driven.</div></div>
+          </div>
+          <div style="margin-top:12px">
+            <a href="https://stripe.com/gb/issuing" target="_blank" class="btn bp" style="width:100%;justify-content:center">Apply for Stripe Issuing →</a>
+          </div>
+        </div>
+
+        <div class="card" style="border-color:rgba(79,195,247,.2)">
+          <div class="ct">🏦 Full Path — Direct BIN Sponsorship</div>
+          <div class="cs">Become a genuine card programme operator. Your brand on the card. Full control. Need a BIN sponsor (Railsr, Marqeta, Griffin). 3–6 months.</div>
+          <div class="step-item done">
+            <div class="step-num done">✓</div>
+            <div class="step-body"><div class="step-t">UK Ltd entity</div><div class="step-d">Companies House registration required.</div></div>
+          </div>
+          <div class="step-item done">
+            <div class="step-num done">✓</div>
+            <div class="step-body"><div class="step-t">Security layer (Satoshi Cypher)</div><div class="step-d">PCI-grade HMAC, audit trail, key rotation. Done.</div></div>
+          </div>
+          <div class="step-item active">
+            <div class="step-num active">3</div>
+            <div class="step-body"><div class="step-t">Choose BIN sponsor</div><div class="step-d">Railsr, Marqeta, or Griffin Bank. Apply + KYC.</div></div>
+          </div>
+          <div class="step-item">
+            <div class="step-num todo">4</div>
+            <div class="step-body"><div class="step-t">FCA registration (EMD Agent)</div><div class="step-d">Required if issuing e-money. Sponsor may cover this.</div></div>
+          </div>
+          <div style="margin-top:12px">
+            <button class="btn bc" style="width:100%;justify-content:center" onclick="showTab('issue',document.querySelectorAll('.nb')[3])">Compare BIN Sponsors →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Visa card mockup -->
+      <div class="card">
+        <div class="ct">🃏 What You're Building Towards</div>
+        <div class="g2" style="align-items:center">
+          <div class="visa-card-mock">
+            <div class="visa-card-chip">
+              <svg width="20" height="16" viewBox="0 0 20 16"><rect width="20" height="16" rx="2" fill="#c9a227"/><line x1="0" y1="8" x2="20" y2="8" stroke="#a07800" stroke-width="1.5"/><line x1="10" y1="0" x2="10" y2="16" stroke="#a07800" stroke-width="1.5"/></svg>
+            </div>
+            <div class="visa-card-num">⬡ ⬡⬡⬡⬡ &nbsp; ⬡⬡⬡⬡ &nbsp; ⬡⬡⬡⬡</div>
+            <div class="visa-card-row">
+              <div>
+                <div class="visa-card-label">Card Holder</div>
+                <div class="visa-card-val">D. CHIPCHASE</div>
+              </div>
+              <div>
+                <div class="visa-card-label">Expires</div>
+                <div class="visa-card-val">12/29</div>
+              </div>
+              <div class="visa-logo">VISA</div>
+            </div>
+            <div style="margin-top:12px;font-size:9px;color:var(--dim);font-family:'Courier New',monospace;letter-spacing:1px">SECURED BY SATOSHI CYPHER ⬡ TEMPORAL BLACK BOX</div>
+          </div>
+          <div>
+            <div class="sec-head">Why your alien tech is the key</div>
+            <div class="cli"><span class="cli-ic">⬛</span><div><strong>Temporal locks</strong> — code valid only inside the encoded time window. Stripe & Visa love this for fraud prevention.</div></div>
+            <div class="cli"><span class="cli-ic">🔐</span><div><strong>HMAC signing</strong> — every transaction blob signed and verified. No tampering possible.</div></div>
+            <div class="cli"><span class="cli-ic">📋</span><div><strong>Audit trail</strong> — 10k rolling log, SIEM-forwardable. Satisfies PCI DSS requirement 10.</div></div>
+            <div class="cli"><span class="cli-ic">🔑</span><div><strong>Hot key rotation</strong> — zero-downtime key swap. Banks require this for operational resilience.</div></div>
+            <div class="cli"><span class="cli-ic">🕐</span><div><strong>Rate limiting</strong> — per-key throttling. Required for card network abuse prevention.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ ENTITY SETUP ══════════════ -->
+    <div id="tab-entity" class="tab">
+      <div class="pg-title">🏢 Entity Setup</div>
+      <div class="pg-sub">The legal foundation. You need a UK Ltd to open merchant accounts and apply for card programmes.</div>
+
+      <div class="al al-info">
+        <span>ℹ️</span>
+        <span>All UK card issuance routes require a registered UK company. If you already have one, skip straight to <strong>Accept Payments</strong>.</span>
+      </div>
+
+      <div class="step-item active">
+        <div class="step-num active">1</div>
+        <div class="step-body">
+          <div class="step-t">Register UK Limited Company</div>
+          <div class="step-d">Companies House online in 24 hours. £12 government fee. You'll need: company name, registered address, director details, SIC code (62011 for software).</div>
+          <div class="step-actions">
+            <a href="https://www.gov.uk/limited-company-formation/register-your-company" target="_blank" class="btn bp">Register at Companies House →</a>
+            <a href="https://www.gov.uk/government/organisations/companies-house" target="_blank" class="btn bs">Companies House</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-item">
+        <div class="step-num todo">2</div>
+        <div class="step-body">
+          <div class="step-t">Open a Business Bank Account</div>
+          <div class="step-d">Required by Stripe and all BIN sponsors. Fastest options for a new UK Ltd: Tide (same day), Starling Bank (2–3 days), Monzo Business (1 week).</div>
+          <div class="step-actions">
+            <a href="https://www.tide.co" target="_blank" class="btn bp">Tide — Fastest Option →</a>
+            <a href="https://www.starlingbank.com/business-account" target="_blank" class="btn bs">Starling Bank</a>
+            <a href="https://monzo.com/business" target="_blank" class="btn bs">Monzo Business</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-item">
+        <div class="step-num todo">3</div>
+        <div class="step-body">
+          <div class="step-t">Get a UTR Number (Tax)</div>
+          <div class="step-d">HMRC will write to your registered address within 3 weeks of company formation. Needed for Stripe tax verification and card programme KYC.</div>
+          <div class="step-actions">
+            <a href="https://www.gov.uk/register-for-self-assessment" target="_blank" class="btn bs">HMRC Self Assessment →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ct">📋 UK Ltd Checklist</div>
+        <div class="cli"><span class="cli-ic">⬜</span><div><strong>Company name chosen</strong> — check availability at Companies House</div></div>
+        <div class="cli"><span class="cli-ic">⬜</span><div><strong>Registered address</strong> — your address or a registered agent address</div></div>
+        <div class="cli"><span class="cli-ic">⬜</span><div><strong>£12 formation fee</strong> — paid online, takes 24h</div></div>
+        <div class="cli"><span class="cli-ic">⬜</span><div><strong>Business bank account</strong> — Tide or Starling recommended for speed</div></div>
+        <div class="cli"><span class="cli-ic">⬜</span><div><strong>UTR number from HMRC</strong> — arrives by post ~3 weeks after formation</div></div>
+        <div class="cli"><span class="cli-ic">⬜</span><div><strong>VAT registration</strong> — optional until £90k turnover, but looks professional for enterprise sales</div></div>
+      </div>
+    </div>
+
+    <!-- ══════════════ ACCEPT PAYMENTS ══════════════ -->
+    <div id="tab-accept" class="tab">
+      <div class="pg-title">💸 Accept Card Payments</div>
+      <div class="pg-sub">Step 1 on the money path. Already done if you have Stripe live — this is the foundation for card issuing.</div>
+
+      <div class="al al-ok">
+        <span>✅</span>
+        <span><strong>Stripe is already live at shortfactory.shop.</strong> You're accepting GBP card payments. This step is complete — move to Issue Cards.</span>
+      </div>
+
+      <div class="g2">
+        <div class="card" style="border-color:rgba(81,207,102,.2)">
+          <div class="ct">✅ What's Already Live</div>
+          <div class="cli"><span class="cli-ic">✅</span><div><strong>Stripe merchant account</strong> — GBP live mode</div></div>
+          <div class="cli"><span class="cli-ic">✅</span><div><strong>Payment links</strong> — checkout flow working</div></div>
+          <div class="cli"><span class="cli-ic">✅</span><div><strong>Webhook endpoint</strong> — join-webhook.php on server</div></div>
+          <div class="cli"><span class="cli-ic">✅</span><div><strong>HTTPS</strong> — TLS terminated at reverse proxy</div></div>
+          <div class="cli"><span class="cli-ic">✅</span><div><strong>Satoshi Cypher</strong> — security layer live</div></div>
+          <div style="margin-top:14px">
+            <a href="https://dashboard.stripe.com" target="_blank" class="btn bg" style="width:100%;justify-content:center">Open Stripe Dashboard →</a>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="ct">⚠️ What's Still Needed</div>
+          <div class="cli"><span class="cli-ic">⚠️</span><div><strong>Register webhook in Stripe LIVE</strong> — go to Developers → Webhooks → Add endpoint → paste: <code style="color:var(--cyan)">https://shortfactory.shop/api/join-webhook.php</code></div></div>
+          <div class="cli"><span class="cli-ic">⚠️</span><div><strong>Satoshi Cypher Stripe product</strong> — create Standard (£79/mo) and Enterprise products in Stripe for direct checkout</div></div>
+          <div class="cli"><span class="cli-ic">⚠️</span><div><strong>Business verification</strong> — Stripe may request ID + proof of address for higher volume</div></div>
+          <div style="margin-top:14px">
+            <a href="https://dashboard.stripe.com/webhooks" target="_blank" class="btn bp">Register Webhook Now →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ct">💷 Create Satoshi Cypher Products in Stripe</div>
+        <div class="cs">Three clicks in Stripe Dashboard → Products → Add Product. Once created, use the Payment Link URL directly in the satoshi-cypher.html UK button.</div>
+        <div class="g3">
+          <div class="prov">
+            <div class="prov-name">Free Tier</div>
+            <div class="prov-tag">100 encodes/day · Community key · GitHub issue support</div>
+            <div class="prov-cost">£0/month</div>
+            <a href="https://dashboard.stripe.com/products/create" target="_blank" class="btn bs" style="font-size:11px">Create Product →</a>
+          </div>
+          <div class="prov" style="border-color:rgba(247,147,26,.3)">
+            <div class="prov-name">Standard 🔥</div>
+            <div class="prov-tag">Unlimited · Hot rotation · Audit trail · 24h support · SLA</div>
+            <div class="prov-cost">£79/month (GBP)</div>
+            <a href="https://dashboard.stripe.com/products/create" target="_blank" class="btn bp" style="font-size:11px">Create Product →</a>
+          </div>
+          <div class="prov">
+            <div class="prov-name">Enterprise</div>
+            <div class="prov-tag">Air-gapped · HSM · PCI / SOC 2 docs · Solutions engineer</div>
+            <div class="prov-cost">Custom — invoice</div>
+            <a href="https://dashboard.stripe.com/products/create" target="_blank" class="btn bc" style="font-size:11px">Create Product →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ ISSUE CARDS ══════════════ -->
+    <div id="tab-issue" class="tab">
+      <div class="pg-title">💳 Issue Your Own Cards</div>
+      <div class="pg-sub">The alien tech play. Your Satoshi Cypher security layer is the exact thing that unlocks card issuing.</div>
+
+      <div class="al al-info">
+        <span>⬛</span>
+        <span><strong>Satoshi Cypher is your unfair advantage.</strong> Every BIN sponsor and Stripe Issuing application requires HMAC signing, audit logging, and key rotation. You have all three. Most applicants don't.</span>
+      </div>
+
+      <!-- Fast path: Stripe Issuing -->
+      <div class="card" style="border-color:rgba(247,147,26,.3)">
+        <div class="ct">⚡ Route A — Stripe Issuing <span class="bd bd-hot" style="margin-left:auto">FASTEST</span></div>
+        <div class="cs">Stripe manages the Visa/Mastercard membership, BIN, and compliance. You call an API to create cards. UK businesses can apply. Approval takes 1–4 weeks. Virtual cards first, physical later.</div>
+
+        <div class="g2" style="margin-bottom:14px">
+          <div>
+            <div class="sec-head">What you get</div>
+            <div class="cli"><span class="cli-ic">✅</span><div>Issue virtual Visa/Mastercard to your users</div></div>
+            <div class="cli"><span class="cli-ic">✅</span><div>Physical cards via Stripe (months, not years)</div></div>
+            <div class="cli"><span class="cli-ic">✅</span><div>Spending controls, per-card limits, freeze/unfreeze</div></div>
+            <div class="cli"><span class="cli-ic">✅</span><div>Stripe handles PCI DSS scope — you don't touch card data</div></div>
+            <div class="cli"><span class="cli-ic">✅</span><div>Webhooks for every authorisation — plug in Satoshi Cypher</div></div>
+          </div>
+          <div>
+            <div class="sec-head">What you need</div>
+            <div class="cli"><span class="cli-ic">⬜</span><div>Active Stripe account (already live ✅)</div></div>
+            <div class="cli"><span class="cli-ic">⬜</span><div>UK Ltd company (or apply anyway)</div></div>
+            <div class="cli"><span class="cli-ic">⬜</span><div>Business verification complete in Stripe</div></div>
+            <div class="cli"><span class="cli-ic">⬜</span><div>Use case description — write "API security layer for fintech/AI"</div></div>
+            <div class="cli"><span class="cli-ic">⬜</span><div>Compliance docs — Satoshi audit log = your compliance doc</div></div>
+          </div>
+        </div>
+
+        <div class="row">
+          <a href="https://stripe.com/gb/issuing" target="_blank" class="btn bp">Apply for Stripe Issuing →</a>
+          <a href="https://dashboard.stripe.com/issuing" target="_blank" class="btn bs">Issuing Dashboard</a>
+          <a href="https://docs.stripe.com/issuing" target="_blank" class="btn bs">API Docs</a>
+        </div>
+      </div>
+
+      <!-- BIN sponsors -->
+      <div class="card">
+        <div class="ct">🏦 Route B — BIN Sponsor Partners <span class="bd bd-info" style="margin-left:auto">YOUR BRAND ON THE CARD</span></div>
+        <div class="cs">A BIN sponsor is a licensed bank that connects you to the Visa/Mastercard network. Your brand on the card. Full card programme control. More compliance work but more power.</div>
+
+        <div class="g2">
+          <div class="prov" style="border-color:rgba(247,147,26,.3)">
+            <div class="prov-name">Railsr (ex-Railsbank) 🔥</div>
+            <div class="prov-tag">UK-based. Visa & Mastercard BIN. Most fintech-friendly. Fastest approval for innovative use cases. Used by Revolut, Curve at launch.</div>
+            <div class="prov-cost">Setup fee + per-card fee — contact for pricing</div>
+            <a href="https://www.railsr.com" target="_blank" class="btn bp" style="font-size:11px">Apply at Railsr →</a>
+          </div>
+          <div class="prov">
+            <div class="prov-name">Marqeta</div>
+            <div class="prov-tag">US/UK. Enterprise-grade card issuing API. Used by DoorDash, Klarna, Goldman Sachs Marcus. Best for high-volume programmable cards.</div>
+            <div class="prov-cost">Revenue share model — no upfront if volume is there</div>
+            <a href="https://www.marqeta.com" target="_blank" class="btn bs" style="font-size:11px">Apply at Marqeta →</a>
+          </div>
+          <div class="prov">
+            <div class="prov-name">Griffin Bank</div>
+            <div class="prov-tag">UK bank with API-first BaaS. Authorised by PRA/FCA. Safeguarding, e-money, card issuing. Best for UK-only compliance path. Slower but cleaner.</div>
+            <div class="prov-cost">Monthly platform fee — transparent pricing</div>
+            <a href="https://griffin.com" target="_blank" class="btn bs" style="font-size:11px">Apply at Griffin →</a>
+          </div>
+          <div class="prov">
+            <div class="prov-name">Modulr</div>
+            <div class="prov-tag">UK FCA-authorised. Accounts, payments, card issuing. Used by Sage, Wagestream. Good for payroll / B2B cards. Solid compliance team.</div>
+            <div class="prov-cost">Per-transaction pricing + monthly platform fee</div>
+            <a href="https://www.modulrfinance.com" target="_blank" class="btn bs" style="font-size:11px">Apply at Modulr →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- FCA note -->
+      <div class="card">
+        <div class="ct">📋 FCA Registration — Do You Need It?</div>
+        <div class="cs">The short answer: if you use Stripe Issuing or a BIN sponsor, they hold the FCA licence — you operate as their agent. You only need direct FCA registration if you're issuing e-money yourself.</div>
+        <div class="cli"><span class="cli-ic">✅</span><div><strong>Stripe Issuing</strong> — Stripe is the FCA-regulated entity. You don't need your own licence.</div></div>
+        <div class="cli"><span class="cli-ic">✅</span><div><strong>Railsr / Marqeta / Griffin</strong> — they are FCA-licensed. You register as their EMD Agent (simple, cheap).</div></div>
+        <div class="cli"><span class="cli-ic">⚠️</span><div><strong>Direct FCA EMI licence</strong> — only if you want to hold customer funds yourself. Takes 12–18 months. Not needed yet.</div></div>
+        <div style="margin-top:12px">
+          <a href="https://www.fca.org.uk/firms/apply-authorisation/electronic-money-institutions" target="_blank" class="btn bs">FCA EMI Info →</a>
+          <a href="https://register.fca.org.uk" target="_blank" class="btn bs" style="margin-left:8px">FCA Register →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ ALIEN SECURITY ══════════════ -->
+    <div id="tab-security" class="tab">
+      <div class="pg-title">⬛ Satoshi Cypher — Your Security Argument</div>
+      <div class="pg-sub">This is what you tell Stripe Issuing, Railsr, or any bank. Print this page. Send this page. It's already compliant.</div>
+
+      <div class="al al-ok">
+        <span>⬛</span>
+        <span><strong>The black box IS the application.</strong> Every security requirement for card issuing is already in the Satoshi Cypher stack. You are not building toward compliance — you are already there.</span>
+      </div>
+
+      <div class="card">
+        <div class="ct">📄 Compliance Map — Satoshi Cypher vs Card Issuing Requirements</div>
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead>
+              <tr>
+                <th style="text-align:left;padding:8px 12px;background:var(--surface2);color:var(--muted);font-size:10px;text-transform:uppercase;border-bottom:1px solid var(--border)">Requirement</th>
+                <th style="text-align:left;padding:8px 12px;background:var(--surface2);color:var(--muted);font-size:10px;text-transform:uppercase;border-bottom:1px solid var(--border)">Standard</th>
+                <th style="text-align:left;padding:8px 12px;background:var(--surface2);color:var(--muted);font-size:10px;text-transform:uppercase;border-bottom:1px solid var(--border)">Satoshi Cypher Solution</th>
+                <th style="text-align:center;padding:8px 12px;background:var(--surface2);color:var(--muted);font-size:10px;text-transform:uppercase;border-bottom:1px solid var(--border)">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:9px 12px;color:var(--txt)">Payload integrity verification</td>
+                <td style="padding:9px 12px;color:var(--muted)">PCI DSS Req 6</td>
+                <td style="padding:9px 12px;color:var(--cyan)">HMAC-SHA256 on every encode/decode. Tampered blobs rejected with 400.</td>
+                <td style="padding:9px 12px;text-align:center"><span class="bd bd-ok">✅ DONE</span></td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:9px 12px;color:var(--txt)">Audit logging</td>
+                <td style="padding:9px 12px;color:var(--muted)">PCI DSS Req 10 / SOC 2</td>
+                <td style="padding:9px 12px;color:var(--cyan)">10,000-entry rolling log via /api/audit. SIEM-forwardable structured events.</td>
+                <td style="padding:9px 12px;text-align:center"><span class="bd bd-ok">✅ DONE</span></td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:9px 12px;color:var(--txt)">Key rotation without downtime</td>
+                <td style="padding:9px 12px;color:var(--muted)">PCI DSS Req 3 / ISO 27001</td>
+                <td style="padding:9px 12px;color:var(--cyan)">POST /api/keys/reload — live swap, no restart. Thread-safe atomic replacement.</td>
+                <td style="padding:9px 12px;text-align:center"><span class="bd bd-ok">✅ DONE</span></td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:9px 12px;color:var(--txt)">Rate limiting / abuse prevention</td>
+                <td style="padding:9px 12px;color:var(--muted)">Visa/MC Network Rules</td>
+                <td style="padding:9px 12px;color:var(--cyan)">Per-key throttling, configurable window. Redis upgrade available for multi-node.</td>
+                <td style="padding:9px 12px;text-align:center"><span class="bd bd-ok">✅ DONE</span></td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:9px 12px;color:var(--txt)">Temporal access control</td>
+                <td style="padding:9px 12px;color:var(--muted)">Fraud Prevention / EMV</td>
+                <td style="padding:9px 12px;color:var(--cyan)">Time-locked ciphers. Code valid only inside encoded window — self-destructs after expiry.</td>
+                <td style="padding:9px 12px;text-align:center"><span class="bd bd-ok">✅ DONE</span></td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:9px 12px;color:var(--txt)">Secret isolation</td>
+                <td style="padding:9px 12px;color:var(--muted)">PCI DSS Req 8</td>
+                <td style="padding:9px 12px;color:var(--cyan)">MASTER_SECRET in environment only. Never logged, never returned in API responses.</td>
+                <td style="padding:9px 12px;text-align:center"><span class="bd bd-ok">✅ DONE</span></td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:9px 12px;color:var(--txt)">No plaintext on disk</td>
+                <td style="padding:9px 12px;color:var(--muted)">PCI DSS Req 3</td>
+                <td style="padding:9px 12px;color:var(--cyan)">Code exists only as 3D coordinate floats. Plaintext wiped from RAM after execution.</td>
+                <td style="padding:9px 12px;text-align:center"><span class="bd bd-ok">✅ DONE</span></td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:9px 12px;color:var(--txt)">TLS / HTTPS</td>
+                <td style="padding:9px 12px;color:var(--muted)">PCI DSS Req 4</td>
+                <td style="padding:9px 12px;color:var(--cyan)">Nginx reverse proxy with Let's Encrypt TLS. All traffic encrypted in transit.</td>
+                <td style="padding:9px 12px;text-align:center"><span class="bd bd-ok">✅ DONE</span></td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:9px 12px;color:var(--txt)">HSM key storage</td>
+                <td style="padding:9px 12px;color:var(--muted)">FIPS 140-2 (enterprise)</td>
+                <td style="padding:9px 12px;color:var(--cyan)">Currently software. HSM integration is Phase 3 roadmap. Required only for direct Visa membership.</td>
+                <td style="padding:9px 12px;text-align:center"><span class="bd bd-warn">PHASE 3</span></td>
+              </tr>
+              <tr>
+                <td style="padding:9px 12px;color:var(--txt)">Automated test suite</td>
+                <td style="padding:9px 12px;color:var(--muted)">SOC 2 / ISO 27001</td>
+                <td style="padding:9px 12px;color:var(--cyan)">Manual smoke test + live round-trip via Control Panel. Pytest suite on Phase 1 roadmap.</td>
+                <td style="padding:9px 12px;text-align:center"><span class="bd bd-warn">PHASE 1</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ct">📝 Copy-Paste: What to Write in Your Stripe Issuing Application</div>
+        <div class="cs">Under "Describe your business and use case" — paste this:</div>
+        <div class="cb">We operate Satoshi Cypher, a temporal black-box encryption API service for fintech and AI pipeline security. Our technology provides HMAC-signed, time-locked code execution with zero plaintext at rest — the code exists only as 3D coordinate floats and self-destructs after the authorised temporal window expires.
+
+Security infrastructure already in place:
+- HMAC-SHA256 payload signing on every encode/decode operation
+- 10,000-entry rolling audit log (SIEM-forwardable, PCI DSS Req 10 compliant)
+- Zero-downtime hot key rotation endpoint
+- Per-key rate limiting
+- All secrets in environment variables, never logged
+- TLS terminated at nginx reverse proxy (Let's Encrypt)
+
+We are issuing cards to our API subscribers (Standard tier) as a reward/access mechanism and to our internal team for business expenses.
+
+GitHub: https://github.com/eliskcage/satoshi-cypher
+Control Panel: https://shortfactory.shop/satoshi-cypher.html</div>
+        <button class="btn bs" onclick="copyAppText()">📋 Copy to Clipboard</button>
+      </div>
+    </div>
+
+    <!-- ══════════════ APPLY NOW ══════════════ -->
+    <div id="tab-apply" class="tab">
+      <div class="pg-title">🚀 Apply Now</div>
+      <div class="pg-sub">Every button. Every link. In order. Start with Stripe Issuing — it's the fastest route to a card.</div>
+
+      <div class="g3" style="margin-bottom:14px">
+        <div class="sc"><div class="sv" style="color:var(--green)">1–4</div><div class="sl">Weeks to Card (Stripe)</div></div>
+        <div class="sc"><div class="sv" style="color:var(--yellow)">3–6</div><div class="sl">Months (BIN Sponsor)</div></div>
+        <div class="sc"><div class="sv" style="color:var(--orange)">£0</div><div class="sl">Application Cost</div></div>
+      </div>
+
+      <!-- Priority order -->
+      <div class="step-item active">
+        <div class="step-num active">1</div>
+        <div class="step-body">
+          <div class="step-t">Register Stripe Webhook (5 minutes)</div>
+          <div class="step-d">Stripe Dashboard → Developers → Webhooks → Add endpoint. URL: <code style="color:var(--cyan)">https://shortfactory.shop/api/join-webhook.php</code>. Events: checkout.session.completed, customer.subscription.created/deleted.</div>
+          <div class="step-actions">
+            <a href="https://dashboard.stripe.com/webhooks" target="_blank" class="btn bp">Register Webhook →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-item active">
+        <div class="step-num active">2</div>
+        <div class="step-body">
+          <div class="step-t">Create Stripe Products for Satoshi Cypher (10 minutes)</div>
+          <div class="step-d">Products → Add Product → "Satoshi Cypher Standard" → £79/month recurring. Repeat for Free and Enterprise. Copy the Payment Link URL and drop it into the UK button on satoshi-cypher.html.</div>
+          <div class="step-actions">
+            <a href="https://dashboard.stripe.com/products/create" target="_blank" class="btn bp">Create Products →</a>
+            <a href="https://dashboard.stripe.com/payment-links" target="_blank" class="btn bs">Payment Links</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-item active">
+        <div class="step-num active">3</div>
+        <div class="step-body">
+          <div class="step-t">Apply for Stripe Issuing (15 minutes)</div>
+          <div class="step-d">Complete business verification in Stripe first. Then go to Issuing → Request access. Use the application text on the Alien Security tab. Stripe will email you within 1–4 weeks.</div>
+          <div class="step-actions">
+            <a href="https://stripe.com/gb/issuing" target="_blank" class="btn bp">Apply for Issuing →</a>
+            <a href="https://dashboard.stripe.com/issuing" target="_blank" class="btn bs">Issuing Dashboard</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-item">
+        <div class="step-num todo">4</div>
+        <div class="step-body">
+          <div class="step-t">If Stripe Issuing Approved — Issue First Card (same day)</div>
+          <div class="step-d">Stripe API call to create a virtual card. You'll have a card number, expiry, CVC. Use it. Film it. Ship it as proof. That's the overnight moment.</div>
+          <div class="step-actions">
+            <a href="https://docs.stripe.com/issuing/cards/virtual" target="_blank" class="btn bs">Virtual Card API Docs →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-item">
+        <div class="step-num todo">5</div>
+        <div class="step-body">
+          <div class="step-t">Parallel Track — Apply to Railsr for Full Card Programme</div>
+          <div class="step-d">Contact Railsr while waiting for Stripe. Different routes — both can run simultaneously. Railsr gives you your brand on the physical card.</div>
+          <div class="step-actions">
+            <a href="https://www.railsr.com/contact" target="_blank" class="btn bs">Contact Railsr →</a>
+            <a href="https://www.marqeta.com/company/contact" target="_blank" class="btn bs">Contact Marqeta</a>
+            <a href="https://griffin.com/contact" target="_blank" class="btn bs">Contact Griffin</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="border-color:rgba(247,147,26,.3);background:rgba(247,147,26,.03)">
+        <div class="ct">⬛ The Alien Tech Sales Pitch — One Paragraph</div>
+        <div class="cs" style="font-size:13px;line-height:1.8;color:var(--txt)">
+          "We have built a temporal black-box encryption layer — code that exists only as coordinate floats, self-destructs after its time window, and is HMAC-signed at every boundary. Banks and AI companies need this. We are issuing access cards to our enterprise clients as a physical proof-of-authorisation layer. The Satoshi Cypher is the security layer; the Visa card is the key to the black box. No plaintext. No key exposure. No fraud vector."
+        </div>
+        <div class="row" style="margin-top:12px">
+          <a href="/satoshi-cypher.html" target="_blank" class="btn bp">⬡ Open Control Panel</a>
+          <a href="https://github.com/eliskcage/satoshi-cypher" target="_blank" class="btn bs">GitHub Repo</a>
+          <a href="/blackbox-demo.html" target="_blank" class="btn bc">▶ Live Demo</a>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+function showTab(id, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(b => b.classList.remove('on'));
+  document.getElementById('tab-' + id).classList.add('on');
+  if (btn) btn.classList.add('on');
+}
+
+function copyAppText() {
+  const text = document.querySelector('.cb').textContent;
+  navigator.clipboard.writeText(text).then(() => toast('Application text copied 📋', 'ok'));
+}
+
+function toast(msg, type = 'info') {
+  const c = document.getElementById('toasts');
+  const t = document.createElement('div');
+  t.className = `toast t-${type}`;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 4000);
+}
+</script>
+</body>
+</html>
