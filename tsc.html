@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Temporal Spatial Calculator — ShortFactory</title>
+<style>
+:root{
+  --bg:#07070d;--bg2:#0e0e1c;--bg3:#13132a;
+  --orange:#f7931a;--cyan:#4fc3f7;--gold:#daa520;
+  --green:#22c55e;--purple:#a855f7;--red:#ef4444;
+  --yellow:#fbbf24;--dim:#94a3b8;--border:rgba(255,255,255,0.07);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:#e2e8f0;font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;overflow-x:hidden;}
+.header{background:rgba(7,7,13,0.95);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:20px;position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);}
+.logo{font-size:13px;font-weight:900;letter-spacing:3px;color:var(--orange);text-transform:uppercase;}
+.conn-bar{display:flex;gap:10px;margin-left:auto;flex-wrap:wrap;}
+.conn-bar a{font-size:11px;color:var(--dim);text-decoration:none;padding:4px 10px;border:1px solid var(--border);border-radius:4px;transition:all .2s;}
+.conn-bar a:hover{color:var(--orange);border-color:var(--orange);}
+.conn-bar a.active{color:var(--cyan);border-color:var(--cyan);}
+.shell{display:flex;min-height:calc(100vh - 57px);}
+.sidebar{width:280px;min-width:280px;background:var(--bg2);border-right:1px solid var(--border);padding:20px 16px;display:flex;flex-direction:column;gap:16px;}
+.main{flex:1;padding:24px;display:flex;flex-direction:column;gap:20px;overflow:hidden;}
+.sb-title{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--dim);text-transform:uppercase;margin-bottom:4px;}
+.sb-section{display:flex;flex-direction:column;gap:8px;}
+.time-display{background:var(--bg3);border:1px solid var(--orange);border-radius:8px;padding:14px;text-align:center;}
+.td-val{font-size:26px;font-weight:900;color:var(--orange);font-variant-numeric:tabular-nums;line-height:1;}
+.td-unit{font-size:11px;color:var(--dim);margin-top:4px;letter-spacing:1px;}
+.slider-wrap{display:flex;flex-direction:column;gap:6px;}
+.slider-wrap label{font-size:10px;color:var(--dim);letter-spacing:1px;}
+input[type=range]{width:100%;accent-color:var(--orange);cursor:pointer;}
+.preset-row{display:flex;flex-wrap:wrap;gap:5px;}
+.preset{background:var(--bg3);border:1px solid var(--border);color:var(--dim);font-size:10px;padding:5px 9px;border-radius:4px;cursor:pointer;transition:all .2s;font-weight:600;}
+.preset:hover{border-color:var(--orange);color:var(--orange);}
+.layer-list{display:flex;flex-direction:column;gap:6px;}
+.layer-item{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px 12px;border-left-width:3px;}
+.layer-item.l-earth{border-left-color:var(--yellow);}
+.layer-item.l-solar{border-left-color:var(--cyan);}
+.layer-item.l-galactic{border-left-color:var(--purple);}
+.layer-item.l-cosmic{border-left-color:var(--red);}
+.li-name{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--dim);text-transform:uppercase;}
+.li-speed{font-size:10px;color:#475569;margin-top:1px;}
+.li-val{font-size:13px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums;}
+.l-earth .li-val{color:var(--yellow);}
+.l-solar .li-val{color:var(--cyan);}
+.l-galactic .li-val{color:var(--purple);}
+.l-cosmic .li-val{color:var(--red);}
+.canvas-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;flex-shrink:0;}
+canvas#universe{display:block;width:100%;height:400px;}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px 18px;}
+.stat-card.total{border-color:var(--orange);background:rgba(247,147,26,0.05);}
+.stat-card.diff{border-color:var(--purple);background:rgba(168,85,247,0.05);}
+.sc-label{font-size:9px;font-weight:700;letter-spacing:2px;color:var(--dim);text-transform:uppercase;}
+.sc-val{font-size:20px;font-weight:900;margin-top:6px;font-variant-numeric:tabular-nums;line-height:1.1;}
+.sc-sub{font-size:11px;color:var(--dim);margin-top:4px;}
+.stat-card.total .sc-val{color:var(--orange);}
+.stat-card.diff .sc-val{color:var(--purple);}
+.compare-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;}
+.cmp-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:12px;}
+.cmp-icon{font-size:20px;flex-shrink:0;}
+.cmp-label{font-size:10px;color:var(--dim);}
+.cmp-val{font-size:13px;font-weight:700;color:var(--cyan);margin-top:2px;}
+.insight-box{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px 18px;border-left:3px solid var(--gold);}
+.insight-box p{font-size:13px;color:var(--dim);line-height:1.8;}
+.insight-box strong{color:var(--gold);}
+.section-title{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--dim);text-transform:uppercase;margin-bottom:8px;}
+@media(max-width:700px){
+  .shell{flex-direction:column;}
+  .sidebar{width:100%;min-width:0;border-right:none;border-bottom:1px solid var(--border);}
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">&#10711; TSC</div>
+  <div style="font-size:11px;color:var(--dim);letter-spacing:1px;">TEMPORAL SPATIAL CALCULATOR</div>
+  <div class="conn-bar">
+    <a href="/satoshi-cypher.html">&#11041; Satoshi</a>
+    <a href="/visa-card.html">&#128179; Visa</a>
+    <a href="/valuation.html">&#163; Valuation</a>
+    <a href="/portfolio.html">&#9672; Portfolio</a>
+    <a href="tsc.html" class="active">&#10711; TSC</a>
+  </div>
+</div>
+
+<div class="shell">
+  <div class="sidebar">
+    <div class="sb-section">
+      <div class="sb-title">Go back in time</div>
+      <div class="time-display">
+        <div class="td-val" id="tdVal">1</div>
+        <div class="td-unit" id="tdUnit">YEAR</div>
+      </div>
+      <div class="slider-wrap">
+        <label>DRAG TO SET (logarithmic)</label>
+        <input type="range" id="timeSlider" min="0" max="1000" value="0" oninput="sliderMove(this.value)">
+      </div>
+      <div class="preset-row">
+        <button class="preset" onclick="setYears(1)">1 yr</button>
+        <button class="preset" onclick="setYears(10)">10 yr</button>
+        <button class="preset" onclick="setYears(100)">100 yr</button>
+        <button class="preset" onclick="setYears(1000)">1K yr</button>
+        <button class="preset" onclick="setYears(66e6)">Dinos</button>
+        <button class="preset" onclick="setYears(3.5e9)">First life</button>
+        <button class="preset" onclick="setYears(13.8e9)">Big Bang</button>
+      </div>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-title">Motion layers</div>
+      <div class="layer-list">
+        <div class="layer-item l-earth">
+          <div class="li-name">Earth orbital</div>
+          <div class="li-speed">29.78 km/s around Sun</div>
+          <div class="li-val" id="lv-earth">—</div>
+        </div>
+        <div class="layer-item l-solar">
+          <div class="li-name">Solar galactic</div>
+          <div class="li-speed">220 km/s around Milky Way</div>
+          <div class="li-val" id="lv-solar">—</div>
+        </div>
+        <div class="layer-item l-galactic">
+          <div class="li-name">Galactic drift</div>
+          <div class="li-speed">627 km/s toward Great Attractor</div>
+          <div class="li-val" id="lv-galactic">—</div>
+        </div>
+        <div class="layer-item l-cosmic">
+          <div class="li-name">Cosmic flow</div>
+          <div class="li-speed">369 km/s vs CMB frame</div>
+          <div class="li-val" id="lv-cosmic">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="canvas-wrap">
+      <canvas id="universe"></canvas>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card total">
+        <div class="sc-label">Total spatial displacement</div>
+        <div class="sc-val" id="sc-total">—</div>
+        <div class="sc-sub" id="sc-total-ly">—</div>
+      </div>
+      <div class="stat-card diff">
+        <div class="sc-label">Difficulty multiplier</div>
+        <div class="sc-val" id="sc-diff">—</div>
+        <div class="sc-sub">x Earth-Moon distance</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">Dominant factor</div>
+        <div class="sc-val" style="font-size:15px;" id="sc-dom">—</div>
+        <div class="sc-sub" id="sc-dom-sub">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">Arrival error if ignored</div>
+        <div class="sc-val" style="color:var(--red);font-size:15px;" id="sc-err">—</div>
+        <div class="sc-sub">miss distance from Earth</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-title">What that distance actually means</div>
+      <div class="compare-grid">
+        <div class="cmp-card">
+          <div class="cmp-icon">&#127765;</div>
+          <div><div class="cmp-label">Earth-Moon trips</div><div class="cmp-val" id="cmp-moon">—</div></div>
+        </div>
+        <div class="cmp-card">
+          <div class="cmp-icon">&#9728;</div>
+          <div><div class="cmp-label">Astronomical Units (AU)</div><div class="cmp-val" id="cmp-au">—</div></div>
+        </div>
+        <div class="cmp-card">
+          <div class="cmp-icon">&#11088;</div>
+          <div><div class="cmp-label">Trips to Alpha Centauri</div><div class="cmp-val" id="cmp-ac">—</div></div>
+        </div>
+        <div class="cmp-card">
+          <div class="cmp-icon">&#127756;</div>
+          <div><div class="cmp-label">Milky Way diameters</div><div class="cmp-val" id="cmp-mw">—</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="insight-box">
+      <p id="insight-text">Set a time value to calculate the true spatial coordinates of the past.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const SPY       = 31557600;
+const KM_PER_LY = 9.461e12;
+const KM_MOON   = 384400;
+const KM_AU     = 149597870.7;
+const KM_AC     = 4.0175e13;
+const KM_MW     = 9.461e17;
+
+const V = { earth:29.78, solar:220, galactic:627, cosmic:369 };
+
+let currentYears = 1;
+let phase = 0;
+let animId = null;
+
+function fmtKm(km){
+  if(km < 1e6)      return km.toLocaleString(undefined,{maximumFractionDigits:0})+' km';
+  if(km < KM_AU)    return (km/1e6).toFixed(2)+'M km';
+  if(km < KM_PER_LY)return (km/KM_AU).toFixed(2)+' AU';
+  const ly=km/KM_PER_LY;
+  if(ly < 1e6) return ly.toFixed(4)+' ly';
+  if(ly < 1e9) return (ly/1e6).toFixed(3)+'M ly';
+  return (ly/1e9).toFixed(3)+'B ly';
+}
+function fmtLy(km){
+  const ly=km/KM_PER_LY;
+  if(ly<0.001) return (ly*1000).toFixed(4)+' milli-ly';
+  if(ly<1)     return ly.toFixed(6)+' ly';
+  if(ly<1e6)   return ly.toFixed(4)+' ly';
+  if(ly<1e9)   return (ly/1e6).toFixed(3)+'M ly';
+  return (ly/1e9).toFixed(3)+'B ly';
+}
+function fmtNum(n){
+  if(n>=1e12) return (n/1e12).toFixed(2)+' trillion';
+  if(n>=1e9)  return (n/1e9).toFixed(2)+' billion';
+  if(n>=1e6)  return (n/1e6).toFixed(2)+' million';
+  if(n>=1e3)  return n.toLocaleString(undefined,{maximumFractionDigits:1});
+  return n.toFixed(2);
+}
+function fmtYears(y){
+  if(y>=1e9)  return (y/1e9).toFixed(2)+' billion years';
+  if(y>=1e6)  return (y/1e6).toFixed(2)+' million years';
+  if(y>=1e3)  return (y/1e3).toFixed(1)+'K years';
+  if(y===1)   return '1 year';
+  return y.toFixed(y<10?2:0)+' years';
+}
+
+function sliderToYears(s){
+  const mn=Math.log10(1),mx=Math.log10(13.8e9);
+  return Math.pow(10,mn+(s/1000)*(mx-mn));
+}
+function yearsToSlider(y){
+  const mn=Math.log10(1),mx=Math.log10(13.8e9);
+  return Math.round(((Math.log10(Math.max(1,y))-mn)/(mx-mn))*1000);
+}
+function sliderMove(v){ currentYears=sliderToYears(v); update(); }
+function setYears(y){ currentYears=y; document.getElementById('timeSlider').value=yearsToSlider(y); update(); }
+
+function update(){
+  const y=currentYears, secs=y*SPY;
+  const d={
+    earth:    V.earth*secs,
+    solar:    V.solar*secs,
+    galactic: V.galactic*secs,
+    cosmic:   V.cosmic*secs
+  };
+  const total=d.earth+d.solar+d.galactic+d.cosmic;
+
+  const tdV=document.getElementById('tdVal'), tdU=document.getElementById('tdUnit');
+  if(y>=1e9){tdV.textContent=(y/1e9).toFixed(2);tdU.textContent='BILLION YEARS';}
+  else if(y>=1e6){tdV.textContent=(y/1e6).toFixed(2);tdU.textContent='MILLION YEARS';}
+  else if(y>=1e3){tdV.textContent=(y/1e3).toFixed(1);tdU.textContent='THOUSAND YEARS';}
+  else{tdV.textContent=y.toFixed(y<10?2:0);tdU.textContent=y===1?'YEAR':'YEARS';}
+
+  document.getElementById('lv-earth').textContent    = fmtKm(d.earth);
+  document.getElementById('lv-solar').textContent    = fmtKm(d.solar);
+  document.getElementById('lv-galactic').textContent = fmtKm(d.galactic);
+  document.getElementById('lv-cosmic').textContent   = fmtKm(d.cosmic);
+
+  document.getElementById('sc-total').textContent   = fmtKm(total);
+  document.getElementById('sc-total-ly').textContent= fmtLy(total);
+  document.getElementById('sc-diff').textContent    = fmtNum(total/KM_MOON);
+  document.getElementById('sc-err').textContent     = fmtKm(total);
+
+  const factors=[
+    {name:'Galactic drift', val:d.galactic, col:'var(--purple)'},
+    {name:'Cosmic flow',    val:d.cosmic,   col:'var(--red)'},
+    {name:'Solar orbit',    val:d.solar,    col:'var(--cyan)'},
+    {name:'Earth orbit',    val:d.earth,    col:'var(--yellow)'}
+  ].sort((a,b)=>b.val-a.val);
+  const dom=factors[0];
+  document.getElementById('sc-dom').textContent=(dom.name);
+  document.getElementById('sc-dom').style.color=dom.col;
+  document.getElementById('sc-dom-sub').textContent=(dom.val/total*100).toFixed(1)+'% of total';
+
+  document.getElementById('cmp-moon').textContent = fmtNum(total/KM_MOON)+'x';
+  document.getElementById('cmp-au').textContent   = fmtNum(total/KM_AU);
+  document.getElementById('cmp-ac').textContent   = fmtNum(total/KM_AC)+'x';
+  document.getElementById('cmp-mw').textContent   = fmtNum(total/KM_MW)+'x';
+
+  const el=document.getElementById('insight-text');
+  if(y<=1) el.innerHTML=`Going back just <strong>1 year</strong> puts you <strong>${fmtKm(total)}</strong> from Earth's current position. The clock is the easy part. The address is the problem.`;
+  else if(y<=100) el.innerHTML=`<strong>${fmtYears(y)} ago</strong>, Earth was <strong>${fmtLy(total)}</strong> from here in absolute space. You would arrive in empty void, no planet anywhere near you. <strong>${dom.name}</strong> is the dominant displacement vector.`;
+  else if(y<=1e6) el.innerHTML=`<strong>${fmtYears(y)} ago</strong>: spatial error = <strong>${fmtLy(total)}</strong>. At this scale, <strong>${dom.name}</strong> dominates all other motion. Your time machine needs coordinates, not just a clock.`;
+  else if(y<=66e6) el.innerHTML=`<strong>${fmtYears(y)} ago (dinosaurs)</strong>: <strong>${fmtLy(total)}</strong> of compound drift. The Milky Way has moved <strong>${fmtNum(total/KM_MW)}x its own diameter</strong> relative to the cosmic web. You land in a region of space that Earth has not occupied for 66 million years.`;
+  else if(y<=4.5e9) el.innerHTML=`<strong>${fmtYears(y)} ago</strong>: <strong>${fmtLy(total)}</strong> displacement. At this depth, <strong>${dom.name}</strong> at ${V[dom.name.split(' ')[0].toLowerCase()] || 627} km/s has carried Earth so far from its current position that the return address no longer exists as a spatial coordinate.`;
+  else el.innerHTML=`<strong>${fmtYears(y)} ago</strong>: <strong>${fmtLy(total)}</strong>. You are near the Big Bang horizon. Time travel at this scale is not a navigation problem — it is a <strong>cosmological address problem</strong>. The destination is the universe before the universe had a fixed structure. The address was written in the explosion.`;
+
+  drawCanvas(y,d,total);
+}
+
+const cvs=document.getElementById('universe');
+const ctx=cvs.getContext('2d');
+let stars=[];
+
+function initStars(){
+  stars=Array.from({length:220},()=>({
+    x:Math.random()*cvs.width, y:Math.random()*cvs.height,
+    r:Math.random()*1.4+0.2, a:0.3+Math.random()*0.7,
+    twinkle:Math.random()*Math.PI*2
+  }));
+}
+function resize(){
+  cvs.width=cvs.offsetWidth; cvs.height=cvs.offsetHeight||400;
+  initStars();
+}
+window.addEventListener('resize',()=>{resize();update();});
+resize();
+
+function drawCanvas(years,d,total){
+  cancelAnimationFrame(animId);
+  phase=(phase+0.008)%(Math.PI*2);
+  const W=cvs.width, H=cvs.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#07070d'; ctx.fillRect(0,0,W,H);
+
+  for(const s of stars){
+    ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    ctx.fillStyle=`rgba(255,255,255,${s.a*(0.6+0.4*Math.sin(phase+s.twinkle))})`;
+    ctx.fill();
+  }
+
+  const cx=W/2, cy=H/2, maxR=Math.min(W,H)*0.43;
+  const totalLy=total/KM_PER_LY;
+  const logMax=Math.max(1,Math.log10(Math.max(1,totalLy)));
+  function toR(km){
+    if(km<=0) return 0;
+    const ly=km/KM_PER_LY;
+    if(ly<1e-12) return 3;
+    return Math.max(3,(Math.log10(Math.max(1e-12,ly))/logMax)*maxR);
+  }
+
+  const rings=[
+    {km:total,                            col:'rgba(239,68,68,0.1)',  lbl:'Cosmic total',  lc:'rgba(239,68,68,0.4)'},
+    {km:d.earth+d.solar+d.galactic,       col:'rgba(168,85,247,0.12)',lbl:'Galactic',      lc:'rgba(168,85,247,0.4)'},
+    {km:d.earth+d.solar,                  col:'rgba(79,195,247,0.12)',lbl:'Solar',         lc:'rgba(79,195,247,0.35)'},
+    {km:d.earth,                          col:'rgba(251,191,36,0.15)',lbl:'Earth orbit',   lc:'rgba(251,191,36,0.4)'},
+  ];
+  for(const rg of rings){
+    const r=toR(rg.km);
+    const g=ctx.createRadialGradient(cx,cy,0,cx,cy,r);
+    g.addColorStop(0,'transparent'); g.addColorStop(1,rg.col);
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+    ctx.fillStyle=g; ctx.fill();
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+    ctx.strokeStyle=rg.lc; ctx.lineWidth=1;
+    ctx.setLineDash([3,8]); ctx.stroke(); ctx.setLineDash([]);
+    if(r>22){
+      const a=-Math.PI/5;
+      ctx.font='10px Segoe UI'; ctx.textAlign='left';
+      ctx.fillStyle=rg.lc; ctx.globalAlpha=0.8;
+      ctx.fillText(rg.lbl, cx+Math.cos(a)*r+4, cy+Math.sin(a)*r-4);
+      ctx.globalAlpha=1;
+    }
+  }
+
+  // NOW dot
+  const ng=ctx.createRadialGradient(cx,cy,0,cx,cy,18);
+  ng.addColorStop(0,'rgba(247,147,26,0.9)');
+  ng.addColorStop(0.5,'rgba(247,147,26,0.25)');
+  ng.addColorStop(1,'transparent');
+  ctx.beginPath(); ctx.arc(cx,cy,18,0,Math.PI*2);
+  ctx.fillStyle=ng; ctx.fill();
+  ctx.beginPath(); ctx.arc(cx,cy,4,0,Math.PI*2);
+  ctx.fillStyle='#f7931a'; ctx.fill();
+  ctx.font='bold 10px Segoe UI'; ctx.textAlign='center';
+  ctx.fillStyle='#f7931a'; ctx.globalAlpha=0.9;
+  ctx.fillText('NOW', cx, cy-12); ctx.globalAlpha=1;
+
+  // THEN dot
+  const tr=toR(total)*0.82;
+  if(tr>12){
+    const ta=Math.PI*0.35+phase*0.08;
+    const tx=cx+Math.cos(ta)*tr, ty=cy+Math.sin(ta)*tr;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(tx,ty);
+    ctx.strokeStyle='rgba(255,255,255,0.12)'; ctx.lineWidth=1;
+    ctx.setLineDash([3,8]); ctx.stroke(); ctx.setLineDash([]);
+    const tg=ctx.createRadialGradient(tx,ty,0,tx,ty,14);
+    tg.addColorStop(0,'rgba(239,68,68,0.85)');
+    tg.addColorStop(1,'transparent');
+    ctx.beginPath(); ctx.arc(tx,ty,14,0,Math.PI*2);
+    ctx.fillStyle=tg; ctx.fill();
+    ctx.beginPath(); ctx.arc(tx,ty,3.5,0,Math.PI*2);
+    ctx.fillStyle='#ef4444'; ctx.fill();
+    ctx.font='bold 10px Segoe UI'; ctx.textAlign='center';
+    ctx.fillStyle='#ef4444'; ctx.globalAlpha=0.9;
+    ctx.fillText('THEN', tx, ty-13); ctx.globalAlpha=1;
+  }
+
+  ctx.font='9px Segoe UI'; ctx.textAlign='right';
+  ctx.fillStyle='rgba(148,163,184,0.3)';
+  ctx.fillText('log scale', W-10, H-8);
+
+  animId=requestAnimationFrame(()=>drawCanvas(years,d,total));
+}
+
+setYears(1);
+</script>
+</body>
+</html>
