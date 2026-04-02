@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Feed Your ALIVE Pet — Biscuit Refuel Station</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#070708;color:#fff;font-family:'Courier New',monospace;
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:40px 20px;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;
+  background-image:radial-gradient(circle,rgba(255,255,255,.04) 1px,transparent 1px);
+  background-size:24px 24px;}
+
+.wrap{position:relative;z-index:1;width:100%;max-width:460px;}
+
+/* LEVEL BADGE */
+.level-badge{text-align:center;margin-bottom:24px;}
+.level-pill{display:inline-block;padding:6px 20px;border-radius:20px;
+  font-size:7px;letter-spacing:4px;text-transform:uppercase;
+  border:1px solid rgba(46,204,96,.4);color:#2ecc60;background:rgba(46,204,96,.06);}
+
+/* PET */
+.pet-panel{background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.06);
+  border-radius:20px;padding:32px;text-align:center;margin-bottom:16px;}
+.pet-name{font-size:7px;letter-spacing:4px;color:rgba(255,255,255,.2);
+  text-transform:uppercase;margin-bottom:20px;}
+#pet-canvas{display:block;margin:0 auto 20px;cursor:default;}
+.blood-label{font-size:6px;letter-spacing:3px;color:rgba(255,255,255,.2);
+  text-transform:uppercase;margin-bottom:8px;}
+.blood-bar{height:6px;background:rgba(255,255,255,.04);border-radius:3px;
+  overflow:hidden;margin-bottom:6px;}
+.blood-fill{height:100%;border-radius:3px;
+  background:linear-gradient(90deg,rgba(46,204,96,.5),#2ecc60);
+  transition:width 1.2s cubic-bezier(.22,1,.36,1);}
+.blood-val{font-size:9px;color:#2ecc60;letter-spacing:2px;}
+
+/* DROP ZONE */
+.drop-zone{border:2px dashed rgba(218,165,32,.25);border-radius:16px;
+  padding:32px 24px;text-align:center;transition:all .2s;cursor:pointer;
+  background:rgba(218,165,32,.02);margin-bottom:12px;position:relative;}
+.drop-zone.hover{border-color:#daa520;background:rgba(218,165,32,.08);}
+.drop-zone.fed{border-color:rgba(46,204,96,.6);background:rgba(46,204,96,.06);}
+.drop-icon{font-size:32px;margin-bottom:12px;opacity:.5;}
+.drop-title{font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.4);
+  text-transform:uppercase;margin-bottom:6px;}
+.drop-sub{font-size:8px;color:rgba(255,255,255,.2);line-height:1.7;}
+#chip-input{display:none;}
+
+.or-row{text-align:center;font-size:7px;letter-spacing:3px;color:rgba(255,255,255,.15);
+  text-transform:uppercase;margin-bottom:12px;}
+
+/* OPEN FILE BTN */
+.open-btn{width:100%;padding:13px;border-radius:10px;
+  border:1px solid rgba(218,165,32,.3);background:rgba(218,165,32,.04);
+  color:rgba(218,165,32,.7);font-family:inherit;font-size:8px;letter-spacing:3px;
+  text-transform:uppercase;cursor:pointer;transition:all .2s;margin-bottom:16px;}
+.open-btn:hover{border-color:#daa520;color:#daa520;background:rgba(218,165,32,.1);}
+
+/* FEED RESULT */
+.feed-result{background:rgba(46,204,96,.04);border:1px solid rgba(46,204,96,.2);
+  border-radius:12px;padding:20px;text-align:center;display:none;margin-bottom:16px;}
+.result-val{font-size:28px;font-weight:bold;color:#2ecc60;letter-spacing:2px;margin-bottom:4px;}
+.result-label{font-size:7px;letter-spacing:3px;color:rgba(255,255,255,.3);text-transform:uppercase;margin-bottom:12px;}
+.result-rows{font-size:8px;color:rgba(255,255,255,.3);line-height:2.2;}
+.result-rows span{color:rgba(255,255,255,.6);}
+
+/* GOVERNANCE */
+.gov-panel{background:rgba(255,255,255,.008);border:1px solid rgba(255,255,255,.04);
+  border-radius:12px;padding:20px;text-align:center;}
+.gov-title{font-size:7px;letter-spacing:3px;color:rgba(255,255,255,.2);
+  text-transform:uppercase;margin-bottom:8px;}
+.gov-levels{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.gov-level{padding:6px 14px;border-radius:8px;font-size:7px;letter-spacing:2px;
+  text-transform:uppercase;border:1px solid;transition:all .2s;}
+.gov-level.active{border-color:rgba(46,204,96,.5);color:#2ecc60;background:rgba(46,204,96,.06);}
+.gov-level.locked{border-color:rgba(255,255,255,.06);color:rgba(255,255,255,.15);}
+.gov-desc{font-size:8px;color:rgba(255,255,255,.2);margin-top:12px;line-height:1.7;}
+
+/* ANIMATION OVERLAY */
+.eat-overlay{position:fixed;inset:0;pointer-events:none;z-index:100;display:none;}
+.eat-biscuit{position:absolute;font-size:40px;transition:all 1.2s cubic-bezier(.22,1,.36,1);}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="level-badge">
+    <div class="level-pill">Level 1 · Unlimited Refuel · Active</div>
+  </div>
+
+  <!-- PET -->
+  <div class="pet-panel">
+    <div class="pet-name">ALIVE Pet · Blood Collateral Engine</div>
+    <canvas id="pet-canvas" width="140" height="140"></canvas>
+    <div class="blood-label">Blood · Metabolic Pool</div>
+    <div class="blood-bar"><div class="blood-fill" id="blood-fill" style="width:40%"></div></div>
+    <div class="blood-val" id="blood-val">£2.00 / £5.00</div>
+  </div>
+
+  <!-- DROP ZONE -->
+  <div class="drop-zone" id="drop-zone"
+    ondragover="event.preventDefault();this.classList.add('hover')"
+    ondragleave="this.classList.remove('hover')"
+    ondrop="handleDrop(event)">
+    <div class="drop-icon">⬡</div>
+    <div class="drop-title">Drop a biscuit chip here</div>
+    <div class="drop-sub">Drag a .html chip file onto your pet.<br>
+      The biscuit is consumed. The blood refills to max.<br>
+      ShortFactory receives the collateral.</div>
+  </div>
+
+  <div class="or-row">— or —</div>
+
+  <button class="open-btn" onclick="document.getElementById('chip-input').click()">
+    ⬡ open chip file
+  </button>
+  <input type="file" id="chip-input" accept=".html,.htm" onchange="handleFile(this.files[0])">
+
+  <!-- RESULT -->
+  <div class="feed-result" id="feed-result">
+    <div class="result-val" id="result-val">£0.00</div>
+    <div class="result-label">Biscuit consumed · Blood refilled to max</div>
+    <div class="result-rows">
+      <div>Collateral received by ShortFactory: <span id="result-sf">£0.00</span></div>
+      <div>Blood restored: <span>£0.00 → £5.00</span></div>
+      <div>Level: <span>1 · Unlimited</span></div>
+    </div>
+  </div>
+
+  <!-- GOVERNANCE -->
+  <div class="gov-panel">
+    <div class="gov-title">Refuel governance · Level system</div>
+    <div class="gov-levels">
+      <div class="gov-level active">Level 1 · Unlimited</div>
+      <div class="gov-level locked">Level 2 · DAO Vote</div>
+      <div class="gov-level locked">Level 3 · Council</div>
+      <div class="gov-level locked">Level 4 · Reserved</div>
+    </div>
+    <div class="gov-desc">
+      Level 1 pets refuel to max on any £1 biscuit — no limit.<br>
+      Higher levels require governance votes to determine refill rate.<br>
+      <span style="color:rgba(255,255,255,.1);">Level 2+ unlocks coming via DAO vote.</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- EAT ANIMATION OVERLAY -->
+<div class="eat-overlay" id="eat-overlay">
+  <div class="eat-biscuit" id="eat-biscuit">⬡</div>
+</div>
+
+<script>
+// ── PET DRAW ─────────────────────────────────────────────────────────────────
+var petBlood = 2.00;
+var PET_MAX = 5.00;
+
+function hsl2rgb(h,s,l){h/=360;var r,g,b;if(!s){r=g=b=l;}else{function hf(p,q,t){if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<.5)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p;}var q=l<.5?l*(1+s):l+s-l*s,p=2*l-q;r=hf(p,q,h+1/3);g=hf(p,q,h);b=hf(p,q,h-1/3);}return Math.round(r*255)+','+Math.round(g*255)+','+Math.round(b*255);}
+
+function drawPet(canvas, pct){
+  var size=canvas.width, ctx=canvas.getContext('2d');
+  var cx=size/2, cy=size/2, r=size/2-4;
+  ctx.clearRect(0,0,size,size);
+  var hue = 120 * pct; // red→green as blood fills
+  // glow
+  var glow=ctx.createRadialGradient(cx,cy,r*.3,cx,cy,r*1.6);
+  glow.addColorStop(0,'rgba('+hsl2rgb(hue,.8,.5)+',0)');
+  glow.addColorStop(.7,'rgba('+hsl2rgb(hue,.9,.4)+',.12)');
+  glow.addColorStop(1,'rgba('+hsl2rgb(hue,1,.5)+',.2)');
+  ctx.beginPath();ctx.arc(cx,cy,r*1.4,0,Math.PI*2);ctx.fillStyle=glow;ctx.fill();
+  // base
+  var base=ctx.createRadialGradient(cx-r*.3,cy-r*.3,r*.05,cx,cy,r);
+  base.addColorStop(0,'hsl('+hue+',20%,14%)');
+  base.addColorStop(.6,'hsl('+hue+',25%,6%)');
+  base.addColorStop(1,'#010101');
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fillStyle=base;ctx.fill();
+  // rings
+  for(var i=0;i<4;i++){
+    ctx.beginPath();ctx.arc(cx,cy,r*(.18+i*.2),0,Math.PI*2);
+    ctx.strokeStyle='rgba('+hsl2rgb(hue,.6,.5)+','+(0.04+pct*.06)+')';
+    ctx.lineWidth=1;ctx.stroke();
+  }
+  // pulse dot
+  var dAlpha=0.4+Math.sin(Date.now()*.003)*.3;
+  ctx.beginPath();ctx.arc(cx,cy-r*.55,r*.1,0,Math.PI*2);
+  ctx.fillStyle='rgba(46,204,96,'+dAlpha+')';ctx.fill();
+  // specular
+  var spec=ctx.createRadialGradient(cx-r*.32,cy-r*.32,0,cx-r*.3,cy-r*.3,r*.5);
+  spec.addColorStop(0,'rgba(255,255,255,.1)');spec.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fillStyle=spec;ctx.fill();
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.strokeStyle='rgba('+hsl2rgb(hue,.6,.65)+',.3)';ctx.lineWidth=1.5;ctx.stroke();
+}
+
+var petCanvas=document.getElementById('pet-canvas');
+function renderPet(){
+  var pct=petBlood/PET_MAX;
+  drawPet(petCanvas, pct);
+  document.getElementById('blood-fill').style.width=(pct*100)+'%';
+  document.getElementById('blood-val').textContent='£'+petBlood.toFixed(2)+' / £'+PET_MAX.toFixed(2);
+}
+setInterval(renderPet, 80);
+
+// ── CHIP PARSE ────────────────────────────────────────────────────────────────
+function parseChip(html){
+  // try to extract BISCUIT data from chip HTML
+  var m = html.match(/var\s+(?:B|BISCUIT)\s*=\s*(\{[^;]+\})/);
+  if(!m) return null;
+  try{ return JSON.parse(m[1]); } catch(e){ return null; }
+}
+
+// ── FEED ──────────────────────────────────────────────────────────────────────
+function feedBiscuit(biscuit, chipVal){
+  var val = chipVal || (biscuit ? (biscuit.liveVal || 1.0) : 1.0);
+
+  // animate biscuit flying to pet
+  var overlay=document.getElementById('eat-overlay');
+  var chip=document.getElementById('eat-biscuit');
+  var petRect=petCanvas.getBoundingClientRect();
+  var startX=window.innerWidth/2 - 20;
+  var startY=window.innerHeight*0.75;
+  chip.style.left=startX+'px';chip.style.top=startY+'px';
+  chip.style.opacity='1';chip.style.transform='scale(1)';
+  overlay.style.display='block';
+
+  setTimeout(function(){
+    chip.style.left=(petRect.left+petRect.width/2-20)+'px';
+    chip.style.top=(petRect.top+petRect.height/2-20)+'px';
+    chip.style.transform='scale(0.1)';
+    chip.style.opacity='0';
+  }, 50);
+
+  setTimeout(function(){
+    overlay.style.display='none';
+    chip.style.transform='scale(1)';
+    // refuel blood to max
+    petBlood = PET_MAX;
+
+    // show result
+    var result=document.getElementById('feed-result');
+    document.getElementById('result-val').textContent='£'+val.toFixed(2);
+    document.getElementById('result-sf').textContent='£'+val.toFixed(2);
+    result.style.display='block';
+
+    // mark drop zone
+    var dz=document.getElementById('drop-zone');
+    dz.classList.remove('hover');
+    dz.classList.add('fed');
+    dz.querySelector('.drop-title').textContent='⬡ biscuit consumed — blood at max';
+
+    // reset after 4s
+    setTimeout(function(){
+      dz.classList.remove('fed');
+      dz.querySelector('.drop-title').textContent='Drop a biscuit chip here';
+    }, 4000);
+  }, 1300);
+}
+
+// ── FILE HANDLERS ─────────────────────────────────────────────────────────────
+function handleFile(file){
+  if(!file) return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var html=e.target.result;
+    var biscuit=parseChip(html);
+    feedBiscuit(biscuit, biscuit ? (biscuit.liveVal||1.0) : 1.0);
+  };
+  reader.readAsText(file);
+}
+
+function handleDrop(e){
+  e.preventDefault();
+  document.getElementById('drop-zone').classList.remove('hover');
+  var file=e.dataTransfer.files[0];
+  if(file) handleFile(file);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>What Could Your £1 Biscuit Do? — ShortFactory</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:#070708;color:#fff;font-family:'Courier New',monospace;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:radial-gradient(circle,rgba(255,255,255,.04) 1px,transparent 1px);
+  background-size:24px 24px;}
+
+/* HERO */
+#hero{position:relative;z-index:1;padding:80px 20px 60px;text-align:center;}
+.eyebrow{font-size:8px;letter-spacing:5px;color:rgba(255,255,255,.2);
+  text-transform:uppercase;margin-bottom:16px;}
+.hero-h1{font-size:clamp(26px,5vw,50px);font-weight:bold;line-height:1.2;
+  margin-bottom:16px;}
+.hero-h1 span{color:#daa520;}
+.hero-sub{font-size:11px;color:rgba(255,255,255,.35);letter-spacing:2px;
+  line-height:1.9;max-width:560px;margin:0 auto 40px;}
+#hero-canvas{display:block;margin:0 auto 32px;border-radius:50%;}
+
+/* LIVE VALUE */
+.live-val{font-size:36px;font-weight:bold;color:#2ecc60;letter-spacing:3px;
+  margin-bottom:4px;}
+.live-sub{font-size:7px;letter-spacing:4px;color:rgba(255,255,255,.2);
+  text-transform:uppercase;margin-bottom:40px;}
+
+/* SECTION */
+.section{position:relative;z-index:1;padding:20px 20px 60px;max-width:1100px;margin:0 auto;}
+.section-label{font-size:7px;letter-spacing:5px;color:rgba(255,255,255,.2);
+  text-transform:uppercase;margin-bottom:8px;text-align:center;}
+.section-title{font-size:clamp(16px,2.5vw,22px);font-weight:bold;
+  text-align:center;margin-bottom:32px;}
+.section-title span{color:#daa520;}
+
+/* GRID */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;}
+
+/* CARD */
+.card{background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.06);
+  border-radius:14px;padding:20px;cursor:default;transition:all .2s;position:relative;}
+.card:hover{border-color:rgba(218,165,32,.4);background:rgba(218,165,32,.04);
+  transform:translateY(-2px);}
+.card-icon{font-size:22px;margin-bottom:10px;opacity:.7;}
+.card-title{font-size:10px;font-weight:bold;letter-spacing:1px;color:#fff;
+  margin-bottom:6px;}
+.card-desc{font-size:9px;color:rgba(255,255,255,.35);line-height:1.7;}
+.card-val{position:absolute;top:12px;right:12px;font-size:7px;letter-spacing:2px;
+  color:#daa520;text-transform:uppercase;}
+.card:hover .card-val{color:#fff;}
+
+/* CATEGORY DIVIDERS */
+.cat-header{display:flex;align-items:center;gap:16px;margin:48px 0 20px;}
+.cat-line{flex:1;height:1px;background:rgba(255,255,255,.05);}
+.cat-label{font-size:7px;letter-spacing:4px;text-transform:uppercase;
+  color:rgba(255,255,255,.2);white-space:nowrap;}
+
+/* CLAIM BOX */
+.claim-box{position:relative;z-index:1;max-width:700px;margin:0 auto 60px;
+  background:rgba(218,165,32,.04);border:1px solid rgba(218,165,32,.2);
+  border-radius:16px;padding:32px;text-align:center;}
+.claim-q{font-size:clamp(14px,2vw,20px);font-weight:bold;margin-bottom:12px;
+  line-height:1.5;}
+.claim-q span{color:#daa520;}
+.claim-desc{font-size:10px;color:rgba(255,255,255,.35);line-height:1.8;
+  margin-bottom:20px;}
+.claim-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.btn{padding:11px 22px;border-radius:8px;font-family:inherit;font-size:8px;
+  letter-spacing:3px;text-transform:uppercase;cursor:pointer;
+  text-decoration:none;display:inline-block;transition:all .2s;}
+.btn-gold{border:1px solid rgba(218,165,32,.5);background:rgba(218,165,32,.07);color:#daa520;}
+.btn-gold:hover{border-color:#daa520;background:rgba(218,165,32,.15);}
+.btn-green{border:1px solid rgba(46,204,96,.5);background:rgba(46,204,96,.07);color:#2ecc60;}
+.btn-green:hover{border-color:#2ecc60;background:rgba(46,204,96,.15);}
+
+/* MECHANICS NOTE */
+.mech-note{position:relative;z-index:1;max-width:800px;margin:0 auto 60px;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;}
+.mech-card{background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.04);
+  border-radius:12px;padding:18px;}
+.mech-icon{font-size:18px;margin-bottom:8px;opacity:.6;}
+.mech-title{font-size:8px;letter-spacing:2px;text-transform:uppercase;
+  color:rgba(255,255,255,.4);margin-bottom:6px;}
+.mech-desc{font-size:9px;color:rgba(255,255,255,.25);line-height:1.7;}
+
+footer{position:relative;z-index:1;padding:40px 20px;text-align:center;
+  border-top:1px solid rgba(255,255,255,.04);
+  font-size:7px;letter-spacing:3px;color:rgba(255,255,255,.1);text-transform:uppercase;}
+
+@media(max-width:480px){.grid{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<section id="hero">
+  <canvas id="hero-canvas" width="120" height="120"></canvas>
+  <div class="live-val" id="live-val">£1.00</div>
+  <div class="live-sub">Your biscuit · Live float · ±23%</div>
+  <div class="eyebrow">ShortFactory · Biscuit Economy · GB2607623.2</div>
+  <h1 class="hero-h1">What could your<br><span>£1 biscuit</span> do?</h1>
+  <p class="hero-sub">Every biscuit you earn is a unit of real value — portable, living, yours.
+    Here's what a single £1 biscuit unlocks when you connect it to the world.</p>
+</section>
+
+<!-- MECHANICS -->
+<div class="mech-note">
+  <div class="mech-card">
+    <div class="mech-icon">⬡</div>
+    <div class="mech-title">Earn first</div>
+    <div class="mech-desc">Build a shape. Watch demand accumulate. The gate opens automatically. No purchase ever.</div>
+  </div>
+  <div class="mech-card">
+    <div class="mech-icon">◎</div>
+    <div class="mech-title">It floats</div>
+    <div class="mech-desc">Your £1 biscuit lives between £0.77 and £1.23. It moves like a market. It grows while you sleep.</div>
+  </div>
+  <div class="mech-card">
+    <div class="mech-icon">△</div>
+    <div class="mech-title">Stack it</div>
+    <div class="mech-desc">Ten biscuits compress into one £10 ZIP. ZIP unlocks a function tray slot. The slot trains itself free.</div>
+  </div>
+  <div class="mech-card">
+    <div class="mech-icon">↗</div>
+    <div class="mech-title">Spend it</div>
+    <div class="mech-desc">One biscuit = one of everything below. The chip travels. The value is real. The possibilities are yours.</div>
+  </div>
+</div>
+
+<!-- MICRO-CONTENT -->
+<div class="section">
+  <div class="cat-header"><div class="cat-line"></div><div class="cat-label">Micro-Content</div><div class="cat-line"></div></div>
+  <div class="grid">
+    <div class="card"><div class="card-icon">🎵</div><div class="card-val">£1</div><div class="card-title">One song play</div><div class="card-desc">Direct tip to the artist. Spotify pays £0.003. You pay £1 and the artist knows you meant it.</div></div>
+    <div class="card"><div class="card-icon">📰</div><div class="card-val">£1</div><div class="card-title">One article</div><div class="card-desc">Journalism that earns per story. No subscription, no paywall. Pay for what you actually read.</div></div>
+    <div class="card"><div class="card-icon">📖</div><div class="card-val">£1</div><div class="card-title">One chapter</div><div class="card-desc">Authors earn per chapter read. The reader pays only as far as they go. Fair for everyone.</div></div>
+    <div class="card"><div class="card-icon">🍳</div><div class="card-val">£1</div><div class="card-title">One recipe</div><div class="card-desc">The chef earns every time someone cooks their dish. Not per book sale. Per actual meal made.</div></div>
+    <div class="card"><div class="card-icon">🖼</div><div class="card-val">£1</div><div class="card-title">One wallpaper</div><div class="card-desc">Digital art with a living price. The artist earns when you download. The biscuit is the license.</div></div>
+    <div class="card"><div class="card-icon">😂</div><div class="card-val">£1</div><div class="card-title">One meme</div><div class="card-desc">The creator finally gets paid. A meme that reaches a million people earns a million biscuits.</div></div>
+    <div class="card"><div class="card-icon">🌙</div><div class="card-val">£1</div><div class="card-title">One bedtime story</div><div class="card-desc">Personalised, AI-generated, read to your child by name. One biscuit. One night. One memory.</div></div>
+    <div class="card"><div class="card-icon">✍️</div><div class="card-val">£1</div><div class="card-title">One personalised poem</div><div class="card-desc">Written for you, about you, by someone who earns when the words land. Demand gates the mint.</div></div>
+  </div>
+
+  <!-- MICRO-TIME -->
+  <div class="cat-header"><div class="cat-line"></div><div class="cat-label">Micro-Time</div><div class="cat-line"></div></div>
+  <div class="grid">
+    <div class="card"><div class="card-icon">⚖️</div><div class="card-val">£1</div><div class="card-title">One minute of expert advice</div><div class="card-desc">Lawyers, doctors, accountants — metered by the minute. One biscuit. One real answer. No retainer.</div></div>
+    <div class="card"><div class="card-icon">🎓</div><div class="card-val">£1</div><div class="card-title">One 5-minute tutorial</div><div class="card-desc">Skills sold by the skill, not the course. Teach one thing, earn one biscuit, repeat forever.</div></div>
+    <div class="card"><div class="card-icon">🧘</div><div class="card-val">£1</div><div class="card-title">One meditation session</div><div class="card-desc">Guided. Personalised. The instructor earns when your blood pressure drops. Demand-gated calm.</div></div>
+    <div class="card"><div class="card-icon">💪</div><div class="card-val">£1</div><div class="card-title">One workout set</div><div class="card-desc">Pay your trainer per set completed, not per month. The biscuit releases when the rep is done.</div></div>
+    <div class="card"><div class="card-icon">🔮</div><div class="card-val">£1</div><div class="card-title">One reading</div><div class="card-desc">Tarot, horoscope, numerology — pay per session, not per subscription. One biscuit buys the insight.</div></div>
+    <div class="card"><div class="card-icon">🛠</div><div class="card-val">£1</div><div class="card-title">One fix</div><div class="card-desc">A developer answers one question. A designer tweaks one thing. Micro-labour, micro-pay, no platform cut.</div></div>
+  </div>
+
+  <!-- MICRO-SOCIAL -->
+  <div class="cat-header"><div class="cat-line"></div><div class="cat-label">Micro-Social</div><div class="cat-line"></div></div>
+  <div class="grid">
+    <div class="card"><div class="card-icon">🗳</div><div class="card-val">£1</div><div class="card-title">One vote</div><div class="card-desc">Your opinion has a real price. Skin in the game. Verified. Not fake. The biscuit is the stake.</div></div>
+    <div class="card"><div class="card-icon">⭐</div><div class="card-val">£1</div><div class="card-title">One review</div><div class="card-desc">Put a biscuit behind your five stars. Verified reviews cost something. Fake ones don't. Now you can tell.</div></div>
+    <div class="card"><div class="card-icon">🤝</div><div class="card-val">£1</div><div class="card-title">One referral</div><div class="card-desc">Send a friend, earn a biscuit on conversion. Auto-tracked. Auto-paid. No affiliate link needed.</div></div>
+    <div class="card"><div class="card-icon">✒️</div><div class="card-val">£1</div><div class="card-title">One autograph</div><div class="card-desc">A famous person's digital signature. Scarce by design. One biscuit per signing. The chip is the proof.</div></div>
+    <div class="card"><div class="card-icon">💌</div><div class="card-val">£1</div><div class="card-title">One compliment</div><div class="card-desc">Scarcity makes it mean something. A compliment that cost someone a biscuit lands differently.</div></div>
+    <div class="card"><div class="card-icon">😈</div><div class="card-val">£1</div><div class="card-title">One dare</div><div class="card-desc">Native D4D integration. The biscuit IS the stake. Complete the dare, claim it. Fail, it burns.</div></div>
+  </div>
+
+  <!-- MICRO-UTILITY -->
+  <div class="cat-header"><div class="cat-line"></div><div class="cat-label">Micro-Utility</div><div class="cat-line"></div></div>
+  <div class="grid">
+    <div class="card"><div class="card-icon">🤖</div><div class="card-val">£1</div><div class="card-title">One AI query</div><div class="card-desc">Pay-per-use inference. No subscription. One biscuit, one answer from the best model available.</div></div>
+    <div class="card"><div class="card-icon">📸</div><div class="card-val">£1</div><div class="card-title">One stock photo</div><div class="card-desc">The photographer earns every time you use the image. One biscuit per license. Micro-royalties, automatic.</div></div>
+    <div class="card"><div class="card-icon">⚡</div><div class="card-val">£1</div><div class="card-title">One API call</div><div class="card-desc">Developers sell access by the call, not the month. The biscuit is the API key.</div></div>
+    <div class="card"><div class="card-icon">🌦</div><div class="card-val">£1</div><div class="card-title">One forecast</div><div class="card-desc">Hyperlocal weather, sports prediction, market call. Pay for the data. The biscuit settles it.</div></div>
+    <div class="card"><div class="card-icon">🎰</div><div class="card-val">£1</div><div class="card-title">One prediction stake</div><div class="card-desc">Sports, markets, elections. Put a biscuit on it. The float means it might already be worth more by kick-off.</div></div>
+    <div class="card"><div class="card-icon">🚌</div><div class="card-val">£1</div><div class="card-title">One bus fare</div><div class="card-desc">Transit token, settled in biscuits. No card, no cash. The chip in your pocket pays for the seat.</div></div>
+    <div class="card"><div class="card-icon">🅿️</div><div class="card-val">£1</div><div class="card-title">One parking minute</div><div class="card-desc">Metered parking settled in micro-biscuits. The chip drains at 1p/min. No warden. No app. No subscription.</div></div>
+    <div class="card"><div class="card-icon">🎟</div><div class="card-val">£1</div><div class="card-title">One lottery entry</div><div class="card-desc">But better — your entry floats. By draw time it might be worth £1.23. Or you might not care about the jackpot.</div></div>
+  </div>
+
+  <!-- MICRO-TRUST -->
+  <div class="cat-header"><div class="cat-line"></div><div class="cat-label">Micro-Trust</div><div class="cat-line"></div></div>
+  <div class="grid">
+    <div class="card"><div class="card-icon">✅</div><div class="card-val">£1</div><div class="card-title">One verification</div><div class="card-desc">Prove you're a real person. Blood-backed biscuit = biological collateral. Bots can't bleed.</div></div>
+    <div class="card"><div class="card-icon">📝</div><div class="card-val">£1</div><div class="card-title">One contract witness</div><div class="card-desc">Sign a micro-agreement with a biscuit. The chip holds until both parties confirm. Then it releases.</div></div>
+    <div class="card"><div class="card-icon">🔒</div><div class="card-val">£1</div><div class="card-title">One escrow release</div><div class="card-desc">Smart contract settles in biscuits. Condition met = chip released. No middleman, no delay, no fee.</div></div>
+    <div class="card"><div class="card-icon">❤️</div><div class="card-val">£1</div><div class="card-title">One charity donation</div><div class="card-desc">The float means it might be worth more by the time it arrives. A donation that grows in transit.</div></div>
+  </div>
+</div>
+
+<!-- CLAIM BOX -->
+<div class="claim-box">
+  <h2 class="claim-q">Ready to earn your first <span>biscuit?</span></h2>
+  <p class="claim-desc">Build a shape. Watch demand accumulate. The gate opens when the world responds.<br>
+    No purchase. No signup. No catch. Just demand — verified, automatic, yours.</p>
+  <div class="claim-btns">
+    <a href="/biscuit-gateway.html" class="btn btn-gold">⬡ how it works</a>
+    <a href="/biscuit-wallet.html" class="btn btn-gold">⬡ open wallet</a>
+    <a href="/biscuit-v2.html" class="btn btn-green">◎ build a shape</a>
+    <a href="/BiscuitWallet-win32-x64.zip" class="btn btn-green" download>↓ desktop wallet</a>
+  </div>
+</div>
+
+<footer>
+  ShortFactory · Biscuit Economy · Patent GB2607623.2 · 2 April 2026<br>
+  IPFS · Tor · GitHub · Three censorship-resistant networks · No single point of failure
+</footer>
+
+<script>
+function hsl2rgb(h,s,l){h/=360;var r,g,b;if(!s){r=g=b=l;}else{function hf(p,q,t){if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<.5)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p;}var q=l<.5?l*(1+s):l+s-l*s,p=2*l-q;r=hf(p,q,h+1/3);g=hf(p,q,h);b=hf(p,q,h-1/3);}return Math.round(r*255)+','+Math.round(g*255)+','+Math.round(b*255);}
+function drawBiscuit(canvas,b){var size=canvas.width,ctx=canvas.getContext('2d');var cx=size/2,cy=size/2,r=size/2-2;ctx.clearRect(0,0,size,size);var hue=(b.seed*137.5)%360;var glow=ctx.createRadialGradient(cx,cy,r*.4,cx,cy,r*1.5);glow.addColorStop(0,'rgba('+hsl2rgb(hue,.6,.5)+',0)');glow.addColorStop(.8,'rgba('+hsl2rgb(hue,.9,.4)+',.1)');glow.addColorStop(1,'rgba('+hsl2rgb(hue,1,.5)+',.15)');ctx.beginPath();ctx.arc(cx,cy,r*1.4,0,Math.PI*2);ctx.fillStyle=glow;ctx.fill();var base=ctx.createRadialGradient(cx-r*.28,cy-r*.28,r*.04,cx,cy,r);base.addColorStop(0,'hsl('+hue+',14%,16%)');base.addColorStop(.5,'hsl('+hue+',18%,7%)');base.addColorStop(1,'#010101');ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fillStyle=base;ctx.fill();for(var i=0;i<3;i++){ctx.beginPath();ctx.arc(cx,cy,r*(.2+i*.22),0,Math.PI*2);ctx.strokeStyle='rgba('+hsl2rgb(hue,.5,.6)+',.05)';ctx.lineWidth=1;ctx.stroke();}var spec=ctx.createRadialGradient(cx-r*.32,cy-r*.32,0,cx-r*.3,cy-r*.3,r*.48);spec.addColorStop(0,'rgba(255,255,255,.09)');spec.addColorStop(1,'rgba(255,255,255,0)');ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fillStyle=spec;ctx.fill();ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.strokeStyle='rgba('+hsl2rgb(hue,.6,.65)+',.2)';ctx.lineWidth=1.5;ctx.stroke();}
+var B={seed:7,liveVal:1.0};var lv=1.0;
+var hc=document.getElementById('hero-canvas');
+drawBiscuit(hc,B);
+setInterval(function(){var d=1+(Math.random()-.47)*.06;lv=Math.max(.77,Math.min(1.23,lv*d));B.liveVal=lv;document.getElementById('live-val').textContent='£'+lv.toFixed(2);drawBiscuit(hc,B);},1600);
+</script>
+</body>
+</html>

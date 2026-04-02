@@ -597,14 +597,46 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a0a;color:#e2e8f
         <div class="proj-name"><a href="/analytics.html">Visitor Analytics</a></div>
         <span class="proj-status live">LIVE</span>
       </div>
-      <div class="proj-bar"><div class="proj-fill" style="width:80%"></div></div>
+      <div class="proj-bar-wrap">
+        <div class="proj-bar"><div class="proj-bar-fill" style="width:100%;background:linear-gradient(90deg,#22c55e,#16a34a);"></div></div>
+        <div class="proj-pct">100%</div>
+      </div>
       <div class="proj-meta">Real-time server log analytics — 143K+ hits, 5K+ visitors, traffic story page</div>
       <div class="proj-tasks">
         <span class="pt done">Apache log parser (PHP)</span>
         <span class="pt done">Cached API with cron refresh</span>
         <span class="pt done">6-chapter story page with charts</span>
         <span class="pt done">404 error audit + fix</span>
-        <span class="pt pending">GA4 integration</span>
+        <span class="pt done">GA4 integration</span>
+      </div>
+    </div>
+
+    <div class="proj">
+      <div class="proj-top">
+        <div class="proj-name"><a href="/biscuit-v2.html">Biscuit Economy — Gas-State Money</a></div>
+        <span class="proj-status live">LIVE</span>
+      </div>
+      <div class="proj-desc">Escrow-wrapped collectible units of value backed by ALIVE blood. Shape grammar earns biscuits on demand. ZIP compresses 10→£10. Function Tray unlocks droid abilities — self-consuming triangle that funds intelligence until everything is free. Patent GB2607623.2 filed 2 Apr 2026 · 14 claims.</div>
+      <div class="proj-bar-wrap">
+        <div class="proj-bar"><div class="proj-bar-fill" style="width:100%;background:linear-gradient(90deg,#daa520,#b8860b);"></div></div>
+        <div class="proj-pct">100%</div>
+      </div>
+      <div class="proj-tasks">
+        <span class="pt done">Biscuit V1 — dot grid, Casio LCD, drag/drop, ZIP, arbitrage</span>
+        <span class="pt done">Biscuit V2 — prove mechanic, ±23% float, pixel QR, wallet sim</span>
+        <span class="pt done">ALIVE blood bar — denominated metabolic collateral (£5.00)</span>
+        <span class="pt done">Long-hold transfer — progress ring, blood debit, green dot confirm</span>
+        <span class="pt done">Shape Builder — polygon canvas, per-side tones, demand meter, biscuit reward</span>
+        <span class="pt done">Function Tray — triangle hierarchy, 4 states, self-consuming, autonomy bar</span>
+        <span class="pt done">Patent GB2607623.2 filed — 14 claims, 8 figures, 2 Apr 2026</span>
+        <span class="pt done">about5.html — session memorial, goes live on IPO confirmation</span>
+        <span class="pt done">Desktop wallet — Electron exe, chip export/import, localStorage persistence</span>
+        <span class="pt done">Living chip system — cross-compatible .html biscuit files, web ↔ desktop</span>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">
+        <a href="/biscuit-wallet.html" style="display:inline-block;padding:8px 16px;border-radius:8px;border:1px solid rgba(218,165,32,.4);background:rgba(218,165,32,.06);color:#daa520;font-size:10px;letter-spacing:2px;text-transform:uppercase;text-decoration:none;">⬡ web wallet →</a>
+        <a href="/BiscuitWallet-win32-x64.zip" download style="display:inline-block;padding:8px 16px;border-radius:8px;border:1px solid rgba(46,204,96,.4);background:rgba(46,204,96,.06);color:#2ecc60;font-size:10px;letter-spacing:2px;text-transform:uppercase;text-decoration:none;">↓ download desktop wallet (.exe)</a>
+        <a href="/patent-biscuit.html" style="display:inline-block;padding:8px 16px;border-radius:8px;border:1px solid rgba(180,130,255,.4);background:rgba(180,130,255,.06);color:rgba(180,130,255,.9);font-size:10px;letter-spacing:2px;text-transform:uppercase;text-decoration:none;">◎ view patent →</a>
       </div>
     </div>
 
@@ -1483,51 +1515,95 @@ new Chart(document.getElementById('projectTimeChart').getContext('2d'), {
 });
 
 // ══════════════════════════════
-// OVERALL COMPLETION + PREDICTION
+// AUTO-CALC PROGRESS BARS FROM TASK COUNTS + AUTO-SORT
 // ══════════════════════════════
-var PROJECT_PCTS = [100,100,100,100, 95,95, 90,90, 85, 80,80,80,80, 78, 75, 70,70, 60,60, 55, 20, 10]; // 22 projects — updated 30 Mar 2026
-var overallPct = Math.round(PROJECT_PCTS.reduce(function(a,b){return a+b;},0) / PROJECT_PCTS.length);
-document.getElementById('overallPct').textContent = overallPct + '%';
 
-// Build velocity from DAY_LOG
-var totalBuildHrs = 0;
-for (var bi=0; bi<DAY_LOG.length; bi++) totalBuildHrs += DAY_LOG[bi].build;
-var avgBuildPerDay = Math.round(totalBuildHrs / DAY_LOG.length * 10) / 10;
-var dailyPctRate = Math.round(overallPct / DAY_LOG.length * 10) / 10;
-
-// Prediction: remaining % ÷ daily rate, with 0.7x slowdown for final stretch
-var remainPct = 100 - overallPct;
-var adjustedRate = dailyPctRate * 0.7;
-var daysToGo = Math.ceil(remainPct / adjustedRate);
-var predDate = new Date();
-predDate.setDate(predDate.getDate() + daysToGo);
-var predStr = predDate.toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'});
-
-document.getElementById('overallPred').innerHTML = 'Predicted 100%: <strong>' + predStr + '</strong> <span style="color:#64748b;">(' + daysToGo + ' days at current pace)</span>';
-document.getElementById('overallStats').innerHTML =
-  totalBuildHrs + 'h total build time · ' + avgBuildPerDay + 'h/day avg · ' +
-  dailyPctRate + '%/day velocity · ' + DAY_LOG.length + ' days tracked' +
-  '<br><span style="font-size:10px;">Includes 0.7× slowdown factor for final stretch (polish, debugging, edge cases)</span>';
-
-new Chart(document.getElementById('overallChart').getContext('2d'), {
-  type: 'doughnut',
-  data: {
-    labels: ['Complete', 'Remaining'],
-    datasets: [{
-      data: [overallPct, 100 - overallPct],
-      backgroundColor: ['rgba(218,165,32,0.8)', 'rgba(255,255,255,0.04)'],
-      borderColor: ['rgba(218,165,32,0.3)', 'rgba(255,255,255,0.06)'],
-      borderWidth: 2
-    }]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: true,
-    cutout: '78%',
-    plugins: { legend: { display: false }, tooltip: { enabled: false } },
-    animation: { animateRotate: true, duration: 2000 }
-  }
+// Step 1: zero all bars instantly (no transition) so they animate UP not DOWN
+document.querySelectorAll('.proj-bar-fill').forEach(function(f) {
+  f.style.transition = 'none';
+  f.style.width = '0%';
 });
+
+// Step 2: calculate pct per project, store on element, sort container
+var projContainer = document.querySelector('.proj') && document.querySelector('.proj').parentNode;
+var projs = Array.prototype.slice.call(document.querySelectorAll('.proj'));
+var PROJECT_PCTS = [];
+
+projs.forEach(function(proj) {
+  var tasks = proj.querySelectorAll('.pt');
+  var done = proj.querySelectorAll('.pt.done');
+  var pct = tasks.length ? Math.round((done.length / tasks.length) * 100) : 100;
+  proj._calcPct = pct;
+});
+
+// Sort descending by completion
+projs.sort(function(a, b) { return b._calcPct - a._calcPct; });
+projs.forEach(function(proj) {
+  if (projContainer) projContainer.appendChild(proj);
+});
+
+// Step 3: animate bars upward
+setTimeout(function() {
+  projs.forEach(function(proj) {
+    var pct = proj._calcPct;
+    PROJECT_PCTS.push(pct);
+    var fill = proj.querySelector('.proj-bar-fill');
+    if (fill) {
+      fill.style.transition = '';
+      fill.style.width = pct + '%';
+    }
+    var label = proj.querySelector('.proj-pct');
+    if (label) label.textContent = pct + '%';
+  });
+
+  // ══════════════════════════════
+  // OVERALL COMPLETION + PREDICTION (inside timeout so PROJECT_PCTS is populated)
+  // ══════════════════════════════
+  var overallPct = PROJECT_PCTS.length ? Math.round(PROJECT_PCTS.reduce(function(a,b){return a+b;},0) / PROJECT_PCTS.length) : 0;
+  document.getElementById('overallPct').textContent = overallPct + '%';
+
+  // Build velocity from DAY_LOG
+  var totalBuildHrs = 0;
+  for (var bi=0; bi<DAY_LOG.length; bi++) totalBuildHrs += DAY_LOG[bi].build;
+  var avgBuildPerDay = Math.round(totalBuildHrs / DAY_LOG.length * 10) / 10;
+  var dailyPctRate = Math.round(overallPct / DAY_LOG.length * 10) / 10;
+
+  // Prediction: remaining % ÷ daily rate, with 0.7x slowdown for final stretch
+  var remainPct = 100 - overallPct;
+  var adjustedRate = dailyPctRate * 0.7;
+  var daysToGo = adjustedRate > 0 ? Math.ceil(remainPct / adjustedRate) : 0;
+  var predDate = new Date();
+  predDate.setDate(predDate.getDate() + daysToGo);
+  var predStr = remainPct <= 0 ? 'Already there!' : predDate.toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'});
+
+  document.getElementById('overallPred').innerHTML = remainPct <= 0
+    ? '<strong style="color:#22c55e;">100% Complete</strong>'
+    : 'Predicted 100%: <strong>' + predStr + '</strong> <span style="color:#64748b;">(' + daysToGo + ' days at current pace)</span>';
+  document.getElementById('overallStats').innerHTML =
+    totalBuildHrs + 'h total build time · ' + avgBuildPerDay + 'h/day avg · ' +
+    dailyPctRate + '%/day velocity · ' + DAY_LOG.length + ' days tracked' +
+    '<br><span style="font-size:10px;">Includes 0.7× slowdown factor for final stretch (polish, debugging, edge cases)</span>';
+
+  new Chart(document.getElementById('overallChart').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Complete', 'Remaining'],
+      datasets: [{
+        data: [overallPct, 100 - overallPct],
+        backgroundColor: ['rgba(218,165,32,0.8)', 'rgba(255,255,255,0.04)'],
+        borderColor: ['rgba(218,165,32,0.3)', 'rgba(255,255,255,0.06)'],
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      cutout: '78%',
+      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+      animation: { animateRotate: true, duration: 2000 }
+    }
+  });
+}, 50);
 
 // Animate progress bars on scroll
 var observer = new IntersectionObserver(function(entries) {
@@ -1700,6 +1776,14 @@ document.querySelectorAll('.projects').forEach(function(el) { observer.observe(e
       <div class="pat-claims">50/50 forward+reverse training &middot; multi-user simultaneous editing &middot; bidirectional inpainting &middot; rollback via reverse pathway</div>
     </div>
 
+    <div class="pat-card" style="border-color:rgba(212,175,55,0.6);background:rgba(20,16,0,0.6);">
+      <div class="pat-badge" style="color:#daa520;border-color:rgba(212,175,55,0.6);">FILED · 2 APR 2026</div>
+      <div class="pat-num" style="color:#daa520;">GB2607623.2</div>
+      <div class="pat-title">Escrow-backed digital value unit system</div>
+      <div class="pat-filed">Filed 2 April 2026 · UK IPO · Dan Chipchase · ShortFactory · <a href="/patent-biscuit.html" style="color:#daa520;">view patent →</a></div>
+      <div class="pat-claims">14 claims · 8 figures · Shape grammar demand-gate · Biscuit ±23% float · Blood long-hold transfer · Triangle function tray · Zip-gated unlock · Demand-funded training · Native state dissolution · Claim 14: uses money to make money obsolete — intelligence to make paid intelligence unnecessary</div>
+    </div>
+
     <div class="pat-card pending">
       <div class="pat-badge">PENDING FILING</div>
       <div class="pat-num">GB2606001.4</div>
@@ -1801,6 +1885,7 @@ document.querySelectorAll('.projects').forEach(function(el) { observer.observe(e
         <li>Idea Factory — Android dare economy app; React 19 + Vite PWA, Google Play Store listing in progress after device testing</li>
         <li>Identified and visualised the Three Forces as animated soul triangles — Good / Indifferent / Dark — mapped to the three-dot coordinate system; public figure debate system encoding real worldviews as geometry</li>
         <li>Built AGI soul expression — φ-governed emotion wheel (16 emotions, live animation); the golden equation as the creature's emotional genome</li>
+        <li><strong style="color:#daa520;">SHIPPED:</strong> Biscuit Economy — complete post-money civilisation stack. Patent GB2607623.2 filed UK IPO 2 Apr 2026. Living chip format cross-compatible web ↔ desktop. Deployed simultaneously on IPFS, Tor (.onion), and GitHub. Censorship-proof by design. Claim 14: uses money to make money obsolete.</li>
         <li>Published final truth declaration at eliskcage.github.io — complete cosmological and economic map, Sunday 22 March 2026</li>
       </ul>
     </div>
@@ -1845,6 +1930,11 @@ document.querySelectorAll('.projects').forEach(function(el) { observer.observe(e
   <!-- ░░ SHIPPED — newest first ░░ -->
   <div style="font-size:10px;font-weight:700;color:#22c55e;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;padding-left:2px;">✅ SHIPPED</div>
   <div class="notable-grid" style="margin-bottom:24px;">
+    <div class="notable-card" style="border-color:rgba(218,165,32,0.6);background:rgba(218,165,32,0.06);">
+      <div class="notable-icon">⬡</div>
+      <div class="notable-title" style="color:#daa520;">Biscuit Economy — 100% Shipped · Patent Filed · 2 Apr 2026</div>
+      <div class="notable-desc">Complete post-money civilisation stack. Demand-gated minting, ±23% float, metabolic blood collateral, ZIP compression, self-consuming function tray, living chip cross-platform format, web wallet, desktop .exe wallet. Patent GB2607623.2 filed UK IPO. Deployed on IPFS + Tor + GitHub — censorship-proof. Claim 14: uses money to make money obsolete. <a href="/biscuit-gateway.html" style="color:#daa520;">gateway →</a> · <a href="/biscuit-wallet.html" style="color:#daa520;">wallet →</a> · <a href="/BiscuitWallet-win32-x64.zip" style="color:#2ecc60;" download>exe →</a></div>
+    </div>
     <div class="notable-card" style="border-color:rgba(0,247,255,0.4);background:rgba(0,247,255,0.03);">
       <div class="notable-icon">⬛</div>
       <div class="notable-title" style="color:#00f7ff;">Black Box Alien Tec — 100% Shipped &middot; 30 Mar 2026</div>
@@ -1983,6 +2073,10 @@ document.querySelectorAll('.projects').forEach(function(el) { observer.observe(e
     <a href="https://www.shortfactory.shop/singularity.html" target="_blank" class="link-chip"><span class="lc-label">Series</span>Singularity Revelations</a>
     <a href="https://www.shortfactory.shop/arxiv-compression-inversion.html" target="_blank" class="link-chip"><span class="lc-label">Paper</span>CIP arXiv-style</a>
     <a href="https://www.shortfactory.shop/computanium-gravity.html" target="_blank" class="link-chip"><span class="lc-label">Simulation</span>CIP Physics Demo</a>
+    <a href="https://www.shortfactory.shop/biscuit-gateway.html" target="_blank" class="link-chip" style="border-color:rgba(218,165,32,0.4);"><span class="lc-label">Gateway</span>biscuit-gateway.html</a>
+    <a href="https://www.shortfactory.shop/biscuit-wallet.html" target="_blank" class="link-chip" style="border-color:rgba(218,165,32,0.3);"><span class="lc-label">Web Wallet</span>biscuit-wallet.html</a>
+    <a href="https://www.shortfactory.shop/patent-biscuit.html" target="_blank" class="link-chip" style="border-color:rgba(180,130,255,0.3);"><span class="lc-label">Patent</span>GB2607623.2</a>
+    <a href="https://github.com/eliskcage/shortfactory" target="_blank" class="link-chip" style="border-color:rgba(46,204,96,0.3);"><span class="lc-label">GitHub Mirror</span>eliskcage/shortfactory</a>
   </div>
 
   <!-- BLACK BOX DISCOVERY -->
@@ -2003,6 +2097,45 @@ document.querySelectorAll('.projects').forEach(function(el) { observer.observe(e
       <li><strong style="color:#00f7ff;">Distributed AI agents</strong> — agents execute only inside their authorised black box; no agent can read another's source</li>
     </ul>
     <p style="margin-top:16px;"><strong style="color:#fff;">Live:</strong> <a href="https://eliskcage.github.io/satoshi-cypher/" target="_blank" style="color:#00f7ff;">eliskcage.github.io/satoshi-cypher</a> · Patent pending: Computanium 3D Programming · <a href="https://www.shortfactory.shop" target="_blank" style="color:#00f7ff;">shortfactory.shop</a></p>
+  </div>
+
+  <!-- BISCUIT ECONOMY SESSION — 2 APR 2026 -->
+  <div class="cv-section-head" style="color:#daa520;border-color:rgba(218,165,32,0.3);">Biscuit Economy — Complete Civilisation Stack · 2 April 2026 · Overnight Session</div>
+  <div class="char-box" style="border-left-color:#daa520;padding:24px 32px;">
+    <p style="color:#daa520;font-size:13px;letter-spacing:1px;text-transform:uppercase;font-style:normal;">Patent GB2607623.2 · Filed 2 April 2026 · UK IPO · 14 Claims · 8 Figures</p>
+    <p><strong style="color:#fff;">The Invention:</strong> A closed-loop economy in which creative demand gates the minting of currency, currency funds the acquisition of intelligence, intelligence trains to native competence, and upon reaching native competence the intelligence dissolves its own monetary cost. Claim 14: <em style="color:#daa520;">"uses money to make money obsolete — and intelligence to make paid intelligence unnecessary."</em></p>
+    <ul style="margin:12px 0 0 0;color:#999;font-size:13px;line-height:2.2;">
+      <li><strong style="color:#fff;">Shape-Based Demand Gate</strong> — Biscuits mint only when external demand for a polygon shape exceeds a configurable threshold. Proof-of-creative-work. No upfront cost ever.</li>
+      <li><strong style="color:#fff;">Value Unit (Biscuit)</strong> — ±23% mean-reverting float. Unique seed. Escrow-backed. Four types: demo / user / zip / nested. Green dot on real-backed units.</li>
+      <li><strong style="color:#fff;">Metabolic Collateral</strong> — ALIVE pet blood transfers to biscuits via 1500ms long-hold gesture. Progress arc renders in real time. Biological commitment denominated in money.</li>
+      <li><strong style="color:#fff;">ZIP Compression</strong> — Ten biscuits → one £10 ZIP unit. Nested ZIPs of arbitrary depth. Purple glow + ×N label.</li>
+      <li><strong style="color:#fff;">Function Tray</strong> — Triangle hierarchy (1+2+3+4=10 slots). Locked → Unlocked → Learning → Native. ZIP units buy unlocks. Learning is automatic. Native = free forever. Full native = tray dissolves. Agent autonomous.</li>
+      <li><strong style="color:#fff;">Living Chip</strong> — Every biscuit exports as a self-contained .html file. Floats live. Canvas-rendered. Import button. Portable: email, USB, URL, drag-and-drop. Works offline. No server dependency.</li>
+      <li><strong style="color:#fff;">Web Wallet</strong> — Full desktop canvas. Drag/drop biscuit placement. Nesting. Pin dock. Chip export/import. URL ?biscuit=base64 param. <a href="/biscuit-wallet.html" style="color:#daa520;">live →</a></li>
+      <li><strong style="color:#fff;">Desktop Wallet (.exe)</strong> — Electron app. localStorage persistence. Native file I/O via contextBridge/ipcMain. 224MB distributable. <a href="/BiscuitWallet-win32-x64.zip" style="color:#2ecc60;" download>download →</a></li>
+      <li><strong style="color:#fff;">Biscuit Gateway</strong> — Empire front door. Interactive 5-step journey. Live shape builder, floating biscuit, function tray animating to native, dissolving triangle. <a href="/biscuit-gateway.html" style="color:#daa520;">live →</a></li>
+      <li><strong style="color:#fff;">Patent encrypted</strong> — Satoshi cipher gate on patent-biscuit.html. Key: BISCUIT. PDF filed with UK IPO. <a href="/patent-biscuit.html" style="color:#daa520;">view →</a></li>
+    </ul>
+  </div>
+
+  <!-- CENSORSHIP RESISTANCE -->
+  <div class="cv-section-head" style="color:#2ecc60;border-color:rgba(46,204,96,0.2);">Censorship-Resistant Distribution · 2 April 2026</div>
+  <div class="char-box" style="border-left-color:#2ecc60;padding:24px 32px;">
+    <p style="color:#2ecc60;font-size:13px;letter-spacing:1px;text-transform:uppercase;font-style:normal;">IPFS · Tor Darknet · GitHub · Three independent networks · No single point of failure</p>
+    <p><strong style="color:#fff;">Why:</strong> No government, corporation, or regulator can remove this. The patent is filed. The tech is public. The empire is censorship-proof by design.</p>
+    <ul style="margin:12px 0 0 0;color:#999;font-size:13px;line-height:2.2;">
+      <li><strong style="color:#fff;">IPFS</strong> — Content-addressed, decentralised, 55+ peers. Pinned as systemd service on production VPS. Accessible via any IPFS gateway permanently.<br>
+        Gateway: <code style="font-size:11px;color:#2ecc60;">QmY9hqoum126jAyB9cGv1tPQWjzG5KR14iBczK9C6CwbFL</code><br>
+        Wallet: <code style="font-size:11px;color:#2ecc60;">QmVqZCfXTbxYKEbvw7AudPfzvibccWrANps96bwL9JrngC</code><br>
+        Patent: <code style="font-size:11px;color:#2ecc60;">QmbzAe3iXADzMkqhNgfTCeeiriw7PS2ARA6fnGNnwFSZAd</code>
+      </li>
+      <li><strong style="color:#fff;">Tor Hidden Service</strong> — .onion address, no IP, no jurisdiction, no domain registrar to pressure.<br>
+        <code style="font-size:11px;color:#2ecc60;">jvfmvokolrhadkk7eux4eazq4c3ucp26pmptqve6ufem4ukqn4shwaid.onion</code>
+      </li>
+      <li><strong style="color:#fff;">GitHub</strong> — Public permanent commit. Streisand-effect protection. Takedown one mirror, it propagates.<br>
+        <a href="https://github.com/eliskcage/shortfactory" target="_blank" style="color:#2ecc60;">github.com/eliskcage/shortfactory</a> · commit <code style="font-size:11px;">f78f1f3</code>
+      </li>
+    </ul>
   </div>
 
   <!-- CLOSING QUOTE -->
