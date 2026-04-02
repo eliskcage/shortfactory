@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Biscuit Gateway — The Empire's Front Door</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --gold:#daa520;--green:#2ecc60;--purple:rgba(180,130,255,.9);
+  --dim:rgba(255,255,255,.08);--dimmer:rgba(255,255,255,.04);
+}
+html{scroll-behavior:smooth;}
+body{background:#070708;color:#fff;font-family:'Courier New',monospace;overflow-x:hidden;}
+
+/* DOT GRID */
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:radial-gradient(circle,rgba(255,255,255,.04) 1px,transparent 1px);
+  background-size:24px 24px;}
+
+/* ── HERO ── */
+#hero{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;padding:40px 20px;}
+#hero-biscuit{margin-bottom:32px;}
+.hero-eyebrow{font-size:8px;letter-spacing:5px;color:rgba(255,255,255,.25);
+  text-transform:uppercase;margin-bottom:16px;}
+.hero-h1{font-size:clamp(28px,5vw,52px);font-weight:bold;line-height:1.15;
+  margin-bottom:16px;max-width:800px;}
+.hero-h1 span{color:var(--gold);}
+.hero-sub{font-size:clamp(10px,1.5vw,13px);color:rgba(255,255,255,.4);
+  letter-spacing:2px;max-width:520px;line-height:1.8;margin-bottom:40px;}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;}
+.btn{padding:13px 28px;border-radius:10px;font-family:inherit;
+  font-size:9px;letter-spacing:3px;text-transform:uppercase;
+  cursor:pointer;text-decoration:none;transition:all .2s;display:inline-block;}
+.btn-gold{border:1px solid rgba(218,165,32,.5);background:rgba(218,165,32,.07);color:var(--gold);}
+.btn-gold:hover{border-color:var(--gold);background:rgba(218,165,32,.15);}
+.btn-green{border:1px solid rgba(46,204,96,.5);background:rgba(46,204,96,.07);color:var(--green);}
+.btn-green:hover{border-color:var(--green);background:rgba(46,204,96,.15);}
+.btn-ghost{border:1px solid var(--dim);background:transparent;color:rgba(255,255,255,.3);}
+.btn-ghost:hover{border-color:rgba(255,255,255,.2);color:rgba(255,255,255,.6);}
+
+/* ── JOURNEY SECTION ── */
+#journey{position:relative;z-index:1;padding:80px 20px;}
+.section-label{text-align:center;font-size:7px;letter-spacing:5px;
+  color:rgba(255,255,255,.2);text-transform:uppercase;margin-bottom:8px;}
+.section-title{text-align:center;font-size:clamp(18px,3vw,28px);font-weight:bold;
+  margin-bottom:60px;}
+
+.steps{display:flex;flex-direction:column;gap:0;max-width:900px;margin:0 auto;}
+.step{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;
+  padding:60px 0;border-top:1px solid var(--dimmer);}
+.step:nth-child(even) .step-demo{order:-1;}
+.step-text{}
+.step-num{font-size:7px;letter-spacing:4px;color:rgba(255,255,255,.15);
+  text-transform:uppercase;margin-bottom:12px;}
+.step-head{font-size:clamp(16px,2.5vw,22px);font-weight:bold;margin-bottom:12px;}
+.step-head .accent{color:var(--gold);}
+.step-head .accent-green{color:var(--green);}
+.step-head .accent-purple{color:var(--purple);}
+.step-desc{font-size:10px;color:rgba(255,255,255,.35);line-height:1.9;
+  letter-spacing:.5px;margin-bottom:20px;}
+.step-tag{display:inline-block;padding:5px 12px;border-radius:6px;font-size:7px;
+  letter-spacing:3px;text-transform:uppercase;border:1px solid var(--dim);
+  color:rgba(255,255,255,.25);}
+.step-demo{display:flex;align-items:center;justify-content:center;}
+
+/* ── SHAPE BUILDER DEMO ── */
+#shape-demo{background:rgba(255,255,255,.015);border:1px solid var(--dim);
+  border-radius:16px;padding:24px;text-align:center;width:100%;max-width:320px;}
+#shape-canvas{display:block;margin:0 auto 16px;}
+.side-btns{display:flex;gap:6px;justify-content:center;margin-bottom:12px;}
+.side-btn{padding:6px 12px;border-radius:6px;border:1px solid var(--dim);
+  background:transparent;color:rgba(255,255,255,.4);font-family:inherit;
+  font-size:7px;letter-spacing:2px;cursor:pointer;transition:all .15s;}
+.side-btn.active,.side-btn:hover{border-color:rgba(218,165,32,.6);color:var(--gold);}
+.demand-wrap{margin-top:4px;}
+.demand-label{font-size:6px;letter-spacing:3px;color:rgba(255,255,255,.2);
+  text-transform:uppercase;margin-bottom:6px;}
+.demand-bar{height:4px;background:var(--dimmer);border-radius:2px;overflow:hidden;margin-bottom:4px;}
+.demand-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,rgba(46,204,96,.4),var(--green));
+  transition:width .4s ease;}
+.mint-flash{font-size:8px;letter-spacing:2px;color:var(--green);
+  min-height:16px;transition:opacity .3s;}
+
+/* ── BISCUIT WALLET DEMO ── */
+#wallet-demo{background:rgba(255,255,255,.015);border:1px solid var(--dim);
+  border-radius:16px;padding:24px;text-align:center;width:100%;max-width:320px;}
+#wallet-canvas{display:block;margin:0 auto 12px;border-radius:50%;}
+.wallet-val{font-size:28px;font-weight:bold;color:var(--green);letter-spacing:2px;margin-bottom:4px;}
+.wallet-backing{font-size:7px;letter-spacing:3px;color:rgba(255,255,255,.2);
+  text-transform:uppercase;margin-bottom:16px;}
+.float-bar{height:3px;background:var(--dimmer);border-radius:2px;overflow:hidden;}
+.float-fill{height:100%;border-radius:2px;
+  background:linear-gradient(90deg,rgba(46,204,96,.4),var(--green));
+  transition:width .8s ease;}
+
+/* ── FUNCTION TRAY DEMO ── */
+#tray-demo{background:rgba(255,255,255,.015);border:1px solid var(--dim);
+  border-radius:16px;padding:24px;width:100%;max-width:320px;}
+.tray-title{font-size:7px;letter-spacing:3px;color:rgba(255,255,255,.2);
+  text-transform:uppercase;text-align:center;margin-bottom:16px;}
+.tray-rows{display:flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:16px;}
+.tray-row{display:flex;gap:6px;}
+.tray-slot{padding:6px 10px;border-radius:6px;font-size:6px;letter-spacing:1.5px;
+  text-transform:uppercase;border:1px solid;transition:all .4s;text-align:center;min-width:64px;}
+.tray-slot.locked{border-color:rgba(255,255,255,.08);color:rgba(255,255,255,.15);background:transparent;}
+.tray-slot.unlocked{border-color:rgba(218,165,32,.3);color:rgba(218,165,32,.6);background:rgba(218,165,32,.03);}
+.tray-slot.learning{border-color:rgba(255,180,50,.5);color:rgba(255,180,50,.8);
+  background:rgba(255,180,50,.04);animation:pulse-amber 1.2s ease-in-out infinite;}
+.tray-slot.native{border-color:rgba(46,204,96,.5);color:var(--green);background:rgba(46,204,96,.06);}
+@keyframes pulse-amber{0%,100%{opacity:.7;}50%{opacity:1;}}
+.autonomy-wrap{text-align:center;}
+.autonomy-label{font-size:6px;letter-spacing:3px;color:rgba(255,255,255,.2);
+  text-transform:uppercase;margin-bottom:6px;}
+.autonomy-bar{height:3px;background:var(--dimmer);border-radius:2px;overflow:hidden;}
+.autonomy-fill{height:100%;border-radius:2px;
+  background:linear-gradient(90deg,rgba(46,204,96,.4),var(--green));transition:width .8s;}
+
+/* ── CHIP DEMO ── */
+#chip-demo{background:rgba(255,255,255,.015);border:1px solid var(--dim);
+  border-radius:16px;padding:24px;width:100%;max-width:320px;text-align:center;}
+.chip-icon{font-size:40px;margin-bottom:12px;opacity:.6;}
+.chip-filename{font-size:8px;letter-spacing:2px;color:rgba(218,165,32,.7);margin-bottom:8px;}
+.chip-desc{font-size:7px;color:rgba(255,255,255,.25);line-height:1.8;letter-spacing:.5px;margin-bottom:16px;}
+.chip-targets{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.chip-target{padding:6px 12px;border-radius:6px;border:1px solid var(--dim);
+  font-size:6px;letter-spacing:2px;color:rgba(255,255,255,.3);text-transform:uppercase;}
+
+/* ── ECOSYSTEM ── */
+#ecosystem{position:relative;z-index:1;padding:80px 20px;}
+.eco-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:16px;max-width:900px;margin:0 auto;}
+.eco-card{background:rgba(255,255,255,.015);border:1px solid var(--dim);
+  border-radius:16px;padding:28px;transition:border-color .2s;}
+.eco-card:hover{border-color:rgba(255,255,255,.15);}
+.eco-icon{font-size:24px;margin-bottom:12px;opacity:.7;}
+.eco-name{font-size:9px;letter-spacing:3px;text-transform:uppercase;
+  color:rgba(255,255,255,.5);margin-bottom:8px;}
+.eco-desc{font-size:9px;color:rgba(255,255,255,.3);line-height:1.8;}
+.eco-link{display:inline-block;margin-top:12px;font-size:7px;letter-spacing:2px;
+  text-transform:uppercase;color:var(--gold);text-decoration:none;opacity:.7;}
+.eco-link:hover{opacity:1;}
+
+/* ── CLAIM 14 ── */
+#claim14{position:relative;z-index:1;padding:80px 20px;text-align:center;}
+.claim-quote{font-size:clamp(13px,2vw,18px);color:rgba(255,255,255,.5);
+  line-height:1.7;max-width:680px;margin:0 auto 16px;font-style:italic;}
+.claim-quote strong{color:#fff;font-style:normal;}
+.claim-ref{font-size:7px;letter-spacing:4px;color:rgba(255,255,255,.15);
+  text-transform:uppercase;}
+
+/* ── FOOTER CTA ── */
+#cta{position:relative;z-index:1;padding:80px 20px;text-align:center;
+  border-top:1px solid var(--dimmer);}
+.cta-h{font-size:clamp(20px,3vw,32px);font-weight:bold;margin-bottom:12px;}
+.cta-sub{font-size:10px;color:rgba(255,255,255,.3);letter-spacing:2px;
+  margin-bottom:32px;}
+.cta-btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;}
+.footer-line{margin-top:48px;font-size:7px;letter-spacing:3px;
+  color:rgba(255,255,255,.08);text-transform:uppercase;}
+
+@media(max-width:640px){
+  .step{grid-template-columns:1fr;}
+  .step:nth-child(even) .step-demo{order:0;}
+}
+</style>
+</head>
+<body>
+
+<!-- ── HERO ─────────────────────────────────────────────────────────────── -->
+<section id="hero">
+  <canvas id="hero-biscuit" width="160" height="160"></canvas>
+  <div class="hero-eyebrow">ShortFactory · Biscuit Gateway · GB2607623.2</div>
+  <h1 class="hero-h1">The <span>impossible</span> just became<br>your front door.</h1>
+  <p class="hero-sub">Financial security. Effortless trading. Gamified intelligence.<br>
+    All earned — never bought. All yours — permanently.</p>
+  <div class="hero-btns">
+    <a href="/biscuit-wallet.html" class="btn btn-gold">⬡ open web wallet</a>
+    <a href="/BiscuitWallet-win32-x64.zip" class="btn btn-green" download>↓ desktop wallet</a>
+    <a href="/biscuit-v2.html" class="btn btn-ghost">◎ shape builder</a>
+  </div>
+</section>
+
+<!-- ── JOURNEY ───────────────────────────────────────────────────────────── -->
+<section id="journey">
+  <div class="section-label">How it works</div>
+  <h2 class="section-title">Five steps. No catch.</h2>
+
+  <div class="steps">
+
+    <!-- STEP 1: PLAY -->
+    <div class="step">
+      <div class="step-text">
+        <div class="step-num">Step 01 · Play</div>
+        <h3 class="step-head">Build a shape.<br><span class="accent">Demand does the rest.</span></h3>
+        <p class="step-desc">Choose your sides. Assign tonal tags — urgency, trust, play, calm.
+          The shape grammar encodes your intent as geometry.
+          When the world responds, the demand gate opens automatically.</p>
+        <span class="step-tag">no upfront cost</span>
+      </div>
+      <div class="step-demo">
+        <div id="shape-demo">
+          <canvas id="shape-canvas" width="180" height="180"></canvas>
+          <div class="side-btns">
+            <button class="side-btn" onclick="setSides(3)">3</button>
+            <button class="side-btn active" onclick="setSides(5)">5</button>
+            <button class="side-btn" onclick="setSides(6)">6</button>
+            <button class="side-btn" onclick="setSides(8)">8</button>
+          </div>
+          <div class="demand-wrap">
+            <div class="demand-label">Demand accumulating</div>
+            <div class="demand-bar"><div class="demand-fill" id="demand-fill" style="width:0%"></div></div>
+            <div class="mint-flash" id="mint-flash"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: EARN -->
+    <div class="step">
+      <div class="step-text">
+        <div class="step-num">Step 02 · Earn</div>
+        <h3 class="step-head">A biscuit mints.<br><span class="accent-green">Yours. Forever.</span></h3>
+        <p class="step-desc">Not bought. Not borrowed. Earned through verified demand.
+          Each biscuit carries a live floating value — ±23% around its nominal —
+          and a unique identity tied to the shape that created it.
+          Real-backed biscuits carry metabolic collateral from a living agent.</p>
+        <span class="step-tag">patent GB2607623.2</span>
+      </div>
+      <div class="step-demo">
+        <div id="wallet-demo">
+          <canvas id="wallet-canvas" width="140" height="140"></canvas>
+          <div class="wallet-val" id="wallet-val">£1.00</div>
+          <div class="wallet-backing">ShortFactory · user biscuit</div>
+          <div class="float-bar"><div class="float-fill" id="float-fill" style="width:50%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: OWN -->
+    <div class="step">
+      <div class="step-text">
+        <div class="step-num">Step 03 · Own</div>
+        <h3 class="step-head">A living chip.<br><span class="accent">Portable anywhere.</span></h3>
+        <p class="step-desc">Export your biscuit as a self-contained file — a living chip.
+          It floats. It travels. Drop it in your desktop wallet,
+          share it as a URL, email it, store it on a USB.
+          It's currency that lives in a file and works everywhere.</p>
+        <span class="step-tag">web · desktop · offline</span>
+      </div>
+      <div class="step-demo">
+        <div id="chip-demo">
+          <div class="chip-icon">⬡</div>
+          <div class="chip-filename">biscuit-a3f9-£1.04.html</div>
+          <div class="chip-desc">
+            Self-contained · Floats live · Importable anywhere<br>
+            No server. No login. No dependency.
+          </div>
+          <div class="chip-targets">
+            <div class="chip-target">⬡ web wallet</div>
+            <div class="chip-target">▣ desktop app</div>
+            <div class="chip-target">↗ url param</div>
+            <div class="chip-target">⊕ drag &amp; drop</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4: UNLOCK -->
+    <div class="step">
+      <div class="step-text">
+        <div class="step-num">Step 04 · Unlock</div>
+        <h3 class="step-head">Spend biscuits.<br><span class="accent-purple">Buy intelligence.</span></h3>
+        <p class="step-desc">ZIP ten biscuits into one £10 unit.
+          Use it to unlock capabilities in the function tray —
+          AGI Bridge, Voice, Vision, Payment, GPS, Shape Grammar.
+          Each capability trains itself. Progress is automatic.</p>
+        <span class="step-tag">10 biscuits = 1 zip = 1 unlock</span>
+      </div>
+      <div class="step-demo">
+        <div id="tray-demo">
+          <div class="tray-title">Function Tray [280]</div>
+          <div class="tray-rows" id="tray-rows"></div>
+          <div class="autonomy-wrap">
+            <div class="autonomy-label">Autonomy</div>
+            <div class="autonomy-bar"><div class="autonomy-fill" id="autonomy-fill" style="width:20%"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 5: AUTOMATE -->
+    <div class="step">
+      <div class="step-text">
+        <div class="step-num">Step 05 · Automate</div>
+        <h3 class="step-head">Native state.<br><span class="accent-green">Cost dissolves.</span></h3>
+        <p class="step-desc">When a capability reaches native, it is yours — permanently — at zero cost.
+          The function tray funds its own obsolescence.
+          When all slots go native, the tray dissolves.
+          The agent runs itself. You own the intelligence outright.</p>
+        <span class="step-tag">claim 14 · money makes itself unnecessary</span>
+      </div>
+      <div class="step-demo">
+        <div id="tray-demo-native" style="background:rgba(255,255,255,.015);border:1px solid rgba(46,204,96,.15);border-radius:16px;padding:24px;width:100%;max-width:320px;text-align:center;">
+          <div style="font-size:7px;letter-spacing:3px;color:rgba(46,204,96,.4);text-transform:uppercase;margin-bottom:16px;">Autonomous State [340]</div>
+          <canvas id="dissolve-canvas" width="200" height="120"></canvas>
+          <div style="font-size:8px;color:rgba(46,204,96,.6);letter-spacing:2px;margin-top:12px;">All capabilities native</div>
+          <div style="font-size:7px;color:rgba(255,255,255,.2);letter-spacing:1px;margin-top:4px;">Zero monetary cost · Forever</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── ECOSYSTEM ──────────────────────────────────────────────────────────── -->
+<section id="ecosystem">
+  <div class="section-label">The empire</div>
+  <h2 class="section-title" style="margin-bottom:40px;">Everything connects.</h2>
+  <div class="eco-grid">
+    <div class="eco-card">
+      <div class="eco-icon">◈</div>
+      <div class="eco-name">Smart Contracts</div>
+      <div class="eco-desc">Biscuits are the escrow unit. Contracts pay out in living chips.
+        Cross-platform, portable, self-verifying. No middleware.</div>
+    </div>
+    <div class="eco-card">
+      <div class="eco-icon">▷</div>
+      <div class="eco-name">Advertainment</div>
+      <div class="eco-desc">Interact with a shape ad. Demand ticks. A biscuit mints.
+        You own a piece of the ad's value. Attention becomes currency.</div>
+    </div>
+    <div class="eco-card">
+      <div class="eco-icon">⬡</div>
+      <div class="eco-name">ALIVE Pets</div>
+      <div class="eco-desc">Your pet's blood backs your biscuits. Long-hold transfers
+        metabolic collateral. Biological commitment in monetary form.</div>
+      <a href="/alive/app.html" class="eco-link">meet your pet →</a>
+    </div>
+    <div class="eco-card">
+      <div class="eco-icon">£</div>
+      <div class="eco-name">Revert Fiver</div>
+      <div class="eco-desc">£5 entry. Biscuits out. The self-replicating chain now has
+        a patented currency. Each recruit's £5 becomes the next recruit's biscuits.</div>
+    </div>
+    <div class="eco-card">
+      <div class="eco-icon">△</div>
+      <div class="eco-name">Shape Grammar</div>
+      <div class="eco-desc">Sides are tag slots. Truth score drives tag swing.
+        Shapes connect like syntax. The language that earns.</div>
+      <a href="/biscuit-v2.html" class="eco-link">build a shape →</a>
+    </div>
+    <div class="eco-card">
+      <div class="eco-icon">◎</div>
+      <div class="eco-name">Soul Stack</div>
+      <div class="eco-desc">Every biscuit carries a seed. The seed maps to a soul coordinate.
+        Value units are identity units. The wallet is the self.</div>
+      <a href="/satoshi.html" class="eco-link">view cipher →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── CLAIM 14 ───────────────────────────────────────────────────────────── -->
+<section id="claim14">
+  <p class="claim-quote">
+    "<strong>uses money to make money obsolete</strong> — and
+    <strong>intelligence to make paid intelligence unnecessary</strong>"
+  </p>
+  <div class="claim-ref">Claim 14 · Patent GB2607623.2 · 2 April 2026</div>
+</section>
+
+<!-- ── FOOTER CTA ─────────────────────────────────────────────────────────── -->
+<section id="cta">
+  <h2 class="cta-h">Start earning. Right now.</h2>
+  <p class="cta-sub">No signup. No purchase. Build a shape and watch the gate open.</p>
+  <div class="cta-btns">
+    <a href="/biscuit-wallet.html" class="btn btn-gold">⬡ open web wallet</a>
+    <a href="/BiscuitWallet-win32-x64.zip" class="btn btn-green" download>↓ download desktop wallet</a>
+    <a href="/biscuit-v2.html" class="btn btn-ghost">◎ shape builder</a>
+    <a href="/patent-biscuit.html" class="btn btn-ghost">◎ view patent</a>
+  </div>
+  <div class="footer-line">ShortFactory · Biscuit Gateway · Patent GB2607623.2 · 2 April 2026</div>
+</section>
+
+<script>
+// ── BISCUIT DRAW ─────────────────────────────────────────────────────────────
+function hsl2rgb(h,s,l){h/=360;var r,g,b;if(!s){r=g=b=l;}else{function hf(p,q,t){if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<.5)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p;}var q=l<.5?l*(1+s):l+s-l*s,p=2*l-q;r=hf(p,q,h+1/3);g=hf(p,q,h);b=hf(p,q,h-1/3);}return Math.round(r*255)+','+Math.round(g*255)+','+Math.round(b*255);}
+
+function drawBiscuit(canvas, b){
+  var size=canvas.width, ctx=canvas.getContext('2d');
+  var cx=size/2, cy=size/2, r=size/2-2;
+  ctx.clearRect(0,0,size,size);
+  var nc=(b.children||[]).length;
+  var hue=b.isDemo?45:b.isZip?270:nc>0?270:(b.seed*137.5)%360;
+  var glow=ctx.createRadialGradient(cx,cy,r*.4,cx,cy,r*1.5);
+  var ga=b.isDemo?.2:nc>0?.18:.07;
+  glow.addColorStop(0,'rgba('+hsl2rgb(hue,.6,.5)+',0)');
+  glow.addColorStop(.8,'rgba('+hsl2rgb(hue,.9,.4)+','+ga+')');
+  glow.addColorStop(1,'rgba('+hsl2rgb(hue,1,.5)+','+(ga*1.5)+')');
+  ctx.beginPath();ctx.arc(cx,cy,r*1.4,0,Math.PI*2);ctx.fillStyle=glow;ctx.fill();
+  var base=ctx.createRadialGradient(cx-r*.28,cy-r*.28,r*.04,cx,cy,r);
+  if(b.isDemo){base.addColorStop(0,'#201800');base.addColorStop(.5,'#130e00');base.addColorStop(1,'#020100');}
+  else if(nc>0){base.addColorStop(0,'#12001f');base.addColorStop(.5,'#0a0014');base.addColorStop(1,'#020003');}
+  else{base.addColorStop(0,'hsl('+hue+',14%,16%)');base.addColorStop(.5,'hsl('+hue+',18%,7%)');base.addColorStop(1,'#010101');}
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fillStyle=base;ctx.fill();
+  var core=ctx.createRadialGradient(cx,cy,0,cx,cy,r*.6);
+  var ca=nc>0?.16:.08;
+  core.addColorStop(0,'rgba('+hsl2rgb(hue,.9,.8)+','+ca+')');
+  core.addColorStop(.5,'rgba('+hsl2rgb(hue,.7,.5)+','+(ca*.5)+')');
+  core.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fillStyle=core;ctx.fill();
+  var rings=nc>0?4+nc:2+b.seed%3;
+  for(var i=0;i<rings;i++){ctx.beginPath();ctx.arc(cx,cy,r*(.2+i*.18),0,Math.PI*2);ctx.strokeStyle='rgba('+hsl2rgb(hue,.5,.6)+',.04)';ctx.lineWidth=1;ctx.stroke();}
+  if(b.realBacked){ctx.beginPath();ctx.arc(cx,cy-r*.55,r*.1,0,Math.PI*2);ctx.fillStyle='rgba(46,204,96,.8)';ctx.fill();}
+  var spec=ctx.createRadialGradient(cx-r*.32,cy-r*.32,0,cx-r*.3,cy-r*.3,r*.48);
+  spec.addColorStop(0,'rgba(255,255,255,.09)');spec.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fillStyle=spec;ctx.fill();
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.strokeStyle='rgba('+hsl2rgb(hue,.6,.65)+','+(nc>0?.35:.18)+')';
+  ctx.lineWidth=1.5;ctx.stroke();
+}
+
+// ── HERO BISCUIT ─────────────────────────────────────────────────────────────
+var heroBiscuit = {seed:42, liveVal:1.0, isDemo:false, realBacked:false, children:[]};
+var heroCanvas = document.getElementById('hero-biscuit');
+var heroLive = 1.0;
+function heroTick(){
+  var d=1+(Math.random()-.47)*.05;
+  heroLive=Math.max(.77,Math.min(1.23,heroLive*d));
+  heroBiscuit.liveVal=heroLive;
+  drawBiscuit(heroCanvas, heroBiscuit);
+}
+drawBiscuit(heroCanvas, heroBiscuit);
+setInterval(heroTick, 1800);
+
+// ── SHAPE BUILDER DEMO ───────────────────────────────────────────────────────
+var sides = 5;
+var demandPct = 0;
+var mintTimeout = null;
+
+function setSides(n){
+  sides = n;
+  document.querySelectorAll('.side-btn').forEach(function(b){b.classList.remove('active');});
+  event.target.classList.add('active');
+  drawShape();
+  demandPct = 0;
+  document.getElementById('demand-fill').style.width = '0%';
+  document.getElementById('mint-flash').textContent = '';
+  document.getElementById('mint-flash').style.opacity = '0';
+}
+
+var tones = ['URGENCY','TRUST','PLAY','CALM','POWER','MYSTERY','WARMTH','CLARITY'];
+function drawShape(){
+  var canvas = document.getElementById('shape-canvas');
+  var ctx = canvas.getContext('2d');
+  var cx=90, cy=90, r=60;
+  ctx.clearRect(0,0,180,180);
+  var angles = [];
+  for(var i=0;i<sides;i++) angles.push(Math.PI/2 + 2*Math.PI*i/sides);
+  var pts = angles.map(function(a){return[cx+r*Math.cos(a),cy+r*Math.sin(a)];});
+  // glow
+  var glow = ctx.createRadialGradient(cx,cy,20,cx,cy,80);
+  glow.addColorStop(0,'rgba(218,165,32,.0)');
+  glow.addColorStop(1,'rgba(218,165,32,.06)');
+  ctx.beginPath();
+  pts.forEach(function(p,i){i===0?ctx.moveTo(p[0],p[1]):ctx.lineTo(p[0],p[1]);});
+  ctx.closePath();ctx.fillStyle=glow;ctx.fill();
+  // outline
+  ctx.beginPath();
+  pts.forEach(function(p,i){i===0?ctx.moveTo(p[0],p[1]):ctx.lineTo(p[0],p[1]);});
+  ctx.closePath();
+  ctx.strokeStyle='rgba(218,165,32,.5)';ctx.lineWidth=1.5;ctx.stroke();
+  // side labels
+  ctx.font='5.5px Courier New';ctx.fillStyle='rgba(255,255,255,.3)';ctx.textAlign='center';
+  for(var i=0;i<sides;i++){
+    var mx=(pts[i][0]+pts[(i+1)%sides][0])/2;
+    var my=(pts[i][1]+pts[(i+1)%sides][1])/2;
+    var dx=mx-cx;var dy=my-cy;var dist=Math.sqrt(dx*dx+dy*dy);
+    ctx.fillText(tones[i%tones.length],mx+8*dx/dist,my+8*dy/dist);
+  }
+}
+drawShape();
+
+// demand animation
+setInterval(function(){
+  demandPct += (Math.random()*3 + 1) * (sides/5);
+  if(demandPct >= 100){
+    demandPct = 0;
+    var flash = document.getElementById('mint-flash');
+    flash.textContent = '⬡ biscuit minted!';
+    flash.style.opacity = '1';
+    setTimeout(function(){flash.style.opacity='0';},2000);
+  }
+  document.getElementById('demand-fill').style.width = Math.min(100,demandPct)+'%';
+}, 600);
+
+// ── WALLET BISCUIT ───────────────────────────────────────────────────────────
+var walletBiscuit = {seed:17, liveVal:1.0, isDemo:false, realBacked:false, children:[]};
+var walletLive = 1.0;
+var walletCanvas = document.getElementById('wallet-canvas');
+function walletTick(){
+  var d=1+(Math.random()-.47)*.06;
+  walletLive=Math.max(.77,Math.min(1.23,walletLive*d));
+  walletBiscuit.liveVal=walletLive;
+  drawBiscuit(walletCanvas, walletBiscuit);
+  document.getElementById('wallet-val').textContent='£'+walletLive.toFixed(2);
+  var pct=((walletLive-.77)/.46)*100;
+  document.getElementById('float-fill').style.width=Math.max(0,Math.min(100,pct))+'%';
+}
+drawBiscuit(walletCanvas, walletBiscuit);
+setInterval(walletTick, 1800);
+
+// ── FUNCTION TRAY ────────────────────────────────────────────────────────────
+var trayFunctions = [
+  {name:'AGI Bridge', state:'native'},
+  {name:'Voice', state:'learning'}, {name:'Vision', state:'unlocked'},
+  {name:'Bluetooth', state:'locked'}, {name:'HD Stream', state:'locked'}, {name:'Data', state:'locked'},
+  {name:'Push', state:'locked'}, {name:'GPS', state:'locked'}, {name:'Pay', state:'locked'}, {name:'Shape', state:'locked'}
+];
+var trayRows = [[0],[1,2],[3,4,5],[6,7,8,9]];
+function renderTray(){
+  var el = document.getElementById('tray-rows');
+  el.innerHTML='';
+  trayRows.forEach(function(row){
+    var rowEl = document.createElement('div');rowEl.className='tray-row';
+    row.forEach(function(idx){
+      var f=trayFunctions[idx];
+      var slot=document.createElement('div');
+      slot.className='tray-slot '+f.state;
+      slot.textContent=f.name;
+      rowEl.appendChild(slot);
+    });
+    el.appendChild(rowEl);
+  });
+  var native=trayFunctions.filter(function(f){return f.state==='native';}).length;
+  document.getElementById('autonomy-fill').style.width=(native/10*100)+'%';
+}
+renderTray();
+
+// learning progress animation
+var learningPct=0;
+setInterval(function(){
+  learningPct+=Math.random()*4;
+  if(learningPct>=100){
+    learningPct=0;
+    // promote first non-native
+    for(var i=0;i<trayFunctions.length;i++){
+      if(trayFunctions[i].state==='learning'){
+        trayFunctions[i].state='native';
+        // unlock next locked
+        for(var j=0;j<trayFunctions.length;j++){
+          if(trayFunctions[j].state==='locked'){trayFunctions[j].state='unlocked';break;}
+        }
+        // set next unlocked to learning
+        for(var j=0;j<trayFunctions.length;j++){
+          if(trayFunctions[j].state==='unlocked'){trayFunctions[j].state='learning';break;}
+        }
+        break;
+      }
+    }
+  }
+  renderTray();
+},400);
+
+// ── DISSOLVE CANVAS ──────────────────────────────────────────────────────────
+var dissolveCanvas = document.getElementById('dissolve-canvas');
+var dCtx = dissolveCanvas.getContext('2d');
+var particles = [];
+for(var i=0;i<60;i++){
+  particles.push({
+    x:100+((Math.random()-.5)*120),
+    y:60+((Math.random()-.5)*60),
+    vx:(Math.random()-.5)*.4,
+    vy:(Math.random()-.5)*.4,
+    r:Math.random()*2+.5,
+    alpha:Math.random()*.6+.2
+  });
+}
+function animateDissolve(){
+  dCtx.clearRect(0,0,200,120);
+  particles.forEach(function(p){
+    p.x+=p.vx;p.y+=p.vy;
+    if(p.x<0||p.x>200){p.vx*=-1;}
+    if(p.y<0||p.y>120){p.vy*=-1;}
+    dCtx.beginPath();
+    dCtx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    dCtx.fillStyle='rgba(46,204,96,'+p.alpha+')';
+    dCtx.fill();
+  });
+  // draw faint triangle (dissolving)
+  dCtx.beginPath();
+  dCtx.moveTo(100,8);dCtx.lineTo(12,112);dCtx.lineTo(188,112);dCtx.closePath();
+  dCtx.strokeStyle='rgba(46,204,96,.12)';dCtx.lineWidth=1;dCtx.stroke();
+  requestAnimationFrame(animateDissolve);
+}
+animateDissolve();
+</script>
+</body>
+</html>
