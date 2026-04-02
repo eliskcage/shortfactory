@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Psyche Proposal — The Asteroid Bond · ShortFactory</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:#03030a;color:#fff;font-family:'Courier New',monospace;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:radial-gradient(circle,rgba(255,255,255,.03) 1px,transparent 1px);
+  background-size:28px 28px;}
+
+/* STARS */
+#stars{position:fixed;inset:0;z-index:0;pointer-events:none;}
+
+/* HERO */
+#hero{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;padding:60px 20px;}
+.hero-eyebrow{font-size:7px;letter-spacing:6px;color:rgba(255,255,255,.2);
+  text-transform:uppercase;margin-bottom:20px;}
+.hero-h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(32px,7vw,82px);
+  font-weight:700;line-height:1.05;letter-spacing:-2px;margin-bottom:20px;}
+.hero-h1 .gold{color:#daa520;}
+.hero-h1 .dim{color:rgba(255,255,255,.3);}
+.hero-sub{font-size:clamp(10px,1.4vw,13px);color:rgba(255,255,255,.35);
+  letter-spacing:2px;line-height:2;max-width:600px;margin:0 auto 48px;}
+.asteroid-val{font-family:'Space Grotesk',sans-serif;font-size:clamp(13px,2vw,18px);
+  color:#daa520;letter-spacing:2px;margin-bottom:8px;font-weight:600;}
+.asteroid-label{font-size:7px;letter-spacing:4px;color:rgba(255,255,255,.15);
+  text-transform:uppercase;}
+
+/* CANVAS */
+#psyche-canvas{display:block;margin:0 auto 32px;}
+
+/* CONTENT */
+.content{position:relative;z-index:1;max-width:820px;margin:0 auto;padding:0 20px 80px;}
+
+/* SECTION BLOCKS */
+.block{margin-bottom:60px;}
+.block-label{font-size:7px;letter-spacing:5px;color:rgba(255,255,255,.18);
+  text-transform:uppercase;margin-bottom:12px;}
+.block-title{font-family:'Space Grotesk',sans-serif;font-size:clamp(20px,3vw,30px);
+  font-weight:700;line-height:1.2;margin-bottom:16px;}
+.block-title .gold{color:#daa520;}
+.block-body{font-size:13px;color:rgba(255,255,255,.5);line-height:2;margin-bottom:16px;}
+.block-body strong{color:rgba(255,255,255,.85);}
+.block-body em{color:#daa520;font-style:normal;}
+
+/* STATES TABLE */
+.states{width:100%;border-collapse:collapse;margin:24px 0;}
+.states th{font-size:7px;letter-spacing:3px;text-transform:uppercase;
+  color:rgba(255,255,255,.2);padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.05);
+  text-align:left;}
+.states td{padding:12px;font-size:12px;border-bottom:1px solid rgba(255,255,255,.04);}
+.states tr:last-child td{border-bottom:none;}
+.states .state-name{color:rgba(255,255,255,.7);font-weight:600;letter-spacing:1px;}
+.states .state-form{color:rgba(255,255,255,.35);}
+.states .state-val{color:#daa520;font-size:10px;letter-spacing:1px;}
+.states tr.active td{background:rgba(218,165,32,.04);}
+.states tr.active .state-name{color:#daa520;}
+
+/* QUOTE */
+.quote-block{border-left:2px solid #daa520;padding:20px 28px;margin:32px 0;
+  background:rgba(218,165,32,.03);}
+.quote-text{font-size:16px;color:rgba(255,255,255,.7);line-height:1.7;font-style:italic;
+  margin-bottom:8px;}
+.quote-text strong{color:#fff;font-style:normal;}
+.quote-attr{font-size:8px;letter-spacing:3px;color:rgba(255,255,255,.2);text-transform:uppercase;}
+
+/* BOND CARD */
+.bond-card{background:rgba(218,165,32,.04);border:1px solid rgba(218,165,32,.2);
+  border-radius:16px;padding:32px;margin:32px 0;}
+.bond-header{font-family:'Space Grotesk',sans-serif;font-size:11px;letter-spacing:4px;
+  text-transform:uppercase;color:#daa520;margin-bottom:6px;}
+.bond-title{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;
+  color:#fff;margin-bottom:16px;}
+.bond-rows{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.bond-row{padding:12px;background:rgba(0,0,0,.3);border-radius:8px;}
+.bond-key{font-size:7px;letter-spacing:3px;text-transform:uppercase;
+  color:rgba(255,255,255,.2);margin-bottom:4px;}
+.bond-val{font-size:12px;color:rgba(255,255,255,.7);}
+.bond-val.gold{color:#daa520;}
+
+/* SCARCITY */
+.scarcity-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:12px;margin:24px 0;}
+.sc-card{background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.05);
+  border-radius:12px;padding:18px;text-align:center;}
+.sc-icon{font-size:24px;margin-bottom:8px;opacity:.6;}
+.sc-title{font-size:8px;letter-spacing:2px;text-transform:uppercase;
+  color:rgba(255,255,255,.4);margin-bottom:6px;}
+.sc-desc{font-size:10px;color:rgba(255,255,255,.25);line-height:1.7;}
+
+/* ROCKET */
+.agi-panel{background:rgba(100,80,255,.04);border:1px solid rgba(100,80,255,.15);
+  border-radius:16px;padding:28px;margin:32px 0;}
+.agi-eyebrow{font-size:7px;letter-spacing:4px;text-transform:uppercase;
+  color:rgba(140,120,255,.6);margin-bottom:8px;}
+.agi-title{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;
+  color:#fff;margin-bottom:12px;}
+.agi-body{font-size:12px;color:rgba(255,255,255,.4);line-height:1.9;}
+.agi-body strong{color:rgba(180,160,255,.8);}
+
+/* CTA */
+.cta-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin:40px 0;}
+.btn{padding:13px 28px;border-radius:10px;font-family:inherit;font-size:8px;
+  letter-spacing:3px;text-transform:uppercase;cursor:pointer;text-decoration:none;
+  display:inline-block;transition:all .2s;}
+.btn-gold{border:1px solid rgba(218,165,32,.5);background:rgba(218,165,32,.07);color:#daa520;}
+.btn-gold:hover{border-color:#daa520;background:rgba(218,165,32,.14);}
+.btn-ghost{border:1px solid rgba(255,255,255,.1);background:transparent;color:rgba(255,255,255,.3);}
+.btn-ghost:hover{border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.6);}
+
+footer{position:relative;z-index:1;padding:40px 20px;text-align:center;
+  border-top:1px solid rgba(255,255,255,.04);
+  font-size:7px;letter-spacing:3px;color:rgba(255,255,255,.08);text-transform:uppercase;}
+</style>
+</head>
+<body>
+
+<canvas id="stars" width="1" height="1"></canvas>
+
+<section id="hero">
+  <canvas id="psyche-canvas" width="200" height="200"></canvas>
+  <div class="hero-eyebrow">A Formal Proposal · ShortFactory · 2 April 2026</div>
+  <h1 class="hero-h1">
+    <span class="dim">16</span> <span class="gold">Psyche</span><br>
+    Humanity's<br>Cash Reserve
+  </h1>
+  <p class="hero-sub">A proposal to the United States Government to authorise asteroid-backed bonds,
+    pair them with 3D Computanium currency, fund the missions to Mars,
+    and give every human being the freedom to leave Earth.</p>
+  <div class="asteroid-val">$10,000,000,000,000,000,000</div>
+  <div class="asteroid-label">Estimated mineral wealth · 16 Psyche · Iron · Nickel · Gold</div>
+</section>
+
+<div class="content">
+
+  <!-- THE ASTEROID -->
+  <div class="block">
+    <div class="block-label">The asset</div>
+    <h2 class="block-title">There is <span class="gold">$10 quintillion</span> safely swinging between Jupiter and Mars. Nobody owns it. No government can print more of it.</h2>
+    <p class="block-body">16 Psyche is a metallic asteroid approximately 280 kilometres across. It is composed primarily of iron, nickel, cobalt, and trace quantities of gold and platinum-group metals. Conservative estimates place its elemental value at $10,000,000,000,000,000,000 — ten quintillion US dollars. That is <strong>more than one million times the total GDP of Earth.</strong></p>
+    <p class="block-body">It has been in its orbit for 4.5 billion years. It is going nowhere. NASA already has a mission en route. The question is not whether humanity reaches it. The question is <strong>who benefits when we do — and how we structure that wealth so it cannot be corrupted.</strong></p>
+    <p class="block-body">The answer is not to mine it all at once. The answer is to <em>back a currency with it.</em></p>
+  </div>
+
+  <!-- THE PROPOSAL -->
+  <div class="block">
+    <div class="block-label">The proposal</div>
+    <h2 class="block-title">Authorise <span class="gold">Psyche Bonds</span> — legal documents backed by verified asteroid mineral rights.</h2>
+
+    <div class="bond-card">
+      <div class="bond-header">Instrument</div>
+      <div class="bond-title">Psyche Sovereign Bond — Series 1</div>
+      <div class="bond-rows">
+        <div class="bond-row"><div class="bond-key">Issuing authority</div><div class="bond-val">United States Government · Space Mineral Rights Act</div></div>
+        <div class="bond-row"><div class="bond-key">Backing asset</div><div class="bond-val gold">16 Psyche · Verified elemental reserve</div></div>
+        <div class="bond-row"><div class="bond-key">Denomination</div><div class="bond-val">1 bond = 1 metric tonne of verified Psyche iron equivalent</div></div>
+        <div class="bond-row"><div class="bond-key">Scarcity mechanism</div><div class="bond-val">Bonds issued only against verified mining capacity. No bond without proof of extraction capability.</div></div>
+        <div class="bond-row"><div class="bond-key">Purpose</div><div class="bond-val gold">Fund Mars missions · Build multi-planetary infrastructure</div></div>
+        <div class="bond-row"><div class="bond-key">Paired instrument</div><div class="bond-val">3D Computanium biscuit — physical cipher-locked value unit</div></div>
+      </div>
+    </div>
+
+    <p class="block-body">The bonds are legal documents issued by the US Government under a new Space Mineral Rights Act — authorising the state to represent humanity's claim to off-world elemental wealth. Each bond is backed by a verified quantity of Psyche mineral reserve. <strong>Bonds are issued at the rate of mining capacity growth — maintaining scarcity while expanding supply in direct proportion to humanity's real-world reach.</strong></p>
+  </div>
+
+  <!-- SCARCITY -->
+  <div class="block">
+    <div class="block-label">Scarcity mechanism</div>
+    <h2 class="block-title">$10 quintillion is meaningless if you <span class="gold">flood the market.</span> So you don't.</h2>
+    <p class="block-body">The entire point of Psyche is not to mine it all. It is to use the <em>existence of verified wealth</em> as a backing instrument for a new monetary era — exactly as the US used Fort Knox, except Fort Knox was a fraction of this and could be abandoned. Psyche cannot be moved.</p>
+
+    <div class="scarcity-grid">
+      <div class="sc-card"><div class="sc-icon">⛏</div><div class="sc-title">Mining-indexed supply</div><div class="sc-desc">New bonds issued only when new extraction capacity is proven. Supply grows with capability, not with political will.</div></div>
+      <div class="sc-card"><div class="sc-icon">🔒</div><div class="sc-title">Cipher-locked chips</div><div class="sc-desc">Each bond paired with a 3D Computanium biscuit. The geometry is the proof. Cannot be duplicated without the key.</div></div>
+      <div class="sc-card"><div class="sc-icon">🗳</div><div class="sc-title">Governance votes</div><div class="sc-desc">Issuance rate governed by DAO. No single government, bank, or individual controls the tap.</div></div>
+      <div class="sc-card"><div class="sc-icon">♾</div><div class="sc-title">Infinite backing, finite issuance</div><div class="sc-desc">The asteroid is functionally infinite. The bonds are deliberately scarce. Stability by design, not by scarcity of resource.</div></div>
+    </div>
+  </div>
+
+  <!-- THE 3D BISCUIT -->
+  <div class="block">
+    <div class="block-label">The currency</div>
+    <h2 class="block-title">A <span class="gold">3D Computanium biscuit</span> paired to a Psyche bond changes money overnight.</h2>
+    <p class="block-body">Right now a biscuit is a 2D chip — a living £1 unit, floating, portable, demand-gated. It is already cross-platform, censorship-resistant, and patented (GB2607623.2).</p>
+    <p class="block-body">A 3D biscuit is a holographic object. Its value is encoded into its geometry via the Satoshi cipher black box. You cannot read it without the key. You cannot fake it because the shape <em>is</em> the proof. And when that shape is built from Computanium — the sixth state of matter (Patent GB2605683.8) — the object physically encodes a truth score. <strong>Two Computanium biscuits can merge to produce a child biscuit whose value is mathematically verified.</strong></p>
+
+    <table class="states">
+      <tr><th>State</th><th>Form of value</th><th>Status</th></tr>
+      <tr><td class="state-name">Solid</td><td class="state-form">Gold. Land. Physical property.</td><td class="state-val">Established</td></tr>
+      <tr><td class="state-name">Liquid</td><td class="state-form">Cash. Bank deposits. Flows but evaporates.</td><td class="state-val">Established</td></tr>
+      <tr><td class="state-name">Gas</td><td class="state-form">Crypto. Invisible, fast, volatile.</td><td class="state-val">Established</td></tr>
+      <tr class="active"><td class="state-name">Digital</td><td class="state-form">The biscuit. Demand-gated, floating, portable.</td><td class="state-val gold">Live · GB2607623.2</td></tr>
+      <tr class="active"><td class="state-name">Computanium</td><td class="state-form">3D biscuit. Geometry is the asset. Truth-scored.</td><td class="state-val gold">Patent GB2605683.8</td></tr>
+      <tr><td class="state-name">Transcended</td><td class="state-form">Psyche-backed. Off-world. Multi-planetary wealth.</td><td class="state-val" style="color:rgba(255,255,255,.2);">Next</td></tr>
+    </table>
+  </div>
+
+  <!-- FREEDOM -->
+  <div class="block">
+    <div class="block-label">The freedom</div>
+    <h2 class="block-title">The freedom to <span class="gold">leave Earth</span> is the next human right.</h2>
+
+    <div class="quote-block">
+      <div class="quote-text">"The freedom to leave Earth is not a luxury. It is the final insurance policy of the human species. A civilisation confined to one planet is not free — it is one asteroid impact away from extinction."</div>
+      <div class="quote-attr">— Proposal rationale · ShortFactory · 2 April 2026</div>
+    </div>
+
+    <p class="block-body">Mars missions cost money. Real money. The kind that no single government can sustain through taxation alone. But a <strong>Psyche Bond programme</strong> changes the equation entirely — the funding mechanism is not debt, it is <em>collateralised future wealth</em> that already exists, in an orbit that has been stable for four billion years.</p>
+    <p class="block-body">Every bond sold funds a mission. Every mission proves extraction capability. Every proof unlocks a new bond issuance. The system is <strong>self-funding, self-governing, and self-expanding</strong> — exactly like the biscuit economy that sits beneath it.</p>
+    <p class="block-body">When the first human steps on Mars funded by a Psyche bond, they carry a 3D Computanium biscuit in their pocket. <em>That is the moment humanity becomes multi-planetary and the new monetary era begins simultaneously.</em></p>
+  </div>
+
+  <!-- AGI ROCKETS -->
+  <div class="agi-panel">
+    <div class="agi-eyebrow">◈ Connected concept · ShortFactory AGI</div>
+    <div class="agi-title">Improving the rockets with AGI</div>
+    <div class="agi-body">
+      <strong>The Cortex brain already runs.</strong> 65,987 nodes. Split-hemisphere architecture. Self-modifying. The same system that maps soul geometry can model rocket telemetry.<br><br>
+      <strong>Starship's failure modes are geometric.</strong> Pressure differentials, aerodynamic instability, engine timing — all expressible as shape genomes. The same polygon grammar that earns biscuits can encode the aerodynamic profile of a Raptor engine bell and evolve it in real time.<br><br>
+      <strong>AGI doesn't improve rockets by reading the manual.</strong> It improves them by modelling the geometry of failure — finding the shape that doesn't break — the same way the biscuit system finds the shape that earns. One grammar. Two applications. The same engine.<br><br>
+      <a href="/alive/studio/" style="color:rgba(140,120,255,.7);font-size:11px;letter-spacing:2px;">View the Cortex brain → shortfactory.shop/alive/studio</a>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-row">
+    <a href="/biscuit-gateway.html" class="btn btn-gold">⬡ biscuit gateway</a>
+    <a href="/patent-biscuit.html" class="btn btn-ghost">◎ patent GB2607623.2</a>
+    <a href="/biscuit-possibilities.html" class="btn btn-ghost">◎ £1 possibilities</a>
+    <a href="/portfolio.html" class="btn btn-ghost">◎ full portfolio</a>
+  </div>
+
+</div>
+
+<footer>
+  ShortFactory · Psyche Proposal · 2 April 2026 · Dan Chipchase · Somerset UK<br>
+  Patent GB2607623.2 · GB2605683.8 · GB2605704.2 · The Sixth State of Matter<br>
+  Solid · Liquid · Gas · Digital · Computanium · Transcended
+</footer>
+
+<script>
+// STARS
+var sc = document.getElementById('stars');
+sc.width = window.innerWidth; sc.height = window.innerHeight;
+var sctx = sc.getContext('2d');
+var stars = [];
+for(var i=0;i<200;i++) stars.push({x:Math.random()*sc.width,y:Math.random()*sc.height,r:Math.random()*1.2+.2,a:Math.random()});
+function drawStars(){
+  sctx.clearRect(0,0,sc.width,sc.height);
+  stars.forEach(function(s){
+    s.a += (Math.random()-.5)*.02;
+    s.a = Math.max(.05,Math.min(.7,s.a));
+    sctx.beginPath();sctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    sctx.fillStyle='rgba(255,255,255,'+s.a+')';sctx.fill();
+  });
+  requestAnimationFrame(drawStars);
+}
+drawStars();
+window.addEventListener('resize',function(){sc.width=window.innerWidth;sc.height=window.innerHeight;});
+
+// PSYCHE ASTEROID DRAW
+var pc = document.getElementById('psyche-canvas');
+var pctx = pc.getContext('2d');
+var t = 0;
+function drawPsyche(){
+  pctx.clearRect(0,0,200,200);
+  var cx=100, cy=100;
+  // orbit glow
+  var og=pctx.createRadialGradient(cx,cy,30,cx,cy,90);
+  og.addColorStop(0,'rgba(218,165,32,0)');
+  og.addColorStop(.7,'rgba(218,165,32,.04)');
+  og.addColorStop(1,'rgba(218,165,32,.12)');
+  pctx.beginPath();pctx.arc(cx,cy,90,0,Math.PI*2);pctx.fillStyle=og;pctx.fill();
+
+  // asteroid body (irregular polygon)
+  pctx.save();pctx.translate(cx,cy);pctx.rotate(t*.003);
+  var pts=[];
+  var n=12;
+  for(var i=0;i<n;i++){
+    var a=2*Math.PI*i/n;
+    var r=36+Math.sin(a*3+t*.01)*8+Math.cos(a*2)*6;
+    pts.push([r*Math.cos(a),r*Math.sin(a)]);
+  }
+  pctx.beginPath();pts.forEach(function(p,i){i===0?pctx.moveTo(p[0],p[1]):pctx.lineTo(p[0],p[1]);});pctx.closePath();
+  var ag=pctx.createRadialGradient(-10,-10,2,0,0,40);
+  ag.addColorStop(0,'#2a2015');ag.addColorStop(.6,'#1a1408');ag.addColorStop(1,'#0a0804');
+  pctx.fillStyle=ag;pctx.fill();
+  pctx.strokeStyle='rgba(218,165,32,.35)';pctx.lineWidth=1;pctx.stroke();
+
+  // mineral glints
+  [[8,-12],[−15,8],[20,5],[−8,18],[12,−20]].forEach(function(g){
+    var glow=.4+Math.sin(t*.05+g[0])*.3;
+    pctx.beginPath();pctx.arc(g[0],g[1],1.5,0,Math.PI*2);
+    pctx.fillStyle='rgba(218,165,32,'+glow+')';pctx.fill();
+  });
+  pctx.restore();
+
+  // orbit path
+  pctx.beginPath();pctx.arc(cx,cy,76,0,Math.PI*2);
+  pctx.strokeStyle='rgba(255,255,255,.04)';pctx.lineWidth=1;pctx.setLineDash([3,8]);pctx.stroke();pctx.setLineDash([]);
+
+  // orbiting dot (us)
+  var ox=cx+76*Math.cos(t*.008), oy=cy+76*Math.sin(t*.008);
+  pctx.beginPath();pctx.arc(ox,oy,3,0,Math.PI*2);
+  pctx.fillStyle='rgba(46,204,96,.9)';pctx.fill();
+
+  t++;
+  requestAnimationFrame(drawPsyche);
+}
+drawPsyche();
+</script>
+</body>
+</html>
