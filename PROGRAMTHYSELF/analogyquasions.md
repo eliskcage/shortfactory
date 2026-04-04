@@ -265,6 +265,71 @@ Dan clocked it in the same breath he said it. That IS the Window working in biol
 
 ---
 
+## The Foundation Layer — Shapes and Nursery Games
+
+*Filed: 4 Apr 2026*
+
+Below memes is the pre-language layer. The most compressed logic that exists.
+
+Children learn this before they can read. Before culture. Before symbols. This is the **AND/OR/NOT gate layer** — taught through shapes and physical play.
+
+### The Stack
+
+```
+SHAPES + NURSERY GAMES  ← infant / pre-language / pure logic gates
+        ↓
+MEMES                   ← lightweight visual compression
+        ↓
+MEMEQUASIONS            ← meme + situational routing
+        ↓
+ANALOGYQUASIONS         ← full 5-field cultural equation
+        ↓
+STORIES / FILMS         ← complete narrative compression
+        ↓
+MYTHS / RELIGION        ← civilisation-scale storage
+```
+
+### Shapes as Logic Gates
+
+| Shape | Gate | What it teaches |
+|-------|------|-----------------|
+| **Triangle** | AND | Three corners — all required. No triangle without all three points. |
+| **Circle** | OR | Any point on the circumference is valid. Closed loop. No hierarchy. |
+| **Square** | XOR | Opposite corners cancel. Opposing states exclude each other. |
+| **Line** | NOT | One end negates the other. Direction matters. |
+
+### Nursery Games as Running Programs
+
+**Ring-a-ring o' roses:**
+- Ring = AND gate (requires all participants — game breaks if anyone leaves)
+- Standing = TRUE state
+- "All fall down" = NOT applied collectively — everyone flips simultaneously
+- The ring structure = no hierarchy, pure equality, unanimous state change
+
+The child who plays this game has run a collective boolean operation with their body before they can read the word "boolean."
+
+**London Bridge is falling down:**
+- Bridge = connection between two states
+- "Falling down" = AND gate failure — remove one component, structure collapses
+- The game teaches: hierarchy is load-bearing. (Stargate, in baby form.)
+
+**Duck duck goose:**
+- Circle = all valid (OR state)
+- "Goose" = NOT-duck — one node selected out of the uniform set
+- Chase = consequence of state change — the first event in a causal chain
+
+### Why This Matters
+
+Dan's visual cortex was running the analogyquasion engine before it was built because the analogyquasion engine is just the formalisation of what the infant brain was already running — shapes and nursery games scaled up to films and memes.
+
+The shape language (sides = tag slots, truth score drives tags, shapes connect like syntax) IS the infant logic layer made formal. It was obvious because it was already there. The body knew it. The visual cortex knew it. The architecture existed in biological hardware before anyone wrote it down.
+
+**The full compression chain is not a hierarchy of complexity. It is a hierarchy of encoding resolution.**
+
+The same AND gate that makes a triangle possible makes a story possible. The same NOT gate that makes "all fall down" work makes Total Recall work. The resolution increases as you move up the stack — but the underlying logic never changes.
+
+---
+
 ## MemeQuasions — The Routing Layer
 
 *Filed: 4 Apr 2026*
