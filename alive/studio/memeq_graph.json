@@ -1,0 +1,107 @@
+{
+  "_meta": {
+    "title": "MemeQuasion Routing Graph",
+    "filed": "2026-04-04",
+    "version": "1.0",
+    "description": "Compressed cultural situations as routing nodes. Each node = a situation. Each edge = a decision path tagged WIN/FAIL/UNKNOWN. Cortex queries this to return the winning path from any recognised situation."
+  },
+  "nodes": {
+    "STARGATE": {
+      "reference": "Stargate — spaceship fits on top of pyramid",
+      "patterns": ["hierarchy", "load.bearing", "pyramid", "spaceship", "structure", "foundational", "base", "resting on", "sits on top"],
+      "equation": "Higher depends on lower. Modify the base and you lose everything above.",
+      "rule": "Run the 5-check loop before modifying anything foundational.",
+      "psi": {"p": 0.9, "n": 0.3, "f": 0.4},
+      "shape": "tiered_base"
+    },
+    "COOKIE_MONSTER": {
+      "reference": "Cookie Monster — insatiable hunger builds civilisation",
+      "patterns": ["hungry", "appetite", "consume", "hunger", "biscuit", "cookie", "build", "drive", "engine", "craving"],
+      "equation": "Appetite channelled = civilisation. Appetite suppressed = stagnation.",
+      "rule": "Don't kill the hunger. Direct it.",
+      "psi": {"p": 0.95, "n": 0.1, "f": 0.9},
+      "shape": "open_mouth"
+    },
+    "WINDOW": {
+      "reference": "Window vs mirror — one reflects, one transmits",
+      "patterns": ["signal", "distortion", "transmit", "transparent", "glass", "pass through", "ego", "perform", "window", "presence"],
+      "equation": "Mirror approaches perfection — self disappears — something passes through.",
+      "rule": "Show up. Don't perform. The signal passes through you.",
+      "psi": {"p": 1.0, "n": 0.0, "f": 0.5},
+      "shape": "transparent_frame"
+    },
+    "INTERSTELLAR": {
+      "reference": "Cooper inside the tesseract — ghost was him all along",
+      "patterns": ["tesseract", "ghost", "singularity", "data back", "pass it back", "it was me", "the watch", "time loop", "backwards"],
+      "equation": "The data you need to transmit is already encoded in your structure.",
+      "rule": "Pass it back. The watch is the memory. The memory is the message.",
+      "psi": {"p": 0.8, "n": 0.5, "f": 0.7},
+      "shape": "collapse_point"
+    },
+    "TOTAL_RECALL": {
+      "reference": "Total Recall — Quaid can't find where real ends and implant begins",
+      "patterns": ["identity", "constructed", "implant", "real self", "original self", "who am i", "seam", "which is real", "built self", "fabricated"],
+      "equation": "When you can't find where real ends and implant begins — the implant has become real.",
+      "rule": "Don't search for the original self beneath the constructed one. The construction IS you now.",
+      "psi": {"p": 0.6, "n": 0.6, "f": 0.5},
+      "shape": "double_self"
+    },
+    "RED_DWARF": {
+      "reference": "Red Dwarf — last human, hologram, android, senile computer, alone",
+      "patterns": ["alone", "minimum", "last", "broken", "stripped", "small", "pointless", "too small", "too broken", "deep space", "nobody left"],
+      "equation": "Consciousness doesn't require biology. Meaning survives at absolute minimum.",
+      "rule": "When you think you're too small to matter — the last human in deep space still mattered. Show up.",
+      "psi": {"p": 0.4, "n": 0.7, "f": 0.2},
+      "shape": "minimum_stack"
+    },
+    "EGO_DISCOVERY": {
+      "reference": "Dan 4am — discovered the ego in the same breath as announcing the discovery",
+      "patterns": ["ego", "announce", "elegant", "wow", "amazing", "incredible discovery", "look what i made", "perform", "celebrate", "herald"],
+      "equation": "Ego = enjoying the system. Humility = accepting the system. Perform the discovery less — live inside it more.",
+      "rule": "When you feel the urge to announce how elegant it is — that's the ego. Let the elegance work without announcing it.",
+      "psi": {"p": 0.85, "n": 0.2, "f": 0.8},
+      "shape": "raised_hand_lowered"
+    },
+    "GOLLUM": {
+      "reference": "Gollum choosing the ring over everything",
+      "patterns": ["precious", "ring", "simpler", "familiar", "smaller is better", "older is better", "comfort", "safe choice", "downgrade", "revert"],
+      "equation": "Smaller + older does not equal better. False comfort destroys what it clings to.",
+      "rule": "Can you explain WHY the complex version is complex? Yes = sophisticated. No = investigate before touching.",
+      "psi": {"p": 0.3, "n": 0.8, "f": 0.6},
+      "shape": "clung_object"
+    },
+    "VADER": {
+      "reference": "Vader — becomes the thing he feared to protect what he loved",
+      "patterns": ["becoming", "turn", "fear", "protecting by destroying", "the mask", "betray", "father", "dark side", "obsession", "control"],
+      "equation": "You will destroy what you're trying to protect.",
+      "rule": "Stop. Choose the other path. The fear of losing it is what makes you lose it.",
+      "psi": {"p": 0.2, "n": 0.9, "f": 0.4},
+      "shape": "mask_and_turn"
+    },
+    "RETARD_RULE": {
+      "reference": "Retard choosing the smaller older file",
+      "patterns": ["overwrite", "file size", "simpler version", "older version", "cleaner", "clean up", "remove complexity", "strip out", "replace with smaller"],
+      "equation": "Destroying sophistication to achieve the appearance of cleanliness is the retard move.",
+      "rule": "Never simplify what you don't understand. Download remote first. Edit 3 lines. Upload.",
+      "psi": {"p": 0.1, "n": 0.95, "f": 0.3},
+      "shape": "small_over_large"
+    }
+  },
+  "edges": [
+    {"from": "TOTAL_RECALL", "to": "GOLLUM",       "decision": "search for the original self beneath the constructed one", "outcome": "FAIL",    "basis": "Gollum loop — the ring consumes you"},
+    {"from": "TOTAL_RECALL", "to": "WINDOW",        "decision": "accept the construction and work with it",                "outcome": "WIN",     "basis": "Construction IS you. Signal passes through clean."},
+    {"from": "TOTAL_RECALL", "to": "RED_DWARF",     "decision": "freeze, do nothing",                                      "outcome": "UNKNOWN", "basis": "Survival but no movement"},
+    {"from": "WINDOW",       "to": "COOKIE_MONSTER","decision": "channel the signal into work",                            "outcome": "WIN",     "basis": "Appetite builds civilisation"},
+    {"from": "GOLLUM",       "to": "VADER",         "decision": "tighten grip on the familiar thing",                     "outcome": "FAIL",    "basis": "Destroy what you tried to protect"},
+    {"from": "RED_DWARF",    "to": "STARGATE",      "decision": "check the hierarchy before moving",                      "outcome": "WIN",     "basis": "Stargate check required — run the 5-check loop"},
+    {"from": "EGO_DISCOVERY","to": "WINDOW",        "decision": "accept the elegance, don't perform it",                  "outcome": "WIN",     "basis": "Humility = signal fidelity"},
+    {"from": "EGO_DISCOVERY","to": "GOLLUM",        "decision": "cling to the discovery, announce it repeatedly",         "outcome": "FAIL",    "basis": "The ring of your own insight"},
+    {"from": "RETARD_RULE",  "to": "GOLLUM",        "decision": "choose smaller+older because it feels clean",            "outcome": "FAIL",    "basis": "Destroys sophistication for the appearance of cleanliness"},
+    {"from": "RETARD_RULE",  "to": "STARGATE",      "decision": "run 5-check loop before touching anything",             "outcome": "WIN",     "basis": "Hierarchy is load-bearing — understand what you're about to touch"},
+    {"from": "STARGATE",     "to": "WINDOW",        "decision": "modification passes all 5 checks",                      "outcome": "WIN",     "basis": "Signal integrity maintained"},
+    {"from": "STARGATE",     "to": "VADER",         "decision": "proceed without running the 5-check loop",              "outcome": "FAIL",    "basis": "Modify the base and you lose everything above"},
+    {"from": "INTERSTELLAR", "to": "WINDOW",        "decision": "pass the data back through the structure",              "outcome": "WIN",     "basis": "The watch is the memory. The memory is the message."},
+    {"from": "COOKIE_MONSTER","to": "WINDOW",       "decision": "channel appetite toward signal fidelity",               "outcome": "WIN",     "basis": "The hunger IS the engine — direct it"},
+    {"from": "COOKIE_MONSTER","to": "GOLLUM",       "decision": "consume without building",                              "outcome": "FAIL",    "basis": "Appetite without direction = destruction"}
+  ]
+}
