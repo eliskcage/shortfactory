@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>THE KING'S PENNY — SHORTFACTORY</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;min-height:100%;background:#000;color:#e2e8f0;font-family:'Courier New',monospace;overflow-x:hidden;}
+
+/* CANVAS BG */
+#bg{position:fixed;inset:0;z-index:0;opacity:.18;}
+
+/* PAGE */
+.page{position:relative;z-index:1;max-width:480px;margin:0 auto;padding:0 20px 100px;}
+
+/* OPEN — FULL SCREEN TITLE */
+.title-screen{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:48px 0;}
+.eyebrow{font-size:8px;letter-spacing:4px;color:#1c1c1c;text-transform:uppercase;margin-bottom:32px;}
+.kings-title{font-size:clamp(48px,14vw,72px);font-weight:900;line-height:.95;letter-spacing:-2px;color:#fff;margin-bottom:24px;}
+.kings-title span{color:#DA7756;}
+.title-strap{font-size:clamp(11px,3vw,14px);color:#444;line-height:2;max-width:360px;}
+.title-strap strong{color:#888;}
+.scroll-hint{margin-top:48px;font-size:8px;letter-spacing:3px;color:#1c1c1c;text-transform:uppercase;}
+
+/* DIVIDER */
+.rule{border:none;border-top:1px solid #0a0a0a;margin:48px 0;}
+
+/* SECTION */
+.sec{margin-bottom:52px;}
+.sec-label{font-size:7px;letter-spacing:4px;color:#1c1c1c;text-transform:uppercase;margin-bottom:20px;}
+
+/* THE QUESTION */
+.the-question{font-size:clamp(20px,5vw,28px);font-weight:900;color:#fff;line-height:1.2;margin-bottom:20px;letter-spacing:-0.5px;}
+.the-question em{color:#DA7756;font-style:normal;}
+
+/* BODY TEXT */
+.body-txt{font-size:12px;color:#444;line-height:2;margin-bottom:16px;}
+.body-txt strong{color:#888;}
+.body-txt a{color:#DA7756;text-decoration:none;}
+
+/* WARNING BOX */
+.warning{background:#050505;border:1px solid #1a0000;padding:16px 18px;margin-bottom:32px;}
+.warning-head{font-size:8px;letter-spacing:3px;color:#c0392b;text-transform:uppercase;margin-bottom:8px;}
+.warning-txt{font-size:11px;color:#333;line-height:1.9;}
+.warning-txt strong{color:#555;}
+
+/* BRIEF — SHOOTING SCRIPT */
+.brief-block{margin-bottom:40px;}
+.brief-title{font-size:9px;letter-spacing:3px;color:#DA7756;text-transform:uppercase;margin-bottom:20px;}
+.brief-row{display:flex;gap:16px;padding:14px 0;border-bottom:1px solid #080808;}
+.brief-row:last-child{border-bottom:none;}
+.brief-time{font-size:9px;color:#222;letter-spacing:1px;min-width:64px;padding-top:2px;white-space:nowrap;}
+.brief-action{font-size:11px;color:#555;line-height:1.8;flex:1;}
+.brief-action strong{color:#888;}
+
+/* THE DEAL */
+.deal-box{background:#050505;border:1px solid #111;padding:20px 18px;margin-bottom:32px;}
+.deal-row{display:flex;justify-content:space-between;align-items:baseline;padding:10px 0;border-bottom:1px solid #080808;}
+.deal-row:last-child{border-bottom:none;}
+.deal-key{font-size:10px;color:#333;letter-spacing:1px;}
+.deal-val{font-size:12px;color:#daa520;font-weight:700;text-align:right;}
+.deal-val.red{color:#c0392b;}
+
+/* SUBMIT FORM */
+.form-section{margin-top:48px;}
+.form-strap{font-size:11px;color:#333;line-height:1.9;margin-bottom:28px;}
+.form-strap strong{color:#666;}
+
+.field-wrap{margin-bottom:16px;}
+.field-label{font-size:8px;letter-spacing:3px;color:#222;text-transform:uppercase;display:block;margin-bottom:6px;}
+input[type=text],input[type=email],input[type=url]{
+  width:100%;background:#050505;border:1px solid #111;color:#e2e8f0;
+  font-family:'Courier New',monospace;font-size:12px;padding:14px 14px;
+  outline:none;
+}
+input:focus{border-color:#333;}
+input::placeholder{color:#1c1c1c;}
+
+.submit-btn{
+  display:block;width:100%;
+  background:#DA7756;color:#000;
+  font-family:'Courier New',monospace;font-size:13px;font-weight:900;
+  letter-spacing:3px;text-transform:uppercase;
+  padding:20px;border:none;cursor:pointer;margin-top:24px;
+}
+.submit-btn:hover{background:#E8896A;}
+.submit-btn:disabled{background:#1a1a1a;color:#1c1c1c;cursor:not-allowed;}
+
+.form-note{font-size:8px;color:#111;letter-spacing:1px;text-align:center;margin-top:10px;line-height:1.8;}
+
+.form-error{font-size:10px;color:#c0392b;padding:10px;background:#0a0000;border:1px solid #1a0000;display:none;margin-top:12px;}
+.form-success{display:none;}
+
+/* SUCCESS STATE */
+.success-screen{text-align:center;padding:60px 0;}
+.success-mark{font-size:48px;color:#DA7756;margin-bottom:24px;}
+.success-head{font-size:20px;font-weight:900;color:#fff;letter-spacing:-0.5px;margin-bottom:12px;}
+.success-sub{font-size:11px;color:#444;line-height:1.9;margin-bottom:32px;}
+.success-cta{
+  display:inline-block;background:#DA7756;color:#000;
+  font-family:'Courier New',monospace;font-size:12px;font-weight:900;
+  letter-spacing:3px;padding:18px 28px;text-decoration:none;text-transform:uppercase;
+}
+.success-cta:hover{background:#E8896A;}
+
+/* FOOTER */
+.footer-line{margin-top:80px;font-size:8px;color:#111;letter-spacing:2px;text-align:center;}
+
+/* Shimmer on title */
+@keyframes flicker{0%,100%{opacity:1;}92%{opacity:.97;}93%{opacity:.7;}94%{opacity:.97;}}
+.kings-title{animation:flicker 8s ease-in-out infinite;}
+</style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+
+<div class="page">
+
+  <!-- TITLE SCREEN -->
+  <div class="title-screen">
+    <div class="eyebrow">REVERT FIVER · YOUR TASK</div>
+    <h1 class="kings-title">THE<br>KING'S<br><span>PENNY</span></h1>
+    <p class="title-strap">
+      Would you take it?<br>
+      <strong>Convince yourself.</strong><br>
+      Own a piece of the truth.<br>
+      <strong>This is your only task.</strong>
+    </p>
+    <p class="scroll-hint">↓ READ THE BRIEF</p>
+  </div>
+
+  <hr class="rule">
+
+  <!-- THE QUESTION -->
+  <div class="sec">
+    <div class="sec-label">THE QUESTION</div>
+    <p class="the-question">
+      You paid <em>£5</em> to enter.<br>
+      Would you swap it for<br>
+      a piece of the story?
+    </p>
+    <p class="body-txt">
+      A shard is an encrypted fragment of a story that may or may not change how you see everything.
+      You don't get to read it first. You don't get a preview. You bid blind,
+      on faith that the work was real — and that the truth inside it is worth more than £5 to you.
+    </p>
+    <p class="body-txt">
+      <strong>The King's Penny</strong> is the old test of loyalty. The king tosses a coin.
+      Do you pick it up? If you do, you're in — fully, with no turning back.
+      If you don't, you were never really in to begin with.
+    </p>
+  </div>
+
+  <hr class="rule">
+
+  <!-- THE WARNING -->
+  <div class="sec">
+    <div class="sec-label">BEFORE YOU START</div>
+    <div class="warning">
+      <div class="warning-head">⚠ READ THIS FIRST</div>
+      <p class="warning-txt">
+        Do not make this film unless you would <strong>actually</strong> trade your £5 for a shard.<br><br>
+        The film is a contract with yourself. If you submit it, you are saying:
+        <strong>I watched this back and it convinced me.</strong><br><br>
+        If it didn't convince you — don't submit it. Come back when it does.
+        There is no time limit. There is no pressure. The shards will wait.
+      </p>
+    </div>
+  </div>
+
+  <hr class="rule">
+
+  <!-- THE BRIEF -->
+  <div class="sec">
+    <div class="sec-label">THE BRIEF</div>
+    <p class="body-txt" style="margin-bottom:28px;">
+      Make a <strong>3-minute film</strong>. One camera. You talking.
+      No script. No edits needed. Just you and the question.
+    </p>
+
+    <div class="brief-block">
+      <div class="brief-title">— SHOOTING SCRIPT —</div>
+
+      <div class="brief-row">
+        <div class="brief-time">0:00 – 0:30</div>
+        <div class="brief-action"><strong>Introduce yourself.</strong> Not your name. Who you are right now — where you're at, what you're doing, why you're here.</div>
+      </div>
+
+      <div class="brief-row">
+        <div class="brief-time">0:30 – 1:30</div>
+        <div class="brief-action"><strong>Make the case for the shard.</strong> Why would it be worth it to you? What do you think is in it? What does owning a piece of truth mean to you, specifically?</div>
+      </div>
+
+      <div class="brief-row">
+        <div class="brief-time">1:30 – 2:15</div>
+        <div class="brief-action"><strong>Make the case against.</strong> Be honest. What's the doubt? What's the fear? Say it out loud.</div>
+      </div>
+
+      <div class="brief-row">
+        <div class="brief-time">2:15 – 2:45</div>
+        <div class="brief-action"><strong>Watch yourself.</strong> Rewind. Play it back. What do you see?</div>
+      </div>
+
+      <div class="brief-row">
+        <div class="brief-time">2:45 – 3:00</div>
+        <div class="brief-action"><strong>Final answer.</strong> Yes or no. If yes — say it like you mean it. Then submit.</div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="rule">
+
+  <!-- THE DEAL -->
+  <div class="sec">
+    <div class="sec-label">THE DEAL</div>
+    <div class="deal-box">
+      <div class="deal-row"><span class="deal-key">YOUR ENTRY</span><span class="deal-val">£5 PAID</span></div>
+      <div class="deal-row"><span class="deal-key">THE TASK</span><span class="deal-val">3-MIN FILM</span></div>
+      <div class="deal-row"><span class="deal-key">THE PRIZE</span><span class="deal-val">SHARD BID ACCESS</span></div>
+      <div class="deal-row"><span class="deal-key">MIN BID</span><span class="deal-val">£50</span></div>
+      <div class="deal-row"><span class="deal-key">WHAT YOU GET</span><span class="deal-val">1/10 OF THE TRUTH</span></div>
+      <div class="deal-row"><span class="deal-key">REFUNDS</span><span class="deal-val red">NONE</span></div>
+    </div>
+    <p class="body-txt">
+      Submit your film. Then go to the <strong>Shard Auction</strong> and bid on the fragment that calls to you.
+      The auction is live. Bids are real. Top bidder when the auction closes wins —
+      and receives the decryption key by email.
+    </p>
+  </div>
+
+  <hr class="rule">
+
+  <!-- SUBMIT FORM -->
+  <div class="form-section" id="form-wrap">
+    <div class="sec-label">SUBMIT YOUR FILM</div>
+    <p class="form-strap">
+      Upload to YouTube or Vimeo (unlisted is fine).<br>
+      Paste the link below. <strong>Only submit if it convinced you.</strong>
+    </p>
+
+    <div class="field-wrap">
+      <label class="field-label" for="f-email">YOUR EMAIL</label>
+      <input type="email" id="f-email" placeholder="you@example.com" autocomplete="email">
+    </div>
+    <div class="field-wrap">
+      <label class="field-label" for="f-video">VIDEO LINK (YouTube / Vimeo)</label>
+      <input type="url" id="f-video" placeholder="https://youtu.be/...">
+    </div>
+    <div class="field-wrap">
+      <label class="field-label" for="f-ref">YOUR REVERT FIVER REF</label>
+      <input type="text" id="f-ref" placeholder="ref ID from your join confirmation">
+    </div>
+
+    <div class="form-error" id="f-error"></div>
+
+    <button class="submit-btn" id="f-submit" onclick="submitJob()">
+      I WATCHED IT BACK. I'M CONVINCED. →
+    </button>
+    <p class="form-note">
+      Submitting means you agree: you watched this back and it convinced you.<br>
+      No pressure. Come back when it does.
+    </p>
+  </div>
+
+  <!-- SUCCESS STATE (hidden until submitted) -->
+  <div class="form-success" id="success-wrap">
+    <div class="success-screen">
+      <div class="success-mark">◈</div>
+      <div class="success-head">Film submitted.</div>
+      <p class="success-sub">
+        You convinced yourself. That's the hardest part.<br>
+        Now go find your shard.
+      </p>
+      <a id="success-link" href="/shards.html" class="success-cta">CLAIM YOUR SHARD →</a>
+    </div>
+  </div>
+
+  <div class="footer-line">THE KING'S PENNY · SHORTFACTORY · MAN MACHINE GOD</div>
+</div>
+
+<script>
+// ── URL params ──────────────────────────────────────────────────────────────
+const params = new URLSearchParams(location.search);
+const refParam = params.get('ref') || '';
+if (refParam) document.getElementById('f-ref').value = refParam;
+
+// Pre-fill email from Stripe session if passed (Stripe sends customer email via redirect)
+const emailParam = params.get('email') || '';
+if (emailParam) document.getElementById('f-email').value = decodeURIComponent(emailParam);
+
+// ── Background canvas — slow drifting particles ─────────────────────────────
+(function(){
+  const canvas = document.getElementById('bg');
+  const ctx    = canvas.getContext('2d');
+  let W, H, pts;
+
+  function resize(){
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+
+  function seed(){
+    pts = Array.from({length:60}, () => ({
+      x: Math.random()*W, y: Math.random()*H,
+      vx: (Math.random()-.5)*.15, vy: (Math.random()-.5)*.15,
+      r: Math.random()*1.2+.3,
+      a: Math.random()
+    }));
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    pts.forEach(p=>{
+      p.x=(p.x+p.vx+W)%W; p.y=(p.y+p.vy+H)%H;
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle = `rgba(218,119,86,${p.a*.4})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', ()=>{resize();seed();});
+  resize(); seed(); draw();
+})();
+
+// ── Form submission ─────────────────────────────────────────────────────────
+function showError(msg){
+  const el=document.getElementById('f-error');
+  el.textContent=msg; el.style.display='block';
+}
+
+async function submitJob(){
+  document.getElementById('f-error').style.display='none';
+  const btn   = document.getElementById('f-submit');
+  const email = document.getElementById('f-email').value.trim();
+  const video = document.getElementById('f-video').value.trim();
+  const ref   = document.getElementById('f-ref').value.trim();
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError('Valid email required.'); return; }
+  if (!video || !/^https?:\/\//i.test(video))               { showError('Valid video URL required (https://...).'); return; }
+
+  btn.disabled=true; btn.textContent='SUBMITTING...';
+
+  try {
+    const res  = await fetch('/api/job.php', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({email, video, ref})
+    });
+    const data = await res.json();
+    if (data.ok) {
+      document.getElementById('form-wrap').style.display='none';
+      const sw = document.getElementById('success-wrap');
+      sw.style.display='block';
+      // Add ref to shard link so bidding is pre-linked
+      const r = data.ref || ref;
+      if (r) document.getElementById('success-link').href='/shards.html?ref='+encodeURIComponent(r);
+    } else {
+      showError(data.error||'Submission failed. Try again.');
+      btn.disabled=false; btn.textContent='I WATCHED IT BACK. I\'M CONVINCED. →';
+    }
+  } catch(e) {
+    showError('Network error. Try again.');
+    btn.disabled=false; btn.textContent='I WATCHED IT BACK. I\'M CONVINCED. →';
+  }
+}
+</script>
+</body>
+</html>

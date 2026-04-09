@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<!-- ShortFactory Shorts v1.1 — Feb 15 2026
+     Drop-shipping store. AI-designed shorts. Print-on-demand.
+     Zero inventory. Stripe checkout. Printful fulfilment.
+     v1.1: Real product mockup images (Grok Imagine)
+-->
+<html lang="en">
+<head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1XY2CNLJCE"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1XY2CNLJCE');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shorts — ShortFactory</title>
+<meta name="description" content="ShortFactory Shorts. AI-designed, made-to-order. Limited drops. The factory that makes YouTube Shorts now makes actual shorts.">
+<link rel="canonical" href="https://www.shortfactory.shop/shorts/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="ShortFactory Shorts — AI-Designed, Made to Order">
+<meta property="og:description" content="Limited edition shorts from the factory. AI-designed. Print-on-demand. Zero waste. Ships worldwide.">
+<meta property="og:url" content="https://www.shortfactory.shop/shorts/">
+<meta property="og:site_name" content="ShortFactory">
+<meta name="twitter:card" content="summary_large_image">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Orbitron:wght@400;600;700;900&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;background:#FAFAF7;color:#1a1a1a;line-height:1.7;overflow-x:hidden}
+::selection{background:rgba(218,165,32,0.2)}
+a{color:#b8860b;text-decoration:none;transition:color .2s}
+a:hover{color:#daa520}
+
+/* NAV */
+.nav{display:flex;align-items:center;justify-content:space-between;max-width:1200px;margin:0 auto;padding:20px 32px}
+.nav-logo{font-weight:900;font-size:22px;color:#1a1a1a;letter-spacing:2px}
+.nav-logo span{color:#daa520}
+.nav-links{display:flex;gap:28px;align-items:center}
+.nav-links a{font-size:14px;font-weight:500;color:#555}
+.nav-links a:hover{color:#daa520}
+
+/* HERO */
+.hero{max-width:1200px;margin:0 auto;padding:80px 32px 60px;text-align:center}
+.hero-badge{font-family:'Press Start 2P',monospace;font-size:9px;color:#daa520;letter-spacing:4px;margin-bottom:16px}
+.hero h1{font-size:clamp(40px,6vw,72px);font-weight:900;line-height:1.1;margin-bottom:20px}
+.hero h1 em{font-style:normal;color:#daa520}
+.hero p{font-size:18px;color:#666;max-width:560px;margin:0 auto 32px;line-height:1.8}
+.hero-tags{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.hero-tag{font-size:11px;font-weight:600;letter-spacing:2px;padding:8px 20px;border:1px solid #ddd;border-radius:40px;color:#888}
+
+/* PRODUCTS */
+.products{max-width:1200px;margin:0 auto;padding:40px 32px 80px}
+.products-header{text-align:center;margin-bottom:48px}
+.products-header h2{font-size:clamp(24px,3vw,36px);font-weight:800;margin-bottom:8px}
+.products-header p{color:#888;font-size:15px}
+.products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:32px}
+
+/* PRODUCT CARD */
+.product-card{background:#fff;border:1px solid #eee;border-radius:16px;overflow:hidden;transition:all .3s;position:relative}
+.product-card:hover{border-color:#daa520;transform:translateY(-4px);box-shadow:0 16px 48px rgba(218,165,32,0.12)}
+.product-img{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.product-img img{width:100%;height:100%;object-fit:cover;transition:transform .4s}
+.product-card:hover .product-img img{transform:scale(1.05)}
+.product-img .mockup{width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;padding:32px}
+.product-img .mockup .shorts-icon{font-size:80px;opacity:0.9}
+.product-img .mockup .design-label{font-family:'Press Start 2P',monospace;font-size:8px;letter-spacing:3px;opacity:0.7}
+.product-badge{position:absolute;top:16px;right:16px;font-family:'Press Start 2P',monospace;font-size:7px;letter-spacing:2px;padding:6px 12px;border-radius:20px;background:rgba(0,0,0,0.7);color:#ffd700}
+.product-info{padding:24px}
+.product-name{font-weight:800;font-size:18px;margin-bottom:4px}
+.product-desc{font-size:13px;color:#888;margin-bottom:16px;line-height:1.6}
+.product-price{font-family:'Orbitron',sans-serif;font-size:24px;font-weight:700;color:#daa520;margin-bottom:16px}
+.product-options{display:flex;align-items:center;gap:16px;margin-bottom:16px;flex-wrap:wrap}
+.size-label{font-size:12px;font-weight:600;color:#888;letter-spacing:1px}
+.size-group{display:flex;gap:6px}
+.size-btn{width:40px;height:36px;border:1px solid #ddd;border-radius:8px;background:#fff;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;color:#555}
+.size-btn:hover{border-color:#daa520;color:#daa520}
+.size-btn.selected{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.buy-btn{width:100%;padding:14px;background:#1a1a1a;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;transition:all .25s;letter-spacing:1px}
+.buy-btn:hover{background:#daa520;color:#1a1a1a;transform:translateY(-2px);box-shadow:0 8px 24px rgba(218,165,32,0.3)}
+.buy-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* FEATURES BAR */
+.features{max-width:1200px;margin:0 auto;padding:0 32px 80px}
+.features-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:24px}
+.feature-card{text-align:center;padding:32px 24px;background:#fff;border:1px solid #eee;border-radius:16px}
+.feature-icon{font-size:32px;margin-bottom:12px}
+.feature-title{font-weight:700;font-size:15px;margin-bottom:6px}
+.feature-desc{font-size:13px;color:#888;line-height:1.6}
+
+/* SIZE GUIDE */
+.size-guide{max-width:800px;margin:0 auto;padding:0 32px 80px}
+.sg-toggle{width:100%;padding:20px 28px;background:#fff;border:1px solid #eee;border-radius:16px;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:all .2s}
+.sg-toggle:hover{border-color:#daa520}
+.sg-toggle .arrow{transition:transform .3s;font-size:20px}
+.sg-toggle.open .arrow{transform:rotate(180deg)}
+.sg-content{max-height:0;overflow:hidden;transition:max-height .4s ease}
+.sg-content.open{max-height:400px}
+.sg-table{width:100%;border-collapse:collapse;margin-top:16px;background:#fff;border-radius:12px;overflow:hidden}
+.sg-table th{font-size:12px;font-weight:600;letter-spacing:1px;color:#888;padding:12px 16px;text-align:left;border-bottom:1px solid #eee}
+.sg-table td{padding:12px 16px;font-size:14px;border-bottom:1px solid #f5f5f5}
+.sg-table tr:last-child td{border-bottom:none}
+
+/* HOW IT WORKS */
+.how{max-width:1200px;margin:0 auto;padding:0 32px 80px;text-align:center}
+.how h2{font-size:clamp(24px,3vw,36px);font-weight:800;margin-bottom:40px}
+.how-steps{display:flex;gap:32px;justify-content:center;flex-wrap:wrap}
+.how-step{flex:1;min-width:200px;max-width:260px}
+.how-num{font-family:'Orbitron',sans-serif;font-size:36px;font-weight:900;color:#daa520;margin-bottom:8px}
+.how-step h3{font-size:15px;font-weight:700;margin-bottom:6px}
+.how-step p{font-size:13px;color:#888;line-height:1.6}
+
+/* CTA */
+.bottom-cta{text-align:center;padding:80px 32px;background:#1a1a1a;color:#fff}
+.bottom-cta h2{font-size:clamp(28px,4vw,44px);font-weight:900;margin-bottom:16px}
+.bottom-cta h2 em{font-style:normal;color:#daa520}
+.bottom-cta p{font-size:17px;color:#999;max-width:520px;margin:0 auto 32px;line-height:1.8}
+.bottom-cta .cta-btn{display:inline-block;padding:16px 40px;background:linear-gradient(135deg,#daa520,#ffd700);color:#1a1a1a;border-radius:12px;font-weight:800;font-size:16px;letter-spacing:1px;transition:all .25s}
+.bottom-cta .cta-btn:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(218,165,32,0.4);color:#1a1a1a}
+
+/* FOOTER */
+.footer{max-width:1200px;margin:0 auto;padding:40px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;border-top:1px solid #eee}
+.footer a{color:#888;font-size:13px;margin-right:20px}
+.footer a:hover{color:#daa520}
+.footer-right{font-size:12px;color:#bbb}
+
+/* MOBILE */
+@media(max-width:768px){
+  .nav{padding:16px 20px}
+  .nav-links{gap:16px}
+  .nav-links a{font-size:12px}
+  .hero{padding:60px 20px 40px}
+  .products{padding:20px 20px 60px}
+  .products-grid{grid-template-columns:1fr}
+  .features{padding:0 20px 60px}
+  .features-grid{grid-template-columns:1fr 1fr}
+  .how-steps{flex-direction:column;align-items:center}
+  .size-guide{padding:0 20px 60px}
+  .bottom-cta{padding:60px 20px}
+  .footer{padding:24px 20px;flex-direction:column;text-align:center}
+}
+@media(max-width:480px){
+  .features-grid{grid-template-columns:1fr}
+  .hero-tags{flex-direction:column;align-items:center}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div class="nav">
+  <a href="/" class="nav-logo">SHORT<span>FACTORY</span></a>
+  <div class="nav-links">
+    <a href="/about.html">About</a>
+    <a href="/alive/app.html">ALIVE</a>
+    <a href="/sft/">SFT</a>
+    <a href="/contribute/">Contribute</a>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">DROP 001</div>
+  <h1>The Factory Makes <em>Shorts</em></h1>
+  <p>AI-designed. Made to order. Zero waste. We made the name — now we're making the product. Limited edition shorts from ShortFactory.</p>
+  <div class="hero-tags">
+    <div class="hero-tag">PRINT ON DEMAND</div>
+    <div class="hero-tag">AI DESIGNED</div>
+    <div class="hero-tag">SHIPS WORLDWIDE</div>
+    <div class="hero-tag">ZERO INVENTORY</div>
+  </div>
+</div>
+
+<!-- PRODUCTS -->
+<div class="products">
+  <div class="products-header">
+    <h2>The Collection</h2>
+    <p>Each design generated by AI. Each pair made when you order it. No waste. No warehouses.</p>
+  </div>
+  <div class="products-grid" id="productsGrid"></div>
+</div>
+
+<!-- FEATURES -->
+<div class="features">
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">&#128666;</div>
+      <div class="feature-title">Ships in 3-5 Days</div>
+      <div class="feature-desc">Printed and shipped direct from our production partner. UK & worldwide delivery.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">&#9851;</div>
+      <div class="feature-title">Zero Waste</div>
+      <div class="feature-desc">Made to order. No overproduction. No dead stock. No landfill.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">&#129302;</div>
+      <div class="feature-title">AI Designed</div>
+      <div class="feature-desc">Every design generated by Claude AI + Dan's creative direction. Unique to ShortFactory.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">&#128176;</div>
+      <div class="feature-title">Earn SFT</div>
+      <div class="feature-desc">Every purchase earns you SF Tokens. Real equity. Real dividends. <a href="/sft/">Learn more</a>.</div>
+    </div>
+  </div>
+</div>
+
+<!-- SIZE GUIDE -->
+<div class="size-guide">
+  <button class="sg-toggle" id="sgToggle" onclick="toggleSizeGuide()">
+    Size Guide <span class="arrow">&#9660;</span>
+  </button>
+  <div class="sg-content" id="sgContent">
+    <table class="sg-table">
+      <thead>
+        <tr><th>SIZE</th><th>WAIST (in)</th><th>HIP (in)</th><th>LENGTH (in)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>S</td><td>28-30</td><td>36-38</td><td>18</td></tr>
+        <tr><td>M</td><td>31-33</td><td>39-41</td><td>19</td></tr>
+        <tr><td>L</td><td>34-36</td><td>42-44</td><td>20</td></tr>
+        <tr><td>XL</td><td>37-40</td><td>45-48</td><td>21</td></tr>
+        <tr><td>XXL</td><td>41-44</td><td>49-52</td><td>22</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="how">
+  <h2>How It Works</h2>
+  <div class="how-steps">
+    <div class="how-step">
+      <div class="how-num">01</div>
+      <h3>Pick Your Shorts</h3>
+      <p>Browse AI-designed limited drops. Choose your size. Each design is exclusive to ShortFactory.</p>
+    </div>
+    <div class="how-step">
+      <div class="how-num">02</div>
+      <h3>We Make Them</h3>
+      <p>Your order goes straight to our production partner. Printed on premium fabric. Quality checked.</p>
+    </div>
+    <div class="how-step">
+      <div class="how-num">03</div>
+      <h3>Shipped To You</h3>
+      <p>Direct from factory to your door. 3-5 business days. Tracked delivery. No middlemen.</p>
+    </div>
+    <div class="how-step">
+      <div class="how-num">04</div>
+      <h3>Earn SFT</h3>
+      <p>Every order earns SF Tokens. Hold tokens, earn monthly dividends from ShortFactory revenue.</p>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM CTA -->
+<div class="bottom-cta">
+  <h2>The Factory Is <em>Open</em></h2>
+  <p>AI-designed shorts. Made when you order. Zero waste. Real equity for every customer. This is how retail should work.</p>
+  <a href="#productsGrid" class="cta-btn">SHOP THE DROP</a>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div>
+    <a href="/">Home</a>
+    <a href="/about.html">About</a>
+    <a href="/alive/app.html">ALIVE</a>
+    <a href="/sft/">SFT</a>
+    <a href="/dares4dosh/">Dares4Dosh</a>
+    <a href="/contribute/">Contribute</a>
+    <a href="/checkout.html">Kinetic Pro</a>
+  </div>
+  <div class="footer-right">&copy; 2026 ShortFactory. Somerset, UK.</div>
+</div>
+
+<script>
+/* ═══ PRODUCT DATA ═══ */
+var PRODUCTS = [
+  {
+    id: 'sf-original',
+    name: 'THE ORIGINAL',
+    desc: 'ShortFactory logo in gold on black. The one that started it all.',
+    price: 28,
+    badge: 'SIGNATURE',
+    bg: 'linear-gradient(135deg, #1a1500, #0d0d0d)',
+    textColor: '#ffd700',
+    icon: '\uD83C\uDFED',
+    designLabel: 'SHORTFACTORY',
+    img: 'images/original.jpg',
+    link: 'https://buy.stripe.com/8x2dR80SQdU2eyl0vPejK08'
+  },
+  {
+    id: 'sf-alive',
+    name: 'ALIVE',
+    desc: 'Creature silhouette with aurora green glow. For the custodians.',
+    price: 30,
+    badge: 'CREATURE',
+    bg: 'linear-gradient(135deg, #001a0d, #0d0d0d)',
+    textColor: '#00ff88',
+    icon: '\uD83E\uDDEC',
+    designLabel: 'ARTIFICIAL LIFE',
+    img: 'images/alive.jpg',
+    link: 'https://buy.stripe.com/fZu28q452dU289X2DXejK0d'
+  },
+  {
+    id: 'sf-corps',
+    name: 'CORPS vs PEOPLE',
+    desc: 'Red and gold split. Pick a side. The central war on fabric.',
+    price: 30,
+    badge: 'STATEMENT',
+    bg: 'linear-gradient(135deg, #1a0505, #1a1500)',
+    textColor: '#ff4444',
+    icon: '\u2694',
+    designLabel: 'CORPS vs PEOPLE',
+    img: 'images/corps.jpg',
+    link: 'https://buy.stripe.com/bJeeVc1WU03cfCp7YhejK0c'
+  },
+  {
+    id: 'sf-neural',
+    name: 'NEURAL',
+    desc: 'Wireframe icosahedron in cyan. The Boy\'s brain on your legs.',
+    price: 30,
+    badge: 'TECH',
+    bg: 'linear-gradient(135deg, #0a0e1a, #0d0d0d)',
+    textColor: '#00d4ff',
+    icon: '\u269B',
+    designLabel: 'NEURAL NETWORK',
+    img: 'images/neural.jpg',
+    link: 'https://buy.stripe.com/9B6aEW1WUg2agGta6pejK0b'
+  },
+  {
+    id: 'sf-deepstate',
+    name: 'DEEP STATE',
+    desc: 'The dying devil. Skull aesthetic from the game. Wear the resistance.',
+    price: 28,
+    badge: 'GAME',
+    bg: 'linear-gradient(135deg, #1a0a0a, #0d0d0d)',
+    textColor: '#ff6b6b',
+    icon: '\u2620',
+    designLabel: 'DEEP STATE',
+    img: 'images/deepstate.jpg',
+    link: 'https://buy.stripe.com/dRm4gy0SQ9DMbm9batejK0a'
+  },
+  {
+    id: 'd4d-green',
+    name: 'GREEN JUMPSUIT',
+    desc: 'Entry level dare taker. Green is where it starts — prove yourself and earn the upgrade.',
+    price: 22,
+    badge: 'D4D · LEVEL 1',
+    bg: 'linear-gradient(135deg, #001a0a, #0d0d0d)',
+    textColor: '#00e676',
+    icon: '\uD83D\uDFE2',
+    designLabel: 'DARE TAKER',
+    img: 'images/greenjumpsuit.jpg',
+    link: 'https://buy.stripe.com/8x2aEWcBy8zI9e16UdejK0j'
+  },
+  {
+    id: 'd4d-blue',
+    name: 'BLUE JUMPSUIT',
+    desc: 'Step up from green. Blue players get access to higher paid dares. Return your green to upgrade.',
+    price: 25,
+    badge: 'D4D · LEVEL 2',
+    bg: 'linear-gradient(135deg, #000d1a, #0d0d0d)',
+    textColor: '#00aaff',
+    icon: '\uD83D\uDFE6',
+    designLabel: 'DARE TAKER',
+    img: 'images/bluejumpsuit.jpg',
+    link: 'https://buy.stripe.com/fZudR81WUcPY0Hv0vPejK0l'
+  },
+  {
+    id: 'd4d-yellow',
+    name: 'YELLOW JUMPSUIT',
+    desc: 'Return your blue, earn yellow. Must be kept pristine for red upgrade. Reduced price — condition matters.',
+    price: 10,
+    badge: 'D4D · LEVEL 3',
+    bg: 'linear-gradient(135deg, #1a1500, #0d0d0d)',
+    textColor: '#ffd700',
+    icon: '\uD83D\uDFE1',
+    designLabel: 'DARE TAKER',
+    img: 'images/yellowjumpsuit.jpg',
+    link: 'https://buy.stripe.com/3cI5kC0SQbLUfCpa6pejK0i'
+  },
+  {
+    id: 'd4d-red',
+    name: 'RED JUMPSUIT',
+    desc: 'Top of the dare economy. Truthful, cunning, entertaining, worthy. The highest paid dares. Upgraded free on return.',
+    price: 30,
+    badge: 'D4D · ELITE',
+    bg: 'linear-gradient(135deg, #1a0000, #0d0d0d)',
+    textColor: '#ff3355',
+    icon: '\uD83D\uDD34',
+    designLabel: 'DARE ELITE',
+    img: 'images/redjumpsuit.jpg',
+    link: 'https://buy.stripe.com/9B67sKatq6rA4XL7YhejK0k'
+  },
+  {
+    id: 'sf-limited001',
+    name: 'LIMITED DROP 001',
+    desc: 'AI-generated abstract pattern. Once this drop sells out, it\'s gone forever.',
+    price: 35,
+    badge: 'LIMITED',
+    bg: 'linear-gradient(135deg, #1a1030, #0d0a1a)',
+    textColor: '#a78bfa',
+    icon: '\uD83C\uDFA8',
+    designLabel: 'AI GENERATED',
+    img: 'images/limited.jpg',
+    link: 'https://buy.stripe.com/6oUdR84524js61P92lejK09'
+  }
+];
+
+var SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
+var selectedSizes = {};
+
+/* ═══ RENDER PRODUCTS ═══ */
+var grid = document.getElementById('productsGrid');
+PRODUCTS.forEach(function(p) {
+  var card = document.createElement('div');
+  card.className = 'product-card';
+  var imgHtml = p.img
+    ? '<img src="' + p.img + '" alt="' + p.name + ' shorts" loading="lazy">'
+    : '<div class="mockup" style="background:' + p.bg + '">' +
+        '<div class="shorts-icon" style="color:' + p.textColor + '">' + p.icon + '</div>' +
+        '<div class="design-label" style="color:' + p.textColor + '">' + p.designLabel + '</div>' +
+      '</div>';
+  card.innerHTML =
+    '<div class="product-img">' +
+      imgHtml +
+      '<div class="product-badge">' + p.badge + '</div>' +
+    '</div>' +
+    '<div class="product-info">' +
+      '<div class="product-name">' + p.name + '</div>' +
+      '<div class="product-desc">' + p.desc + '</div>' +
+      '<div class="product-price">\u00A3' + p.price + '</div>' +
+      '<div class="product-options">' +
+        '<span class="size-label">SIZE</span>' +
+        '<div class="size-group" id="sizes-' + p.id + '">' +
+          SIZES.map(function(s) {
+            return '<button class="size-btn" onclick="selectSize(\'' + p.id + '\',\'' + s + '\',this)">' + s + '</button>';
+          }).join('') +
+        '</div>' +
+      '</div>' +
+      '<button class="buy-btn" id="buy-' + p.id + '" disabled onclick="buyProduct(\'' + p.id + '\')">' +
+        'SELECT SIZE' +
+      '</button>' +
+    '</div>';
+  grid.appendChild(card);
+});
+
+/* ═══ SIZE SELECTION ═══ */
+function selectSize(productId, size, btn) {
+  selectedSizes[productId] = size;
+  var group = document.getElementById('sizes-' + productId);
+  var btns = group.querySelectorAll('.size-btn');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('selected');
+  btn.classList.add('selected');
+  var buyBtn = document.getElementById('buy-' + productId);
+  buyBtn.disabled = false;
+  buyBtn.textContent = 'BUY — \u00A3' + PRODUCTS.filter(function(p){return p.id===productId})[0].price;
+}
+
+/* ═══ BUY — PAYMENT LINKS ═══ */
+function buyProduct(productId) {
+  var product = PRODUCTS.filter(function(p){return p.id===productId})[0];
+  var size = selectedSizes[productId];
+  if (!product || !size) return;
+
+  if (typeof gtag === 'function') {
+    gtag('event', 'begin_checkout', {
+      currency: 'GBP',
+      value: product.price,
+      items: [{ item_id: product.id, item_name: product.name, item_variant: size, price: product.price }]
+    });
+  }
+
+  window.location.href = product.link;
+}
+
+/* ═══ SIZE GUIDE TOGGLE ═══ */
+function toggleSizeGuide() {
+  var btn = document.getElementById('sgToggle');
+  var content = document.getElementById('sgContent');
+  btn.classList.toggle('open');
+  content.classList.toggle('open');
+}
+</script>
+</body>
+</html>

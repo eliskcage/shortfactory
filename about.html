@@ -225,13 +225,18 @@ a:hover { color: #ffcd37; }
   background: #0f0c08;
 }
 
-.screen-viewport iframe {
-  width: 1360px;
-  height: 800px;
-  border: none;
-  transform: scale(0.25);
-  transform-origin: top left;
-  pointer-events: none;
+.screen-preview {
+  width: 100%;
+  height: 100%;
+  background: #0f0c08;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.screen-preview.yt-preview {
+  width: 140px;
+  height: 200px;
+  background: #111;
 }
 
 .screen-viewport .screen-fallback {
@@ -957,7 +962,10 @@ body, .header, .container, .footer,
 <body>
 
 <!-- HEADER -->
-<div style="text-align:right;padding:12px 24px 0;"><a href="about2.html" style="font-family:'Press Start 2P',monospace;font-size:8px;letter-spacing:2px;color:rgba(218,165,32,0.45);border:1px solid rgba(218,165,32,0.15);padding:5px 12px;text-decoration:none;transition:all .2s;" onmouseover="this.style.color='#daa520';this.style.borderColor='rgba(218,165,32,0.4)'" onmouseout="this.style.color='rgba(218,165,32,0.45)';this.style.borderColor='rgba(218,165,32,0.15)'">FULL BUILD LOG →</a></div>
+<div style="text-align:right;padding:12px 24px 0;display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;">
+  <a href="safe-agi.html" style="font-family:'Press Start 2P',monospace;font-size:8px;letter-spacing:2px;color:rgba(100,200,120,0.55);border:1px solid rgba(100,200,120,0.2);padding:5px 12px;text-decoration:none;transition:all .2s;" onmouseover="this.style.color='#64c878';this.style.borderColor='rgba(100,200,120,0.5)'" onmouseout="this.style.color='rgba(100,200,120,0.55)';this.style.borderColor='rgba(100,200,120,0.2)'">SAFE AGI →</a>
+  <a href="about2.html" style="font-family:'Press Start 2P',monospace;font-size:8px;letter-spacing:2px;color:rgba(218,165,32,0.45);border:1px solid rgba(218,165,32,0.15);padding:5px 12px;text-decoration:none;transition:all .2s;" onmouseover="this.style.color='#daa520';this.style.borderColor='rgba(218,165,32,0.4)'" onmouseout="this.style.color='rgba(218,165,32,0.45)';this.style.borderColor='rgba(218,165,32,0.15)'">FULL BUILD LOG →</a>
+</div>
 <div class="header">
   <div class="logo">SHORTFACTORY</div>
   <div class="tagline">Shorts Mastered.</div>
@@ -1102,7 +1110,7 @@ body, .header, .container, .footer,
               <span class="screen-url">shortfactory.shop</span>
             </div>
             <div class="screen-viewport">
-              <iframe src="/" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" title="Cortex AI"></iframe>
+              <div class="screen-preview"></div>
             </div>
           </div>
           <div class="card-info">
@@ -1120,7 +1128,7 @@ body, .header, .container, .footer,
               <span class="screen-url">shortfactory.shop/trump/game</span>
             </div>
             <div class="screen-viewport">
-              <iframe src="/trump/game/" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" title="Trump Game"></iframe>
+              <div class="screen-preview"></div>
             </div>
           </div>
           <div class="card-info">
@@ -1138,7 +1146,7 @@ body, .header, .container, .footer,
               <span class="screen-url">shortfactory.shop/trump/game/cat</span>
             </div>
             <div class="screen-viewport">
-              <iframe src="/trump/game/cat/" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" title="Pricey Cat"></iframe>
+              <div class="screen-preview"></div>
             </div>
           </div>
           <div class="card-info">
@@ -1156,7 +1164,7 @@ body, .header, .container, .footer,
               <span class="screen-url">shortfactory.shop/credits</span>
             </div>
             <div class="screen-viewport">
-              <iframe src="/credits/" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" title="Gamergate 3"></iframe>
+              <div class="screen-preview"></div>
             </div>
           </div>
           <div class="card-info">
@@ -1174,7 +1182,7 @@ body, .header, .container, .footer,
               <span class="screen-url">shortfactory.shop/trump/game-v3</span>
             </div>
             <div class="screen-viewport">
-              <iframe src="/trump/game-v3/" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" title="v3 Sandbox"></iframe>
+              <div class="screen-preview"></div>
             </div>
           </div>
           <div class="card-info">
@@ -1192,7 +1200,7 @@ body, .header, .container, .footer,
               <span class="screen-url">shortfactory.shop/jobs.html</span>
             </div>
             <div class="screen-viewport">
-              <iframe src="/jobs.html" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" title="Bounties"></iframe>
+              <div class="screen-preview"></div>
             </div>
           </div>
           <div class="card-info">
@@ -1210,7 +1218,7 @@ body, .header, .container, .footer,
               <span class="screen-url">shortfactory.shop/portfolio.html</span>
             </div>
             <div class="screen-viewport">
-              <iframe src="/portfolio.html" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" title="Portfolio"></iframe>
+              <div class="screen-preview"></div>
             </div>
           </div>
           <div class="card-info">
@@ -1228,7 +1236,7 @@ body, .header, .container, .footer,
               <span class="screen-url">shortfactory.shop/imaginator</span>
             </div>
             <div class="screen-viewport">
-              <iframe src="/imaginator/index2.php" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" title="Imaginator"></iframe>
+              <div class="screen-preview"></div>
             </div>
           </div>
           <div class="card-info">
@@ -1246,7 +1254,7 @@ body, .header, .container, .footer,
               <span class="screen-url">shortfactory.shop/kinetic_editor.html</span>
             </div>
             <div class="screen-viewport">
-              <iframe src="/kinetic_editor.html" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" title="Kinetic Editor"></iframe>
+              <div class="screen-preview"></div>
             </div>
           </div>
           <div class="card-info">
@@ -1264,7 +1272,7 @@ body, .header, .container, .footer,
               <span class="screen-url">shortfactory.shop/subtitles_pro_v2.html</span>
             </div>
             <div class="screen-viewport">
-              <iframe src="/subtitles_pro_v2.html" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" title="Kinetic Player"></iframe>
+              <div class="screen-preview"></div>
             </div>
           </div>
           <div class="card-info">
@@ -1282,7 +1290,7 @@ body, .header, .container, .footer,
               <span class="screen-url">shortfactory.shop/alive</span>
             </div>
             <div class="screen-viewport" style="background:#0a0e1a">
-              <iframe src="/alive/" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" title="ALIVE Girl"></iframe>
+              <div class="screen-preview"></div>
             </div>
           </div>
           <div class="card-info">
@@ -1300,7 +1308,7 @@ body, .header, .container, .footer,
               <span class="screen-url">shortfactory.shop/alive/boy</span>
             </div>
             <div class="screen-viewport" style="background:#0a0e1a">
-              <iframe src="/alive/boy/" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" title="ALIVE Boy"></iframe>
+              <div class="screen-preview"></div>
             </div>
           </div>
           <div class="card-info">
@@ -1318,7 +1326,7 @@ body, .header, .container, .footer,
               <span class="screen-url">shortfactory.shop/dares4dosh</span>
             </div>
             <div class="screen-viewport" style="background:#0a0a0a">
-              <iframe src="/dares4dosh/" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" title="Dares4Dosh"></iframe>
+              <div class="screen-preview"></div>
             </div>
           </div>
           <div class="card-info">
@@ -1336,7 +1344,7 @@ body, .header, .container, .footer,
               <span class="screen-url">shortfactory.shop/screensaver</span>
             </div>
             <div class="screen-viewport" style="background:#050510">
-              <iframe src="/screensaver/" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" title="Supercharged Screensaver"></iframe>
+              <div class="screen-preview"></div>
             </div>
           </div>
           <div class="card-info">
@@ -1354,7 +1362,7 @@ body, .header, .container, .footer,
               <span class="screen-url">shortfactory.shop/comicvid</span>
             </div>
             <div class="screen-viewport" style="background:#0a0a0a">
-              <iframe src="/comicvid/" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" title="ComicVID"></iframe>
+              <div class="screen-preview"></div>
             </div>
           </div>
           <div class="card-info">
@@ -1372,7 +1380,7 @@ body, .header, .container, .footer,
               <span class="screen-url">shortfactory.shop/admaker</span>
             </div>
             <div class="screen-viewport" style="background:#0a0a0a">
-              <iframe src="/admaker/" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" title="Ad Monster"></iframe>
+              <div class="screen-preview"></div>
             </div>
           </div>
           <div class="card-info">
@@ -1390,7 +1398,7 @@ body, .header, .container, .footer,
               <span class="screen-url">shortfactory.shop/mememonster</span>
             </div>
             <div class="screen-viewport" style="background:#0a0a0a">
-              <iframe src="/mememonster/" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" title="Meme Monster"></iframe>
+              <div class="screen-preview"></div>
             </div>
           </div>
           <div class="card-info">
@@ -1408,7 +1416,7 @@ body, .header, .container, .footer,
               <span class="screen-url">shortfactory.shop/ipfs</span>
             </div>
             <div class="screen-viewport" style="background:#0a0a0a">
-              <iframe src="/ipfs/" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" title="IPFS Vault"></iframe>
+              <div class="screen-preview"></div>
             </div>
           </div>
           <div class="card-info">
@@ -1426,7 +1434,7 @@ body, .header, .container, .footer,
               <span class="screen-url">shortfactory.shop/fuel</span>
             </div>
             <div class="screen-viewport" style="background:#0a0a0a">
-              <iframe src="/fuel/" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" title="Fuel Dashboard"></iframe>
+              <div class="screen-preview"></div>
             </div>
           </div>
           <div class="card-info">
@@ -1444,7 +1452,7 @@ body, .header, .container, .footer,
               <span class="screen-url">shortfactory.shop/imaginator/yt_upload</span>
             </div>
             <div class="screen-viewport" style="background:#0a0a0a">
-              <iframe src="/imaginator/yt_upload.html" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" title="Layer Studio"></iframe>
+              <div class="screen-preview"></div>
             </div>
           </div>
           <div class="card-info">
@@ -1462,7 +1470,7 @@ body, .header, .container, .footer,
               <span class="screen-url">shortfactory.shop/alive/soundlab</span>
             </div>
             <div class="screen-viewport" style="background:#0a0e1a">
-              <iframe src="/alive/soundlab/" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" title="ALIVE Sound Lab"></iframe>
+              <div class="screen-preview"></div>
             </div>
           </div>
           <div class="card-info">
@@ -1480,7 +1488,7 @@ body, .header, .container, .footer,
               <span class="screen-url">shortfactory.shop/alive/imagelab</span>
             </div>
             <div class="screen-viewport" style="background:#0a0e1a">
-              <iframe src="/alive/imagelab/" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" title="ALIVE Image Lab"></iframe>
+              <div class="screen-preview"></div>
             </div>
           </div>
           <div class="card-info">
@@ -1499,11 +1507,11 @@ body, .header, .container, .footer,
                 <span class="screen-url">shortfactory.shop/mcforms</span>
               </div>
               <div class="screen-viewport" style="background:#0a0a0a;width:auto;height:200px;">
-                <iframe src="/mcforms/" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" title="mcFORM"></iframe>
+                <div class="screen-preview"></div>
               </div>
             </div>
             <div style="width:140px;flex-shrink:0;background:linear-gradient(135deg,#8b0000,#ff3d00);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;">
-              <iframe src="https://www.youtube.com/embed/69qMURZG2Ds?autoplay=0&mute=1&loop=1&playlist=69qMURZG2Ds&controls=0&showinfo=0&rel=0&playsinline=1" style="width:140px;height:200px;border:none;pointer-events:none;" allow="autoplay;encrypted-media" loading="lazy"></iframe>
+              <div class="screen-preview"></div>
               <div style="position:absolute;bottom:6px;left:0;right:0;text-align:center;font-family:'Press Start 2P',monospace;font-size:6px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,0.8);letter-spacing:1px;line-height:1.4;pointer-events:none;">THE VISION</div>
             </div>
           </div>
@@ -1522,7 +1530,7 @@ body, .header, .container, .footer,
               <span class="screen-url">shortfactory.shop/50</span>
             </div>
             <div class="screen-viewport" style="background:#0a0a0a">
-              <iframe src="/50/" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" title="50% App"></iframe>
+              <div class="screen-preview"></div>
             </div>
           </div>
           <div class="card-info">
@@ -1540,7 +1548,7 @@ body, .header, .container, .footer,
               <span class="screen-url">shortfactory.shop/shorts</span>
             </div>
             <div class="screen-viewport" style="background:#0a0a0a">
-              <iframe src="/shorts/" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" title="Shorts Store"></iframe>
+              <div class="screen-preview"></div>
             </div>
           </div>
           <div class="card-info">
@@ -1558,7 +1566,7 @@ body, .header, .container, .footer,
               <span class="screen-url">shortfactory.shop/contribute</span>
             </div>
             <div class="screen-viewport" style="background:#0a0a0a">
-              <iframe src="/contribute/" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" title="Contribute Portal"></iframe>
+              <div class="screen-preview"></div>
             </div>
           </div>
           <div class="card-info">
@@ -1594,7 +1602,7 @@ body, .header, .container, .footer,
               <span class="screen-url">shortfactory.shop/trump/advertainment-pipeline.html</span>
             </div>
             <div class="screen-viewport">
-              <iframe src="/trump/advertainment-pipeline.html" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" title="Advertainment Pipeline"></iframe>
+              <div class="screen-preview"></div>
             </div>
           </div>
           <div class="card-info">
@@ -1612,7 +1620,7 @@ body, .header, .container, .footer,
               <span class="screen-url">shortfactory.shop/trump/campaigns.html</span>
             </div>
             <div class="screen-viewport">
-              <iframe src="/trump/campaigns.html" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" title="Campaign Engine"></iframe>
+              <div class="screen-preview"></div>
             </div>
           </div>
           <div class="card-info">
@@ -1630,7 +1638,7 @@ body, .header, .container, .footer,
               <span class="screen-url">shortfactory.shop/trump/perk-ladder.html</span>
             </div>
             <div class="screen-viewport">
-              <iframe src="/trump/perk-ladder.html" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" title="Perk Ladder"></iframe>
+              <div class="screen-preview"></div>
             </div>
           </div>
           <div class="card-info">
@@ -1664,7 +1672,7 @@ body, .header, .container, .footer,
               <span class="screen-url">shortfactory.shop/computanium.html</span>
             </div>
             <div class="screen-viewport">
-              <iframe src="/computanium.html" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" title="Computanium"></iframe>
+              <div class="screen-preview"></div>
             </div>
           </div>
           <div class="card-info">
@@ -1682,7 +1690,7 @@ body, .header, .container, .footer,
               <span class="screen-url">shortfactory.shop/alive/eye.html</span>
             </div>
             <div class="screen-viewport">
-              <iframe src="/alive/eye.html" loading="lazy" sandbox="allow-scripts allow-same-origin" title="ALIVE Visual Cortex"></iframe>
+              <div class="screen-preview"></div>
             </div>
           </div>
           <div class="card-info">
@@ -1700,7 +1708,7 @@ body, .header, .container, .footer,
               <span class="screen-url">shortfactory.shop/business.html</span>
             </div>
             <div class="screen-viewport">
-              <iframe src="/business.html" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" title="ShortFactory Business"></iframe>
+              <div class="screen-preview"></div>
             </div>
           </div>
           <div class="card-info">
@@ -1718,7 +1726,7 @@ body, .header, .container, .footer,
               <span class="screen-url">shortfactory.shop/status.html</span>
             </div>
             <div class="screen-viewport">
-              <iframe src="/status.html" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" title="System Status"></iframe>
+              <div class="screen-preview"></div>
             </div>
           </div>
           <div class="card-info">

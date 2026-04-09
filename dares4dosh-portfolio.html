@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D4D — Project Portfolio</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #050505; color: #e0e0e0; font-family: 'Courier New', monospace; min-height: 100vh; }
+
+.header { padding: 40px 24px 24px; border-bottom: 1px solid #1a1a1a; text-align: center; }
+.logo { font-size: 28px; font-weight: 900; letter-spacing: 6px; color: #00ff88; }
+.subtitle { font-size: 11px; letter-spacing: 3px; color: #444; margin-top: 4px; }
+
+/* ── VERSION SWITCHER ── */
+.versions { display: flex; gap: 0; max-width: 700px; margin: 24px auto 0; }
+.ver-btn {
+  flex: 1; padding: 12px; border: 1px solid #222; background: #0a0a0a;
+  color: #444; font-family: 'Courier New', monospace; font-size: 11px;
+  font-weight: 700; letter-spacing: 2px; cursor: pointer; transition: all 0.2s;
+}
+.ver-btn:first-child { border-radius: 6px 0 0 6px; }
+.ver-btn:last-child  { border-radius: 0 6px 6px 0; }
+.ver-btn.active { background: #111; color: #00ff88; border-color: #00ff88; }
+.ver-btn.deferred { color: #333; border-color: #1a1a1a; }
+.ver-badge {
+  display: inline-block; font-size: 8px; padding: 1px 5px;
+  border-radius: 3px; margin-left: 6px; vertical-align: middle;
+}
+.badge-live    { background: rgba(0,255,136,0.15); color: #00ff88; }
+.badge-old     { background: rgba(80,80,80,0.2); color: #444; }
+
+/* ── OVERALL ── */
+.overall { text-align: center; padding: 32px 24px; border-bottom: 1px solid #111; }
+.pct-big { font-size: 72px; font-weight: 900; line-height: 1; }
+.pct-big .num { color: #00ff88; }
+.pct-big .sym { color: #1a5c3a; font-size: 40px; }
+.pct-label { font-size: 10px; letter-spacing: 3px; color: #444; margin-top: 6px; }
+.overall-bar { width: 100%; max-width: 500px; height: 6px; background: #111; border-radius: 3px; margin: 16px auto 0; overflow: hidden; }
+.overall-fill { height: 100%; background: linear-gradient(90deg, #00ff88, #00d4ff); border-radius: 3px; transition: width 1s ease; }
+
+/* ── SECTIONS ── */
+.sections { max-width: 700px; margin: 0 auto; padding: 24px; }
+.section { margin-bottom: 28px; }
+.section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.section-name { font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #888; }
+.section-pct  { font-size: 13px; font-weight: 700; }
+.section-bar  { height: 4px; background: #111; border-radius: 2px; overflow: hidden; margin-bottom: 8px; }
+.section-fill { height: 100%; border-radius: 2px; transition: width 1s ease; }
+.fill-green  { background: #00ff88; }
+.fill-yellow { background: #ffd700; }
+.fill-orange { background: #ff6b35; }
+.fill-red    { background: #ff4444; }
+
+.items { display: flex; flex-direction: column; gap: 3px; }
+.item { display: flex; align-items: center; gap: 10px; padding: 5px 0; font-size: 11px; border-bottom: 1px solid #0a0a0a; }
+.item:last-child { border-bottom: none; }
+.item-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dot-done    { background: #00ff88; }
+.dot-wip     { background: #ffd700; }
+.dot-missing { background: #ff4444; box-shadow: 0 0 6px rgba(255,68,68,0.4); }
+.dot-deferred{ background: #555; }
+.item-text { flex: 1; color: #bbb; }
+.item-text.done    { color: #888; }
+.item-text.missing { color: #ff6666; }
+.item-badge { font-size: 9px; letter-spacing: 1px; padding: 2px 6px; border-radius: 3px; font-weight: 700; }
+.badge-done    { background: rgba(0,255,136,0.1); color: #00ff88; }
+.badge-wip     { background: rgba(255,215,0,0.1); color: #ffd700; }
+.badge-missing { background: rgba(255,68,68,0.1); color: #ff4444; }
+.badge-deferred{ background: rgba(80,80,80,0.2); color: #666; }
+
+/* ── DEFERRED VERSION OVERLAY ── */
+.deferred-overlay {
+  max-width: 700px; margin: 0 auto; padding: 24px;
+  opacity: 0.35; filter: grayscale(1); pointer-events: none;
+}
+.deferred-banner {
+  text-align: center; padding: 16px; border: 1px solid #222;
+  border-radius: 6px; margin-bottom: 20px; color: #555;
+  font-size: 10px; letter-spacing: 2px;
+}
+
+/* ── LEGEND ── */
+.legend { display: flex; gap: 20px; justify-content: center; padding: 16px; border-top: 1px solid #111; font-size: 10px; letter-spacing: 1px; color: #444; }
+.legend-item { display: flex; align-items: center; gap: 6px; }
+
+/* ── NOTES ── */
+.notes { max-width: 700px; margin: 0 auto; padding: 0 24px 40px; border-top: 1px solid #111; }
+.notes-title { font-size: 10px; letter-spacing: 2px; color: #444; margin: 20px 0 10px; }
+.note { font-size: 11px; color: #555; padding: 6px 0; border-bottom: 1px solid #0d0d0d; line-height: 1.6; }
+.note span { color: #ffd700; }
+.note span.green { color: #00ff88; }
+
+/* ── TEST CHECKLIST ── */
+.test-section { max-width: 700px; margin: 0 auto; padding: 0 24px 20px; }
+.test-title { font-size: 10px; letter-spacing: 2px; color: #00d4ff; margin: 20px 0 10px; border-top: 1px solid #111; padding-top: 20px; }
+.test-item { font-size: 11px; color: #666; padding: 5px 0; display: flex; gap: 8px; align-items: baseline; }
+.test-item .t-num { color: #333; min-width: 18px; }
+.test-item .t-action { color: #00d4ff; }
+.test-item .t-expect { color: #555; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">DARES4DOSH</div>
+  <div class="subtitle">PROJECT STATUS · 26 MAR 2026</div>
+</div>
+
+<div class="versions" style="padding: 0 24px;">
+  <button class="ver-btn active" onclick="showVersion(1, this)">
+    V1 · STINKINDIGGER<span class="ver-badge badge-live">LIVE</span>
+  </button>
+  <button class="ver-btn deferred" onclick="showVersion(2, this)">
+    V2 · CORTEX<span class="ver-badge badge-old">PROTOTYPE</span>
+  </button>
+</div>
+
+<!-- ═══ VERSION 1 ═══ -->
+<div id="v1">
+  <div class="overall">
+    <div class="pct-big"><span class="num" id="pctNum1">--</span><span class="sym">%</span></div>
+    <div class="pct-label">COMPLETE — stinkindigger.info</div>
+    <div class="overall-bar"><div class="overall-fill" id="overallFill1" style="width:0%"></div></div>
+  </div>
+  <div class="sections" id="sections1"></div>
+
+  <div class="test-section">
+    <div class="test-title">END-TO-END TEST CHECKLIST</div>
+    <div class="test-item"><span class="t-num">1.</span><span class="t-action">Login</span><span class="t-expect">— paste dan-chipchase OR drag .sft file → CHAD HUD loads</span></div>
+    <div class="test-item"><span class="t-num">2.</span><span class="t-action">CREATE tab</span><span class="t-expect">— create a dare → appears in PROPOSE feed immediately</span></div>
+    <div class="test-item"><span class="t-num">3.</span><span class="t-action">PROPOSE tab</span><span class="t-expect">— stake △ tokens on it → total goes up, your balance drops</span></div>
+    <div class="test-item"><span class="t-num">4.</span><span class="t-action">PROPOSE tab (Dan only)</span><span class="t-expect">— set bounty + FUND → dare moves to DARES feed as OPEN</span></div>
+    <div class="test-item"><span class="t-num">5.</span><span class="t-action">DARES tab</span><span class="t-expect">— hit ACCEPT → modal opens with ProofRecorder</span></div>
+    <div class="test-item"><span class="t-num">6.</span><span class="t-action">Record proof</span><span class="t-expect">— camera opens, record 5s, stop → preview shows</span></div>
+    <div class="test-item"><span class="t-num">7.</span><span class="t-action">Upload proof</span><span class="t-expect">— SAVE TO IPFS → local_xxx CID returned → challenge submitted</span></div>
+    <div class="test-item"><span class="t-num">8.</span><span class="t-action">VOTE tab</span><span class="t-expect">— dare appears, vote YES → count increments</span></div>
+    <div class="test-item"><span class="t-num">9.</span><span class="t-action">Judgment</span><span class="t-expect">— 5 votes → dare completes → XMR or △ tokens credited</span></div>
+    <div class="test-item"><span class="t-num">10.</span><span class="t-action">WALLET tab</span><span class="t-expect">— balance + dares_completed updated</span></div>
+    <div class="test-item"><span class="t-num">11.</span><span class="t-action">BOARD tab</span><span class="t-expect">— dan-chipchase appears at #1 earners</span></div>
+    <div class="test-item"><span class="t-num">12.</span><span class="t-action">GOV tab</span><span class="t-expect">— rates show, propose new rate → appears in proposals</span></div>
+  </div>
+
+  <div class="notes">
+    <div class="notes-title">BLOCKERS &amp; NEXT ACTIONS</div>
+    <div class="note">🔑 <span>PINATA_JWT</span> — SSH to 185.230.216.235, add to /etc/environment as PINATA_JWT=xxxxx, restart Apache. Without it proofs stored locally only (still works).</div>
+    <div class="note">🌐 <span>www DNS</span> — Add A record for www.stinkindigger.info in IONOS panel → 185.230.216.235. Apex works fine.</div>
+    <div class="note">💰 <span>Monero RPC</span> — Deferred. Virtual balance works. Real XMR payout = manual for now.</div>
+    <div class="note">⚡ <span>IP vote dedup</span> — Same machine can only cast 1 vote (by IP). Fine for production. Test with real phones.</div>
+    <div class="note">△ <span>Triangle token faucet</span> — New tokens get 50–1000 △ based on rank. Dan has 500 △. Top up via DB if needed.</div>
+  </div>
+</div>
+
+<!-- ═══ VERSION 2 (greyed) ═══ -->
+<div id="v2" style="display:none">
+  <div class="deferred-overlay">
+    <div class="deferred-banner">
+      ⊘ PROTOTYPE — CORTEX / shortfactory.shop — not the active build<br>
+      PHP only · no React · no soul tokens · no stake flow · no voting chain
+    </div>
+    <div class="sections" id="sections2"></div>
+  </div>
+  <div class="notes">
+    <div class="notes-title">WHY DEFERRED</div>
+    <div class="note">⊘ <span>CORTEX</span> is an older PHP-only concept. Different mental model (marketplace/value assessment AI vs dare game).</div>
+    <div class="note">⊘ V1 (stinkindigger.info) is <span class="green">further ahead on every axis</span> — React app, full REST API, soul tokens, propose/stake/fund/vote chain, governance. No point maintaining two stacks.</div>
+    <div class="note">♻ <span>What's worth rescuing</span> — cortex_brain.py wisdom/learning system could eventually plug into V1 as the AI dare-curator. Not needed to go live.</div>
+  </div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="item-dot dot-done"></div> DONE</div>
+  <div class="legend-item"><div class="item-dot dot-wip"></div> IN PROGRESS</div>
+  <div class="legend-item"><div class="item-dot dot-missing"></div> MISSING</div>
+  <div class="legend-item"><div class="item-dot dot-deferred"></div> DEFERRED</div>
+</div>
+
+<script>
+// ═══ VERSION 1 DATA ═══
+const V1 = [
+  {
+    name: 'INFRASTRUCTURE',
+    items: [
+      { s: 'done', t: 'React app live at stinkindigger.info' },
+      { s: 'done', t: 'PHP API at stinkindigger.info/api' },
+      { s: 'done', t: 'SSL certificate installed' },
+      { s: 'done', t: 'Database tables created (17 tables)' },
+      { s: 'done', t: 'Auth — token paste + .sft + .json file upload' },
+      { s: 'done', t: 'Dan founder token deployed (dan-chipchase.sft + .json)' },
+      { s: 'wip',  t: 'www.stinkindigger.info DNS (apex works, www pending)' },
+    ]
+  },
+  {
+    name: 'BACKEND API',
+    items: [
+      { s: 'done', t: 'POST /auth — token + .sft + .json login' },
+      { s: 'done', t: 'GET  /player — own profile (inc triangle_balance)' },
+      { s: 'done', t: 'GET  /player/:token — public profile' },
+      { s: 'done', t: 'GET  /dares — list (open/proposed/voting/completed)' },
+      { s: 'done', t: 'POST /dares — create dare (starts as proposed)' },
+      { s: 'done', t: 'GET  /dare/:id — single dare + challenges' },
+      { s: 'done', t: 'POST /stake — back a proposal with △ tokens' },
+      { s: 'done', t: 'POST /fund — Dan funds a proposal (founder only)' },
+      { s: 'done', t: 'POST /challenge — accept dare + proof upload' },
+      { s: 'done', t: 'POST /vote — vote + 5-vote judgment chain' },
+      { s: 'done', t: 'GET  /wallet — balance + history' },
+      { s: 'done', t: 'POST /payout — withdrawal request' },
+      { s: 'done', t: 'GET  /leaderboard — earners / brave / courage / chaos' },
+      { s: 'done', t: 'GET  /badges/:token — badge collection' },
+      { s: 'done', t: 'GET  /community-pot — shared pot balance' },
+      { s: 'done', t: 'GET  /types — dare types + risks catalogue' },
+      { s: 'done', t: 'POST /request-token — soul forge token mint' },
+      { s: 'done', t: 'GET  /governance/rates + proposals + propose + vote' },
+    ]
+  },
+  {
+    name: 'REACT APP',
+    items: [
+      { s: 'done', t: 'TokenGate — paste token or drag .sft/.json file' },
+      { s: 'done', t: 'PlayerHUD — rank badge, XMR + △ balance, dare count' },
+      { s: 'done', t: 'Soul Radar — canvas polygon popup' },
+      { s: 'done', t: 'DARES tab — feed with status + type filters' },
+      { s: 'done', t: 'PROPOSE tab — ranked by stake, stake button, Dan FUND button' },
+      { s: 'done', t: 'DareCard — thumbnails, risk colours, bounty' },
+      { s: 'done', t: 'ACCEPT button → modal → ProofRecorder → challenge submit' },
+      { s: 'done', t: 'CREATE tab — dare creation form' },
+      { s: 'done', t: 'VOTE tab — loads pending challenges, renders VotePanel' },
+      { s: 'done', t: 'BOARD tab — leaderboard with 4 sort modes' },
+      { s: 'done', t: 'WALLET tab — XMR balance, △ tokens, VIP tier' },
+      { s: 'done', t: 'GOV tab — rates, proposals, vote, propose new rate' },
+      { s: 'done', t: 'ProofRecorder — camera, 60s record, flip, timer' },
+      { s: 'done', t: 'ComicVID compression (normy/degen forced, CHAD skips)' },
+      { s: 'done', t: 'ComicVIDPlayer — local CID + real IPFS CID playback' },
+      { s: 'done', t: 'VotePanel — proof view, vote bar, yes/no' },
+    ]
+  },
+  {
+    name: 'IPFS + UPLOADS',
+    items: [
+      { s: 'done', t: '/ipfs/api.php — local storage + Pinata ready' },
+      { s: 'done', t: 'ComicVIDPlayer handles local_xxx and real Qm... CIDs' },
+      { s: 'done', t: 'uploads/proofs/ directory on server' },
+      { s: 'missing', t: 'Pinata JWT — set env var for real decentralised storage' },
+    ]
+  },
+  {
+    name: 'ECONOMY ENGINE',
+    items: [
+      { s: 'done', t: 'XMR virtual balance (earn, spend, withdraw)' },
+      { s: 'done', t: '△ Triangle token balance — starter by rank, stake on dares' },
+      { s: 'done', t: 'Propose → stake → rank → Dan funds → open flow' },
+      { s: 'done', t: 'Dual payout: △ tokens (automated) or XMR (Dan decides)' },
+      { s: 'done', t: 'Soul evolution on dare completion (by type × risk)' },
+      { s: 'done', t: 'Rank progression (normy → degen → cultist → high_priest → architect)' },
+      { s: 'done', t: 'Badge unlock system' },
+      { s: 'done', t: '5% platform cut → community pot' },
+      { s: 'done', t: 'VIP tiers (standard / bronze / silver / gold / platinum)' },
+      { s: 'done', t: 'Governance: CHAD+ vote on shape exchange rates' },
+      { s: 'deferred', t: 'Real Monero RPC — manual payouts work for now' },
+    ]
+  },
+  {
+    name: 'CONTENT + PAGES',
+    items: [
+      { s: 'done', t: 'Soul Forge (soulforge/index.html) — token minting ritual' },
+      { s: 'done', t: 'dares4dosh-architecture.html — live, Oracle-ready' },
+      { s: 'done', t: 'portfolio.html — this page' },
+      { s: 'wip',  t: 'www.stinkindigger.info DNS redirect' },
+    ]
+  }
+];
+
+// ═══ VERSION 2 DATA ═══
+const V2 = [
+  {
+    name: 'CORTEX CORE',
+    items: [
+      { s: 'done',     t: 'cortex_brain.php — AI wisdom/learning engine' },
+      { s: 'done',     t: 'index.html — CORTEX UI (vanilla JS, no React)' },
+      { s: 'done',     t: 'upload.php — basic file upload' },
+      { s: 'deferred', t: 'React app — not built (V1 has this)' },
+      { s: 'deferred', t: 'Soul tokens / .sft system — not built (V1 has this)' },
+    ]
+  },
+  {
+    name: 'DARE GAME',
+    items: [
+      { s: 'deferred', t: 'Dare creation — not built' },
+      { s: 'deferred', t: 'Propose / stake / fund flow — not built' },
+      { s: 'deferred', t: 'Proof recording + IPFS — not built' },
+      { s: 'deferred', t: 'Voting / judgment chain — not built' },
+      { s: 'deferred', t: 'Soul evolution — not built' },
+      { s: 'deferred', t: 'Triangle token economy — not built' },
+    ]
+  },
+  {
+    name: 'MARKETPLACE (UNIQUE TO V2)',
+    items: [
+      { s: 'done',     t: 'Value assessment AI (male/female metrics)' },
+      { s: 'done',     t: 'Escrow + arbitrage concept' },
+      { s: 'deferred', t: 'Could merge into V1 later — not needed for launch' },
+    ]
+  }
+];
+
+const STATUS   = { done: '#00ff88', wip: '#ffd700', missing: '#ff4444', deferred: '#555' };
+const LABELS   = { done: 'DONE', wip: 'WIP', missing: 'MISSING', deferred: 'LATER' };
+
+function renderSections(data, containerId, pctNumId, fillId) {
+  let totalItems = 0, doneItems = 0;
+  const container = document.getElementById(containerId);
+
+  data.forEach(sec => {
+    const done  = sec.items.filter(i => i.s === 'done').length;
+    const total = sec.items.length;
+    const pct   = Math.round((done / total) * 100);
+    totalItems += total; doneItems += done;
+
+    const barClass  = pct >= 90 ? 'fill-green' : pct >= 60 ? 'fill-yellow' : pct >= 30 ? 'fill-orange' : 'fill-red';
+    const pctColor  = pct >= 90 ? '#00ff88' : pct >= 60 ? '#ffd700' : pct >= 30 ? '#ff6b35' : '#ff4444';
+
+    const itemsHtml = sec.items.map(item => `
+      <div class="item">
+        <div class="item-dot dot-${item.s}"></div>
+        <div class="item-text ${item.s === 'done' ? 'done' : item.s === 'missing' ? 'missing' : ''}">${item.t}</div>
+        <div class="item-badge badge-${item.s}">${LABELS[item.s]}</div>
+      </div>
+    `).join('');
+
+    container.innerHTML += `
+      <div class="section">
+        <div class="section-head">
+          <div class="section-name">${sec.name}</div>
+          <div class="section-pct" style="color:${pctColor}">${done}/${total} · ${pct}%</div>
+        </div>
+        <div class="section-bar"><div class="section-fill ${barClass}" style="width:${pct}%"></div></div>
+        <div class="items">${itemsHtml}</div>
+      </div>
+    `;
+  });
+
+  if (pctNumId) {
+    const overall = Math.round((doneItems / totalItems) * 100);
+    document.getElementById(pctNumId).textContent = overall;
+    document.getElementById(fillId).style.width = overall + '%';
+  }
+}
+
+function showVersion(v, btn) {
+  document.getElementById('v1').style.display = v === 1 ? 'block' : 'none';
+  document.getElementById('v2').style.display = v === 2 ? 'block' : 'none';
+  document.querySelectorAll('.ver-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+renderSections(V1, 'sections1', 'pctNum1', 'overallFill1');
+renderSections(V2, 'sections2', null, null);
+</script>
+</body>
+</html>

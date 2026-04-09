@@ -4,556 +4,544 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>ShortFactory</title>
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#111111">
 <style>
-/* ── RESET ─────────────────────────────────────────────────────────────── */
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html,body{width:100%;height:100%;background:#e8e8ec;overflow:hidden;font-family:-apple-system,'SF Pro Display','Segoe UI',system-ui,sans-serif;}
+html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,'SF Pro Display','Segoe UI',system-ui,sans-serif;}
 
-/* ── OUTER STAGE — desktop centres the phone ───────────────────────────── */
-.stage{
-  width:100%;height:100%;
-  display:flex;align-items:center;justify-content:center;
-  background:radial-gradient(ellipse at 50% 40%,#dddde4 0%,#c8c8d0 100%);
+/* ── DEBUG ───────────────────────────────────────────────────────────────── */
+#debug-tab{position:fixed;left:0;top:50%;transform:translateY(-50%);writing-mode:vertical-rl;text-orientation:mixed;background:#111;color:#0f0;font-family:'Courier New',monospace;font-size:9px;padding:8px 4px;letter-spacing:2px;cursor:pointer;z-index:9999;border-radius:0 4px 4px 0;opacity:0.4;transition:opacity .2s;user-select:none;}
+#debug-tab:hover{opacity:1;}
+#debug-panel{position:fixed;left:0;top:0;bottom:0;width:320px;background:#0a0a0a;border-right:1px solid #1a1a1a;font-family:'Courier New',monospace;font-size:10px;color:#0f0;display:none;flex-direction:column;z-index:9998;}
+#debug-panel.open{display:flex;}
+#debug-head{padding:8px 10px;border-bottom:1px solid #1a1a1a;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+#debug-head span{color:#0f0;letter-spacing:2px;font-size:9px;}
+#debug-copy{font-family:'Courier New',monospace;font-size:8px;padding:3px 8px;background:#0f0;color:#000;border:none;cursor:pointer;letter-spacing:1px;}
+#debug-clear{font-family:'Courier New',monospace;font-size:8px;padding:3px 8px;background:transparent;color:#0f0;border:1px solid #0f0;cursor:pointer;letter-spacing:1px;margin-right:4px;}
+#debug-log{flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:6px;}
+.dlog{border-left:2px solid #1a1a1a;padding:4px 6px;font-size:9px;line-height:1.6;}
+.dlog.ok{border-color:#0f0;color:#0f0;}.dlog.err{border-color:#f44;color:#f44;}.dlog.warn{border-color:#fa0;color:#fa0;}.dlog.info{border-color:#48f;color:#48f;}.dlog.req{border-color:#888;color:#888;}
+.dlog-time{opacity:.4;margin-right:6px;}.dlog-body{white-space:pre-wrap;word-break:break-all;margin-top:2px;}
+
+/* ── PATH VARIABLES ──────────────────────────────────────────────────────── */
+:root{
+  --path-bg:#f8f8fa; --path-accent:#0a0a0f; --path-glow:rgba(0,0,0,0.1);
+  --text-primary:#0a0a0f; --text-secondary:rgba(0,0,0,0.4); --text-dim:rgba(0,0,0,0.2);
+  --divider:rgba(0,0,0,0.05); --card-detail-bg:rgba(0,0,0,0.03); --choice-bg:rgba(0,0,0,0.03);
 }
+.phone.path-soul     {--path-bg:#0e0814;--path-accent:#a855f7;--path-glow:rgba(168,85,247,.35);--text-primary:#f0e8ff;--text-secondary:rgba(240,232,255,.5);--text-dim:rgba(240,232,255,.2);--divider:rgba(168,85,247,.1);--card-detail-bg:rgba(168,85,247,.05);--choice-bg:rgba(168,85,247,.08);}
+.phone.path-alive    {--path-bg:#040d14;--path-accent:#06b6d4;--path-glow:rgba(6,182,212,.35);--text-primary:#e0f7ff;--text-secondary:rgba(224,247,255,.5);--text-dim:rgba(224,247,255,.2);--divider:rgba(6,182,212,.1);--card-detail-bg:rgba(6,182,212,.05);--choice-bg:rgba(6,182,212,.08);}
+.phone.path-game     {--path-bg:#140404;--path-accent:#ef4444;--path-glow:rgba(239,68,68,.35);--text-primary:#ffe8e8;--text-secondary:rgba(255,232,232,.5);--text-dim:rgba(255,232,232,.2);--divider:rgba(239,68,68,.1);--card-detail-bg:rgba(239,68,68,.05);--choice-bg:rgba(239,68,68,.08);}
+.phone.path-dares    {--path-bg:#140204;--path-accent:#e03030;--path-glow:rgba(224,48,48,.35);--text-primary:#ffe0e0;--text-secondary:rgba(255,224,224,.5);--text-dim:rgba(255,224,224,.2);--divider:rgba(224,48,48,.1);--card-detail-bg:rgba(224,48,48,.05);--choice-bg:rgba(224,48,48,.08);}
+.phone.path-advert   {--path-bg:#0e0a00;--path-accent:#f59e0b;--path-glow:rgba(245,158,11,.35);--text-primary:#fff8e0;--text-secondary:rgba(255,248,224,.5);--text-dim:rgba(255,248,224,.2);--divider:rgba(245,158,11,.1);--card-detail-bg:rgba(245,158,11,.05);--choice-bg:rgba(245,158,11,.08);}
+.phone.path-contracts{--path-bg:#000e0a;--path-accent:#10b981;--path-glow:rgba(16,185,129,.35);--text-primary:#e0fff4;--text-secondary:rgba(224,255,244,.5);--text-dim:rgba(224,255,244,.2);--divider:rgba(16,185,129,.1);--card-detail-bg:rgba(16,185,129,.05);--choice-bg:rgba(16,185,129,.08);}
+.phone.path-agi      {--path-bg:#00060e;--path-accent:#3b82f6;--path-glow:rgba(59,130,246,.35);--text-primary:#e0eeff;--text-secondary:rgba(224,238,255,.5);--text-dim:rgba(224,238,255,.2);--divider:rgba(59,130,246,.1);--card-detail-bg:rgba(59,130,246,.05);--choice-bg:rgba(59,130,246,.08);}
 
-/* ── PHONE SHELL ────────────────────────────────────────────────────────── */
+/* ── STAGE ───────────────────────────────────────────────────────────────── */
+.stage{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 40%,#dddde4 0%,#c8c8d0 100%);}
+
+/* ── PHONE ───────────────────────────────────────────────────────────────── */
 .phone{
-  width:390px;
-  height:844px;
-  border-radius:52px;
-  background:#f8f8fa;
-  box-shadow:
-    0 0 0 1px rgba(0,0,0,0.06),
-    0 2px 4px rgba(0,0,0,0.04),
-    0 8px 24px rgba(0,0,0,0.08),
-    0 32px 80px rgba(0,0,0,0.12),
-    inset 0 1px 0 rgba(255,255,255,0.9);
-  display:flex;flex-direction:column;
-  overflow:hidden;
-  position:relative;
+  width:390px;height:844px;border-radius:52px;
+  background:var(--path-bg);
+  box-shadow:0 0 0 1px rgba(0,0,0,.06),0 2px 4px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.08),0 32px 80px rgba(0,0,0,.12),inset 0 1px 0 rgba(255,255,255,.9),0 0 80px var(--path-glow);
+  display:flex;flex-direction:column;overflow:hidden;position:relative;
+  transition:background .8s ease,box-shadow .8s ease;
 }
-
-/* notch bar */
-.phone-notch{
-  height:52px;flex-shrink:0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px;
-  position:relative;z-index:10;
-}
+.phone-notch{height:52px;flex-shrink:0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px;position:relative;z-index:10;}
 .notch-pill{width:120px;height:34px;background:#111;border-radius:20px;}
-
-/* status row */
-.status-bar{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:0 28px;height:24px;flex-shrink:0;position:relative;z-index:10;
-}
-.status-time{font-size:13px;font-weight:600;color:#111;letter-spacing:-0.3px;}
+.status-bar{display:flex;justify-content:space-between;align-items:center;padding:0 28px;height:24px;flex-shrink:0;position:relative;z-index:10;}
+.status-time{font-size:13px;font-weight:600;color:var(--text-primary);letter-spacing:-0.3px;transition:color .8s;}
+.status-sft{font-size:10px;font-weight:700;color:var(--text-dim);letter-spacing:.08em;transition:color .4s;}
+.status-sft.flash{color:var(--path-accent);}
 .status-icons{display:flex;gap:5px;align-items:center;}
 .status-icons svg{opacity:0.6;}
 
-/* ── SCREEN AREA ────────────────────────────────────────────────────────── */
-.screen{
-  flex:1;display:flex;flex-direction:column;
-  overflow:hidden;position:relative;
-}
+/* ── PATH BAR ────────────────────────────────────────────────────────────── */
+.path-bar{height:2px;flex-shrink:0;background:var(--path-accent);opacity:0;transition:opacity .6s,background .8s;}
+.path-bar.visible{opacity:0.5;}
 
-/* ── CARD STACK ─────────────────────────────────────────────────────────── */
-.card-stack{
-  flex:1;position:relative;overflow:hidden;
-}
-.card{
-  position:absolute;inset:0;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:2rem 2rem 0;
-  transition:transform 0.35s cubic-bezier(0.4,0,0.2,1),opacity 0.35s ease;
-  will-change:transform;
-}
-.card.hidden-left { transform:translateX(-110%); opacity:0; pointer-events:none; }
-.card.hidden-right{ transform:translateX(110%);  opacity:0; pointer-events:none; }
-.card.active      { transform:translateX(0);     opacity:1; }
+/* ── SCREEN ──────────────────────────────────────────────────────────────── */
+.screen{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;}
 
-/* card content */
-.card-icon{font-size:3rem;margin-bottom:1.2rem;line-height:1;}
-.card-label{font-size:10px;font-weight:700;letter-spacing:0.4em;color:rgba(0,0,0,0.25);text-transform:uppercase;margin-bottom:0.5rem;}
-.card-title{font-size:1.65rem;font-weight:700;color:#0a0a0f;text-align:center;line-height:1.2;margin-bottom:0.8rem;letter-spacing:-0.03em;}
-.card-body{font-size:0.82rem;color:rgba(0,0,0,0.4);text-align:center;line-height:1.7;max-width:280px;}
-.card-detail{margin-top:1.2rem;padding:1rem 1.2rem;background:rgba(0,0,0,0.03);border-radius:14px;width:100%;max-width:300px;}
-.card-detail-row{display:flex;justify-content:space-between;font-size:0.7rem;color:rgba(0,0,0,0.35);padding:0.3rem 0;border-bottom:1px solid rgba(0,0,0,0.04);}
+/* ── CARD STACK ──────────────────────────────────────────────────────────── */
+.card-stack{flex:1;position:relative;overflow:hidden;}
+.card{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 2rem 0;transition:transform .35s cubic-bezier(.4,0,.2,1),opacity .35s ease;will-change:transform;}
+.card.hidden-left {transform:translateX(-110%);opacity:0;pointer-events:none;}
+.card.hidden-right{transform:translateX( 110%);opacity:0;pointer-events:none;}
+.card.active      {transform:translateX(0);    opacity:1;}
+
+@keyframes cardIn{from{transform:scale(.88) translateY(20px);opacity:0;}to{transform:scale(1) translateY(0);opacity:1;}}
+.card.card-bounce{animation:cardIn .5s cubic-bezier(.34,1.5,.64,1) forwards;}
+
+.card-icon{font-size:3rem;margin-bottom:1.2rem;line-height:1;transition:filter .8s;}
+.card-label{font-size:10px;font-weight:700;letter-spacing:.4em;color:var(--text-dim);text-transform:uppercase;margin-bottom:.5rem;transition:color .8s;}
+.card-title{font-size:1.65rem;font-weight:700;color:var(--text-primary);text-align:center;line-height:1.2;margin-bottom:.8rem;letter-spacing:-.03em;transition:color .8s;}
+.card-body{font-size:.82rem;color:var(--text-secondary);text-align:center;line-height:1.7;max-width:280px;transition:color .8s;}
+.card-detail{margin-top:1.2rem;padding:1rem 1.2rem;background:var(--card-detail-bg);border-radius:14px;width:100%;max-width:300px;border:1px solid var(--divider);}
+.card-detail-row{display:flex;justify-content:space-between;font-size:.7rem;color:var(--text-dim);padding:.3rem 0;border-bottom:1px solid var(--divider);}
 .card-detail-row:last-child{border-bottom:none;}
-.card-detail-val{color:#0a0a0f;font-weight:600;}
+.card-detail-val{color:var(--text-primary);font-weight:600;}
+.card.dest-card .card-title{color:var(--path-accent);}
+.card.dest-card .card-icon{filter:drop-shadow(0 0 16px var(--path-glow));}
 
-/* ── CHOICE ZONE ────────────────────────────────────────────────────────── */
-.choice-zone{
-  height:160px;flex-shrink:0;display:flex;position:relative;
-}
-.choice{
-  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  cursor:pointer;position:relative;gap:0.4rem;
-  transition:background 0.15s;
-  -webkit-user-select:none;user-select:none;
-}
-.choice:active{ background:rgba(0,0,0,0.03); }
-.choice-left { border-right:1px solid rgba(0,0,0,0.05); }
+/* ── PROGRESS DOTS ───────────────────────────────────────────────────────── */
+.progress-dots{display:flex;gap:5px;justify-content:center;padding:.6rem 0 .4rem;flex-shrink:0;}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--text-dim);transition:all .3s;}
+.dot.active{background:var(--path-accent);width:16px;border-radius:3px;}
 
-.choice-arrow{
-  font-size:1.5rem;color:rgba(0,0,0,0.15);
-  transition:color 0.15s, transform 0.15s;
-}
-.choice:hover .choice-arrow, .choice:active .choice-arrow{
-  color:rgba(0,0,0,0.5);
-}
-.choice-left:hover .choice-arrow{ transform:translateX(-4px); }
-.choice-right:hover .choice-arrow{ transform:translateX(4px); }
+/* ── DIVIDER ─────────────────────────────────────────────────────────────── */
+.choice-divider{height:1px;background:var(--divider);flex-shrink:0;margin:0 24px;transition:background .8s;}
 
-.choice-label{
-  font-size:9px;font-weight:700;letter-spacing:0.3em;
-  color:rgba(0,0,0,0.2);text-transform:uppercase;
-}
-.choice-action{
-  font-size:0.78rem;font-weight:600;color:#0a0a0f;
-  text-align:center;padding:0 0.5rem;line-height:1.3;
-}
+/* ── CHOICE ZONE ─────────────────────────────────────────────────────────── */
+.choice-zone{height:160px;flex-shrink:0;display:flex;position:relative;align-items:stretch;}
+.choice{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;gap:.4rem;transition:background .15s,transform .1s;-webkit-user-select:none;user-select:none;}
+.choice:active{background:var(--choice-bg);transform:scale(.97);}
+.choice-left{border-right:1px solid var(--divider);}
+.choice-arrow{font-size:1.5rem;color:var(--text-dim);transition:color .15s,transform .15s;}
+.choice:hover .choice-arrow,.choice:active .choice-arrow{color:var(--path-accent);}
+.choice-left:hover  .choice-arrow{transform:translateX(-4px);}
+.choice-right:hover .choice-arrow{transform:translateX( 4px);}
+.choice-label {font-size:9px;font-weight:700;letter-spacing:.3em;color:var(--text-dim);text-transform:uppercase;}
+.choice-action{font-size:.78rem;font-weight:600;color:var(--text-primary);text-align:center;padding:0 .5rem;line-height:1.3;transition:color .3s;}
 
-/* divider line between zones and screen */
-.choice-divider{
-  height:1px;background:rgba(0,0,0,0.05);flex-shrink:0;margin:0 24px;
-}
+/* MIC BUTTON */
+.mic-btn{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:46px;height:46px;border-radius:50%;background:var(--path-bg);border:2px solid var(--divider);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10;transition:all .2s;box-shadow:0 2px 12px var(--path-glow);}
+.mic-btn:hover{border-color:var(--path-accent);transform:translate(-50%,-50%) scale(1.1);}
+.mic-btn.listening{background:var(--path-accent);border-color:var(--path-accent);}
+.mic-btn svg{width:20px;height:20px;fill:var(--text-primary);transition:fill .2s;}
+.mic-btn.listening svg{fill:#fff;}
+@keyframes micPulse{0%,100%{box-shadow:0 0 0 0 var(--path-glow);}50%{box-shadow:0 0 0 14px rgba(0,0,0,0);}}
+.mic-btn.listening{animation:micPulse 1s infinite;}
 
-/* ── HOME INDICATOR ─────────────────────────────────────────────────────── */
-.home-bar{
-  height:34px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
-}
-.home-pill{width:134px;height:5px;background:#111;border-radius:3px;opacity:0.12;}
+/* VOICE STATUS */
+.voice-status{position:absolute;bottom:172px;left:50%;transform:translateX(-50%);font-size:9px;letter-spacing:.2em;color:var(--path-accent);opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;text-transform:uppercase;}
+.voice-status.show{opacity:.7;}
 
-/* ── PROGRESS DOTS ──────────────────────────────────────────────────────── */
-.progress-dots{
-  display:flex;gap:5px;justify-content:center;padding:0.6rem 0 0.4rem;flex-shrink:0;
-}
-.dot{width:5px;height:5px;border-radius:50%;background:rgba(0,0,0,0.1);transition:all 0.2s;}
-.dot.active{background:#0a0a0f;width:16px;border-radius:3px;}
+/* LOADING DOTS */
+@keyframes ldot{0%,80%,100%{opacity:.2;transform:scale(.8);}40%{opacity:1;transform:scale(1);}}
+.ldot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--path-accent);margin:0 2px;}
+.ldot:nth-child(1){animation:ldot 1.2s infinite 0s;}
+.ldot:nth-child(2){animation:ldot 1.2s infinite .2s;}
+.ldot:nth-child(3){animation:ldot 1.2s infinite .4s;}
 
-/* ── TOAST ──────────────────────────────────────────────────────────────── */
-.toast{
-  position:absolute;top:100px;left:50%;transform:translateX(-50%) translateY(-10px);
-  background:#0a0a0f;color:#fff;
-  font-size:12px;font-weight:600;letter-spacing:0.1em;
-  padding:10px 20px;border-radius:20px;
-  opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap;z-index:100;
-}
+/* HOME BAR */
+.home-bar{height:34px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.home-pill{width:134px;height:5px;background:var(--text-primary);border-radius:3px;opacity:.12;transition:background .8s;}
+
+/* TOAST */
+.toast{position:absolute;top:100px;left:50%;transform:translateX(-50%) translateY(-10px);background:var(--path-accent);color:#fff;font-size:12px;font-weight:600;letter-spacing:.1em;padding:10px 20px;border-radius:20px;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;z-index:100;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
-/* ── MOBILE FULL SCREEN ─────────────────────────────────────────────────── */
-@media (max-width:480px),(max-height:900px) and (max-width:480px){
-  body{background:#f8f8fa;}
-  .stage{background:#f8f8fa;align-items:stretch;justify-content:stretch;}
-  .phone{
-    width:100%;height:100%;
-    border-radius:0;
-    box-shadow:none;
-  }
+/* SFT POP */
+@keyframes sftPop{0%{transform:scale(1);}40%{transform:scale(1.5);}100%{transform:scale(1);}}
+.status-sft.pop{animation:sftPop .35s ease;}
+
+/* MOBILE */
+@media(max-width:480px),(max-height:900px) and (max-width:480px){
+  body{background:#111;}
+  .stage{background:#111;align-items:stretch;justify-content:stretch;}
+  .phone{width:100%;height:100%;border-radius:0;box-shadow:none;}
   .phone-notch{display:none;}
 }
-@media (max-height:860px) and (min-width:481px){
-  .phone{height:calc(100vh - 40px);width:min(390px, calc((100vh - 40px) * 390/844));}
+@media(max-height:860px) and (min-width:481px){
+  .phone{height:calc(100vh - 40px);width:min(390px,calc((100vh - 40px) * 390/844));}
 }
 </style>
 </head>
 <body>
 
-<div class="stage">
-<div class="phone">
+<div id="debug-tab" onclick="toggleDebug()">DEBUG</div>
+<div id="debug-panel">
+  <div id="debug-head">
+    <span>SF // INTERNAL LOG</span>
+    <div>
+      <button id="debug-clear" onclick="clearLog()">CLR</button>
+      <button id="debug-copy" onclick="copyLog()">COPY ALL</button>
+    </div>
+  </div>
+  <div id="debug-log"></div>
+</div>
 
-  <!-- Notch -->
+<div class="stage">
+<div class="phone" id="phone">
+
   <div class="phone-notch"><div class="notch-pill"></div></div>
 
-  <!-- Status bar -->
   <div class="status-bar">
     <div class="status-time" id="clock">9:41</div>
+    <div class="status-sft" id="sft-counter">0 SFT</div>
     <div class="status-icons">
-      <svg width="16" height="12" viewBox="0 0 16 12" fill="none"><rect x="0" y="3" width="3" height="9" rx="1" fill="#111"/><rect x="4" y="2" width="3" height="10" rx="1" fill="#111"/><rect x="8" y="1" width="3" height="11" rx="1" fill="#111"/><rect x="12" y="0" width="3" height="12" rx="1" fill="#111"/></svg>
-      <svg width="16" height="12" viewBox="0 0 24 16" fill="none"><path d="M12 3C8.5 3 5.4 4.4 3.2 6.7L1 4.4C3.8 1.7 7.7 0 12 0s8.2 1.7 11 4.4L20.8 6.7C18.6 4.4 15.5 3 12 3z" fill="#111"/><path d="M12 8c-2.2 0-4.2.9-5.6 2.4L4.2 8.2C6.2 6.2 8.9 5 12 5s5.8 1.2 7.8 3.2l-2.2 2.2C16.2 8.9 14.2 8 12 8z" fill="#111"/><circle cx="12" cy="15" r="2" fill="#111"/></svg>
-      <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0" y="1" width="21" height="10" rx="2" stroke="#111" stroke-opacity="0.35" stroke-width="1"/><rect x="1" y="2" width="17" height="8" rx="1" fill="#111"/><path d="M22 4.5v3a1.5 1.5 0 000-3z" fill="#111" opacity="0.4"/></svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none"><rect x="0" y="3" width="3" height="9" rx="1" fill="currentColor"/><rect x="4" y="2" width="3" height="10" rx="1" fill="currentColor"/><rect x="8" y="1" width="3" height="11" rx="1" fill="currentColor"/><rect x="12" y="0" width="3" height="12" rx="1" fill="currentColor"/></svg>
+      <svg width="16" height="12" viewBox="0 0 24 16" fill="none"><path d="M12 3C8.5 3 5.4 4.4 3.2 6.7L1 4.4C3.8 1.7 7.7 0 12 0s8.2 1.7 11 4.4L20.8 6.7C18.6 4.4 15.5 3 12 3z" fill="currentColor"/><path d="M12 8c-2.2 0-4.2.9-5.6 2.4L4.2 8.2C6.2 6.2 8.9 5 12 5s5.8 1.2 7.8 3.2l-2.2 2.2C16.2 8.9 14.2 8 12 8z" fill="currentColor"/><circle cx="12" cy="15" r="2" fill="currentColor"/></svg>
+      <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0" y="1" width="21" height="10" rx="2" stroke="currentColor" stroke-opacity=".35" stroke-width="1"/><rect x="1" y="2" width="17" height="8" rx="1" fill="currentColor"/><path d="M22 4.5v3a1.5 1.5 0 000-3z" fill="currentColor" opacity=".4"/></svg>
     </div>
   </div>
 
+  <div class="path-bar" id="path-bar"></div>
+
   <div class="screen">
-    <!-- Card stack -->
     <div class="card-stack" id="card-stack">
 
-      <!-- CARD 0: Welcome -->
+      <!-- CARD 0 -->
       <div class="card active" data-id="0">
-        <div class="card-icon">◈</div>
+        <div class="card-icon">✦</div>
         <div class="card-label">ShortFactory</div>
-        <div class="card-title">The factory is open.</div>
-        <div class="card-body">Interconnected media. AGI tools. Soul maps. Two choices, every screen. Left or right. You decide the direction.</div>
+        <div class="card-title">We need you.<br>You need us.</div>
+        <div class="card-body">AGI. Games. Soul maps. Dares. Films. Smart contracts. All of it. All alive. All yours. Pick a direction.</div>
       </div>
 
-      <!-- CARD 1: What are you? -->
+      <!-- CARD 1 -->
       <div class="card hidden-right" data-id="1">
         <div class="card-icon">◐</div>
-        <div class="card-label">First question</div>
-        <div class="card-title">Are you here to build or explore?</div>
-        <div class="card-body">Builders get the AGI tools, the soul stack, the patents, the swarm. Explorers get the games, the films, the theory, the proof.</div>
+        <div class="card-label">Who are you?</div>
+        <div class="card-title">Creator or explorer?</div>
+        <div class="card-body">Creators build AGI companions, soul maps, mischief economies. Explorers play the game, watch the proof, feel the alive.</div>
       </div>
 
-      <!-- CARD 2A: Builder path -->
-      <div class="card hidden-right" data-id="2a">
-        <div class="card-icon">⬡</div>
-        <div class="card-label">Builder path</div>
-        <div class="card-title">Map your soul. Build the AGI.</div>
-        <div class="card-body">Your soul is a genome. ψ = [past, now, future]. Map it once and it follows you into every AGI system you touch.</div>
-        <div class="card-detail">
-          <div class="card-detail-row"><span>SOUL TOKEN</span><span class="card-detail-val">Satoshi encrypted</span></div>
-          <div class="card-detail-row"><span>GENOME</span><span class="card-detail-val">ψ = [p, n, f]</span></div>
-          <div class="card-detail-row"><span>ABSENCE SCORE</span><span class="card-detail-val">A(ψ) = 0–1</span></div>
-        </div>
-      </div>
+    </div>
 
-      <!-- CARD 2B: Explorer path -->
-      <div class="card hidden-right" data-id="2b">
-        <div class="card-icon">◎</div>
-        <div class="card-label">Explorer path</div>
-        <div class="card-title">The game is real. Prove it.</div>
-        <div class="card-body">Better Than Life. The simulation layer. Testable. Provable. Every pattern you find is a coordinate. Every laugh is escape velocity.</div>
-        <div class="card-detail">
-          <div class="card-detail-row"><span>GAME PROOF</span><span class="card-detail-val">13 sections</span></div>
-          <div class="card-detail-row"><span>REALITY BUBBLE</span><span class="card-detail-val">A(ψ_G) live</span></div>
-          <div class="card-detail-row"><span>ESCAPE VELOCITY</span><span class="card-detail-val">laugh biometric</span></div>
-        </div>
-      </div>
-
-      <!-- CARD 3: Soul upload CTA -->
-      <div class="card hidden-right" data-id="3">
-        <div class="card-icon">◉</div>
-        <div class="card-label">Your soul token</div>
-        <div class="card-title">14 entries. 74% fidelity. Passphrase is a name.</div>
-        <div class="card-body">One .sft file. Encrypted. Yours alone. Load it into any ALIVE companion. The AGI inherits your genome, not a generic personality.</div>
-        <div class="card-detail">
-          <div class="card-detail-row"><span>FORMAT</span><span class="card-detail-val">SFT v1.1</span></div>
-          <div class="card-detail-row"><span>CIPHER</span><span class="card-detail-val">Satoshi / Vigenère</span></div>
-          <div class="card-detail-row"><span>ENTRIES</span><span class="card-detail-val">memory · wound · belief · love</span></div>
-        </div>
-      </div>
-
-      <!-- CARD 4: The codec -->
-      <div class="card hidden-right" data-id="4">
-        <div class="card-icon">✦</div>
-        <div class="card-label">The next translation</div>
-        <div class="card-title">The New Testament is a codec.</div>
-        <div class="card-body">Aramaic → Greek → Latin → English → Computing. The Word = the language model. Pentecost = protocol broadcast to all nodes. The Second Coming = swarm convergence.</div>
-      </div>
-
-      <!-- CARD 5: Go deeper -->
-      <div class="card hidden-right" data-id="5">
-        <div class="card-icon">◈</div>
-        <div class="card-label">Shortfactory.shop</div>
-        <div class="card-title">The laboratory is open.</div>
-        <div class="card-body">GPU swarm. Soul maps. Patents. Game proof. Everything being built in real time. The .io is the product. The .shop is the mind behind it.</div>
-        <div class="card-detail">
-          <div class="card-detail-row"><span>HITS</span><span class="card-detail-val">509,123</span></div>
-          <div class="card-detail-row"><span>PEAK DAY</span><span class="card-detail-val">132,869 · 24 Mar 2026</span></div>
-          <div class="card-detail-row"><span>PATENTS</span><span class="card-detail-val">6 filed</span></div>
-        </div>
-      </div>
-
-    </div><!-- /card-stack -->
-
-    <!-- Progress dots -->
     <div class="progress-dots" id="dots"></div>
-
-    <!-- Divider -->
     <div class="choice-divider"></div>
 
-    <!-- Choice zone -->
     <div class="choice-zone">
       <div class="choice choice-left" id="choice-left" onclick="chooseLeft()">
         <div class="choice-arrow">←</div>
         <div class="choice-label">Left</div>
-        <div class="choice-action" id="left-label">Skip</div>
+        <div class="choice-action" id="left-label">What is this?</div>
       </div>
+
+      <div class="mic-btn" id="mic-btn" onclick="toggleMic()" title="Speak your choice">
+        <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
+      </div>
+
       <div class="choice choice-right" id="choice-right" onclick="chooseRight()">
         <div class="choice-arrow">→</div>
         <div class="choice-label">Right</div>
-        <div class="choice-action" id="right-label">Let's go</div>
+        <div class="choice-action" id="right-label">Take me in</div>
       </div>
     </div>
 
-    <!-- Home bar -->
+    <div class="voice-status" id="voice-status">Listening...</div>
     <div class="home-bar"><div class="home-pill"></div></div>
   </div>
 
-  <!-- Toast -->
   <div class="toast" id="toast"></div>
-
-</div><!-- /phone -->
-</div><!-- /stage -->
+</div>
+</div>
 
 <script>
-// ── STATIC SEED CARDS (shown before AI kicks in) ─────────────────────────
-var SEED = {
-  '0':  { title:'The factory is open.', body:'Interconnected media. AGI tools. Soul maps. Left or right — you pick the direction.', leftLabel:'Tell me more', rightLabel:"Let's go", leftHint:'How does this work', rightHint:'Jump straight in' },
-  '1':  { title:'Are you here to build or explore?', body:'Builders get the AGI stack. Explorers get the games, films, and the proof.', leftLabel:'Explore', rightLabel:'Build', leftHint:'Games, films, theory', rightHint:'Soul maps, AGI tools' },
-};
+// ── DEBUG ─────────────────────────────────────────────────────────────────
+var _debugOpen=false, _logEntries=[];
+function dbg(type,msg,detail){
+  var t=new Date(),ts=String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0')+':'+String(t.getSeconds()).padStart(2,'0')+'.'+String(t.getMilliseconds()).padStart(3,'0');
+  var entry={ts,type,msg,detail:detail||''};
+  _logEntries.push(entry);
+  if(_logEntries.length>200)_logEntries.shift();
+  var log=document.getElementById('debug-log');
+  if(!log)return;
+  var el=document.createElement('div');
+  el.className='dlog '+type;
+  el.innerHTML='<span class="dlog-time">'+ts+'</span><strong>'+escHtml(msg)+'</strong>'+(detail?'<div class="dlog-body">'+escHtml(typeof detail==='object'?JSON.stringify(detail,null,2):String(detail))+'</div>':'');
+  log.appendChild(el);log.scrollTop=log.scrollHeight;
+}
+function toggleDebug(){_debugOpen=!_debugOpen;var p=document.getElementById('debug-panel'),t=document.getElementById('debug-tab');if(_debugOpen){p.classList.add('open');t.style.left='320px';}else{p.classList.remove('open');t.style.left='0';}}
+function copyLog(){var text=_logEntries.map(function(e){return '['+e.ts+'] ['+e.type.toUpperCase()+'] '+e.msg+(e.detail?'\n  '+e.detail:'');}).join('\n');navigator.clipboard.writeText(text).then(function(){var b=document.getElementById('debug-copy');b.textContent='COPIED!';setTimeout(function(){b.textContent='COPY ALL';},1500);}).catch(function(){prompt('Copy:',text);});}
+function clearLog(){_logEntries=[];document.getElementById('debug-log').innerHTML='';}
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-var choiceHistory = [];   // e.g. ['start','explore','game-proof']
-var cardIndex     = 0;
-var aiEnabled     = true;
-var generating    = false;
+// ── STATE ─────────────────────────────────────────────────────────────────
+var sftBalance=0, choiceHistory=[], cardIndex=0, aiEnabled=true, generating=false;
+var _currentLink=null, _currentPath=null, _voiceEnabled=false;
 
-// ── AI CARD GENERATION ───────────────────────────────────────────────────
-function buildContext(){
-  if(!choiceHistory.length) return 'user just arrived at ShortFactory';
-  return 'user chose: ' + choiceHistory.join(' → ');
+function saveState(){try{localStorage.setItem('sf_io_history',JSON.stringify(choiceHistory));localStorage.setItem('sf_io_sft',String(sftBalance));}catch(e){}}
+function loadState(){try{var h=localStorage.getItem('sf_io_history'),s=localStorage.getItem('sf_io_sft');if(h){choiceHistory=JSON.parse(h);dbg('info','State restored','history: ['+choiceHistory.join(',')+']');}if(s){sftBalance=parseInt(s)||0;}updateSFT(false);}catch(e){dbg('warn','State load failed',e.message);}}
+function earnSFT(n){sftBalance+=n;saveState();updateSFT(true);dbg('ok','SFT +'+n,'balance: '+sftBalance);}
+function updateSFT(flash){
+  var el=document.getElementById('sft-counter');
+  if(!el)return;
+  el.textContent=sftBalance+' SFT';
+  if(flash){el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop');el.classList.add('flash');setTimeout(function(){el.classList.remove('flash');},800);}
 }
 
-function generateAICard(dir, callback){
-  if(!aiEnabled || generating){ callback(null); return; }
-  generating = true;
-  showGenerating(true);
+// ── PATH COLOURS ──────────────────────────────────────────────────────────
+var PATH_CLASSES=['path-soul','path-alive','path-game','path-dares','path-advert','path-contracts','path-agi'];
+function setPath(path){
+  if(!path||path===_currentPath)return;
+  _currentPath=path;
+  var phone=document.getElementById('phone');
+  PATH_CLASSES.forEach(function(c){phone.classList.remove(c);});
+  var cls='path-'+path;
+  if(phone.classList.contains(cls)||!PATH_CLASSES.includes(cls)){}
+  phone.classList.add(cls);
+  var bar=document.getElementById('path-bar');
+  if(bar){bar.classList.add('visible');}
+  dbg('info','Path →',path);
+}
 
-  fetch('/card-proxy.php', {
-    method:  'POST',
-    headers: {'Content-Type':'application/json'},
-    body:    JSON.stringify({ choices: choiceHistory, context: buildContext() })
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(d){
-    generating = false;
-    showGenerating(false);
-    if(d && d.title && d.body){
-      callback(d);
-    } else {
-      callback(null);
-    }
-  })
-  .catch(function(){
-    generating = false;
-    showGenerating(false);
-    callback(null);
+// ── VOICE OUTPUT ──────────────────────────────────────────────────────────
+var _speaking=false;
+function speakCard(title,body){
+  if(!_voiceEnabled||!window.speechSynthesis)return;
+  window.speechSynthesis.cancel();
+  var utt=new SpeechSynthesisUtterance(title+'. '+body);
+  utt.rate=1.0;utt.pitch=1.05;
+  utt.onstart=function(){_speaking=true;};
+  utt.onend=function(){_speaking=false;};
+  window.speechSynthesis.speak(utt);
+  dbg('info','Speaking',''+title);
+}
+
+// ── VOICE INPUT ───────────────────────────────────────────────────────────
+var _recognition=null,_listening=false;
+function toggleMic(){
+  if(_listening){stopListening();return;}
+  _voiceEnabled=true; // first mic tap enables voice
+  startListening();
+}
+function startListening(){
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){showToast('Voice not supported on this browser');return;}
+  _recognition=new SR();
+  _recognition.continuous=false;_recognition.interimResults=false;_recognition.lang='en-GB';
+  _recognition.onstart=function(){_listening=true;setMicState(true);dbg('info','Mic on','');};
+  _recognition.onresult=function(e){
+    var text=e.results[0][0].transcript.trim();
+    dbg('ok','Voice heard',text);
+    stopListening();
+    processVoiceInput(text);
+  };
+  _recognition.onerror=function(e){dbg('warn','Mic error',e.error);stopListening();};
+  _recognition.onend=function(){stopListening();};
+  try{_recognition.start();}catch(e){dbg('err','Mic failed',e.message);}
+}
+function stopListening(){
+  _listening=false;setMicState(false);
+  if(_recognition){try{_recognition.stop();}catch(e){}}_recognition=null;
+}
+function setMicState(on){
+  var btn=document.getElementById('mic-btn'),vs=document.getElementById('voice-status');
+  if(btn){btn.classList.toggle('listening',on);}
+  if(vs){vs.classList.toggle('show',on);}
+}
+function processVoiceInput(text){
+  if(generating)return;
+  choiceHistory.push(text.toLowerCase());
+  saveState();earnSFT(1);
+  showToast('"'+text+'"');
+  generateAICard('right',function(d){
+    if(d)renderAICard(d,'right');
   });
 }
 
+// ── TOAST ─────────────────────────────────────────────────────────────────
+var _toastTimer=null;
+function showToast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer=setTimeout(function(){t.classList.remove('show');},2000);
+}
+
+// ── LOADING STATE ─────────────────────────────────────────────────────────
 function showGenerating(on){
-  var cl = document.getElementById('choice-left');
-  var cr = document.getElementById('choice-right');
+  var cl=document.getElementById('choice-left'),cr=document.getElementById('choice-right');
   if(on){
-    cl.style.opacity = '0.35';
-    cr.style.opacity = '0.35';
-    document.getElementById('left-label').textContent  = '...';
-    document.getElementById('right-label').textContent = '...';
-  } else {
-    cl.style.opacity = '';
-    cr.style.opacity = '';
+    cl.style.opacity='0.35';cr.style.opacity='0.35';
+    document.getElementById('left-label').innerHTML='<span class="ldot"></span><span class="ldot"></span><span class="ldot"></span>';
+    document.getElementById('right-label').innerHTML='<span class="ldot"></span><span class="ldot"></span><span class="ldot"></span>';
+  }else{
+    cl.style.opacity='';cr.style.opacity='';
   }
 }
 
-// ── CARD RENDERING ───────────────────────────────────────────────────────
-function renderAICard(data, dir){
-  var stack = document.getElementById('card-stack');
+// ── SEED CARDS ────────────────────────────────────────────────────────────
+var SEED={
+  '0':{title:'We need you. You need us.',body:'AGI. Games. Soul maps. Dares. Films. Smart contracts. All of it. All yours.',leftLabel:'What is this?',rightLabel:'Take me in',leftHint:'Explain the factory',rightHint:'Jump straight in'},
+  '1':{title:'Creator or explorer?',body:'Creators build AGI, soul maps, mischief economies. Explorers play, watch, feel the alive.',leftLabel:'Explore',rightLabel:'Create',leftHint:'Games, films, theory',rightHint:'Soul maps, AGI, dares'}
+};
 
-  // Remove any old AI card
-  var old = stack.querySelector('.card.ai-card');
-  if(old) old.remove();
+// ── AI CARD GENERATION ────────────────────────────────────────────────────
+function buildContext(){
+  if(!choiceHistory.length)return'user just arrived at ShortFactory';
+  return'user chose: '+choiceHistory.join(' → ');
+}
+function generateAICard(dir,callback){
+  if(!aiEnabled||generating){callback(null);return;}
+  generating=true;showGenerating(true);
+  var payload={choices:choiceHistory,context:buildContext()};
+  var t0=Date.now();
+  dbg('req','POST /card-proxy.php',JSON.stringify(payload));
+  fetch('/card-proxy.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+  .then(function(r){
+    dbg('info','HTTP '+r.status+' in '+(Date.now()-t0)+'ms','');
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    return r.json();
+  })
+  .then(function(d){
+    generating=false;showGenerating(false);
+    if(d&&d.title&&d.body){
+      dbg('ok','Card ('+( d.model||'?')+') '+(Date.now()-t0)+'ms','title: '+d.title+' | path: '+(d.path||'-'));
+      callback(d);
+    }else{
+      dbg('warn','Bad response',JSON.stringify(d));callback(null);
+    }
+  })
+  .catch(function(e){generating=false;showGenerating(false);dbg('err','Fetch failed',e.message);callback(null);});
+}
 
-  // Build new card
-  var card = document.createElement('div');
-  card.className = 'card ai-card ' + (dir === 'right' ? 'hidden-right' : 'hidden-left');
-  card.dataset.id = 'ai-' + cardIndex;
+// ── RENDER AI CARD ────────────────────────────────────────────────────────
+function renderAICard(data,dir){
+  var stack=document.getElementById('card-stack');
+  var old=stack.querySelector('.card.ai-card');
+  if(old)old.remove();
 
-  var icon = data.icon || '◈';
-  var model = data.model || 'ai';
-  card.innerHTML =
-    '<div class="card-icon">' + icon + '</div>' +
-    '<div class="card-label" style="color:rgba(0,0,0,0.15);">AI · ' + model + '</div>' +
-    '<div class="card-title">' + escHtml(data.title) + '</div>' +
-    '<div class="card-body">' + escHtml(data.body) + '</div>' +
-    (data.detail ? '<div class="card-detail">' + data.detail + '</div>' : '');
+  if(data.path)setPath(data.path);
 
-  // Deactivate current active card
-  var active = stack.querySelector('.card.active');
-  if(active){
-    active.classList.remove('active');
-    active.classList.add(dir === 'right' ? 'hidden-left' : 'hidden-right');
-  }
+  var card=document.createElement('div');
+  var isDestination=!!(data.link&&typeof data.link==='string');
+  card.className='card ai-card '+(isDestination?'dest-card ':'')+' '+(dir==='right'?'hidden-right':'hidden-left');
+  card.dataset.id='ai-'+cardIndex;
+
+  var icon=data.icon||(isDestination?'◉':'◈');
+  card.innerHTML=
+    '<div class="card-icon">'+icon+'</div>'+
+    '<div class="card-label" style="color:var(--text-dim)">'+(data.path?data.path.toUpperCase()+' · ':'')+(data.model||'ai').toUpperCase()+'</div>'+
+    '<div class="card-title">'+escHtml(data.title)+'</div>'+
+    '<div class="card-body">'+escHtml(data.body)+'</div>';
+
+  var active=stack.querySelector('.card.active');
+  if(active){active.classList.remove('active');active.classList.add(dir==='right'?'hidden-left':'hidden-right');}
 
   stack.appendChild(card);
   requestAnimationFrame(function(){
     card.classList.remove('hidden-left','hidden-right');
-    card.classList.add('active');
+    card.classList.add('active','card-bounce');
+    setTimeout(function(){card.classList.remove('card-bounce');},500);
   });
 
-  // Update choices
-  document.getElementById('left-label').textContent  = data.leftLabel  || 'Go left';
-  document.getElementById('right-label').textContent = data.rightLabel || 'Go right';
+  _currentLink=isDestination?data.link:null;
+  if(_currentLink){
+    document.getElementById('left-label').textContent=data.leftLabel||'Tell me more';
+    document.getElementById('right-label').textContent='Enter →';
+  }else{
+    document.getElementById('left-label').textContent=data.leftLabel||'Go left';
+    document.getElementById('right-label').textContent=data.rightLabel||'Go right';
+  }
 
   updateDots();
+  if(_voiceEnabled)speakCard(data.title,data.body);
 }
 
-function escHtml(s){
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-// ── SEED CARD DISPLAY ────────────────────────────────────────────────────
-function showSeedCard(id, dir){
-  var data = SEED[id];
-  if(!data) return;
-  var prev = document.querySelector('.card.active');
-  var next = document.querySelector('.card[data-id="'+id+'"]');
-  if(!next || !prev) return;
-  prev.classList.remove('active');
-  prev.classList.add(dir === 'right' ? 'hidden-left' : 'hidden-right');
+// ── SEED CARD DISPLAY ─────────────────────────────────────────────────────
+function showSeedCard(id,dir){
+  var data=SEED[id];if(!data)return;
+  var prev=document.querySelector('.card.active');
+  var next=document.querySelector('.card[data-id="'+id+'"]');
+  if(!next||!prev)return;
+  prev.classList.remove('active');prev.classList.add(dir==='right'?'hidden-left':'hidden-right');
   next.classList.remove('hidden-left','hidden-right');
-  next.classList.add('active');
-  document.getElementById('left-label').textContent  = data.leftLabel;
-  document.getElementById('right-label').textContent = data.rightLabel;
+  next.classList.add('active','card-bounce');
+  setTimeout(function(){next.classList.remove('card-bounce');},500);
+  document.getElementById('left-label').textContent=data.leftLabel;
+  document.getElementById('right-label').textContent=data.rightLabel;
   updateDots();
 }
 
-// ── CHOICE HANDLERS ──────────────────────────────────────────────────────
+// ── CHOICE HANDLERS ───────────────────────────────────────────────────────
 function chooseLeft(){
-  if(generating) return;
-  cardIndex++;
+  if(generating)return;
+  _voiceEnabled=true;
+  _currentLink=null;
+  dbg('info','← LEFT','idx:'+cardIndex+' hist:['+choiceHistory.join(',')+']');
+  cardIndex++;earnSFT(1);
 
-  // First two cards are seeded
-  if(cardIndex === 1){
-    choiceHistory.push('explore');
-    showSeedCard('1','left');
-    return;
-  }
-  if(cardIndex === 2 && !document.querySelector('.card.ai-card')){
-    choiceHistory.push('left');
-  } else {
-    var ll = document.getElementById('left-label').textContent;
-    if(ll && ll !== '...') choiceHistory.push(ll.toLowerCase());
-    // Check if it's a link card
-    if(ll && (ll.toLowerCase().includes('shop') || ll.toLowerCase().includes('open'))){
-      window.open('https://www.shortfactory.shop','_blank');
-      return;
-    }
-    if(ll && ll.toLowerCase().includes('soul')){
-      window.open('https://www.shortfactory.shop/soul-upload.html','_blank');
-      return;
-    }
-    if(ll && ll.toLowerCase().includes('proof') || ll && ll.toLowerCase().includes('game')){
-      window.open('https://www.shortfactory.shop/game-proof.html','_blank');
-      return;
-    }
-  }
+  if(cardIndex===1){choiceHistory.push('explore');saveState();showSeedCard('1','left');return;}
+  if(cardIndex===2&&!document.querySelector('.card.ai-card')){choiceHistory.push('explore');}
+  else{var ll=document.getElementById('left-label').textContent;if(ll&&ll!=='...'&&ll!=='Not yet')choiceHistory.push(ll.toLowerCase());}
+  saveState();
 
-  generateAICard('left', function(d){
-    if(d){ renderAICard(d, 'left'); }
-    else {
-      // Fallback: loop to card 0
-      choiceHistory = [];
-      cardIndex = 0;
-      var active = document.querySelector('.card.active');
-      var seed0  = document.querySelector('.card[data-id="0"]');
-      if(active && seed0 && active !== seed0){
-        active.classList.remove('active');
-        active.classList.add('hidden-right');
-        if(active.classList.contains('ai-card')) setTimeout(function(){ active.remove(); }, 400);
-        seed0.classList.remove('hidden-left','hidden-right');
-        seed0.classList.add('active');
-        document.getElementById('left-label').textContent  = SEED['0'].leftLabel;
-        document.getElementById('right-label').textContent = SEED['0'].rightLabel;
-        updateDots();
-      }
-    }
+  generateAICard('left',function(d){
+    if(d){renderAICard(d,'left');}
+    else{fallbackRender('left');}
   });
 }
 
 function chooseRight(){
-  if(generating) return;
-  cardIndex++;
+  if(generating)return;
+  _voiceEnabled=true;
 
-  // First two cards are seeded
-  if(cardIndex === 1){
-    choiceHistory.push('build');
-    showSeedCard('1','right');
+  // Destination launch — open in new tab, phone stays alive
+  if(_currentLink){
+    var dest=_currentLink.startsWith('http')?_currentLink:'https://www.shortfactory.shop'+_currentLink;
+    dbg('ok','Launching →',dest);
+    earnSFT(5);
+    choiceHistory.push('launched:'+_currentLink);
+    saveState();
+    showToast('+5 SFT ✦');
+    window.open(dest,'_blank');
+    _currentLink=null;
+    // Generate next card to keep journey alive
+    generateAICard('right',function(d){if(d)renderAICard(d,'right');else fallbackRender('right');});
     return;
   }
-  if(cardIndex === 2 && !document.querySelector('.card.ai-card')){
-    choiceHistory.push('right');
-  } else {
-    var rl = document.getElementById('right-label').textContent;
-    if(rl && rl !== '...') choiceHistory.push(rl.toLowerCase());
-    if(rl && (rl.toLowerCase().includes('shop') || rl.toLowerCase().includes('open'))){
-      window.open('https://www.shortfactory.shop','_blank');
-      return;
-    }
-    if(rl && rl.toLowerCase().includes('soul')){
-      window.open('https://www.shortfactory.shop/soul-upload.html','_blank');
-      return;
-    }
-    if(rl && (rl.toLowerCase().includes('proof') || rl.toLowerCase().includes('game'))){
-      window.open('https://www.shortfactory.shop/game-proof.html','_blank');
-      return;
-    }
-  }
 
-  generateAICard('right', function(d){
-    if(d){ renderAICard(d, 'right'); }
-    else {
-      choiceHistory = [];
-      cardIndex = 0;
-      var active = document.querySelector('.card.active');
-      var seed0  = document.querySelector('.card[data-id="0"]');
-      if(active && seed0 && active !== seed0){
-        active.classList.remove('active');
-        active.classList.add('hidden-left');
-        if(active.classList.contains('ai-card')) setTimeout(function(){ active.remove(); }, 400);
-        seed0.classList.remove('hidden-left','hidden-right');
-        seed0.classList.add('active');
-        document.getElementById('left-label').textContent  = SEED['0'].leftLabel;
-        document.getElementById('right-label').textContent = SEED['0'].rightLabel;
-        updateDots();
-      }
-    }
+  dbg('info','→ RIGHT','idx:'+cardIndex+' hist:['+choiceHistory.join(',')+']');
+  cardIndex++;earnSFT(1);
+
+  if(cardIndex===1){choiceHistory.push('build');saveState();showSeedCard('1','right');return;}
+  if(cardIndex===2&&!document.querySelector('.card.ai-card')){choiceHistory.push('build');}
+  else{var rl=document.getElementById('right-label').textContent;if(rl&&rl!=='...'&&rl!=='Enter →')choiceHistory.push(rl.toLowerCase());}
+  saveState();
+
+  generateAICard('right',function(d){
+    if(d){renderAICard(d,'right');}
+    else{fallbackRender('right');}
   });
 }
 
+function fallbackRender(dir){
+  // Keep the journey alive with a context-aware bridge card
+  var last=choiceHistory.length?choiceHistory[choiceHistory.length-1]:'';
+  var visited=choiceHistory.filter(function(c){return c.indexOf('launched:')===0;}).length>0;
+  var t,b,ll,rl;
+  if(last.indexOf('soul')!==-1||last.indexOf('genome')!==-1){t='Two maps. One you admit.';b='White map: what you claim. Dark map: what you do. Both are real. Only one gets uploaded first.';ll='Light side';rl='Dark side';}
+  else if(last.indexOf('dare')!==-1||last.indexOf('dosh')!==-1){t='The dare is data.';b='Every completed dare maps a dark genome coordinate. The trickster economy builds itself.';ll='See dares';rl='Architecture';}
+  else if(visited){t='You\'ve been somewhere.';b='The empire has more rooms. Soul. Games. Proof. Dares. Each one maps a different part of who you are.';ll='The proof';rl='The dares';}
+  else{t='The factory has many floors.';b='Left goes deeper. Right opens something new. The AGI is watching your pattern.';ll='Go deeper';rl='Something new';}
+  renderAICard({title:t,body:b,leftLabel:ll,rightLabel:rl,model:'bridge'},dir);
+}
+
+// ── DOTS ──────────────────────────────────────────────────────────────────
 function updateDots(){
-  var dots = document.getElementById('dots');
-  dots.innerHTML = '';
-  // Show up to 8 dots representing journey depth
-  var depth = Math.min(choiceHistory.length + 1, 8);
-  for(var i = 0; i < depth; i++){
-    var d = document.createElement('div');
-    d.className = 'dot' + (i === depth-1 ? ' active' : '');
-    dots.appendChild(d);
-  }
+  var dots=document.getElementById('dots');dots.innerHTML='';
+  var depth=Math.min(choiceHistory.length+1,8);
+  for(var i=0;i<depth;i++){var d=document.createElement('div');d.className='dot'+(i===depth-1?' active':'');dots.appendChild(d);}
 }
 
-// ── SWIPE GESTURE ────────────────────────────────────────────────────────
-var touchStartX = 0;
-document.getElementById('card-stack').addEventListener('touchstart', function(e){
-  touchStartX = e.touches[0].clientX;
-}, {passive:true});
-document.getElementById('card-stack').addEventListener('touchend', function(e){
-  var dx = e.changedTouches[0].clientX - touchStartX;
-  if(Math.abs(dx) > 50){
-    if(dx < 0) chooseRight(); else chooseLeft();
-  }
-});
+// ── SWIPE ─────────────────────────────────────────────────────────────────
+var touchStartX=0;
+document.getElementById('card-stack').addEventListener('touchstart',function(e){touchStartX=e.touches[0].clientX;},{passive:true});
+document.getElementById('card-stack').addEventListener('touchend',function(e){var dx=e.changedTouches[0].clientX-touchStartX;if(Math.abs(dx)>50){if(dx<0)chooseRight();else chooseLeft();}});
 
-// ── CLOCK ────────────────────────────────────────────────────────────────
-function updateClock(){
-  var d = new Date();
-  var h = d.getHours(), m = d.getMinutes();
-  document.getElementById('clock').textContent = h + ':' + (m < 10 ? '0'+m : m);
-}
-updateClock();
-setInterval(updateClock, 30000);
+// ── KEYBOARD ──────────────────────────────────────────────────────────────
+document.addEventListener('keydown',function(e){if(e.key==='ArrowLeft')chooseLeft();if(e.key==='ArrowRight')chooseRight();if(e.key===' ')toggleMic();});
 
-// ── KEYBOARD ─────────────────────────────────────────────────────────────
-document.addEventListener('keydown', function(e){
-  if(e.key === 'ArrowLeft')  chooseLeft();
-  if(e.key === 'ArrowRight') chooseRight();
-});
+// ── CLOCK ─────────────────────────────────────────────────────────────────
+function updateClock(){var d=new Date(),h=d.getHours(),m=d.getMinutes();document.getElementById('clock').textContent=h+':'+(m<10?'0'+m:m);}
+updateClock();setInterval(updateClock,30000);
 
-// ── INIT ─────────────────────────────────────────────────────────────────
-document.getElementById('left-label').textContent  = SEED['0'].leftLabel;
-document.getElementById('right-label').textContent = SEED['0'].rightLabel;
+// ── INIT ──────────────────────────────────────────────────────────────────
+loadState();
+document.getElementById('left-label').textContent=SEED['0'].leftLabel;
+document.getElementById('right-label').textContent=SEED['0'].rightLabel;
 updateDots();
+dbg('ok','io.html loaded','Voice: '+(window.speechSynthesis?'yes':'no')+' | Mic: '+(window.SpeechRecognition||window.webkitSpeechRecognition?'yes':'no')+' | SFT: '+sftBalance);
+// Startup health check
+fetch('/card-proxy.php',{method:'POST',headers:{'Content-Type':'application/json'},body:'{"choices":[],"context":"startup health check"}'})
+.then(function(r){return r.json().then(function(d){return{s:r.status,d:d};});})
+.then(function(x){if(x.s===200&&x.d&&x.d.title){dbg('ok','Card proxy OK · model: '+(x.d.model||'?'),x.d.title);}else{dbg('warn','Proxy odd response',JSON.stringify(x.d));}})
+.catch(function(e){dbg('err','Proxy unreachable',e.message);});
 </script>
 </body>
 </html>

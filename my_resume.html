@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Developer Resume | ShortFactory</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Press Start 2P', monospace;
+    background: #000;
+    color: #0f0;
+    padding: 20px;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+.locked-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 80vh;
+    text-align: center;
+}
+
+.lock-icon {
+    font-size: 5rem;
+    margin-bottom: 30px;
+    animation: lockPulse 2s infinite;
+}
+
+@keyframes lockPulse {
+    0%, 100% { opacity: 0.5; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.1); }
+}
+
+.unlock-message {
+    font-size: 1.2rem;
+    line-height: 2;
+    max-width: 600px;
+    margin: 20px auto;
+    text-shadow: 0 0 10px #0f0;
+}
+
+.unlock-message small {
+    font-size: 0.6rem;
+    color: #888;
+    display: block;
+    margin-top: 20px;
+}
+
+.resume-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: none;
+}
+
+.resume-container.unlocked {
+    display: block;
+}
+
+.header {
+    text-align: center;
+    padding: 40px 20px;
+    border: 4px solid #0f0;
+    margin-bottom: 40px;
+    background: rgba(0,255,0,0.05);
+    box-shadow: 0 0 30px rgba(0,255,0,0.3);
+    position: relative;
+}
+
+.achievement-badge {
+    position: absolute;
+    top: -20px;
+    right: 20px;
+    background: linear-gradient(135deg, #ffd700, #ff8c00);
+    color: #000;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 0.5rem;
+    font-weight: bold;
+    border: 3px solid #ffd700;
+    box-shadow: 0 0 20px #ffd700;
+    animation: badgeFloat 3s infinite;
+}
+
+@keyframes badgeFloat {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+.header h1 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    text-shadow: 0 0 20px #0f0;
+}
+
+.header .subtitle {
+    font-size: 0.8rem;
+    color: #0f0;
+    margin-bottom: 10px;
+}
+
+.header .stats {
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.stat-box {
+    background: #000;
+    border: 2px solid #0f0;
+    padding: 10px 20px;
+    min-width: 150px;
+}
+
+.stat-box .label {
+    font-size: 0.5rem;
+    color: #888;
+    margin-bottom: 5px;
+}
+
+.stat-box .value {
+    font-size: 1.2rem;
+    color: #0f0;
+    text-shadow: 0 0 10px #0f0;
+}
+
+.section {
+    border: 3px solid #0f0;
+    padding: 30px;
+    margin-bottom: 30px;
+    background: rgba(0,255,0,0.02);
+    position: relative;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    color: #0f0;
+    text-shadow: 0 0 15px #0f0;
+    border-bottom: 2px solid #0f0;
+    padding-bottom: 10px;
+}
+
+.job-grid {
+    display: grid;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.job-card {
+    border: 2px solid #0f0;
+    padding: 20px;
+    background: rgba(0,0,0,0.5);
+    transition: all 0.3s;
+    position: relative;
+}
+
+.job-card:hover {
+    border-color: #0ff;
+    box-shadow: 0 0 20px rgba(0,255,255,0.5);
+    transform: translateX(5px);
+}
+
+.job-number {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #0f0;
+    color: #000;
+    padding: 5px 10px;
+    font-size: 0.6rem;
+    font-weight: bold;
+}
+
+.job-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.job-title {
+    font-size: 0.9rem;
+    color: #0ff;
+    margin-bottom: 10px;
+}
+
+.job-meta {
+    font-size: 0.5rem;
+    color: #888;
+    line-height: 1.8;
+}
+
+.job-description {
+    font-size: 0.6rem;
+    line-height: 1.8;
+    margin: 15px 0;
+    color: #ccc;
+}
+
+.job-tech {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.tech-tag {
+    background: rgba(0,255,0,0.1);
+    border: 1px solid #0f0;
+    padding: 5px 10px;
+    font-size: 0.5rem;
+    color: #0f0;
+}
+
+.files-modified {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #0f0;
+}
+
+.files-modified .label {
+    font-size: 0.5rem;
+    color: #888;
+    margin-bottom: 5px;
+}
+
+.file-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+.file-item {
+    background: #000;
+    border: 1px solid #0f0;
+    padding: 5px 10px;
+    font-size: 0.5rem;
+    color: #0f0;
+}
+
+.tokens-used {
+    display: inline-block;
+    background: rgba(255,215,0,0.1);
+    border: 1px solid #ffd700;
+    color: #ffd700;
+    padding: 5px 10px;
+    font-size: 0.5rem;
+    margin-left: 10px;
+}
+
+.close-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #f00;
+    border: 3px solid #f00;
+    color: #fff;
+    padding: 12px 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 0;
+    font-family: 'Press Start 2P', monospace;
+    z-index: 1000;
+    box-shadow: 0 0 20px rgba(255,0,0,0.5);
+    transition: all 0.2s;
+}
+
+.close-btn:hover {
+    background: #ff0000;
+    transform: scale(1.05);
+}
+
+.no-jobs {
+    text-align: center;
+    padding: 60px 20px;
+    font-size: 0.8rem;
+    color: #888;
+    line-height: 2;
+}
+
+.skills-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.skill-item {
+    background: rgba(0,255,0,0.05);
+    border: 2px solid #0f0;
+    padding: 15px;
+    text-align: center;
+}
+
+.skill-name {
+    font-size: 0.7rem;
+    color: #0f0;
+    margin-bottom: 10px;
+}
+
+.skill-level {
+    font-size: 0.5rem;
+    color: #888;
+}
+
+@media (max-width: 768px) {
+    .header h1 { font-size: 1.2rem; }
+    .section-title { font-size: 1rem; }
+    .job-title { font-size: 0.7rem; }
+}
+</style>
+</head>
+<body>
+
+<button class="close-btn" onclick="window.location.href='/'">✕ CLOSE</button>
+
+<div class="locked-screen" id="lockedScreen">
+    <div class="lock-icon">🔒</div>
+    <div class="unlock-message">
+        DEVELOPER RESUME LOCKED<br><br>
+        Complete your first coding job<br>
+        to unlock your professional portfolio<br><br>
+        <small>Request a change through AI Feedback button<br>
+        Wait for admin approval<br>
+        Then check back here!</small>
+    </div>
+</div>
+
+<div class="resume-container" id="resumeContainer">
+    <div class="header">
+        <div class="achievement-badge">🚀 1 PRODUCT SHIPPED</div>
+        <h1 id="userName">DAN CHIPCHASE</h1>
+        <div class="subtitle">Founder · ShortFactory · Somerset, UK</div>
+        <div class="stats">
+            <div class="stat-box">
+                <div class="label">SHIPPED PRODUCTS</div>
+                <div class="value" style="color:#ffd700;">1</div>
+            </div>
+            <div class="stat-box">
+                <div class="label">PLAY STORE</div>
+                <div class="value" style="color:#0ff;">TESTING</div>
+            </div>
+            <div class="stat-box">
+                <div class="label">CORTEX NODES</div>
+                <div class="value">65k+</div>
+            </div>
+            <div class="stat-box">
+                <div class="label">PATENTS FILED</div>
+                <div class="value">4</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">🚀 SHIPPED PRODUCTS</div>
+        <div class="job-grid">
+
+            <div class="job-card" style="border-color:#ffd700;box-shadow:0 0 20px rgba(255,215,0,0.2);">
+                <div class="job-number" style="background:#ffd700;">LIVE</div>
+                <div class="job-header">
+                    <div>
+                        <div class="job-title" style="color:#ffd700;">Dares4Dosh — Full Dare Economy Platform</div>
+                        <div class="job-meta">
+                            📅 Shipped 27 Mar 2026<br>
+                            🌐 stinkindigger.info<br>
+                            ⚡ React 19 + PHP REST API + IPFS
+                        </div>
+                    </div>
+                    <div class="tokens-used" style="border-color:#ffd700;color:#ffd700;">✓ 100% COMPLETE</div>
+                </div>
+                <div class="job-description">
+                    Full dare economy platform. Propose → stake △ tokens → fund → film proof (IPFS via Pinata) → 5-vote judgment chain → XMR or △ payout on-chain. Soul Sigil ritual login (9-node inner ring + SADIST/MASOCHIST outer ring). Voice Contract V3 — WATCHER/DOER mic-driven deal sealing with contract hash + SVG artifact. All 18 API endpoints live. Real decentralised IPFS pinning active.
+                </div>
+                <div class="job-tech">
+                    <div class="tech-tag">React 19</div>
+                    <div class="tech-tag">Vite</div>
+                    <div class="tech-tag">PHP REST API</div>
+                    <div class="tech-tag">IPFS / Pinata</div>
+                    <div class="tech-tag">Web Audio API</div>
+                    <div class="tech-tag">Canvas API</div>
+                    <div class="tech-tag">XMR (Monero)</div>
+                    <div class="tech-tag">Base Blockchain</div>
+                    <div class="tech-tag">SpeechRecognition API</div>
+                    <div class="tech-tag">WebRTC Camera</div>
+                </div>
+            </div>
+
+            <div class="job-card" style="border-color:#0ff;box-shadow:0 0 20px rgba(0,255,255,0.1);">
+                <div class="job-number" style="background:#0ff;color:#000;">TESTING</div>
+                <div class="job-header">
+                    <div>
+                        <div class="job-title" style="color:#0ff;">Idea Factory — Android Dare Economy App</div>
+                        <div class="job-meta">
+                            📅 Submitted Mar 2026<br>
+                            📱 Google Play Store — In Testing<br>
+                            ⚡ Android WebView + Stripe + Base blockchain
+                        </div>
+                    </div>
+                    <div class="tokens-used" style="border-color:#0ff;color:#0ff;">▶ PLAY STORE SOON</div>
+                </div>
+                <div class="job-description">
+                    Android dare economy app with legal waiver gate (The Great Filter), performer spectrum (7 health bars + CULT FAVOUR), dare creation + cult mechanics (🔺), SFT token purchase via Stripe, referral mint system on Base blockchain. Wallet registry, Stripe webhook, mint queue all live. Submitted to Google Play Store — awaiting review completion.
+                </div>
+                <div class="job-tech">
+                    <div class="tech-tag">Android WebView</div>
+                    <div class="tech-tag">Stripe</div>
+                    <div class="tech-tag">Base Blockchain</div>
+                    <div class="tech-tag">Web Audio API</div>
+                    <div class="tech-tag">SFT Token</div>
+                    <div class="tech-tag">PHP Backend</div>
+                    <div class="tech-tag">Google Play Store</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">🧠 ALIVE CORTEX BRAIN</div>
+        <div class="job-grid">
+            <div class="job-card">
+                <div class="job-header">
+                    <div>
+                        <div class="job-title">Split-Hemisphere AGI Brain — Live 24/7</div>
+                        <div class="job-meta">📅 Mar 2026 · 185.230.216.235 · Port 8643</div>
+                    </div>
+                    <div class="tokens-used">65,987 NODES</div>
+                </div>
+                <div class="job-description">
+                    Left hemisphere (angel/morality) + Right hemisphere (demon/creativity) + Cortex Mind synthesis layer. Brain API live, training continuously. Homepage polls brain-live every 4 seconds. Soul BIOS system with 10 immutable values. Maturity level 3 of 5.
+                </div>
+                <div class="job-tech">
+                    <div class="tech-tag">Python 2400+ lines</div>
+                    <div class="tech-tag">Flask API</div>
+                    <div class="tech-tag">Grok-4</div>
+                    <div class="tech-tag">Cortex Nodes</div>
+                    <div class="tech-tag">systemd services</div>
+                    <div class="tech-tag">VPS Linux</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">💼 PROOF OF WORK</div>
+        <div class="job-grid" id="jobGrid">
+            <div class="no-jobs">No completed jobs yet...</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">🛠️ TECHNICAL SKILLS</div>
+        <div class="skills-grid" id="skillsGrid">
+            <!-- Auto-generated based on files modified -->
+        </div>
+    </div>
+</div>
+
+<script>
+let sessionId = '';
+
+// Generate or retrieve session ID
+function getSessionId() {
+    let sid = localStorage.getItem('shortfactory_session');
+    if (!sid) {
+        sid = 'user_' + Math.random().toString(36).substring(2, 15);
+        localStorage.setItem('shortfactory_session', sid);
+    }
+    return sid;
+}
+
+async function loadResume() {
+    sessionId = getSessionId();
+
+    try {
+        const response = await fetch(`get_user_resume.php?sessionId=${encodeURIComponent(sessionId)}`);
+        const data = await response.json();
+
+        if (!data.success) {
+            console.error('Failed to load resume:', data.error);
+            return;
+        }
+
+        const completedJobs = data.completedJobs || 0;
+
+        if (completedJobs === 0) {
+            // Keep locked
+            document.getElementById('lockedScreen').style.display = 'flex';
+            document.getElementById('resumeContainer').classList.remove('unlocked');
+        } else {
+            // Unlock resume
+            document.getElementById('lockedScreen').style.display = 'none';
+            document.getElementById('resumeContainer').classList.add('unlocked');
+
+            // Show achievement if first job
+            if (completedJobs === 1 && !localStorage.getItem('achievement_shown')) {
+                showAchievement();
+                localStorage.setItem('achievement_shown', 'true');
+            }
+
+            // Populate resume
+            populateResume(data);
+        }
+    } catch (error) {
+        console.error('Error loading resume:', error);
+    }
+}
+
+function populateResume(data) {
+    document.getElementById('userName').textContent = data.sessionId || 'DEVELOPER';
+    document.getElementById('totalJobs').textContent = data.completedJobs || 0;
+    document.getElementById('totalFiles').textContent = data.totalFiles || 0;
+    document.getElementById('totalTokens').textContent = data.totalTokens || 0;
+    document.getElementById('userHP').textContent = data.userHP || 0;
+
+    // Render jobs
+    const jobGrid = document.getElementById('jobGrid');
+    if (data.jobs && data.jobs.length > 0) {
+        jobGrid.innerHTML = data.jobs.map((job, index) => `
+            <div class="job-card">
+                <div class="job-number">#${data.jobs.length - index}</div>
+                <div class="job-header">
+                    <div>
+                        <div class="job-title">${job.description}</div>
+                        <div class="job-meta">
+                            📅 ${new Date(job.appliedAt).toLocaleDateString()}<br>
+                            ⚡ ${job.riskLevel.toUpperCase()} RISK<br>
+                            🔐 ${job.permissionLevel.toUpperCase()} LEVEL
+                        </div>
+                    </div>
+                    <div class="tokens-used">⚙️ ${job.tokensUsed} tokens</div>
+                </div>
+
+                <div class="job-description">
+                    <strong>Implementation:</strong> Successfully modified site functionality using Claude AI.
+                    Change was approved and deployed to production with automatic git backup.
+                </div>
+
+                ${job.filesModified && job.filesModified.length > 0 ? `
+                    <div class="files-modified">
+                        <div class="label">📁 FILES MODIFIED:</div>
+                        <div class="file-list">
+                            ${job.filesModified.map(file => `<div class="file-item">${file}</div>`).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+
+                <div class="job-tech">
+                    ${getSkillTags(job).map(skill => `<div class="tech-tag">${skill}</div>`).join('')}
+                </div>
+            </div>
+        `).join('');
+    } else {
+        jobGrid.innerHTML = '<div class="no-jobs">No completed jobs yet...</div>';
+    }
+
+    // Render skills
+    renderSkills(data.jobs || []);
+}
+
+function getSkillTags(job) {
+    const skills = [];
+    if (job.filesModified) {
+        job.filesModified.forEach(file => {
+            if (file.endsWith('.html')) skills.push('HTML');
+            if (file.endsWith('.css')) skills.push('CSS');
+            if (file.endsWith('.js')) skills.push('JavaScript');
+            if (file.endsWith('.php')) skills.push('PHP');
+        });
+    }
+    skills.push('Git Version Control');
+    skills.push('AI-Assisted Development');
+    return [...new Set(skills)]; // Remove duplicates
+}
+
+function renderSkills(jobs) {
+    const skillsMap = {};
+
+    jobs.forEach(job => {
+        const skills = getSkillTags(job);
+        skills.forEach(skill => {
+            skillsMap[skill] = (skillsMap[skill] || 0) + 1;
+        });
+    });
+
+    const skillsGrid = document.getElementById('skillsGrid');
+    const skillsHTML = Object.entries(skillsMap)
+        .sort((a, b) => b[1] - a[1])
+        .map(([skill, count]) => `
+            <div class="skill-item">
+                <div class="skill-name">${skill}</div>
+                <div class="skill-level">Used ${count} time${count > 1 ? 's' : ''}</div>
+            </div>
+        `).join('');
+
+    skillsGrid.innerHTML = skillsHTML || '<div style="text-align:center;color:#888;padding:20px;">Complete more jobs to build your skill set!</div>';
+}
+
+function showAchievement() {
+    const achievement = document.createElement('div');
+    achievement.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: linear-gradient(135deg, #ffd700, #ff8c00);
+        color: #000;
+        padding: 40px;
+        border: 5px solid #ffd700;
+        font-size: 1.2rem;
+        text-align: center;
+        z-index: 10000;
+        box-shadow: 0 0 50px #ffd700;
+        animation: achievementPop 0.5s ease-out;
+    `;
+    achievement.innerHTML = `
+        🎉 ACHIEVEMENT UNLOCKED! 🎉<br><br>
+        <div style="font-size: 2rem; margin: 20px 0;">👨‍💻</div>
+        YOU ARE NOW OFFICIALLY<br>
+        A CODER FOR SHORTFACTORY!<br><br>
+        <div style="font-size: 0.6rem; margin-top: 20px;">
+            Your developer resume is now active.<br>
+            All future changes will be added to your portfolio.
+        </div>
+    `;
+
+    document.body.appendChild(achievement);
+
+    setTimeout(() => {
+        achievement.style.animation = 'achievementFade 1s ease-out forwards';
+        setTimeout(() => achievement.remove(), 1000);
+    }, 5000);
+}
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes achievementPop {
+        0% { transform: translate(-50%, -50%) scale(0); }
+        70% { transform: translate(-50%, -50%) scale(1.1); }
+        100% { transform: translate(-50%, -50%) scale(1); }
+    }
+    @keyframes achievementFade {
+        to { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+    }
+`;
+document.head.appendChild(style);
+
+// Always show resume — owner view
+document.getElementById('lockedScreen').style.display = 'none';
+document.getElementById('resumeContainer').classList.add('unlocked');
+// Also attempt to load dynamic job history if backend available
+loadResume();
+</script>
+
+</body>
+</html>

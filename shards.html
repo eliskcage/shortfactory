@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>SHARD AUCTION — SHORTFACTORY</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;min-height:100%;background:#000;color:#e2e8f0;font-family:'Courier New',monospace;-webkit-font-smoothing:antialiased;}
+.page{max-width:480px;margin:0 auto;padding:48px 20px 80px;}
+
+/* HEADER */
+.eyebrow{font-size:8px;letter-spacing:4px;color:#222;text-transform:uppercase;margin-bottom:16px;}
+h1{font-size:clamp(26px,8vw,38px);font-weight:900;color:#fff;line-height:1.0;margin-bottom:8px;letter-spacing:-1px;}
+h1 span{color:#DA7756;}
+.sub{font-size:11px;color:#333;margin-bottom:36px;line-height:1.8;}
+.sub strong{color:#666;}
+
+/* HERO SVG */
+.shard-hero{width:100%;max-width:340px;margin:0 auto 28px;display:block;cursor:default;}
+
+/* STATS BAR */
+.stats-bar{display:flex;justify-content:space-between;margin-bottom:32px;padding:14px 16px;background:#050505;border:1px solid #111;}
+.stat{text-align:center;}
+.stat-val{font-size:20px;font-weight:900;color:#daa520;}
+.stat-lbl{font-size:8px;letter-spacing:2px;color:#222;text-transform:uppercase;margin-top:2px;}
+
+/* SHARD GRID */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:32px;}
+.shard-card{background:#050505;border:1px solid #111;padding:14px 12px;cursor:pointer;transition:border-color .2s;}
+.shard-card:hover{border-color:#333;}
+.shard-card.bidding{border-color:#DA775640;}
+.shard-card.sold{opacity:.4;cursor:default;}
+.card-num{font-size:8px;letter-spacing:2px;color:#222;margin-bottom:4px;}
+.card-title{font-size:11px;font-weight:900;color:#e2e8f0;letter-spacing:1px;margin-bottom:8px;}
+.card-title.sold{color:#333;}
+.card-badge{display:inline-block;font-size:7px;letter-spacing:2px;padding:3px 6px;text-transform:uppercase;margin-bottom:8px;}
+.badge-available{color:#DA7756;background:#DA775610;border:1px solid #DA775630;}
+.badge-bidding{color:#F5C78A;background:#F5C78A10;border:1px solid #F5C78A40;}
+.badge-sold{color:#333;background:#0a0a0a;border:1px solid #111;}
+.card-bid{font-size:10px;color:#666;}
+.card-bid strong{color:#daa520;}
+.card-count{font-size:8px;color:#222;margin-top:3px;}
+
+/* CARD SVG preview */
+.card-shard-wrap{float:right;margin:-2px -2px 4px 8px;}
+.card-shard-wrap svg{width:44px;height:44px;}
+
+/* MODAL OVERLAY */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:100;overflow-y:auto;}
+.modal-overlay.open{display:flex;align-items:flex-start;justify-content:center;padding:40px 16px 80px;}
+.modal{width:100%;max-width:420px;background:#000;border:1px solid #1a1a1a;padding:28px 24px;}
+.modal-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;}
+.modal-title{font-size:16px;font-weight:900;color:#fff;letter-spacing:1px;}
+.modal-num{font-size:8px;letter-spacing:3px;color:#333;}
+.modal-close{font-size:18px;color:#333;cursor:pointer;background:none;border:none;font-family:inherit;line-height:1;}
+.modal-close:hover{color:#999;}
+
+.modal-shard-wrap{text-align:center;margin-bottom:20px;}
+.modal-shard-wrap svg{width:160px;height:160px;}
+
+.modal-teaser{font-size:11px;color:#555;line-height:1.8;margin-bottom:20px;padding:12px;background:#050505;border:1px solid #0a0a0a;font-style:italic;}
+.modal-teaser::before{content:'"';color:#222;}
+.modal-teaser::after{content:'"';color:#222;}
+
+.modal-status{margin-bottom:20px;}
+.top-bid-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #0a0a0a;}
+.top-bid-label{font-size:10px;color:#333;letter-spacing:1px;}
+.top-bid-val{font-size:18px;font-weight:900;color:#daa520;}
+.top-bid-val.none{font-size:12px;color:#222;}
+.bid-count-row{font-size:9px;color:#222;letter-spacing:1px;margin-top:8px;}
+
+/* BID FORM */
+.bid-form{display:flex;flex-direction:column;gap:10px;}
+.bid-form label{font-size:9px;letter-spacing:2px;color:#333;text-transform:uppercase;display:block;margin-bottom:4px;}
+.bid-form input{width:100%;background:#050505;border:1px solid #111;color:#e2e8f0;font-family:'Courier New',monospace;font-size:13px;padding:12px 14px;outline:none;}
+.bid-form input:focus{border-color:#333;}
+.bid-form input::placeholder{color:#1c1c1c;}
+.bid-hint{font-size:8px;color:#222;letter-spacing:1px;}
+.bid-btn{display:block;width:100%;background:#DA7756;color:#000;font-family:'Courier New',monospace;font-size:12px;font-weight:900;letter-spacing:3px;text-transform:uppercase;padding:16px;border:none;cursor:pointer;margin-top:4px;}
+.bid-btn:hover{background:#E8896A;}
+.bid-btn:disabled{background:#1a1a1a;color:#333;cursor:not-allowed;}
+.modal-error{font-size:10px;color:#c0392b;padding:8px 10px;background:#0a0000;border:1px solid #1a0000;display:none;}
+.modal-success{font-size:10px;color:#2ecc71;padding:8px 10px;background:#000a00;border:1px solid #001a00;display:none;}
+
+/* SOLD OVERLAY in modal */
+.sold-overlay{text-align:center;padding:20px 0;}
+.sold-overlay .sold-txt{font-size:11px;letter-spacing:3px;color:#333;text-transform:uppercase;}
+.sold-price{font-size:28px;font-weight:900;color:#1a1a1a;margin:8px 0;}
+
+.footer-line{margin-top:48px;font-size:8px;color:#111;letter-spacing:2px;text-align:center;}
+
+/* Animations */
+@keyframes shimmer{0%,100%{opacity:.7;}50%{opacity:1;}}
+@keyframes pulse-gold{0%,100%{filter:drop-shadow(0 0 4px #DA775640);}50%{filter:drop-shadow(0 0 10px #DA7756aa);}}
+.shard-available{animation:pulse-gold 3s ease-in-out infinite;}
+.shard-bidding{animation:shimmer 1.5s ease-in-out infinite;}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="eyebrow">SHORTFACTORY · LIVING EQUATION</div>
+  <h1>SHARD<br><span>AUCTION</span></h1>
+  <p class="sub">10 encrypted fragments of the story. Each one a tenth of the truth.<br>
+  <strong>Satoshi cipher. Key held by the buyer. No refunds.</strong></p>
+
+  <!-- HERO SVG — assembled logo -->
+  <svg id="hero-svg" class="shard-hero" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="grad-avail" cx="50%" cy="50%" r="50%">
+        <stop offset="0%"   stop-color="#DA7756"/>
+        <stop offset="100%" stop-color="#7C3AED"/>
+      </radialGradient>
+      <radialGradient id="grad-bid" cx="50%" cy="50%" r="50%">
+        <stop offset="0%"   stop-color="#F5C78A"/>
+        <stop offset="100%" stop-color="#B07AE8"/>
+      </radialGradient>
+      <filter id="glow">
+        <feGaussianBlur stdDeviation="3" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+    <!-- Shards rendered by JS -->
+    <g id="hero-shards"></g>
+    <!-- Center -->
+    <circle cx="200" cy="200" r="42" fill="#000"/>
+    <text x="200" y="195" text-anchor="middle" fill="#1a1a1a" font-family="Courier New" font-size="9" letter-spacing="2">THE LIVING</text>
+    <text x="200" y="210" text-anchor="middle" fill="#1a1a1a" font-family="Courier New" font-size="9" letter-spacing="2">EQUATION</text>
+  </svg>
+
+  <!-- STATS BAR -->
+  <div class="stats-bar">
+    <div class="stat"><div class="stat-val" id="stat-avail">—</div><div class="stat-lbl">AVAILABLE</div></div>
+    <div class="stat"><div class="stat-val" id="stat-bid">—</div><div class="stat-lbl">IN AUCTION</div></div>
+    <div class="stat"><div class="stat-val" id="stat-sold">—</div><div class="stat-lbl">SOLD</div></div>
+  </div>
+
+  <!-- SHARD GRID -->
+  <div class="grid" id="shard-grid"></div>
+
+  <div class="footer-line">SHARD AUCTION · SHORTFACTORY · MAN MACHINE GOD</div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-num" id="m-num">SHARD 00</div>
+        <div class="modal-title" id="m-title">—</div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-shard-wrap">
+      <svg id="m-shard-svg" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="m-grad-avail" cx="50%" cy="50%" r="50%">
+            <stop offset="0%"   stop-color="#DA7756"/>
+            <stop offset="100%" stop-color="#7C3AED"/>
+          </radialGradient>
+          <radialGradient id="m-grad-bid" cx="50%" cy="50%" r="50%">
+            <stop offset="0%"   stop-color="#F5C78A"/>
+            <stop offset="100%" stop-color="#B07AE8"/>
+          </radialGradient>
+        </defs>
+        <g id="m-shard-piece"></g>
+      </svg>
+    </div>
+    <p class="modal-teaser" id="m-teaser"></p>
+    <div class="modal-status">
+      <div class="top-bid-row">
+        <span class="top-bid-label">TOP BID</span>
+        <span class="top-bid-val" id="m-top-bid">OPEN</span>
+      </div>
+      <div class="bid-count-row" id="m-bid-count">NO BIDS YET</div>
+    </div>
+    <div id="m-bid-section">
+      <div class="bid-form">
+        <div>
+          <label for="bid-amount">YOUR BID (£)</label>
+          <input type="number" id="bid-amount" min="50" step="10" placeholder="50">
+          <div class="bid-hint" id="bid-hint">Minimum bid: £50</div>
+        </div>
+        <div>
+          <label for="bid-email">YOUR EMAIL</label>
+          <input type="email" id="bid-email" placeholder="you@example.com">
+        </div>
+        <div id="m-ref-wrap" style="display:none">
+          <label for="bid-ref">REVERT FIVER REF (optional)</label>
+          <input type="text" id="bid-ref" placeholder="ref ID">
+        </div>
+        <div class="modal-error" id="m-error"></div>
+        <div class="modal-success" id="m-success"></div>
+        <button class="bid-btn" id="bid-submit" onclick="submitBid()">REGISTER BID →</button>
+        <p style="font-size:8px;color:#1c1c1c;letter-spacing:1px;text-align:center;margin-top:6px;">
+          Top bidder wins when auction closes. Payment link sent by email.
+        </p>
+      </div>
+    </div>
+    <div id="m-sold-section" class="sold-overlay" style="display:none">
+      <div class="sold-txt">SOLD</div>
+      <div class="sold-price" id="m-sold-price">—</div>
+      <div style="font-size:9px;color:#1c1c1c;letter-spacing:2px;">ENCRYPTED · DELIVERED · DARK</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Shard path generator ────────────────────────────────────────────────────
+function deg2rad(d){ return d * Math.PI / 180; }
+
+// Deterministic jag values per shard (aesthetics, not random)
+const JAGS = [1.07,0.93,1.08,0.92,1.06,0.94,1.09,0.91,1.07,0.93];
+
+function shardPoints(idx) {
+  const cx=200, cy=200, IR=52, OR=154, GAP=2;
+  const a0 = deg2rad(idx*36 - 90 + GAP/2);
+  const a1 = deg2rad((idx+1)*36 - 90 - GAP/2);
+  const am = (a0+a1)/2;
+  const a0m= (a0*2+am)/3;
+  const am1= (am+a1*2)/3;
+  const j  = JAGS[idx];
+
+  const pts = [
+    [cx + IR   * Math.cos(a0),  cy + IR   * Math.sin(a0)],   // inner start
+    [cx + OR   * Math.cos(a0),  cy + OR   * Math.sin(a0)],   // outer start
+    [cx + OR*j * Math.cos(a0m), cy + OR*j * Math.sin(a0m)],  // outer jagged 1
+    [cx + OR/j * Math.cos(am),  cy + OR/j * Math.sin(am)],   // outer mid
+    [cx + OR*j * Math.cos(am1), cy + OR*j * Math.sin(am1)],  // outer jagged 2
+    [cx + OR   * Math.cos(a1),  cy + OR   * Math.sin(a1)],   // outer end
+    [cx + IR   * Math.cos(a1),  cy + IR   * Math.sin(a1)],   // inner end
+    [cx + IR/j * Math.cos(am),  cy + IR/j * Math.sin(am)],   // inner mid
+  ];
+  return pts.map(p => p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+}
+
+function shardFill(state) {
+  if (state === 'available') return 'url(#grad-avail)';
+  if (state === 'bidding')   return 'url(#grad-bid)';
+  return '#111';
+}
+
+function shardClass(state) {
+  if (state === 'available') return 'shard-available';
+  if (state === 'bidding')   return 'shard-bidding';
+  return '';
+}
+
+// ── State ──────────────────────────────────────────────────────────────────
+let SHARDS = [];  // [{shard_num, title, teaser, state, top_bid, bid_count}]
+let activeIdx = null;
+
+// ── Render hero SVG ────────────────────────────────────────────────────────
+function renderHero() {
+  const g = document.getElementById('hero-shards');
+  g.innerHTML = '';
+  SHARDS.forEach((s, i) => {
+    const poly = document.createElementNS('http://www.w3.org/2000/svg','polygon');
+    poly.setAttribute('points', shardPoints(i));
+    poly.setAttribute('fill', shardFill(s.state));
+    poly.setAttribute('class', shardClass(s.state));
+    poly.style.cursor = s.state !== 'sold' ? 'pointer' : 'default';
+    poly.addEventListener('click', () => s.state !== 'sold' && openModal(i));
+    g.appendChild(poly);
+  });
+}
+
+// ── Render grid cards ──────────────────────────────────────────────────────
+function renderGrid() {
+  const grid = document.getElementById('shard-grid');
+  grid.innerHTML = '';
+  SHARDS.forEach((s, i) => {
+    const card = document.createElement('div');
+    card.className = 'shard-card ' + s.state;
+    card.onclick = () => openModal(i);
+
+    const badgeClass = {available:'badge-available', bidding:'badge-bidding', sold:'badge-sold'}[s.state];
+    const badgeTxt   = {available:'AVAILABLE', bidding:'BIDDING', sold:'SOLD'}[s.state];
+    const bidTxt = s.top_bid > 0
+      ? '<strong>£'+parseFloat(s.top_bid).toFixed(0)+'</strong>'
+      : '<span style="color:#1c1c1c">OPEN</span>';
+
+    // Mini shard SVG
+    const miniSvg = `<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="g${i}a" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#DA7756"/><stop offset="100%" stop-color="#7C3AED"/>
+        </radialGradient>
+        <radialGradient id="g${i}b" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#F5C78A"/><stop offset="100%" stop-color="#B07AE8"/>
+        </radialGradient>
+      </defs>
+      <polygon points="${shardPoints(i)}" fill="${s.state==='available'?'url(#g'+i+'a)':s.state==='bidding'?'url(#g'+i+'b)':'#1a1a1a'}"/>
+    </svg>`;
+
+    card.innerHTML = `
+      <div class="card-shard-wrap">${miniSvg}</div>
+      <div class="card-num">SHARD ${String(s.shard_num).padStart(2,'0')}</div>
+      <div class="card-title ${s.state==='sold'?'sold':''}">${s.title}</div>
+      <span class="card-badge ${badgeClass}">${badgeTxt}</span>
+      <div class="card-bid">${bidTxt}</div>
+      <div class="card-count">${s.bid_count > 0 ? s.bid_count+' bid'+(s.bid_count>1?'s':'') : 'No bids yet'}</div>`;
+
+    grid.appendChild(card);
+  });
+}
+
+// ── Stats bar ──────────────────────────────────────────────────────────────
+function renderStats() {
+  const avail = SHARDS.filter(s=>s.state==='available').length;
+  const bid   = SHARDS.filter(s=>s.state==='bidding').length;
+  const sold  = SHARDS.filter(s=>s.state==='sold').length;
+  document.getElementById('stat-avail').textContent = avail;
+  document.getElementById('stat-bid').textContent   = bid;
+  document.getElementById('stat-sold').textContent  = sold;
+}
+
+// ── Modal ──────────────────────────────────────────────────────────────────
+function openModal(i) {
+  activeIdx = i;
+  const s = SHARDS[i];
+
+  document.getElementById('m-num').textContent   = 'SHARD '+String(s.shard_num).padStart(2,'0');
+  document.getElementById('m-title').textContent = s.title;
+  document.getElementById('m-teaser').textContent= s.teaser;
+
+  // Large shard preview
+  const g = document.getElementById('m-shard-piece');
+  g.innerHTML = '';
+  const poly = document.createElementNS('http://www.w3.org/2000/svg','polygon');
+  poly.setAttribute('points', shardPoints(i));
+  poly.setAttribute('fill', s.state==='available'?'url(#m-grad-avail)':s.state==='bidding'?'url(#m-grad-bid)':'#1a1a1a');
+  g.appendChild(poly);
+
+  // Bid status
+  const topBidEl = document.getElementById('m-top-bid');
+  if (s.top_bid > 0) {
+    topBidEl.textContent = '£'+parseFloat(s.top_bid).toFixed(0);
+    topBidEl.className = 'top-bid-val';
+    document.getElementById('bid-hint').textContent = 'Minimum bid: £'+(parseFloat(s.top_bid)+10).toFixed(0)+' (current top + £10)';
+    document.getElementById('bid-amount').min = (parseFloat(s.top_bid)+10).toFixed(0);
+    document.getElementById('bid-amount').value = (parseFloat(s.top_bid)+10).toFixed(0);
+  } else {
+    topBidEl.textContent = 'OPEN';
+    topBidEl.className = 'top-bid-val none';
+    document.getElementById('bid-hint').textContent = 'Minimum bid: £50';
+    document.getElementById('bid-amount').min = '50';
+    document.getElementById('bid-amount').value = '50';
+  }
+
+  document.getElementById('m-bid-count').textContent = s.bid_count > 0
+    ? s.bid_count+' bid'+(s.bid_count>1?'s':'')+' registered'
+    : 'No bids yet — be first';
+
+  // Show/hide bid vs sold
+  const bidSec  = document.getElementById('m-bid-section');
+  const soldSec = document.getElementById('m-sold-section');
+  if (s.state === 'sold') {
+    bidSec.style.display = 'none';
+    soldSec.style.display = 'block';
+    document.getElementById('m-sold-price').textContent = s.top_bid > 0 ? '£'+parseFloat(s.top_bid).toFixed(0) : '—';
+  } else {
+    bidSec.style.display = 'block';
+    soldSec.style.display = 'none';
+  }
+
+  // Check for ?ref= in URL to pre-fill
+  const ref = new URLSearchParams(location.search).get('ref') || '';
+  if (ref) {
+    document.getElementById('bid-ref').value = ref;
+    document.getElementById('m-ref-wrap').style.display = 'block';
+  }
+
+  clearMsg();
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  activeIdx = null;
+}
+
+document.getElementById('modal').addEventListener('click', function(e){
+  if (e.target === this) closeModal();
+});
+
+// ── Bid submission ─────────────────────────────────────────────────────────
+function clearMsg() {
+  const err = document.getElementById('m-error');
+  const ok  = document.getElementById('m-success');
+  err.style.display = 'none';
+  ok.style.display  = 'none';
+}
+
+function showError(msg) {
+  const el = document.getElementById('m-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function showSuccess(msg) {
+  const el = document.getElementById('m-success');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+async function submitBid() {
+  if (activeIdx === null) return;
+  clearMsg();
+  const btn    = document.getElementById('bid-submit');
+  const amount = parseFloat(document.getElementById('bid-amount').value);
+  const email  = document.getElementById('bid-email').value.trim();
+  const ref    = document.getElementById('bid-ref').value.trim();
+  const shard  = SHARDS[activeIdx].shard_num;
+
+  if (!email) { showError('Email required.'); return; }
+  if (!amount || amount < 50) { showError('Minimum bid is £50.'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'REGISTERING...';
+
+  try {
+    const res = await fetch('/api/shards.php', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({action:'bid', shard, email, amount, ref})
+    });
+    const data = await res.json();
+    if (data.ok) {
+      showSuccess(data.message);
+      btn.textContent = 'BID REGISTERED ✓';
+      loadStatus();  // refresh state
+    } else {
+      showError(data.error || 'Failed. Try again.');
+      btn.disabled = false;
+      btn.textContent = 'REGISTER BID →';
+    }
+  } catch(e) {
+    showError('Network error. Try again.');
+    btn.disabled = false;
+    btn.textContent = 'REGISTER BID →';
+  }
+}
+
+// ── Load status from API ───────────────────────────────────────────────────
+async function loadStatus() {
+  try {
+    const res  = await fetch('/api/shards.php?action=status');
+    const data = await res.json();
+    if (!data.ok || !data.shards) return;
+    SHARDS = data.shards;
+    renderHero();
+    renderGrid();
+    renderStats();
+    // Refresh modal if open
+    if (activeIdx !== null) {
+      const s = SHARDS[activeIdx];
+      if (s) {
+        document.getElementById('m-top-bid').textContent = s.top_bid > 0 ? '£'+parseFloat(s.top_bid).toFixed(0) : 'OPEN';
+        document.getElementById('m-bid-count').textContent = s.bid_count > 0
+          ? s.bid_count+' bid'+(s.bid_count>1?'s':'')+' registered'
+          : 'No bids yet — be first';
+      }
+    }
+  } catch(e) { /* silent fail */ }
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+loadStatus();
+setInterval(loadStatus, 15000);  // refresh every 15s
+</script>
+</body>
+</html>

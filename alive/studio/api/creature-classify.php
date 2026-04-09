@@ -1,0 +1,35 @@
+<?php
+// creature-classify.php
+// Passes text through the SphereNet creature_bridge on the cortex server
+// Returns: { concept, confidence, is_new, generation, parents, psi, summary }
+
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
+
+$body = json_decode(file_get_contents('php://input'), true);
+$text = isset($body['text']) ? trim($body['text']) : '';
+if (!$text) { echo json_encode(['ok'=>false,'error'=>'no text']); exit; }
+
+// Forward to cortex Python server on port 8643
+$payload = json_encode(['text' => $text, 'op' => 'creature-classify']);
+$ctx = stream_context_create(['http'=>[
+    'method'  => 'POST',
+    'header'  => "Content-Type: application/json\r\nContent-Length: ".strlen($payload)."\r\n",
+    'content' => $payload,
+    'timeout' => 5,
+]]);
+
+$resp = @file_get_contents('http://127.0.0.1:8643/api/creature-classify', false, $ctx);
+if ($resp === false) {
+    $resp = @file_get_contents('http://185.230.216.235:8643/api/creature-classify', false, $ctx);
+}
+
+if ($resp) {
+    echo $resp;
+} else {
+    // Fallback — SphereNet not reachable, return raw word as concept
+    echo json_encode(['ok'=>true,'concept'=>$text,'confidence'=>0,'is_new'=>false,'summary'=>'']);
+}

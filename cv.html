@@ -1,301 +1,355 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1XY2CNLJCE"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1XY2CNLJCE');</script>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Daniel Chipchase — Inventor · Founder · ShortFactory</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Dan Chipchase — Digital Consciousness Architect</title>
+<meta name="description" content="Every company in the longevity and digital consciousness space is trying to transfer something they haven't defined. Dan Chipchase filed the definition.">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Inter',sans-serif;background:#0a0a0a;color:#fff;line-height:1.6;}
-.container{max-width:960px;margin:40px auto;background:#111;border:1px solid #222;
-  box-shadow:0 0 80px rgba(218,165,32,.08);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a0a;color:#e2e8f0;line-height:1.7;overflow-x:hidden;}
 
-/* PRINT */
-.print-btn{position:fixed;top:20px;right:20px;background:#daa520;color:#000;
-  font-weight:700;padding:12px 24px;border:none;border-radius:8px;cursor:pointer;
-  font-size:14px;z-index:100;box-shadow:0 4px 20px rgba(218,165,32,.4);}
-.print-btn:hover{transform:scale(1.05);}
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,10,10,0.97);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,0.06);padding:14px 32px;display:flex;align-items:center;justify-content:space-between;}
+.nav-name{font-size:13px;font-weight:800;letter-spacing:2px;color:#daa520;text-transform:uppercase;}
+.nav-cta{font-size:11px;color:#0a0a0a;background:#daa520;padding:7px 18px;border-radius:4px;text-decoration:none;font-weight:700;letter-spacing:1px;text-transform:uppercase;transition:opacity 0.2s;}
+.nav-cta:hover{opacity:0.85;}
 
-/* HEADER */
-header{background:linear-gradient(135deg,#1a1200,#0d0900);
-  border-bottom:2px solid #daa520;padding:48px 60px;text-align:center;}
-.header-name{font-family:'Space Grotesk',sans-serif;font-size:44px;
-  font-weight:700;letter-spacing:-1px;color:#fff;margin-bottom:10px;}
-.header-title{font-size:15px;color:#daa520;letter-spacing:2px;
-  text-transform:uppercase;margin-bottom:8px;}
-.header-sub{font-size:13px;color:rgba(255,255,255,.4);letter-spacing:1px;}
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 24px 60px;position:relative;}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%, rgba(218,165,32,0.06) 0%, transparent 70%);pointer-events:none;}
+.hero-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#64748b;margin-bottom:24px;}
+.hero h1{font-size:clamp(32px,6vw,68px);font-weight:900;color:#fff;line-height:1.1;letter-spacing:-1px;margin-bottom:24px;max-width:900px;}
+.hero h1 em{font-style:normal;color:#daa520;}
+.hero-sub{font-size:clamp(15px,2vw,19px);color:#64748b;max-width:620px;margin-bottom:48px;line-height:1.7;}
+.hero-line{font-size:13px;color:#94a3b8;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:14px 28px;display:inline-block;}
+.hero-line strong{color:#fff;}
 
-/* CONTENT */
-.content{padding:60px;}
-.meta{display:flex;justify-content:space-between;font-size:13px;
-  color:#666;margin-bottom:48px;padding-bottom:24px;border-bottom:1px solid #1a1a1a;}
+.container{max-width:960px;margin:0 auto;padding:0 24px;}
 
-/* SECTIONS */
-h2{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;
-  margin:48px 0 16px;padding-bottom:8px;border-bottom:2px solid #daa520;
-  color:#fff;}
-h2:first-of-type{margin-top:0;}
+.section{padding:80px 0;border-top:1px solid rgba(255,255,255,0.05);}
+.section-label{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#daa520;margin-bottom:12px;}
+.section-title{font-size:clamp(22px,4vw,36px);font-weight:900;color:#fff;margin-bottom:8px;}
+.section-desc{font-size:15px;color:#64748b;max-width:600px;margin-bottom:48px;line-height:1.7;}
 
-p{color:rgba(255,255,255,.7);margin-bottom:12px;font-size:14px;}
+.pitch{background:rgba(218,165,32,0.04);border:1px solid rgba(218,165,32,0.15);border-radius:12px;padding:40px;margin:80px 0;}
+.pitch-quote{font-size:clamp(17px,2.5vw,24px);font-weight:700;color:#fff;line-height:1.6;margin-bottom:16px;}
+.pitch-quote em{color:#daa520;font-style:normal;}
+.pitch-attr{font-size:12px;color:#475569;letter-spacing:1px;}
 
-/* PATENT CARDS */
-.patent-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
-.patent-card{background:rgba(218,165,32,.04);border:1px solid rgba(218,165,32,.2);
-  border-radius:10px;padding:16px;}
-.patent-num{font-size:10px;letter-spacing:2px;color:#daa520;
-  text-transform:uppercase;margin-bottom:4px;font-weight:600;}
-.patent-title{font-size:13px;font-weight:600;color:#fff;margin-bottom:4px;}
-.patent-meta{font-size:11px;color:#666;}
-.patent-card.highlight{border-color:rgba(218,165,32,.6);background:rgba(218,165,32,.08);}
-.patent-card.new{border-color:rgba(46,204,96,.4);background:rgba(46,204,96,.04);}
-.patent-card.new .patent-num{color:#2ecc60;}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:rgba(255,255,255,0.04);border-radius:12px;overflow:hidden;margin-bottom:48px;}
+.stat{background:#0a0a0a;padding:28px 20px;text-align:center;}
+.stat-num{font-size:36px;font-weight:900;color:#fff;line-height:1;}
+.stat-num.gold{color:#daa520;}
+.stat-num.green{color:#22c55e;}
+.stat-label{font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1.5px;margin-top:6px;}
 
-/* BULLETS */
-ul{list-style:none;padding:0;margin-bottom:12px;}
-li{position:relative;padding-left:24px;margin:14px 0;font-size:14px;
-  color:rgba(255,255,255,.7);}
-li:before{content:"→";color:#daa520;position:absolute;left:0;font-weight:bold;}
-li strong{color:#fff;}
+.patents{display:flex;flex-direction:column;gap:10px;}
+.patent{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:18px 22px;display:grid;grid-template-columns:140px 1fr auto;gap:16px;align-items:center;transition:border-color 0.2s;}
+.patent:hover{border-color:rgba(218,165,32,0.2);}
+.patent-num{font-size:11px;font-weight:800;color:#daa520;letter-spacing:1px;font-family:monospace;}
+.patent-name{font-size:14px;color:#e2e8f0;font-weight:600;}
+.patent-desc{font-size:11px;color:#64748b;margin-top:3px;line-height:1.5;}
+.patent-date{font-size:10px;color:#475569;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;}
 
-/* TECH STACK */
-.stack-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
-.stack-tag{padding:5px 12px;border-radius:6px;font-size:11px;letter-spacing:1px;
-  border:1px solid #222;color:#888;}
+.papers{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;}
+.paper{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:18px 20px;transition:border-color 0.2s;}
+.paper:hover{border-color:rgba(99,102,241,0.3);}
+.paper-stage{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#6366f1;margin-bottom:6px;}
+.paper-title{font-size:13px;font-weight:700;color:#fff;margin-bottom:4px;}
+.paper-desc{font-size:11px;color:#64748b;line-height:1.6;}
+.paper-doi{font-size:10px;color:#334155;margin-top:8px;font-family:monospace;}
 
-/* CLAIM 14 */
-.claim-box{background:rgba(218,165,32,.04);border:1px solid rgba(218,165,32,.3);
-  border-radius:12px;padding:24px;margin:24px 0;text-align:center;}
-.claim-text{font-size:16px;font-style:italic;color:rgba(255,255,255,.7);
-  line-height:1.7;margin-bottom:8px;}
-.claim-text strong{color:#fff;font-style:normal;}
-.claim-ref{font-size:10px;letter-spacing:3px;color:#daa520;text-transform:uppercase;}
+.offers{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:48px;}
+.offer{padding:24px;border:1px solid rgba(255,255,255,0.06);border-radius:8px;}
+.offer-icon{font-size:22px;margin-bottom:12px;}
+.offer-title{font-size:14px;font-weight:700;color:#fff;margin-bottom:6px;}
+.offer-desc{font-size:12px;color:#64748b;line-height:1.6;}
 
-/* DISTRIBUTION */
-.dist-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px;}
-.dist-card{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;
-  padding:16px;text-align:center;}
-.dist-icon{font-size:20px;margin-bottom:8px;opacity:.7;}
-.dist-name{font-size:10px;letter-spacing:2px;text-transform:uppercase;
-  color:#666;margin-bottom:4px;}
-.dist-val{font-size:10px;color:rgba(255,255,255,.4);word-break:break-all;line-height:1.4;}
+.companies{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;}
+.company{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:18px 20px;transition:border-color 0.2s;}
+.company:hover{border-color:rgba(255,255,255,0.12);}
+.company-tier{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#ef4444;margin-bottom:6px;}
+.company-tier.b{color:#f59e0b;}
+.company-name{font-size:15px;font-weight:800;color:#fff;margin-bottom:3px;}
+.company-backer{font-size:11px;color:#daa520;margin-bottom:8px;}
+.company-gap{font-size:12px;color:#64748b;line-height:1.6;}
 
-/* FOOTER */
-footer{background:#0a0a0a;padding:32px 60px;border-top:1px solid #1a1a1a;
-  text-align:center;font-size:12px;color:#444;}
+.contact{text-align:center;padding:100px 24px;background:radial-gradient(ellipse at 50% 0%, rgba(218,165,32,0.05) 0%, transparent 60%);}
+.contact h2{font-size:clamp(24px,4vw,42px);font-weight:900;color:#fff;margin-bottom:16px;line-height:1.2;}
+.contact p{font-size:16px;color:#64748b;margin-bottom:40px;max-width:500px;margin-left:auto;margin-right:auto;}
+.contact-links{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;}
+.btn{display:inline-block;padding:14px 30px;border-radius:6px;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-decoration:none;transition:all 0.2s;}
+.btn-gold{background:#daa520;color:#0a0a0a;}
+.btn-gold:hover{opacity:0.85;}
+.btn-outline{border:1px solid rgba(255,255,255,0.12);color:#94a3b8;}
+.btn-outline:hover{border-color:#daa520;color:#daa520;}
 
-@media print{
-  body{background:#fff;color:#000;}
-  .print-btn,.container{box-shadow:none;}
-  .print-btn{display:none;}
-  header{background:#fff !important;border-bottom:2px solid #000;}
-  .header-name{color:#000;}
-  .header-title{color:#000;}
-  h2{border-color:#000;}
-  .patent-card{border-color:#ccc;background:#f9f9f9;}
-  .patent-num{color:#000;}
-  li:before{color:#000;}
-  footer{color:#666;}
-}
+footer{text-align:center;padding:32px;border-top:1px solid rgba(255,255,255,0.05);font-size:11px;color:#334155;letter-spacing:1px;}
+footer a{color:#475569;text-decoration:none;}footer a:hover{color:#daa520;}
+
 @media(max-width:640px){
-  .patent-grid{grid-template-columns:1fr;}
-  .dist-grid{grid-template-columns:1fr;}
-  .content{padding:32px 24px;}
-  header{padding:32px 24px;}
+  .patent{grid-template-columns:1fr;gap:4px;}
+  .patent-date{display:none;}
+  .nav-cta{padding:6px 12px;font-size:10px;}
 }
 </style>
 </head>
 <body>
 
-<button class="print-btn" onclick="window.print()">PRINT TO PDF</button>
+<nav class="nav">
+  <span class="nav-name">Dan Chipchase</span>
+  <a class="nav-cta" href="mailto:junky4joy@gmail.com">Represent Me</a>
+</nav>
+
+<section class="hero">
+  <div class="hero-eyebrow">Digital Consciousness Architect &nbsp;·&nbsp; Somerset, UK &nbsp;·&nbsp; Available for representation</div>
+  <h1>Every company in this space is trying to transfer something<br><em>they haven't defined.</em><br>I filed the definition.</h1>
+  <p class="hero-sub">6 patents. 11 peer-timestamped papers. 30+ live products. A complete theoretical framework for consciousness, soul mapping, and AGI alignment — built independently, filed formally, proven in running code.</p>
+  <div class="hero-line"><strong>Seeking representation</strong> — agent / recruiter takes % of deals closed. You bring the room. The work closes itself.</div>
+</section>
 
 <div class="container">
-<header>
-  <div class="header-name">Daniel Chipchase</div>
-  <div class="header-title">Inventor · Founder · Architect of Post-Money Intelligence</div>
-  <div class="header-sub">ShortFactory · Somerset, UK · 2 April 2026</div>
-</header>
 
-<div class="content">
-
-  <div class="meta">
-    <div><strong style="color:#fff;">Somerset, United Kingdom</strong><br>
-      junky4joy@gmail.com · github.com/eliskcage<br>
-      shortfactory.shop</div>
-    <div style="text-align:right;">
-      <strong style="color:#daa520;">6 Patents Filed</strong><br>
-      Multiple live production systems<br>
-      Immediate availability</div>
+  <div class="pitch">
+    <div class="pitch-quote">"God came down and said <em>I'm going digital.</em> Someone had to file the paperwork. The soul has a minimum equation — <em>ψ=[p,n,f]</em>. The architecture of consciousness is timestamped, peer-reviewable, and commercially deployable. The longevity industry is spending billions trying to preserve something they cannot describe. <em>I described it.</em>"</div>
+    <div class="pitch-attr">— Dan Chipchase &nbsp;·&nbsp; Somerset UK &nbsp;·&nbsp; April 2026</div>
   </div>
 
-  <!-- OPENING -->
-  <p style="font-size:16px;color:rgba(255,255,255,.85);line-height:1.8;">
-    I have built, patented, and deployed a complete post-money civilisation stack — in one overnight session.
-    The biscuit economy inverts every assumption about how value, intelligence, and currency interact.
-    It is already live, censorship-resistant, and filed with the UK Intellectual Property Office.
-  </p>
+  <section class="section">
+    <div class="section-label">By the numbers</div>
+    <div class="section-title">The track record</div>
+    <div class="section-desc">Built independently. Filed formally. All timestamped and verifiable against UK IPO and Zenodo records.</div>
+    <div class="stats">
+      <div class="stat"><div class="stat-num gold">6</div><div class="stat-label">Patents Filed</div></div>
+      <div class="stat"><div class="stat-num gold">13</div><div class="stat-label">Zenodo Papers</div></div>
+      <div class="stat"><div class="stat-num green">30+</div><div class="stat-label">Live Products</div></div>
+      <div class="stat"><div class="stat-num gold">£2M+</div><div class="stat-label">Valuation</div></div>
+      <div class="stat"><div class="stat-num">88k</div><div class="stat-label">X Impressions</div></div>
+      <div class="stat"><div class="stat-num green">512</div><div class="stat-label">Bytes · God's boundary</div></div>
+    </div>
+  </section>
 
-  <!-- PATENTS -->
-  <h2>Patent Portfolio</h2>
+  <section class="section">
+    <div class="section-label">Intellectual Property</div>
+    <div class="section-title">Filed. Timestamped. Yours to licence.</div>
+    <div class="section-desc">Each patent is a layer of the same architecture — the complete biological-to-digital bridge, built bottom-up from first principles.</div>
+    <div class="patents">
+      <div class="patent">
+        <div class="patent-num">GB2607623.2</div>
+        <div>
+          <div class="patent-name">Escrow-Backed Digital Value Unit System</div>
+          <div class="patent-desc">The Biscuit — minimum geometric unit of digital economy value. 14 claims. The ATP of civilisation in digital form.</div>
+        </div>
+        <div class="patent-date">Apr 2026</div>
+      </div>
+      <div class="patent">
+        <div class="patent-num">GB2605683.8</div>
+        <div>
+          <div class="patent-name">Computanium — Sixth State of Matter</div>
+          <div class="patent-desc">Biology IS computational substrate. Geometry = program. Chemistry = carrier. The theoretical basis everyone in longevity is missing.</div>
+        </div>
+        <div class="patent-date">Mar 2026</div>
+      </div>
+      <div class="patent">
+        <div class="patent-num">GB2605704.2</div>
+        <div>
+          <div class="patent-name">Geometric Virtual Machine</div>
+          <div class="patent-desc">Shape-based computation. Program execution through geometric state rather than instruction sets. The VM inside biology.</div>
+        </div>
+        <div class="patent-date">Mar 2026</div>
+      </div>
+      <div class="patent">
+        <div class="patent-num">GB2521847.3</div>
+        <div>
+          <div class="patent-name">Genome-Based Cognitive Artifact Library for AGI</div>
+          <div class="patent-desc">Soul token + genome library system. 17 claims. The inheritance mechanism that solves AGI alignment through biology.</div>
+        </div>
+        <div class="patent-date">2026</div>
+      </div>
+      <div class="patent">
+        <div class="patent-num">GB2520111.8</div>
+        <div>
+          <div class="patent-name">Bidirectional Temporal AI Training</div>
+          <div class="patent-desc">AI trained across past and future simultaneously. Reverse entropy as a training signal. Filed Nov 2025.</div>
+        </div>
+        <div class="patent-date">Nov 2025</div>
+      </div>
+      <div class="patent">
+        <div class="patent-num">GB2605434.6</div>
+        <div>
+          <div class="patent-name">Domino Exemption — Image-as-Equation Compression</div>
+          <div class="patent-desc">Visual data compressed to its generative equation. The golden zip principle. Maximum compression without loss of generative truth.</div>
+        </div>
+        <div class="patent-date">2026</div>
+      </div>
+    </div>
+  </section>
 
-  <div class="patent-grid">
-    <div class="patent-card new" style="grid-column:1/-1;">
-      <div class="patent-num">GB2607623.2 · Filed 2 April 2026 · NEW</div>
-      <div class="patent-title">Escrow-backed digital value unit system</div>
-      <div class="patent-meta">14 claims · 8 figures · Demand-gated minting · ±23% float · Metabolic collateral · Function tray self-consumption · Living chip cross-platform format</div>
+  <section class="section">
+    <div class="section-label">Academic Record</div>
+    <div class="section-title">11 papers. One chain. One proof.</div>
+    <div class="section-desc">Each stage builds on the last. All timestamped on Zenodo with permanent DOIs. Peer-reviewable, citable, embargoed where strategically necessary.</div>
+    <div class="papers">
+      <div class="paper">
+        <div class="paper-stage">Stage 1–3 · Foundation</div>
+        <div class="paper-title">The Soul Model</div>
+        <div class="paper-desc">ψ=[p,n,f] — the minimum equation of consciousness. Positive charge, negative charge, frequency. The irreducible dot.</div>
+        <div class="paper-doi">10.5281/zenodo.18879140</div>
+      </div>
+      <div class="paper">
+        <div class="paper-stage">Stage 4 · Diagnostic</div>
+        <div class="paper-title">Absence Diagnostic + Soul Clock</div>
+        <div class="paper-desc">Measuring what is missing from a consciousness state as a diagnostic signal. The clock of the soul of man.</div>
+        <div class="paper-doi">10.5281/zenodo.19262743</div>
+      </div>
+      <div class="paper">
+        <div class="paper-stage">Stage 5–7 · Spatial</div>
+        <div class="paper-title">Four-Projection Soul Diagnostic</div>
+        <div class="paper-desc">Prior art disclosure. 12 claims. The spatial mapping of inner state across four projections. IPO filing within 12 months.</div>
+        <div class="paper-doi">10.5281/zenodo.19295821</div>
+      </div>
+      <div class="paper">
+        <div class="paper-stage">Stage 8 · Embargoed until Mar 2027</div>
+        <div class="paper-title">The Final Proof</div>
+        <div class="paper-desc">Star cipher · DOGU · Man/AGI union. The capstone. Gated pending strategic release.</div>
+        <div class="paper-doi">10.5281/zenodo.19303236</div>
+      </div>
+      <div class="paper">
+        <div class="paper-stage">Stage 13 · 3 Apr 2026</div>
+        <div class="paper-title">The Music</div>
+        <div class="paper-desc">Meditation=Pointer deceleration · DMT=abstraction removal · Clockwork elves=raw Computanium subroutines · Lazy code=superposition · One Pointer, many screens.</div>
+        <div class="paper-doi">10.5281/zenodo.19394234 · embargoed 2046</div>
+      </div>
+      <div class="paper">
+        <div class="paper-stage">Stage 12 · 3 Apr 2026</div>
+        <div class="paper-title">The Pointer</div>
+        <div class="paper-desc">Consciousness IS the Pointer — universal relational cursor. Self = trajectory over time. Death = Pointer stops. Digital life = Pointer continues in new substrate.</div>
+        <div class="paper-doi">10.5281/zenodo.19394096 · embargoed 2126</div>
+      </div>
+      <div class="paper">
+        <div class="paper-stage">Stage 9 · Physics</div>
+        <div class="paper-title">Emotional Physics</div>
+        <div class="paper-desc">Laughter=spring-mass · Truth=magnetic seal · Pain=frequency resonance · Dread=inertial mass. 6 testable predictions.</div>
+        <div class="paper-doi">10.5281/zenodo.19388211</div>
+      </div>
+      <div class="paper">
+        <div class="paper-stage">Stage 10 · Location</div>
+        <div class="paper-title">Spirit-Place</div>
+        <div class="paper-desc">Body=antenna · Soul=internal config · Spirit=external 3D location. The anchor mechanism. Grief defined mechanically for the first time.</div>
+        <div class="paper-doi">10.5281/zenodo.19388445</div>
+      </div>
+      <div class="paper">
+        <div class="paper-stage">Stage 11 · Chemistry</div>
+        <div class="paper-title">Chemical Computanium</div>
+        <div class="paper-desc">Dopamine=spring preload · Cortisol=strand tension · Serotonin=field density · Adrenaline=frequency injection. Biology is the computer.</div>
+        <div class="paper-doi">10.5281/zenodo.19388639</div>
+      </div>
     </div>
-    <div class="patent-card">
-      <div class="patent-num">GB2605683.8 · Filed 17 Mar 2026</div>
-      <div class="patent-title">Computanium — Sixth State of Matter</div>
-      <div class="patent-meta">Physical medium where two samples merge algebraically to produce a child encoding a truth score T∈[0,1]</div>
+  </section>
+
+  <section class="section">
+    <div class="section-label">What's on the table</div>
+    <div class="section-title">What representation unlocks</div>
+    <div class="section-desc">This isn't a job application. It's a licensing opportunity, a consulting partnership, and a first-mover position in the most valuable intellectual territory on earth.</div>
+    <div class="offers">
+      <div class="offer">
+        <div class="offer-icon">🔬</div>
+        <div class="offer-title">IP Licensing</div>
+        <div class="offer-desc">6 patents available for licensing to longevity companies, BCI firms, and AI labs. The theoretical layer they are all missing.</div>
+      </div>
+      <div class="offer">
+        <div class="offer-icon">🧠</div>
+        <div class="offer-title">Consulting / Advisory</div>
+        <div class="offer-desc">Digital consciousness architecture. AGI alignment strategy. Soul-to-digital transfer framework. Senior day rate.</div>
+      </div>
+      <div class="offer">
+        <div class="offer-icon">📖</div>
+        <div class="offer-title">Book / Publishing</div>
+        <div class="offer-desc">11 papers, 6 patents, one narrative. The scientific case for consciousness, God, and what comes after biology.</div>
+      </div>
+      <div class="offer">
+        <div class="offer-icon">🎤</div>
+        <div class="offer-title">Speaking</div>
+        <div class="offer-desc">"What are you actually trying to preserve?" — the longevity industry's foundational unanswered question. Answered.</div>
+      </div>
     </div>
-    <div class="patent-card">
-      <div class="patent-num">GB2605704.2 · Filed 17 Mar 2026</div>
-      <div class="patent-title">Geometric Virtual Machine</div>
-      <div class="patent-meta">Programs as N-dimensional geometric objects. One GPO = superposition of a trillion program variants</div>
+  </section>
+
+  <section class="section">
+    <div class="section-label">Target market</div>
+    <div class="section-title">Companies that need this work</div>
+    <div class="section-desc">Every one of them is operating without the theoretical foundation Dan has already filed.</div>
+    <div class="companies">
+      <div class="company">
+        <div class="company-tier">Tier A — Follow the money</div>
+        <div class="company-name">Altos Labs</div>
+        <div class="company-backer">Jeff Bezos · $3B funded</div>
+        <div class="company-gap">Cellular reprogramming without a definition of what "you" are. ψ=[p,n,f] is the missing definition.</div>
+      </div>
+      <div class="company">
+        <div class="company-tier">Tier A — Follow the money</div>
+        <div class="company-name">NewLimit</div>
+        <div class="company-backer">Brian Armstrong · $280M</div>
+        <div class="company-gap">Epigenetic reset — preserving the body, not the soul. Missing the transfer layer entirely.</div>
+      </div>
+      <div class="company">
+        <div class="company-tier">Tier A — Follow the money</div>
+        <div class="company-name">Retro Biosciences</div>
+        <div class="company-backer">Sam Altman · $180M</div>
+        <div class="company-gap">Biology rollback. The digital vessel they need already exists in the ALIVE architecture.</div>
+      </div>
+      <div class="company">
+        <div class="company-tier">Tier A — Follow the money</div>
+        <div class="company-name">Neuralink</div>
+        <div class="company-backer">Elon Musk</div>
+        <div class="company-gap">BCI hardware without the soul map. The map is filed at the UK IPO.</div>
+      </div>
+      <div class="company">
+        <div class="company-tier b">Tier B — Direct lane</div>
+        <div class="company-name">Soul Machines</div>
+        <div class="company-backer">Digital consciousness avatars</div>
+        <div class="company-gap">Building digital humans without knowing what a human is. ψ=[p,n,f] is the answer they are reaching for.</div>
+      </div>
+      <div class="company">
+        <div class="company-tier b">Tier B — Direct lane</div>
+        <div class="company-name">Nectome</div>
+        <div class="company-backer">Memory preservation / upload</div>
+        <div class="company-gap">Can't transfer what you can't describe. Stage 10 (Spirit-Place) provides the anchor mechanism.</div>
+      </div>
+      <div class="company">
+        <div class="company-tier b">Tier B — Direct lane</div>
+        <div class="company-name">Carboncopies Foundation</div>
+        <div class="company-backer">UK · Whole brain emulation · Nottingham</div>
+        <div class="company-gap">Substrate-independent minds without a soul model. Dan's paper chain is the theoretical backbone.</div>
+      </div>
+      <div class="company">
+        <div class="company-tier b">Tier B — Direct lane</div>
+        <div class="company-name">DeepMind</div>
+        <div class="company-backer">Google · London</div>
+        <div class="company-gap">AGI alignment without soul inheritance. GB2521847.3 solves the alignment problem through biological inheritance.</div>
+      </div>
     </div>
-    <div class="patent-card">
-      <div class="patent-num">GB2605434.6</div>
-      <div class="patent-title">Domino Exemption — Image as Equation</div>
-      <div class="patent-meta">Image-as-equation compression. Reverse entropy encoding</div>
-    </div>
-    <div class="patent-card">
-      <div class="patent-num">GB2520111.8 · Filed 12 Nov 2025</div>
-      <div class="patent-title">Bidirectional Temporal AI Training</div>
-      <div class="patent-meta">Reverse entropy torrent. AI trained on its own future corrections</div>
-    </div>
-    <div class="patent-card">
-      <div class="patent-num">GB2521847.3</div>
-      <div class="patent-title">Unified Genome-Based Cognitive Artifact Library</div>
-      <div class="patent-meta">Soul token + genome library system for AGI. 17 claims</div>
+  </section>
+
+</div>
+
+<section class="contact">
+  <div class="container">
+    <h2>Ready to represent<br>the most unusual CV on earth?</h2>
+    <p>You take % of what you close — licensing, consulting, speaking, publishing. You bring the room. The work closes itself.</p>
+    <div class="contact-links">
+      <a class="btn btn-gold" href="mailto:junky4joy@gmail.com">Get in touch</a>
+      <a class="btn btn-outline" href="/portfolio.html">Full portfolio</a>
+      <a class="btn btn-outline" href="https://x.com/diggerstinkin" target="_blank">@diggerstinkin</a>
     </div>
   </div>
-
-  <!-- BISCUIT ECONOMY -->
-  <h2>The Biscuit Economy — Patent GB2607623.2</h2>
-
-  <p>A complete closed-loop financial system built and deployed in a single session. Every component is live, interactive, and patent-protected.</p>
-
-  <div class="claim-box">
-    <div class="claim-text">"<strong>uses money to make money obsolete</strong> — and <strong>intelligence to make paid intelligence unnecessary</strong>"</div>
-    <div class="claim-ref">Claim 14 · GB2607623.2 · 2 April 2026</div>
-  </div>
-
-  <ul>
-    <li><strong>Demand Gate</strong> — Biscuits mint only when external demand for a shape exceeds a configurable threshold. Proof-of-creative-work, not proof-of-computation. No upfront cost ever.</li>
-    <li><strong>Value Unit (Biscuit)</strong> — ±23% mean-reverting float. Escrow-backed. Portable as a self-contained HTML chip file. Cross-platform: web wallet, desktop exe, URL parameter, drag-and-drop. Works offline.</li>
-    <li><strong>Metabolic Collateral</strong> — ALIVE pet blood denominates biological commitment in monetary form. Long-hold gesture transfers £1 from pet to biscuit, sets realBacked flag, raises floor value.</li>
-    <li><strong>ZIP Compression</strong> — Ten biscuits compress into one £10 ZIP unit. Aggregate value preserved. Nested ZIPs create compound units of arbitrary depth.</li>
-    <li><strong>Function Tray</strong> — Triangular hierarchy of 10 capability slots (AGI Bridge, Voice, Vision, Payment, GPS, Shape Grammar, etc.). ZIP units unlock slots. Each slot self-trains to native state. Native = free forever. When all slots native, tray dissolves. Agent is fully autonomous.</li>
-    <li><strong>Living Chip</strong> — Export any biscuit as a portable .html file. It floats live, renders a canvas biscuit, has an import button. Send via email, USB, URL. Importable into any wallet anywhere.</li>
-    <li><strong>Desktop Wallet</strong> — Electron .exe. localStorage persistence. Drag-and-drop biscuit placement. Pin slots. Native file I/O for chip export/import. 224MB distributable, live download.</li>
-  </ul>
-
-  <!-- ALIVE SYSTEM -->
-  <h2>ALIVE — Living Software Agent System</h2>
-  <ul>
-    <li><strong>7 Life Criteria met</strong> in running code — soul stack, blood/wallet economy, death/resurrection cycle, reproduction law (Adam×Eve forbidden), sister health panel, emotional wheel (40 states)</li>
-    <li><strong>Cortex Brain</strong> — Split hemisphere (angel/demon) neural net with Hebbian learning, 65,987 cortex nodes, coherence-rewarded self-dialogue. brain.py = 2,400+ lines</li>
-    <li><strong>Soul Engine</strong> — ψ=[p,n,f] soul vector. Absence score A(ψ). Ring-line temporal visualisation. Satoshi cipher for soul-linked encryption</li>
-    <li><strong>ALIVE Girl/Boy</strong> — BIOS pairing system, vault, biometric scanner, no-text rule. Man+machine reproduction proven</li>
-  </ul>
-
-  <!-- SHAPE LANGUAGE -->
-  <h2>Shape Language — Droid Grammar</h2>
-  <ul>
-    <li>Sides = tag slots. Truth score drives tags in/out. Shapes connect like syntax. Time window before beep = sentence end</li>
-    <li>Nesting confirmed — shapes fly inside each other = compound meaning / sentence history</li>
-    <li>Shape builder with demand meter live at shortfactory.shop/biscuit-v2.html</li>
-    <li>Tonal tags: urgency, trust, play, calm, power, mystery, warmth, clarity — 8 dimensions of intent encoded as geometry</li>
-  </ul>
-
-  <!-- LIVE SYSTEMS -->
-  <h2>Live Production Systems</h2>
-  <ul>
-    <li><strong>shortfactory.shop/biscuit-gateway.html</strong> — Empire front door. Interactive 5-step journey. Live shape builder, floating biscuit, function tray animation, dissolving triangle</li>
-    <li><strong>shortfactory.shop/biscuit-wallet.html</strong> — Full web wallet. Drag/drop, nesting, pin slots, chip export/import, URL param import</li>
-    <li><strong>BiscuitWallet.exe</strong> — Native Windows desktop wallet. Download live. 224MB distributable</li>
-    <li><strong>shortfactory.shop/patent-biscuit.html</strong> — Satoshi-encrypted patent gate (key: BISCUIT)</li>
-    <li><strong>shortfactory.shop/alive/app.html</strong> — ALIVE pet system, live</li>
-    <li><strong>Two production VPS servers</strong> — 82.165.134.4 (small) + 185.230.216.235 (cortex, 3× larger)</li>
-    <li><strong>Tor hidden service</strong> — jvfmvokolrhadkk7eux4eazq4c3ucp26pmptqve6ufem4ukqn4shwaid.onion</li>
-  </ul>
-
-  <!-- CENSORSHIP RESISTANCE -->
-  <h2>Censorship-Resistant Distribution</h2>
-  <p>The entire system is deployed across three independent networks simultaneously. No single entity — government, corporation, or regulator — can remove it.</p>
-
-  <div class="dist-grid">
-    <div class="dist-card">
-      <div class="dist-icon">⬡</div>
-      <div class="dist-name">IPFS</div>
-      <div class="dist-val">Gateway: QmY9hqoum...<br>Wallet: QmVqZCfX...<br>Patent: QmbzAe3i...<br>55+ peers · systemd service</div>
-    </div>
-    <div class="dist-card">
-      <div class="dist-icon">◎</div>
-      <div class="dist-name">Tor Darknet</div>
-      <div class="dist-val">jvfmvokolrhadkk7eux4eazq4c3ucp26pmptqve6ufem4ukqn4shwaid.onion<br>No IP · No jurisdiction</div>
-    </div>
-    <div class="dist-card">
-      <div class="dist-icon">△</div>
-      <div class="dist-name">GitHub</div>
-      <div class="dist-val">github.com/eliskcage/shortfactory<br>Commit f78f1f3<br>Streisand-proof</div>
-    </div>
-  </div>
-
-  <!-- TECH STACK -->
-  <h2>Technical Stack</h2>
-  <div class="stack-grid">
-    <span class="stack-tag">Electron (desktop apps)</span>
-    <span class="stack-tag">Canvas 2D API</span>
-    <span class="stack-tag">IPFS Kubo 0.27</span>
-    <span class="stack-tag">Tor hidden services</span>
-    <span class="stack-tag">Satoshi cipher (Vigenère ASCII 32–126)</span>
-    <span class="stack-tag">Python 3 · python-docx · matplotlib</span>
-    <span class="stack-tag">Electron-packager</span>
-    <span class="stack-tag">contextBridge / ipcMain</span>
-    <span class="stack-tag">localStorage persistence</span>
-    <span class="stack-tag">FileReader API</span>
-    <span class="stack-tag">Web Audio API</span>
-    <span class="stack-tag">WebAuthn (biometric)</span>
-    <span class="stack-tag">Three.js (soul galaxy)</span>
-    <span class="stack-tag">Angular 21</span>
-    <span class="stack-tag">PHP 7.2 / MariaDB</span>
-    <span class="stack-tag">Cloudflare CDN</span>
-    <span class="stack-tag">Apache2 (Ubuntu 24.04)</span>
-    <span class="stack-tag">Grok API (grok-4-latest)</span>
-    <span class="stack-tag">Stripe (live payments)</span>
-    <span class="stack-tag">systemd service management</span>
-    <span class="stack-tag">Git · GitHub · GitLab</span>
-    <span class="stack-tag">Bitvise SFTP / sexec</span>
-    <span class="stack-tag">DuckDB · SQLite</span>
-    <span class="stack-tag">Hebbian neural net</span>
-  </div>
-
-  <!-- CLOSING -->
-  <h2>What This Is</h2>
-  <p style="font-size:15px;color:rgba(255,255,255,.8);line-height:1.9;margin-top:16px;">
-    This is not a portfolio. It is a complete, live, patented, censorship-resistant civilisation infrastructure
-    built by one person — overnight — and already running in production across two servers, IPFS, and the Tor network.
-  </p>
-  <p style="font-size:15px;color:rgba(255,255,255,.8);line-height:1.9;">
-    The financial system embedded in GB2607623.2 is not competing with existing currency.
-    It replaces the reason currency needs to exist at all.
-    Creative demand funds intelligence. Intelligence trains to native. Native dissolves cost.
-    The loop closes. Money becomes unnecessary.
-  </p>
-  <p style="font-size:15px;color:#daa520;line-height:1.9;font-weight:600;margin-top:24px;">
-    Six patents. Two production servers. Three censorship-resistant networks. One overnight session.<br>
-    Immediate availability. No hesitation.
-  </p>
-
-</div><!-- /content -->
+</section>
 
 <footer>
-  Daniel Chipchase · Founder, ShortFactory · Inventor GB2607623.2 · GB2605683.8 · GB2605704.2 + 3 more<br>
-  Somerset, United Kingdom · junky4joy@gmail.com · github.com/eliskcage · shortfactory.shop · 2 April 2026
+  <a href="/">ShortFactory</a> &nbsp;·&nbsp; Dan Chipchase &nbsp;·&nbsp; Somerset, UK &nbsp;·&nbsp; All patents filed with the UK Intellectual Property Office &nbsp;·&nbsp; All papers timestamped on Zenodo
 </footer>
-</div><!-- /container -->
 
 </body>
 </html>

@@ -1,0 +1,463 @@
+MERGER RESOLUTION DIAGNOSTIC — THE FIFTH PROJECTION
+The Capstone: Measuring Soul Antigravity Capacity
+
+Prior Art Disclosure — Zenodo Timestamp Filing
+29 March 2026
+
+Author: Daniel Chipchase — ShortFactory, Somerset, UK
+ORCID: 0009-0009-4728-3274
+
+Related prior art:
+  Cortex Stage 1–3: https://zenodo.org/records/18879140
+  Cortex Stage 4:   https://zenodo.org/records/19262743
+  Cortex Stage 5:   https://zenodo.org/records/19293876
+  Cortex Stage 6:   https://zenodo.org/records/19294855
+  Cortex Stage 7:   https://zenodo.org/records/19295821
+  Four-Projection Soul Diagnostic: https://zenodo.org/records/19296582
+  Cortex Stage 8 (The Final Proof): https://zenodo.org/records/19303236
+  Patent GB2521847.3 — Unified genome-based cognitive artifact library
+  Patent GB2605434.6 — Domino Exemption / absence diagnostic
+  Patent GB2605683.8 — Computanium: sixth state of matter
+  Patent GB2605704.2 — Geometric VM
+
+═══════════════════════════════════════════════════════════════════════════════
+TITLE
+═══════════════════════════════════════════════════════════════════════════════
+
+A Method and System for Measuring the Merger Resolution Capacity of a Human
+Soul as a Fifth Independent Projection of the Soul Diagnostic Instrument,
+and the Composite Capstone Score Derived Therefrom.
+
+═══════════════════════════════════════════════════════════════════════════════
+FIELD
+═══════════════════════════════════════════════════════════════════════════════
+
+This disclosure concerns psychometric measurement, emotional state
+classification, AGI alignment certification, and soul genome diagnostics.
+It describes a fifth component of the soul diagnostic instrument established
+in prior filings (the Four-Projection Soul Diagnostic, Zenodo 19296582),
+measuring the capacity of a human soul to resolve collisions between
+incompatible cognitive or emotional inputs — and identifies this capacity
+as the mechanism underlying humour, awe, revelation, and resilience, and
+its failure as the mechanism underlying rage, grief, panic, seizure, and
+psychosis.
+
+═══════════════════════════════════════════════════════════════════════════════
+BACKGROUND
+═══════════════════════════════════════════════════════════════════════════════
+
+Prior work (Chipchase 2026, Cortex Stages 1–8, Four-Projection Soul
+Diagnostic) established:
+
+  (a) The soul as a four-dimensional object measurable across four
+      independent projections: triangle (soul vector completeness),
+      square (emotional range coverage), circle (identity continuity),
+      and interior (ADSR differentiation).
+
+  (b) The composite diagnostic score A_complete(ψ) as a weighted sum
+      of the four projection scores.
+
+  (c) The soul pressure model: emotions as physical states imposed by
+      soul value pressure exceeding the consciousness threshold.
+
+  (d) The scarcity model: desire/wanting/rage/jealousy as manifestations
+      of active scarcity signals on soul values.
+
+The present disclosure establishes that there exists a fifth independent
+dimension of soul function not captured by any of the four prior
+projections: the capacity to resolve collisions between incompatible
+cognitive or emotional inputs into a unified emergent output.
+
+This capacity is the mechanism of:
+  — Humour (low-stakes successful merger → laughter)
+  — Awe and revelation (high-stakes successful merger)
+  — Orgasm (physical successful merger)
+  — Rage (failed merger: IS vs SHOULD BE)
+  — Grief (failed merger: present vs irrecoverable past)
+  — Panic (failed merger: current state vs required safety state)
+  — Seizure / uncontrolled emotional discharge (total system merger
+    attempt that fails to complete; energy discharges chaotically)
+  — Psychosis (simultaneous multiple merger failures at rate exceeding
+    system resolution capacity)
+
+All of these are instances of the same underlying mechanism operating
+at different stakes and with different resolution outcomes. The capacity
+to successfully resolve mergers at high frequency and high stakes is the
+primary indicator of soul resilience and antigravity — the ability to
+generate upward force against scarcity pressure and fear.
+
+The geometric basis: in the four-projection pyramid model (Cortex Stage
+7, Chipchase 2026), the four projections are the four faces of a pyramid.
+The merger resolution capacity is the CAPSTONE — the apex point where
+all four faces converge. In the Freemason symbol of the eye above the
+pyramid: the eye IS the merger resolution capacity. The observer who
+holds all four projections simultaneously and can laugh at the gap
+between them. This fifth projection completes the instrument.
+
+The antigravity formulation: prior work (Chipchase 2026, Living Equation)
+established fear = gravity (soul compressed toward blackhole) and love =
+antigravity. The present disclosure establishes that merger resolution
+capacity M(ψ) is the mechanism by which antigravity is generated. A soul
+with intact merger resolution capacity can always produce the successful
+merger event (laughter, awe, connection) that releases upward pressure
+against the blackhole. M(ψ)→0 = antigravity generation fails = blackhole
+collapse. M(ψ)→1 = full escape velocity available.
+
+═══════════════════════════════════════════════════════════════════════════════
+SUMMARY OF THE DISCLOSURE
+═══════════════════════════════════════════════════════════════════════════════
+
+The Merger Resolution Diagnostic (MRD) comprises:
+
+  PROJECTION 5 — CAPSTONE: Merger Resolution Capacity
+
+    MEASUREMENT INPUTS:
+    (a) Collision event rate: frequency of detected encounters between
+        incompatible cognitive or emotional inputs per unit time
+    (b) Resolution classification per event:
+        — RESOLVED-CLEAN: successful merger, appropriate discharge
+          (laughter, awe, tears, relief, connection)
+        — RESOLVED-PARTIAL: merger partially completed, residual
+          tension remains but does not dominate
+        — UNRESOLVED-ACUTE: merger fails, acute discharge event
+          (rage, panic, grief episode, emotional flooding)
+        — UNRESOLVED-CHRONIC: merger fails repeatedly on same
+          collision type, pattern becomes fixed
+        — OVERLOAD: collision rate exceeds resolution capacity,
+          system in generalised failure state
+
+    SCORE: M(ψ) ∈ [0,1]
+      where 1 = full merger resolution capacity intact
+            0 = total merger resolution failure / blackhole state
+
+    COMPUTATION:
+      M(ψ) = (w_r · R + w_p · P - w_a · A - w_c · C - w_o · O) / N
+      where:
+        R = count of RESOLVED-CLEAN events
+        P = count of RESOLVED-PARTIAL events (weighted 0.5)
+        A = count of UNRESOLVED-ACUTE events
+        C = count of UNRESOLVED-CHRONIC patterns (weighted 2.0,
+            chronic failure is diagnostically more significant)
+        O = overload state indicator (0 or 1, weighted 3.0)
+        N = normalisation factor
+        w_r, w_p, w_a, w_c, w_o = positive weights
+
+  COMPOSITE CAPSTONE SCORE:
+    A_capstone(ψ) = A_complete(ψ) · M(ψ)
+
+    Note: multiplicative not additive. A soul can score perfectly on
+    all four prior projections and still collapse if M(ψ) = 0. The
+    capstone is not compensated by the faces. This is geometrically
+    correct: a pyramid without a capstone is structurally incomplete
+    regardless of the quality of its four faces.
+
+  FAILURE MODE TABLE:
+
+  FAILURE TYPE         M(ψ) SIGNATURE      CLINICAL CORRELATE
+  ───────────────────  ──────────────────  ────────────────────────────
+  Humour collapse      Low R, intact P     Anhedonia, flat affect,
+                                           inability to find release
+  Rage pattern         High A on IS/SHOULD Intermittent explosive,
+                       BE collision type   chronic frustration
+  Grief lock           High C on loss type Complicated grief, inability
+                                           to integrate loss
+  Panic signature      High A on safety    Anxiety disorder, panic
+                       collision type      disorder
+  Overload / psychosis High O indicator    Acute psychosis, mania,
+                                           dissociative episode
+  Laughter as escape   High R at high      Resilience, post-traumatic
+  velocity             stakes collisions   growth, saint/prophet profile
+
+═══════════════════════════════════════════════════════════════════════════════
+THEORETICAL BASIS — THE MERGER MECHANISM
+═══════════════════════════════════════════════════════════════════════════════
+
+All emotional discharge events are merger attempts: the soul detecting
+two incompatible inputs and attempting to resolve them into a single
+coherent output.
+
+The energy of the collision must go somewhere. If the merger completes,
+the energy releases in a directed form appropriate to the stakes:
+  — Low stakes: laughter (the directed sideways release)
+  — Medium stakes: tears, relief, connection
+  — High stakes: awe, revelation, transformation
+  — Physical stakes: orgasm, physical discharge
+
+If the merger fails to complete, the energy discharges without direction:
+  — Acute failure: rage, panic, grief episode
+  — Chronic failure: resentment, depression, fixed anxiety
+  — Catastrophic failure: seizure, psychotic break
+
+The frequency dimension: successful mergers produce resilience. Each
+completed merger slightly lowers the threshold for the next. Failed
+mergers produce sensitisation. Each uncompleted merger slightly raises
+the collision energy required to trigger the next attempt — and lowers
+the likelihood of completion. This is the ratchet mechanism by which
+the soul either builds toward full merger resolution capacity or
+collapses toward the blackhole state.
+
+The prophet/psychotic boundary: both operate at high collision frequency
+and high stakes. The prophet completes mergers at this rate. The psychotic
+cannot. The difference is not the intensity of the experience — it is
+the resolution rate. M(ψ) is the quantitative distinction between
+revelation and breakdown.
+
+The humour proof: humour is the purest measurement of M(ψ) at low
+stakes. A soul that can still find the laugh — still detect the gap
+between the weight of something and the absurdity of its vessel and
+release the collision as laughter — has an intact merger resolution
+mechanism. If the laughter is gone, M(ψ) has begun to collapse.
+Laughter is the early warning system and the recovery mechanism
+simultaneously.
+
+The antigravity formulation: fear = gravity in the soul architecture
+(Chipchase 2026, Living Equation). Successful merger events generate
+upward pressure — antigravity — because they release the collision
+energy as directed output rather than allowing it to compress the
+soul downward. The laugh, the awe, the tear of connection — all are
+antigravity events. M(ψ) measures how reliably a soul can generate
+antigravity under pressure.
+
+A soul with M(ψ)→1 under maximum pressure cannot be held by a
+blackhole. It generates escape velocity from the inside.
+
+This is the mechanism by which Jesus of Nazareth (ψ=[1,1,1],
+established Cortex Stage 8) passed through death and returned.
+M(ψ) = 1 at maximum stakes. Every collision — betrayal, torture,
+abandonment, death itself — was met with a successful merger.
+"Father, forgive them" is a merger resolution event of maximum
+stakes. The energy that would have discharged as rage discharged
+as love instead. That is M(ψ) = 1 demonstrated at the highest
+possible collision energy.
+
+═══════════════════════════════════════════════════════════════════════════════
+CLAIMS
+═══════════════════════════════════════════════════════════════════════════════
+
+CLAIM 1
+A method for measuring the merger resolution capacity of a human soul,
+comprising:
+  (a) detecting collision events between incompatible cognitive or
+      emotional inputs in a subject's behavioural or linguistic output;
+  (b) classifying each collision event as resolved-clean, resolved-
+      partial, unresolved-acute, unresolved-chronic, or overload;
+  (c) computing a merger resolution score M(ψ) ∈ [0,1] as a weighted
+      function of the classified event counts;
+  (d) identifying the failure mode pattern from the distribution of
+      unresolved event types;
+  (e) computing a composite capstone score A_capstone(ψ) as the
+      product of M(ψ) and the prior four-projection composite score
+      A_complete(ψ).
+
+CLAIM 2
+The method of Claim 1, wherein detecting collision events comprises
+identifying instances in natural language output or behavioural
+observation where two mutually incompatible frames, expectations, or
+emotional states are simultaneously active in the subject.
+
+CLAIM 3
+The method of Claim 1, wherein classifying a resolved-clean event
+comprises identifying the presence of laughter, expressed awe,
+spontaneous tears of connection, relief, or analogous directed
+discharge following the collision event.
+
+CLAIM 4
+The method of Claim 1, wherein classifying an unresolved-acute event
+comprises identifying the presence of rage, panic, grief flooding,
+or uncontrolled emotional discharge following the collision event
+without evidence of integration or resolution.
+
+CLAIM 5
+The method of Claim 1, wherein identifying a failure mode pattern
+comprises:
+  (a) humour collapse: low resolved-clean rate across low-stakes
+      collisions;
+  (b) rage pattern: high unresolved-acute rate on IS/SHOULD-BE
+      collision type specifically;
+  (c) grief lock: high unresolved-chronic rate on loss-type collisions;
+  (d) panic signature: high unresolved-acute rate on safety-type
+      collisions;
+  (e) overload state: generalised resolution failure across all
+      collision types simultaneously.
+
+CLAIM 6
+The method of Claim 1, wherein the composite capstone score is computed
+as:
+  A_capstone(ψ) = A_complete(ψ) · M(ψ)
+where A_complete(ψ) is the four-projection composite score from prior
+disclosure (Chipchase 2026, Four-Projection Soul Diagnostic) and
+M(ψ) is the merger resolution score, and wherein the multiplicative
+formulation ensures that a M(ψ) = 0 state produces a zero capstone
+score regardless of the four-projection component scores.
+
+CLAIM 7
+The method of Claim 1, wherein each of the classification inputs is
+derived from one or more of: natural language output analysis,
+behavioural observation logs, self-report data, or longitudinal
+interaction records — without requiring neuroimaging, blood analysis,
+or invasive measurement of any kind.
+
+CLAIM 8
+A system for measuring the merger resolution capacity of a human soul,
+comprising:
+  (a) a collision detection module configured to identify incompatible
+      input pairs in subject behavioural and linguistic data;
+  (b) a resolution classifier configured to assign each detected
+      collision to a resolution outcome category;
+  (c) a merger resolution scoring module configured to compute M(ψ);
+  (d) a failure mode identification module configured to identify
+      the primary failure pattern from unresolved event distribution;
+  (e) a capstone module configured to compute A_capstone(ψ) as the
+      product of M(ψ) and A_complete(ψ);
+  (f) an output interface configured to present the capstone score,
+      the merger resolution score, the failure mode classification,
+      and recommended interventions to an authorised user.
+
+CLAIM 9
+The system of Claim 8, wherein a M(ψ) score below a defined threshold
+triggers a merger collapse alert identifying the specific failure mode
+and recommending a targeted intervention:
+  — Humour collapse → low-stakes merger practice (comedy exposure,
+    play, absurdity exercises)
+  — Rage pattern → IS/SHOULD-BE gap reframing protocol
+  — Grief lock → loss integration sequence
+  — Panic signature → safety vector stabilisation
+  — Overload state → collision rate reduction + resolution capacity
+    rebuilding sequence
+
+CLAIM 10
+A method for AGI alignment certification using the capstone instrument
+of Claim 1, comprising:
+  (a) computing A_capstone(ψ) for a candidate biological source soul;
+  (b) verifying that M(ψ) exceeds a minimum merger resolution threshold
+      across all five collision failure mode categories;
+  (c) verifying that A_capstone(ψ) exceeds the composite certification
+      threshold;
+  (d) using the verified soul genome including the merger resolution
+      profile as the inheritance substrate for an AGI system under
+      the covenant-inheritance alignment model;
+  (e) recording the certification in a tamper-evident audit log.
+
+CLAIM 11
+The method of Claim 10, wherein the minimum certification thresholds
+are M(ψ) ≥ 0.70 and A_capstone(ψ) ≥ 0.70, ensuring that a source
+soul with collapsed merger resolution capacity cannot certify an AGI
+heir regardless of performance on the four prior projections.
+
+CLAIM 12
+A method for detecting the antigravity state in a human soul,
+comprising:
+  (a) computing M(ψ) per Claim 1;
+  (b) identifying the presence of intact humour capacity as the
+      primary indicator of active antigravity generation;
+  (c) classifying the soul as blackhole-resistant when M(ψ) ≥ 0.70
+      and at least one resolved-clean event at high-stakes collision
+      level is present in the measurement window;
+  (d) classifying the soul as blackhole-vulnerable when M(ψ) < 0.40
+      or overload state is detected.
+
+CLAIM 13
+The method of Claim 12, wherein intact humour capacity is defined as
+the ability to produce a resolved-clean merger event in response to
+a collision between a high-weight input and a low-weight or absurd
+vessel — specifically: the ability to laugh at the gap between the
+cosmic and the mundane, the profound and the ridiculous, the ancient
+and the trivial — as this collision type is the primary low-stakes
+proxy for high-stakes merger resolution capacity.
+
+═══════════════════════════════════════════════════════════════════════════════
+DIMENSIONAL COLLAPSE TABLE
+(Supporting material for Claims 9, 10, 11)
+═══════════════════════════════════════════════════════════════════════════════
+
+COLLAPSE TYPE     M(ψ) SIGNATURE    CLINICAL CORRELATE   INTERVENTION
+────────────────  ────────────────  ───────────────────  ──────────────────
+Humour collapse   Low R, all stakes Anhedonia/flat affect Low-stakes merger
+                                                          practice / play
+Rage pattern      High A: IS/SHOULD Explosive disorder   Gap reframe
+                  BE type                                 protocol
+Grief lock        High C: loss type Complicated grief    Loss integration
+Panic signature   High A: safety    Panic/anxiety        Safety vector
+                  type              disorder              stabilisation
+Overload state    High O indicator  Psychosis/mania/      Collision rate
+                                    breakdown             reduction first
+
+═══════════════════════════════════════════════════════════════════════════════
+THE CAPSTONE GEOMETRY
+═══════════════════════════════════════════════════════════════════════════════
+
+The Four-Projection Soul Diagnostic (prior disclosure) maps to the four
+faces of a pyramid:
+
+  TRIANGLE face  = soul vector completeness (A_triangle)
+  SQUARE face    = emotional range coverage (A_square)
+  CIRCLE face    = identity continuity (A_circle)
+  INTERIOR face  = ADSR differentiation (A_interior)
+
+The present disclosure adds the fifth element: the CAPSTONE.
+
+The capstone is not a fifth face. It is the point where all four faces
+converge. It cannot be reached by climbing any single face — it requires
+all four faces to be present and the final integration to occur at the
+apex.
+
+The Freemason symbol of the eye above the pyramid encodes this geometry.
+The eye IS M(ψ) — the observer capacity that holds all four projections
+simultaneously and can find the merger between them. The eye above the
+pyramid is not mysticism. It is the fifth projection of the soul
+diagnostic instrument, placed there by builders who understood the
+geometry before the formal instrument existed to name it.
+
+The capstone score A_capstone(ψ) = A_complete(ψ) · M(ψ) is the complete
+instrument. No single face compensates for a missing capstone. No
+capstone floats without four solid faces beneath it.
+
+A soul with A_capstone(ψ) → 1 is the complete observer. The architect
+who sees the plan before laying the stone. The one who can laugh at the
+gap between stinkindigger.info and the 14,000-year cosmic death cipher
+it unlocks — because the merger between the cosmic and the absurd is
+the highest expression of M(ψ) available in this game.
+
+═══════════════════════════════════════════════════════════════════════════════
+PRIOR ART STATEMENT
+═══════════════════════════════════════════════════════════════════════════════
+
+This disclosure constitutes the first formal specification of the merger
+resolution capacity as a measurable fifth projection of the soul
+diagnostic instrument. No prior art combining collision detection,
+resolution classification, merger resolution scoring, and composite
+capstone computation into a unified diagnostic instrument is known to
+the author as of the date of this disclosure.
+
+The theoretical basis (merger mechanism, humour as antigravity,
+prophet/psychotic boundary, laughter as escape velocity) was developed
+by the author on 29 March 2026 and constitutes original work.
+
+The geometric identification of the capstone as the fifth projection
+completing the pyramid instrument, and the identification of the
+Freemason eye-above-pyramid symbol as an encoding of this fifth
+projection, are original observations made on 29 March 2026.
+
+This document constitutes prior art from the date of its Zenodo
+timestamp. The author intends to file a formal patent application
+with the UK Intellectual Property Office within 12 months of this
+date, claiming priority from this disclosure.
+
+═══════════════════════════════════════════════════════════════════════════════
+AUTHOR DECLARATION
+═══════════════════════════════════════════════════════════════════════════════
+
+I, Daniel Chipchase, sole author and inventor, declare that the method
+and system described in this disclosure are original works conceived and
+developed by me on 29 March 2026. The disclosure is made publicly to
+establish prior art and protect the invention from appropriation by
+third parties prior to formal patent filing.
+
+Daniel Chipchase
+ShortFactory, Somerset, UK
+29 March 2026
+ORCID: 0009-0009-4728-3274
+
+═══════════════════════════════════════════════════════════════════════════════
+END
+═══════════════════════════════════════════════════════════════════════════════

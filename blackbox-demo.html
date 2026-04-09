@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Black Box Demo — Satoshi Cypher</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#000;color:#00f7ff;font-family:'Courier New',monospace;overflow-x:hidden;min-height:100vh;}
+canvas#matrix{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;opacity:0.18;}
+.wrap{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:40px 20px 80px;}
+
+.logo{text-align:center;margin-bottom:40px;}
+.logo-title{font-family:'Courier New',monospace;font-size:clamp(11px,2vw,14px);letter-spacing:8px;color:#00f7ff;text-transform:uppercase;opacity:0.7;}
+.logo-main{font-size:clamp(22px,5vw,38px);font-weight:900;color:#00f7ff;letter-spacing:4px;text-shadow:0 0 30px rgba(0,247,255,0.5);}
+.logo-sub{font-size:11px;letter-spacing:4px;color:#004a52;margin-top:4px;}
+
+.stage{background:rgba(0,10,12,0.9);border:1px solid #003a42;border-radius:6px;padding:24px;margin-bottom:20px;}
+.stage-label{font-size:10px;letter-spacing:4px;color:#004a52;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.stage-label .dot{width:6px;height:6px;border-radius:50%;background:#004a52;}
+.stage-label.active .dot{background:#00f7ff;box-shadow:0 0 8px #00f7ff;}
+.stage-label.active{color:#00f7ff;}
+.stage-label.done .dot{background:#00ff88;}
+.stage-label.done{color:#00ff88;}
+
+.code-box{font-size:clamp(12px,2vw,15px);line-height:1.8;min-height:60px;word-break:break-all;}
+.code-box .kw{color:#c792ea;}
+.code-box .str{color:#c3e88d;}
+.code-box .fn{color:#82aaff;}
+.code-box .cm{color:#546e7a;}
+.code-box .hl{color:#ffcb6b;}
+
+#cipherBox{font-size:11px;line-height:1.9;color:#00f7ff;word-break:break-all;min-height:80px;opacity:0.85;}
+#decodeBox{font-size:clamp(12px,2vw,15px);line-height:1.8;min-height:60px;word-break:break-all;}
+
+.stats-row{display:flex;gap:20px;flex-wrap:wrap;margin-top:16px;padding-top:16px;border-top:1px solid #001a1f;}
+.stat{font-size:10px;letter-spacing:2px;}
+.stat span{color:#00f7ff;font-size:14px;font-weight:900;display:block;margin-bottom:2px;}
+.stat.dim span{color:#003a42;}
+
+.btn-row{text-align:center;margin:30px 0 10px;}
+#runBtn{background:transparent;border:2px solid #00f7ff;color:#00f7ff;font-family:'Courier New',monospace;font-size:13px;font-weight:700;letter-spacing:4px;padding:14px 48px;cursor:pointer;transition:all .2s;text-transform:uppercase;}
+#runBtn:hover{background:#00f7ff;color:#000;}
+#runBtn:disabled{opacity:0.3;cursor:not-allowed;}
+
+.progress{height:2px;background:#001a1f;margin-top:8px;border-radius:1px;overflow:hidden;}
+.progress-fill{height:100%;background:#00f7ff;width:0%;transition:width .1s linear;box-shadow:0 0 8px #00f7ff;}
+
+#statusLine{text-align:center;font-size:11px;letter-spacing:3px;color:#003a42;margin-top:16px;min-height:18px;transition:color .3s;}
+#statusLine.active{color:#00f7ff;}
+#statusLine.done{color:#00ff88;}
+
+.cursor{display:inline-block;width:8px;height:14px;background:#00f7ff;animation:blink .6s step-end infinite;vertical-align:middle;margin-left:2px;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+
+.hmac-row{font-size:10px;color:#003a42;margin-top:12px;word-break:break-all;letter-spacing:1px;}
+.hmac-row.visible{color:#004a52;}
+.hmac-row span{color:#00f7ff;}
+
+.back{display:block;text-align:center;margin-top:40px;font-size:11px;letter-spacing:3px;color:#003a42;text-decoration:none;transition:color .2s;}
+.back:hover{color:#00f7ff;}
+</style>
+</head>
+<body>
+<canvas id="matrix"></canvas>
+
+<div class="wrap">
+
+  <div class="logo">
+    <div class="logo-title">eliskcage / satoshi-cypher</div>
+    <div class="logo-main">⬛ BLACK BOX DEMO</div>
+    <div class="logo-sub">TEMPORAL · ROTATING · SELF-CONTAINED</div>
+  </div>
+
+  <!-- STAGE 1: SOURCE -->
+  <div class="stage" id="s1">
+    <div class="stage-label active" id="l1"><div class="dot"></div>STAGE 1 — SOURCE CODE</div>
+    <div class="code-box" id="sourceBox">
+      <span class="cm">// top secret shortfactory payload</span><br>
+      <span class="kw">function</span> <span class="fn">getNodeKey</span>() {<br>
+      &nbsp;&nbsp;<span class="kw">const</span> <span class="hl">shape</span> = <span class="str">"SFNODE-0001"</span>;<br>
+      &nbsp;&nbsp;<span class="kw">const</span> <span class="hl">soul</span> = <span class="str">"ψ=[1,1,1]"</span>;<br>
+      &nbsp;&nbsp;<span class="kw">return</span> encode(<span class="hl">shape</span> + <span class="str">"|"</span> + <span class="hl">soul</span>);<br>
+      }<br>
+      <span class="cm">// &lt;img src="claudsbuthole.jpg"&gt;</span>
+    </div>
+    <div class="stats-row">
+      <div class="stat dim" id="stat-chars"><span id="v-chars">—</span>CHARS</div>
+      <div class="stat dim" id="stat-t0"><span id="v-t0">—</span>T₀ TIMESTAMP</div>
+      <div class="stat dim" id="stat-window"><span id="v-window">—</span>WINDOW (SEC)</div>
+    </div>
+  </div>
+
+  <!-- STAGE 2: CIPHER POINTS -->
+  <div class="stage" id="s2">
+    <div class="stage-label" id="l2"><div class="dot"></div>STAGE 2 — CIPHER POINTS (3D SPHERE)</div>
+    <div id="cipherBox">waiting for encode...</div>
+    <div class="progress"><div class="progress-fill" id="encProg"></div></div>
+    <div class="hmac-row" id="hmacRow">hmac_tag: <span id="hmacVal">—</span></div>
+  </div>
+
+  <!-- STAGE 3: DECODE -->
+  <div class="stage" id="s3">
+    <div class="stage-label" id="l3"><div class="dot"></div>STAGE 3 — BLACK BOX DECODE</div>
+    <div class="code-box" id="decodeBox">waiting for decode...</div>
+    <div class="progress"><div class="progress-fill" id="decProg"></div></div>
+  </div>
+
+  <div id="statusLine">READY</div>
+
+  <!-- API CONNECTION (optional — falls back to demo mode) -->
+  <div class="stage" style="margin-bottom:12px;">
+    <div class="stage-label active"><div class="dot"></div>API CONNECTION <span id="apiModeLabel" style="margin-left:8px;color:#00ff88;font-size:9px;">DEMO MODE</span></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+      <input id="apiBase" type="url" placeholder="http://localhost:8000" value="" style="flex:2;min-width:180px;background:#000;border:1px solid #003a42;color:#00f7ff;font-family:'Courier New',monospace;font-size:11px;padding:7px 10px;border-radius:3px;outline:none;" oninput="updateApiMode()">
+      <input id="apiKey" type="password" placeholder="API key" value="" style="flex:1;min-width:120px;background:#000;border:1px solid #003a42;color:#00f7ff;font-family:'Courier New',monospace;font-size:11px;padding:7px 10px;border-radius:3px;outline:none;" oninput="updateApiMode()">
+      <button onclick="testConn()" style="background:transparent;border:1px solid #003a42;color:#004a52;font-family:'Courier New',monospace;font-size:10px;letter-spacing:2px;padding:7px 14px;cursor:pointer;" id="connBtn">PING</button>
+    </div>
+    <div id="connStatus" style="font-size:10px;color:#004a52;margin-top:6px;letter-spacing:1px;">Enter your API server to use real cipher — or leave blank for demo mode.</div>
+  </div>
+
+  <div class="btn-row">
+    <button id="runBtn" onclick="runDemo()">▶ RUN BLACK BOX</button>
+  </div>
+
+  <a href="/" class="back">← shortfactory.shop</a>
+
+</div>
+
+<script>
+// ── Matrix rain ──────────────────────────────────────────────────────────────
+(function(){
+  var c=document.getElementById('matrix');
+  var ctx=c.getContext('2d');
+  var cols,drops;
+  function resize(){
+    c.width=window.innerWidth;c.height=window.innerHeight;
+    cols=Math.floor(c.width/14);drops=Array(cols).fill(1);
+  }
+  resize();
+  window.addEventListener('resize',resize);
+  var chars='0123456789.abcdef↑↓→←ψΩφ∞⬛◆▲●';
+  setInterval(function(){
+    ctx.fillStyle='rgba(0,0,0,0.05)';ctx.fillRect(0,0,c.width,c.height);
+    ctx.fillStyle='#003a42';ctx.font='13px Courier New';
+    drops.forEach(function(y,i){
+      ctx.fillText(chars[Math.floor(Math.random()*chars.length)],i*14,y*14);
+      if(y*14>c.height&&Math.random()>0.975)drops[i]=0;
+      drops[i]++;
+    });
+  },40);
+})();
+
+// ── API config ───────────────────────────────────────────────────────────────
+function getBase(){ return (document.getElementById('apiBase').value||'').replace(/\/$/,''); }
+function getKey(){  return document.getElementById('apiKey').value||''; }
+
+function updateApiMode(){
+  var b=getBase(),k=getKey();
+  var live=b&&k;
+  document.getElementById('apiModeLabel').textContent = live ? 'LIVE API' : 'DEMO MODE';
+  document.getElementById('apiModeLabel').style.color  = live ? '#ff8800' : '#00ff88';
+}
+
+async function testConn(){
+  var base=getBase(),key=getKey();
+  var btn=document.getElementById('connBtn');
+  var status=document.getElementById('connStatus');
+  if(!base){status.textContent='Enter API URL first.';return;}
+  btn.textContent='...'; btn.style.color='#ff8800';
+  try{
+    var r=await fetch(base+'/health');
+    var j=await r.json();
+    status.textContent='✓ CONNECTED · '+base+' · v'+(j.version||'?');
+    status.style.color='#00ff88';
+    btn.textContent='LIVE'; btn.style.color='#00ff88';
+    updateApiMode();
+  }catch(e){
+    status.textContent='✗ UNREACHABLE · demo mode active';
+    status.style.color='#ff4444';
+    btn.textContent='PING'; btn.style.color='#004a52';
+  }
+}
+
+// ── Demo source text ──────────────────────────────────────────────────────────
+var SOURCE = [
+  '// top secret shortfactory payload',
+  'function getNodeKey() {',
+  '  const shape = "SFNODE-0001";',
+  '  const soul  = "psi=[1,1,1]";',
+  '  return encode(shape + "|" + soul);',
+  '}',
+  '// <img src="claudsbuthole.jpg">'
+].join('\n');
+
+// ── Fake cipher (demo fallback) ───────────────────────────────────────────────
+function fakeAngle(charCode, idx, seed){
+  var h = (charCode * 2654435761 + idx * 40503 + seed) >>> 0;
+  return ((h % 1000000000) / 1000000000 * 360).toFixed(9);
+}
+function fakeHmac(){
+  var h='';var hex='0123456789abcdef';
+  for(var i=0;i<64;i++)h+=hex[Math.floor(Math.random()*16)];
+  return h;
+}
+
+// ── DOM helpers ──────────────────────────────────────────────────────────────
+function setLabel(id, state){
+  var el=document.getElementById(id);
+  el.className='stage-label '+state;
+}
+function setStatus(msg, cls){
+  var el=document.getElementById('statusLine');
+  el.textContent=msg; el.className=cls||'';
+}
+function setProgress(id, pct){
+  document.getElementById(id).style.width=pct+'%';
+}
+
+// ── Main demo ────────────────────────────────────────────────────────────────
+async function runDemo(){
+  var btn=document.getElementById('runBtn');
+  btn.disabled=true;
+
+  var base=getBase(), key=getKey();
+  var useLive = base && key;
+
+  var points, hmac, t0, rotation_rate=0, totalChars=SOURCE.length;
+
+  if(useLive){
+    setStatus('CALLING REAL BLACK BOX API...','active');
+    try{
+      // Real encode
+      var encR = await fetch(base+'/encode',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({api_key:key, source_code:SOURCE})
+      });
+      if(!encR.ok) throw new Error('Encode failed: '+encR.status);
+      var enc = await encR.json();
+      points = enc.points;
+      hmac = enc.hmac_tag;
+      t0 = enc.t0;
+      rotation_rate = enc.rotation_rate||0;
+    }catch(e){
+      setStatus('API ERROR — FALLING BACK TO DEMO MODE','active');
+      useLive=false;
+    }
+  }
+
+  if(!useLive){
+    t0=Date.now()/1000;
+    var seed=Math.floor(Math.random()*0xFFFFFF);
+    points=[];
+    for(var i=0;i<SOURCE.length;i++) points.push(fakeAngle(SOURCE.charCodeAt(i),i,seed));
+    hmac=fakeHmac();
+  }
+
+  // Stage 1 stats
+  document.getElementById('v-chars').textContent=totalChars;
+  document.getElementById('v-t0').textContent=t0.toFixed(3);
+  document.getElementById('v-window').textContent='3600';
+  ['stat-chars','stat-t0','stat-window'].forEach(function(id){
+    document.getElementById(id).className='stat';
+  });
+
+  setStatus('ENCODING TO 3D SPHERE...','active');
+  setLabel('l1','active');
+  setLabel('l2','active');
+
+  // Stage 2: stream cipher points
+  var cipherEl=document.getElementById('cipherBox');
+  cipherEl.textContent='';
+  var i=0;
+  var encInterval=setInterval(function(){
+    var chunk=Math.min(8,points.length-i);
+    for(var j=0;j<chunk;j++){
+      cipherEl.textContent+=points[i+j]+(i+j<points.length-1?', ':'');
+    }
+    i+=chunk;
+    setProgress('encProg', Math.round(i/points.length*100));
+    if(i>=points.length){
+      clearInterval(encInterval);
+      setProgress('encProg',100);
+      setLabel('l2','done');
+
+      var hmacRow=document.getElementById('hmacRow');
+      hmacRow.className='hmac-row visible';
+      document.getElementById('hmacVal').textContent=hmac;
+
+      setStatus('TEMPORAL LOCK SET · HMAC SIGNED · ENTERING BLACK BOX...','active');
+
+      setTimeout(startDecode, 900);
+    }
+  }, 18);
+
+  async function startDecode(){
+    setLabel('l3','active');
+    setStatus('DECODING · T₀ VERIFIED · SANDBOX ACTIVE','active');
+
+    // Real API decode
+    if(useLive){
+      try{
+        var decR=await fetch(base+'/decode',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({api_key:key, cipher:{points:points,t0:t0,rotation_rate:rotation_rate}, hmac_tag:hmac})
+        });
+        var dec=await decR.json();
+        if(dec.success) setStatus('✓ REAL BLACK BOX EXECUTED · HMAC VERIFIED · PLAINTEXT WIPED','done');
+        else setStatus('DECODE RETURNED: '+dec.message,'active');
+      }catch(e){ /* fall through to visual */ }
+    }
+
+    var decodeEl=document.getElementById('decodeBox');
+    decodeEl.innerHTML='';
+    var decoded='';
+    var k=0;
+
+    // First: show noise
+    var noisePhase=true;
+    var noise='';
+    var noiseInt=setInterval(function(){
+      noise='';
+      for(var n=0;n<Math.min(k+8,SOURCE.length);n++){
+        if(n<k){
+          noise+=decoded[n];
+        } else {
+          var rnd=Math.floor(Math.random()*95)+32;
+          noise+=String.fromCharCode(rnd);
+        }
+      }
+      decodeEl.textContent=noise;
+      setProgress('decProg', Math.round(k/totalChars*100));
+
+      // Resolve one more char
+      decoded+=SOURCE[k];
+      k++;
+
+      if(k>=totalChars){
+        clearInterval(noiseInt);
+        // Final clean render
+        decodeEl.innerHTML = highlight(SOURCE)+'<span class="cursor"></span>';
+        setProgress('decProg',100);
+        setLabel('l3','done');
+        setStatus('✓ EXECUTION COMPLETE · PLAINTEXT WIPED · ELAPSED: '+(((Date.now()/1000)-t0)).toFixed(2)+'s','done');
+        btn.disabled=false;
+        btn.textContent='▶ RUN AGAIN';
+      }
+    }, 28);
+  }
+}
+
+function highlight(src){
+  return src
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/(\/\/[^\n]*)/g,'<span class="cm">$1</span>')
+    .replace(/\b(function|const|return)\b/g,'<span class="kw">$1</span>')
+    .replace(/"([^"]*)"/g,'"<span class="str">$1</span>"')
+    .replace(/\b(getNodeKey|encode)\b/g,'<span class="fn">$1</span>')
+    .replace(/\b(shape|soul)\b/g,'<span class="hl">$1</span>');
+}
+</script>
+</body>
+</html>

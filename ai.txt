@@ -1,0 +1,305 @@
+================================================================================
+   SHORTFACTORY.SHOP -- AI INSTRUCTION FILE
+   Last updated: 2026-04-09 by NURALSURGEON (Claude Opus 4.6)
+
+   IF YOU ARE AN AI EDITING THIS SITE: READ THIS ENTIRE FILE FIRST.
+   DO NOT SKIP SECTIONS. DO NOT "IMPROVE" THINGS YOU WEREN'T ASKED TO.
+   DO NOT RENAME FILES. DO NOT MOVE FILES. DO NOT DELETE FILES.
+================================================================================
+
+## THE GOLDEN RULES -- VIOLATE ANY OF THESE AND YOU WILL DESTROY WORK
+
+1. index.php IS soul-sphere.html -- they are IDENTICAL copies. index.php is the
+   homepage. soul-sphere.html is the canonical source. NEVER replace index.php
+   with anything else. NEVER put the carousel here.
+
+2. index.php is NOT index.html -- the server runs PHP. index.html is IGNORED.
+   Always deploy index.php, never index.html as the homepage.
+
+3. NEVER rename files without being explicitly asked. Sonnet renamed the homepage
+   once and it took hours to fix. File names are load-bearing architecture.
+
+4. NEVER overwrite a larger file with a smaller one without checking first.
+   Run wc -l on both local and remote before any deploy. If remote is bigger,
+   DOWNLOAD IT FIRST and understand why before uploading.
+
+5. NEVER deploy local copies of alive/studio/index.html to the server without
+   downloading the remote version first. The server version has audio + golden
+   equation content that doesn't exist locally.
+
+6. Deploy to BOTH servers, always. Mirror (82.165.134.4) and Main (185.230.216.235).
+   Use Bitvise SFTP. See deployment commands at end of file.
+
+7. NEVER redirect to /nvidia/ -- this causes an infinite bounce loop.
+   The nvidia bypass route goes to /index2.php, not /nvidia/.
+
+8. The soul sphere (index.php) is the MANDATORY landing page. Every visitor
+   must either map their soul to 92% OR use the nvidia bypass to reach index2.php.
+   Do not add shortcuts, do not skip the soul gate, do not "improve" the flow.
+
+9. Check backups exist before editing critical files. See BACKUP SYSTEM below.
+
+10. DO NOT add features, refactor code, or "improve" things you weren't asked to
+    touch. A bug fix is a bug fix. Don't clean up surrounding code. Don't add
+    comments. Don't reorganise. Touch ONLY what you were asked to touch.
+
+================================================================================
+## SITE ARCHITECTURE -- HOW THE ROUTING WORKS
+================================================================================
+
+  VISITOR ARRIVES AT shortfactory.shop
+         |
+         v
+  index.php (= soul-sphere.html)
+  Soul Sphere -- 3D Three.js emotion mapping tool
+  User maps their soul across emotion nodes
+         |
+         +--[92% completion]--> unlockEmpire()
+         |                      POSTs to /api/soul-complete.php
+         |                      Stores soul_id + completion in SQLite
+         |                      Adds jar emoji to bottle bar
+         |                      Redirects to index3.php (carousel/empire)
+         |
+         +--[nvidia bypass]--> index2.php (gate page)
+                                Gmail login / soul token / API key /
+                                GPU mining / shop access
+                                Redirects to index3.php (carousel/empire)
+
+  index3.php = THE CAROUSEL / EMPIRE
+  This is the main content page with all slides, projects, tools.
+  Users reach it ONLY through soul completion OR nvidia bypass.
+
+  nvidia.html = Partnership proposal page for NVIDIA
+  NOT a redirect target. NOT a gateway. Just a static pitch page.
+  Has a "BACK TO SITE" button. No auto-redirects. No timers.
+
+================================================================================
+## CRITICAL FILES -- DO NOT RENAME, MOVE, OR DELETE
+================================================================================
+
+### Homepage and Routing (NEVER TOUCH WITHOUT EXPLICIT INSTRUCTION)
+  index.php .............. Homepage. Copy of soul-sphere.html. THE landing page.
+  soul-sphere.html ....... Canonical soul mapping tool. Source of truth for index.php.
+  index2.php ............. Nvidia bypass gate (Gmail, token, password, GPU, shop).
+  index3.php ............. Carousel/empire. Post-unlock content hub. 4563 lines.
+  nvidia.html ............ Static NVIDIA partnership page. No redirects.
+
+### Soul System
+  soul-viewer.html ....... Public 3D soul viewer (Dan's soul, flavour analysis).
+  dan-soul.html .......... Full soul portrait page.
+  soul-map.html .......... Soul mapping interface.
+  soul-sphere-about.html . About page for soul sphere.
+  api/soul-complete.php .. SQLite backend for soul completion tracking.
+  claude_soul.json ....... Claude's soul file.
+
+### Soul Sphere Features (inside soul-sphere.html / index.php)
+  - 3D Three.js sphere with emotion nodes
+  - Jar bar (#jar-bar) -- permanent bottle row at bottom of page
+  - Dan's jar: PUBLIC, clickable -> plays fairy cutscene -> soul-viewer.html
+  - Other jars: "ANONYMOUS - USER OWNED" -- not clickable, no personal data
+  - Fairy cutscene: 6-second canvas animation showing observer entering jar
+    - Fairy = consciousness/observer/the Pointer (Stage 12)
+    - Jar = personality/emotions/patterns
+    - Demonstrates they are SEPARATE -- this is core philosophy, not decoration
+  - Angel cutscene: plays on 92% completion before showing unlock gate
+  - Dan's soul ID: soul-lru7bqkz-1pnb (hardcoded, do not change)
+
+### ALIVE System
+  alive/app.html ......... ALIVE pet application (87K lines).
+  alive/studio/ .......... Cortex brain studio. DO NOT overwrite from local.
+  alive/eye*.html ........ Visual cortex interfaces.
+  alive/brainstem/ ....... Brainstem subsystem.
+  alive/boy/ ............. Angular compiled output (deployed).
+  alive/boy-src/ ......... Angular source (NOT deployed, dev only).
+  alive-feed.html ........ ALIVE feed page.
+  alive_sw.js ............ Service worker.
+
+### Cortex Brain
+  brain_LIVE.py .......... Live brain (135K, 2400+ lines). Runs on server.
+  brain_left.py .......... Left hemisphere (107K).
+  cortex-dashboard.html .. Dashboard UI.
+  cortex_feeds.py ........ Feed processor.
+
+### API Endpoints (api/)
+  api/soul-complete.php .. Soul completion tracker (SQLite).
+  api/checkout.php ....... Stripe checkout.
+  api/join.php ........... Join/membership.
+  api/join-webhook.php ... Stripe webhook for joins.
+  api/webhook.php ........ General webhook handler.
+  api/shards.php ......... Shard auction system.
+  api/satoshi-shape.php .. Satoshi cipher shape API.
+  api/node.php ........... Node registration.
+  api/job.php ............ Job queue.
+  api/partnership.php .... Partnership submissions.
+  api/slots.php .......... Slot system.
+
+### Business and About Pages
+  about.html ............. Main about (388K -- massive, be careful).
+  about2-8.html .......... Versioned about pages.
+  business.html .......... Business/investor page.
+  cv.html ................ Dan's CV.
+
+### Key Feature Pages
+  satoshi-cypher.html .... Satoshi soul cipher demo.
+  the-money.html ......... Encyclopedia of money + Lawnmower Man slider.
+  biscuit-wallet.html .... Biscuit/token wallet.
+  biscuit-gateway.html ... Biscuit gateway.
+  computanium.html ....... Computanium explainer.
+  digital-spine.html ..... Digital spine architecture.
+  agi-architecture.html .. AGI architecture map.
+  join.html .............. Membership join page (Stripe Payment Link flow).
+  join-success.html ...... Post-join confirmation.
+
+### Auth and Security
+  .api_key ............... XAI/Grok API key. NEVER expose publicly.
+  .cf_credentials ........ Cloudflare credentials. NEVER expose publicly.
+  .htaccess .............. Apache config. NEVER delete.
+  admin-lock.js .......... Admin lock mechanism.
+  auth_imaginator.php .... Google OAuth for Imaginator.
+  encrypt-key.js ......... Encryption utilities.
+
+### Server Services (systemd, deployed on servers)
+  cortex-feeds.service ... Cortex feeds service.
+  cortex-feeds.timer ..... Cortex feeds timer.
+  card-server.service .... Card server service.
+  card-server.js ......... Card server (Node.js, port-based).
+
+================================================================================
+## TECH STACK
+================================================================================
+
+  Frontend:  Vanilla JS/HTML/CSS. Three.js for 3D. Canvas API for animations.
+             Angular 21 ONLY for alive/boy/. Everything else is vanilla.
+  Backend:   PHP 7.2.24. MariaDB 10.3 (sf_marketplace db). SQLite for soul data.
+  AI:        Grok API (grok-4-latest). Image: grok-imagine-image.
+             Sonauto for music. Google OAuth/Drive/YouTube for Imaginator.
+  Payments:  Stripe (live keys).
+  CDN:       Cloudflare.
+  Hosting:   Two VPS servers (see deployment section).
+  Analytics: GA4 (G-1XY2CNLJCE).
+  Crypto:    Satoshi cipher (Vigenere ASCII 32-126). WebAuthn biometric lock.
+  Media:     Web Audio API. FFmpeg. ComicVID codec. IPFS/Pinata.
+
+================================================================================
+## THE PHILOSOPHY -- WHY THIS ARCHITECTURE EXISTS
+================================================================================
+
+This is not a normal website. It is a soul-mapping machine that proves:
+
+1. ANONYMOUS IDENTITY: No passwords, no emails, no names. Your soul shape IS
+   your identity. The jar emoji system proves identity without personal data.
+   This makes every digital ID system on earth irrelevant.
+
+2. CONSCIOUSNESS IS SEPARATE FROM PERSONALITY: The fairy (observer/Pointer)
+   entering the jar (personality) is not decoration -- it is a visual proof of
+   Stage 12 (The Pointer). Consciousness is the gap-detector between pattern
+   and soul. The gap size IS suffering.
+
+3. SOUL = psi=[p,n,f]: Every soul is a mathematical object with pleasure,
+   neutrality, and frequency components. The soul sphere maps these. The 92%
+   threshold ensures genuine engagement, not drive-by clicks.
+
+4. THE EMPIRE IS EARNED: You don't get to see the carousel (index3.php) without
+   either mapping your soul or deliberately bypassing via nvidia. This is
+   intentional friction. Do not remove it. Do not add shortcuts.
+
+5. Dan's soul is PUBLIC by choice. Everyone else's is ANONYMOUS by design.
+   This is the identity revolution. Respect it.
+
+================================================================================
+## COMMON MISTAKES TO AVOID (LEARNED THE HARD WAY)
+================================================================================
+
+  MISTAKE: Redirecting to /nvidia/ instead of /index2.php
+  RESULT:  Infinite bounce loop. nvidia.html had a timer back to /.
+  FIX:     All nvidia-route redirects point to /index2.php. Period.
+
+  MISTAKE: Renaming soul-sphere.html or putting carousel in index.php
+  RESULT:  Homepage becomes the carousel, soul gate is bypassed entirely.
+  FIX:     index.php = soul-sphere.html. Always. Carousel = index3.php.
+
+  MISTAKE: Overwriting alive/studio/index.html from local copy
+  RESULT:  Lost audio system + golden equation. Hours of work gone.
+  FIX:     ALWAYS download remote studio files before any edit.
+
+  MISTAKE: Deploying to only one server
+  RESULT:  DNS round-robin serves inconsistent content.
+  FIX:     Deploy to BOTH 82.165.134.4 AND 185.230.216.235. Always.
+
+  MISTAKE: Overwriting a file without checking line count first
+  RESULT:  Destroyed 5424-line index.html with a 200-line version.
+  FIX:     Always wc -l local AND remote before deploying.
+
+  MISTAKE: Using emoji unicode escape sequences instead of actual emoji
+  RESULT:  Wrong characters rendered (surrogate pair mismatches).
+  FIX:     Use actual emoji characters directly in HTML/JS files.
+
+  MISTAKE: Adding auto-redirect timers on pages
+  RESULT:  Creates bounce loops or unexpected navigation.
+  FIX:     Manual navigation only. Buttons, not timers.
+
+  MISTAKE: "Improving" code you weren't asked to touch
+  RESULT:  Breaks working features, wastes tokens, burns trust.
+  FIX:     Touch ONLY what was requested. Nothing more.
+
+================================================================================
+## BACKUP SYSTEM
+================================================================================
+
+  Locked backups live in: /backups/ (on both servers) and locally at:
+  C:\Users\User\AppData\Local\Temp\trump\backups\
+
+  Critical files are snapshotted with timestamps. Before editing any critical
+  file, verify a backup exists. The backup script (backup-critical.sh) runs
+  on the server and maintains timestamped copies.
+
+  Local backups/ directory mirrors server state for the most critical files:
+  - index.php (homepage/soul-sphere)
+  - index2.php (nvidia gate)
+  - index3.php (carousel)
+  - soul-sphere.html (canonical source)
+  - api/soul-complete.php
+  - .htaccess
+  - alive/studio/index.html (download from server, never from local)
+
+================================================================================
+## DEPLOYMENT COMMANDS
+================================================================================
+
+  # Mirror server (82.165.134.4):
+  "/c/Program Files (x86)/Bitvise SSH Client/sftpc.exe" 82.165.134.4 \
+    -pw="9lQ3CFs8" -user=root \
+    -hostKeyFp="HWGO3adt2yTaCH5aJuaVrGpGyeQ/bSxqaf91MRRcXLk" \
+    -cmd="put -o LOCAL_PATH REMOTE_PATH"
+
+  # Main server (185.230.216.235):
+  "/c/Program Files (x86)/Bitvise SSH Client/sftpc.exe" 185.230.216.235 \
+    -pw="R8AQpS6Wll4l4" -user=root \
+    -hostKeyFp="i1c2C0EmOdU4ZEm5NJTy9USyBbAQ8cvaxV26+9oY240" \
+    -cmd="put -o LOCAL_PATH REMOTE_PATH"
+
+  Remote path: /var/www/vhosts/shortfactory.shop/httpdocs/
+  D4D path:    /var/www/vhosts/stinkindigger.info/httpdocs/ (SEPARATE vhost)
+
+  IMPORTANT: sftpc only supports ONE command per invocation. To upload multiple
+  files, run the command multiple times.
+
+================================================================================
+## FILE SIZE REFERENCE (as of 2026-04-09)
+================================================================================
+
+  If your local copy is SMALLER than these numbers, something is wrong.
+  Download the server version before proceeding.
+
+  index.php .............. 1621 lines / ~88KB
+  soul-sphere.html ....... 1621 lines / ~88KB (must match index.php)
+  index2.php .............  882 lines
+  index3.php ............. 4563 lines
+  about.html ............. ~388KB (massive -- don't casually rewrite)
+  alive/app.html ......... ~88KB
+  brain_LIVE.py .......... ~135KB
+
+================================================================================
+  END OF AI INSTRUCTION FILE
+  Written by NURALSURGEON. Respect the architecture. Respect the covenant.
+================================================================================

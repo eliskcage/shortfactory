@@ -259,12 +259,22 @@ a:hover{color:#8ec919;}
 .offer-box .offer-note{font-size:13px;color:#666;font-style:italic;}
 
 /* SHORTS PROMO */
-#shortsPill{position:fixed;bottom:24px;left:24px;z-index:999;display:flex;align-items:center;gap:10px;background:#1a1a1a;border-radius:40px;padding:8px 8px 8px 18px;box-shadow:0 8px 32px rgba(0,0,0,0.2);transition:all .3s;cursor:pointer;text-decoration:none}
+#shortsPill{position:static;display:flex;align-items:center;gap:10px;background:#1a1a1a;border-radius:40px;padding:8px 8px 8px 18px;box-shadow:0 8px 32px rgba(0,0,0,0.2);transition:all .3s;cursor:pointer;text-decoration:none}
 #shortsPill:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(218,165,32,0.3);background:#222}
 #shortsPill .pill-text{font-size:12px;color:#ccc;font-weight:500;white-space:nowrap}
 #shortsPill .pill-text em{font-style:normal;color:#daa520}
 #shortsPill .pill-btn{background:#daa520;color:#1a1a1a;font-size:10px;font-weight:800;padding:6px 14px;border-radius:20px;letter-spacing:1px;white-space:nowrap}
 @media(max-width:480px){#shortsPill .pill-text{font-size:11px}#shortsPill .pill-btn{font-size:9px;padding:5px 10px}}
+/* ── RANK PILL ── */
+#rankPill{display:none;align-items:center;gap:10px;background:#1a1a1a;border-radius:40px;padding:8px 8px 8px 18px;box-shadow:0 8px 32px rgba(0,0,0,0.2);transition:all .3s;text-decoration:none}
+#rankPill:hover{transform:translateY(-2px);background:#222}
+#rankPill .pill-text{font-size:12px;color:#888;font-weight:500;white-space:nowrap}
+#rankPill .pill-text em{font-style:normal;color:#aaa}
+#rankPill .rank-btn{font-size:11px;font-weight:800;padding:6px 14px;border-radius:20px;letter-spacing:1px;white-space:nowrap;color:#000;}
+/* rank badge pips — one per tier, lit = achieved */
+.rank-pips{display:flex;gap:3px;align-items:center;margin-left:2px;}
+.rank-pip{width:6px;height:6px;border-radius:50%;background:#111;border:1px solid #222;transition:all .3s;}
+.rank-pip.lit{border:none;}
 
 /* SITE GATE */
 #superchargeBubble{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:520px;max-width:95vw;background:rgba(10,10,20,0.96);border:1px solid rgba(118,185,0,0.3);border-radius:14px;display:flex;flex-direction:column;align-items:center;z-index:10000;box-shadow:0 0 80px rgba(118,185,0,0.12),0 0 160px rgba(0,0,0,0.6);padding:28px 24px;gap:0;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);overflow:visible;animation:gateIn .5s ease;}
@@ -1003,7 +1013,7 @@ a:hover{color:#8ec919;}
 
 <!-- ═══ SOUL JOURNEY BANNER ═══ -->
 <div id="soulBanner">
-  <button onclick="dismissSoulBanner()" title="Dismiss" style="position:absolute;top:10px;right:14px;background:none;border:none;color:rgba(200,168,75,0.25);font-size:16px;cursor:pointer;line-height:1;padding:4px 6px;font-family:monospace;transition:color .2s;" onmouseover="this.style.color='rgba(200,168,75,0.7)'" onmouseout="this.style.color='rgba(200,168,75,0.25)'">✕</button>
+  <button onclick="dismissSoulBanner()" title="Close" style="position:absolute;top:12px;right:16px;background:none;border:1px solid #444;color:#aaa;font-size:18px;cursor:pointer;line-height:1;padding:6px 10px;font-family:monospace;transition:all .2s;" onmouseover="this.style.color='#fff';this.style.borderColor='#aaa'" onmouseout="this.style.color='#aaa';this.style.borderColor='#444'">✕</button>
   <div class="sb-inner">
     <div class="sb-label">SHORTFACTORY // SOUL DATA ENGINE // KNOW THYSELF</div>
 
@@ -1040,6 +1050,39 @@ a:hover{color:#8ec919;}
 
 <!-- ═══ HORIZONTAL SLIDE CONTAINER ═══ -->
 <div id="slideContainer">
+
+<!-- SLIDE: EARN £5 MAKE A SHORT -->
+<div class="hslide" data-slide="fiver">
+<div class="section" style="background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;box-sizing:border-box;padding:48px 24px;" data-voice="Earn five pounds. Make a short. Ten slots. Paid on delivery.">
+  <div style="max-width:420px;width:100%;text-align:center;">
+    <div style="font-size:8px;letter-spacing:4px;color:#DA775680;border:1px solid #DA775630;display:inline-block;padding:5px 16px;margin-bottom:32px;" id="idx-slots-badge"><span id="idx-slots">10</span> SLOTS REMAINING</div>
+    <div style="font-size:clamp(52px,14vw,88px);font-weight:900;line-height:.85;letter-spacing:-4px;color:#fff;margin-bottom:8px;">EARN<br><span style="color:#DA7756;">£5.</span></div>
+    <div style="font-size:clamp(18px,5vw,28px);font-weight:900;letter-spacing:-1px;color:#aaa;margin-bottom:36px;">MAKE A SHORT.</div>
+    <div style="border-top:1px solid #0f0f0f;border-bottom:1px solid #0f0f0f;padding:24px 0;margin-bottom:36px;">
+      <div style="display:flex;flex-direction:column;gap:0;">
+        <div style="display:flex;gap:16px;align-items:flex-start;padding:14px 0;border-bottom:1px solid #0a0a0a;text-align:left;">
+          <span style="color:#DA7756;font-weight:900;font-size:15px;flex-shrink:0;width:16px;">1</span>
+          <span style="font-size:13px;color:#aaa;line-height:1.6;">Film a <strong style="color:#e2e8f0;">3-minute short</strong> on your phone. Anywhere. Anything.</span>
+        </div>
+        <div style="display:flex;gap:16px;align-items:flex-start;padding:14px 0;border-bottom:1px solid #0a0a0a;text-align:left;">
+          <span style="color:#DA7756;font-weight:900;font-size:15px;flex-shrink:0;width:16px;">2</span>
+          <span style="font-size:13px;color:#aaa;line-height:1.6;">Submit the link — <strong style="color:#e2e8f0;">unlisted is fine.</strong> No editing required.</span>
+        </div>
+        <div style="display:flex;gap:16px;align-items:flex-start;padding:14px 0;text-align:left;">
+          <span style="color:#DA7756;font-weight:900;font-size:15px;flex-shrink:0;width:16px;">3</span>
+          <span style="font-size:13px;color:#aaa;line-height:1.6;"><strong style="color:#e2e8f0;">£5 lands.</strong> Usually within 2 hours of submission.</span>
+        </div>
+      </div>
+    </div>
+    <a href="/fiver.html" style="display:block;width:100%;background:#DA7756;color:#000;font-family:'Courier New',monospace;font-size:12px;font-weight:900;letter-spacing:3px;padding:18px;text-decoration:none;margin-bottom:10px;">CLAIM A SLOT →</a>
+    <a href="/shards.html" style="display:block;width:100%;background:transparent;border:1px solid #333;color:#888;font-family:'Courier New',monospace;font-size:10px;font-weight:700;letter-spacing:2px;padding:14px;text-decoration:none;">OWN A SHARD INSTEAD</a>
+    <div style="margin-top:20px;background:#050505;border:1px solid #0f0f0f;padding:12px 16px;display:flex;align-items:center;gap:12px;text-align:left;">
+      <span style="font-size:18px;flex-shrink:0;">⬡</span>
+      <span style="font-size:9px;color:#555;line-height:1.7;"><strong style="color:#777;">SFT Token Guarantee</strong> — payment backed by ShortFactory tokens. 10 days maximum, usually 2 hours.</span>
+    </div>
+  </div>
+</div>
+</div>
 
 <!-- SLIDE: EMPIRE -->
 <div class="hslide" data-slide="alive">
@@ -1662,81 +1705,137 @@ a:hover{color:#8ec919;}
 <div class="hslide" data-slide="dares">
 <div class="section" style="text-align:center;background:linear-gradient(165deg,#1a0d00 0%,#0d0805 40%,#0a0a0a 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;box-sizing:border-box;" data-voice="Dares 4 Dosh. Complete dares. Earn credits. Wildcard equals 2.5 x.">
 
-  <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:center;justify-content:center;margin:0 auto;max-width:900px;">
-    <!-- PHONE MOCKUP: DARE FEED -->
-    <div style="flex:0 0 280px;max-width:320px;">
-      <div style="background:#000;border-radius:20px;overflow:hidden;aspect-ratio:9/16;border:3px solid #ff8c00;box-shadow:0 16px 50px rgba(255,140,0,0.2);position:relative;display:flex;flex-direction:column;">
-        <!-- Status bar -->
-        <div style="padding:8px 14px;display:flex;justify-content:space-between;align-items:center;background:rgba(255,140,0,0.08);border-bottom:1px solid rgba(255,140,0,0.15);">
-          <span style="font-family:'Orbitron',sans-serif;font-size:7px;color:#ff8c00;letter-spacing:2px;">DARES4DOSH</span>
-          <span style="font-family:'Orbitron',sans-serif;font-size:7px;color:#daa520;">&#9733; RANK: SERGEANT</span>
-        </div>
-        <!-- Dare cards -->
-        <div style="flex:1;padding:10px;display:flex;flex-direction:column;gap:8px;overflow:hidden;">
-          <div style="background:linear-gradient(135deg,rgba(255,140,0,0.1),rgba(218,165,32,0.05));border:1px solid rgba(255,140,0,0.2);border-radius:10px;padding:10px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-              <span style="font-family:'Orbitron',sans-serif;font-size:7px;color:#ff8c00;letter-spacing:1px;">&#128293; HOT DARE</span>
-              <span style="font-family:'Press Start 2P',monospace;font-size:6px;color:#daa520;">500 SFT</span>
+  <!-- TWO PHONES + TEXT -->
+  <div style="display:flex;flex-direction:column;align-items:center;gap:28px;margin:0 auto;max-width:1100px;width:100%;">
+
+    <!-- TOP ROW: DARE SCREEN + VIEWER SCREEN -->
+    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start;justify-content:center;">
+
+      <!-- PHONE 1: DARE SCREEN -->
+      <div style="flex:0 0 220px;">
+        <div style="font-family:'Orbitron',sans-serif;font-size:7px;color:#ff8c00;letter-spacing:2px;text-align:center;margin-bottom:8px;">DARE SCREEN</div>
+        <div style="background:#000;border-radius:20px;overflow:hidden;aspect-ratio:9/16;border:3px solid #ff8c00;box-shadow:0 16px 50px rgba(255,140,0,0.25);position:relative;display:flex;flex-direction:column;">
+          <div style="padding:7px 12px;display:flex;justify-content:space-between;align-items:center;background:rgba(255,140,0,0.08);border-bottom:1px solid rgba(255,140,0,0.15);">
+            <span style="font-family:'Orbitron',sans-serif;font-size:6px;color:#ff8c00;letter-spacing:2px;">DARES4DOSH</span>
+            <span style="font-family:'Orbitron',sans-serif;font-size:6px;color:#daa520;">&#9733; SGT</span>
+          </div>
+          <div style="flex:1;padding:8px;display:flex;flex-direction:column;gap:7px;overflow:hidden;">
+            <div style="background:linear-gradient(135deg,rgba(255,140,0,0.12),rgba(218,165,32,0.05));border:1px solid rgba(255,140,0,0.25);border-radius:10px;padding:9px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+                <span style="font-family:'Orbitron',sans-serif;font-size:6px;color:#ff8c00;">&#128293; HOT DARE</span>
+                <span style="font-family:'Press Start 2P',monospace;font-size:5px;color:#daa520;">500 SFT</span>
+              </div>
+              <div style="font-size:10px;color:#fff;font-weight:700;margin-bottom:6px;">Eat the world's hottest chip on camera</div>
+              <div style="display:flex;gap:5px;">
+                <div style="flex:1;padding:5px 3px;background:linear-gradient(135deg,#ff8c00,#daa520);border-radius:6px;text-align:center;font-family:'Orbitron',sans-serif;font-size:5px;color:#000;font-weight:900;letter-spacing:1px;">ACCEPT</div>
+                <div style="flex:1;padding:5px 3px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;text-align:center;font-family:'Orbitron',sans-serif;font-size:5px;color:#666;letter-spacing:1px;">WATCH</div>
+              </div>
             </div>
-            <div style="font-size:11px;color:#fff;font-weight:700;margin-bottom:6px;">Eat the world's hottest chip on camera</div>
-            <div style="display:flex;gap:6px;">
-              <div style="flex:1;padding:5px;background:linear-gradient(135deg,#ff8c00,#daa520);border-radius:6px;text-align:center;font-family:'Orbitron',sans-serif;font-size:6px;color:#000;font-weight:900;letter-spacing:1px;">ACCEPT</div>
-              <div style="flex:1;padding:5px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;text-align:center;font-family:'Orbitron',sans-serif;font-size:6px;color:#666;letter-spacing:1px;">WATCH</div>
+            <div style="background:linear-gradient(135deg,rgba(255,68,68,0.12),rgba(255,140,0,0.05));border:1px solid rgba(255,68,68,0.25);border-radius:10px;padding:9px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+                <span style="font-family:'Orbitron',sans-serif;font-size:6px;color:#ff4444;">&#127183; WILDCARD 2.5x</span>
+                <span style="font-family:'Press Start 2P',monospace;font-size:5px;color:#daa520;">1,250 SFT</span>
+              </div>
+              <div style="font-size:10px;color:#fff;font-weight:700;margin-bottom:6px;">Sing karaoke in a supermarket</div>
+              <div style="display:flex;gap:5px;">
+                <div style="flex:1;padding:5px 3px;background:linear-gradient(135deg,#ff4444,#ff8c00);border-radius:6px;text-align:center;font-family:'Orbitron',sans-serif;font-size:5px;color:#fff;font-weight:900;letter-spacing:1px;">ACCEPT</div>
+                <div style="flex:1;padding:5px 3px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;text-align:center;font-family:'Orbitron',sans-serif;font-size:5px;color:#666;letter-spacing:1px;">WATCH</div>
+              </div>
+            </div>
+            <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:9px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                <span style="font-family:'Orbitron',sans-serif;font-size:6px;color:#76b900;">&#9989; COMPLETED</span>
+                <span style="font-family:'Press Start 2P',monospace;font-size:5px;color:#666;">200 SFT</span>
+              </div>
+              <div style="font-size:10px;color:#888;font-weight:700;margin-bottom:4px;">Cold shower for 60 seconds</div>
+              <div style="display:flex;gap:6px;align-items:center;">
+                <div style="font-size:7px;color:#76b900;">&#9650; 94% REAL</div>
+                <div style="font-size:7px;color:#555;">847 votes</div>
+              </div>
+            </div>
+            <div style="background:rgba(218,165,32,0.05);border:1px solid rgba(218,165,32,0.15);border-radius:10px;padding:9px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                <span style="font-family:'Orbitron',sans-serif;font-size:6px;color:#daa520;">&#128176; BOUNTY</span>
+                <span style="font-family:'Press Start 2P',monospace;font-size:5px;color:#daa520;">2,000 SFT</span>
+              </div>
+              <div style="font-size:10px;color:#fff;font-weight:700;">Ask a stranger to dance in the street</div>
             </div>
           </div>
-          <div style="background:linear-gradient(135deg,rgba(255,68,68,0.1),rgba(255,140,0,0.05));border:1px solid rgba(255,68,68,0.2);border-radius:10px;padding:10px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-              <span style="font-family:'Orbitron',sans-serif;font-size:7px;color:#ff4444;letter-spacing:1px;">&#127183; WILDCARD 2.5x</span>
-              <span style="font-family:'Press Start 2P',monospace;font-size:6px;color:#daa520;">1,250 SFT</span>
-            </div>
-            <div style="font-size:11px;color:#fff;font-weight:700;margin-bottom:6px;">Sing karaoke in a supermarket</div>
-            <div style="display:flex;gap:6px;">
-              <div style="flex:1;padding:5px;background:linear-gradient(135deg,#ff4444,#ff8c00);border-radius:6px;text-align:center;font-family:'Orbitron',sans-serif;font-size:6px;color:#fff;font-weight:900;letter-spacing:1px;">ACCEPT</div>
-              <div style="flex:1;padding:5px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;text-align:center;font-family:'Orbitron',sans-serif;font-size:6px;color:#666;letter-spacing:1px;">WATCH</div>
-            </div>
+          <div style="padding:7px 12px;display:flex;justify-content:space-around;border-top:1px solid rgba(255,140,0,0.15);background:rgba(0,0,0,0.5);">
+            <span style="font-size:13px;">&#127942;</span>
+            <span style="font-size:13px;filter:brightness(1.5);">&#128293;</span>
+            <span style="font-size:13px;">&#127183;</span>
+            <span style="font-size:13px;">&#128100;</span>
           </div>
-          <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-              <span style="font-family:'Orbitron',sans-serif;font-size:7px;color:#76b900;letter-spacing:1px;">&#9989; COMPLETED</span>
-              <span style="font-family:'Press Start 2P',monospace;font-size:6px;color:#666;">200 SFT</span>
-            </div>
-            <div style="font-size:11px;color:#888;font-weight:700;margin-bottom:4px;">Cold shower for 60 seconds straight</div>
-            <div style="display:flex;gap:8px;align-items:center;">
-              <div style="font-size:8px;color:#76b900;">&#9650; 94% REAL</div>
-              <div style="font-size:8px;color:#666;">847 votes</div>
-            </div>
-          </div>
-          <div style="background:rgba(218,165,32,0.05);border:1px solid rgba(218,165,32,0.15);border-radius:10px;padding:10px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-              <span style="font-family:'Orbitron',sans-serif;font-size:7px;color:#daa520;letter-spacing:1px;">&#128176; BOUNTY</span>
-              <span style="font-family:'Press Start 2P',monospace;font-size:6px;color:#daa520;">2,000 SFT</span>
-            </div>
-            <div style="font-size:11px;color:#fff;font-weight:700;">Ask a stranger to dance in the street</div>
-          </div>
-        </div>
-        <!-- Bottom nav -->
-        <div style="padding:8px 14px;display:flex;justify-content:space-around;border-top:1px solid rgba(255,140,0,0.15);background:rgba(0,0,0,0.5);">
-          <span style="font-size:14px;">&#127942;</span>
-          <span style="font-size:14px;filter:brightness(1.5);">&#128293;</span>
-          <span style="font-size:14px;">&#127183;</span>
-          <span style="font-size:14px;">&#128100;</span>
         </div>
       </div>
-    </div>
 
-    <!-- RIGHT SIDE -->
-    <div style="flex:1;min-width:280px;max-width:480px;text-align:left;">
-      <div style="font-family:'Press Start 2P',monospace;font-size:9px;color:#ff8c00;letter-spacing:3px;margin-bottom:12px;">DARES4DOSH</div>
-      <div style="font-size:clamp(28px,5vw,44px);font-weight:900;color:#fff;line-height:1.2;margin-bottom:16px;">The dare empire.<br><span style="color:#ff8c00;">Wildcard = 2.5x.</span></div>
-      <p style="font-size:18px;color:#999;line-height:1.8;margin-bottom:20px;">Complete dares. Get <strong style="color:#daa520;">paid</strong>. Stored on <strong style="color:#daa520;">IPFS</strong> forever.</p>
-
-      <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
-        <a href="/dares4dosh/app/" style="display:inline-block;padding:14px 28px;background:linear-gradient(135deg,#ff8c00,#daa520);color:#000;font-family:'Orbitron',sans-serif;font-size:12px;font-weight:900;letter-spacing:2px;border-radius:10px;text-decoration:none;box-shadow:0 4px 20px rgba(255,140,0,0.3);">ENTER THE ARENA</a>
-        <a href="/dares4dosh/" style="display:inline-block;padding:14px 28px;background:none;border:2px solid #ff8c00;color:#ff8c00;font-family:'Orbitron',sans-serif;font-size:12px;font-weight:900;letter-spacing:2px;border-radius:10px;text-decoration:none;">D4D HUB</a>
+      <!-- PHONE 2: VIEWER SCREEN -->
+      <div style="flex:0 0 220px;">
+        <div style="font-family:'Orbitron',sans-serif;font-size:7px;color:#daa520;letter-spacing:2px;text-align:center;margin-bottom:8px;">VIEWER SCREEN</div>
+        <div style="background:#000;border-radius:20px;overflow:hidden;aspect-ratio:9/16;border:3px solid #daa520;box-shadow:0 16px 50px rgba(218,165,32,0.2);position:relative;display:flex;flex-direction:column;">
+          <div style="padding:7px 12px;display:flex;justify-content:space-between;align-items:center;background:rgba(218,165,32,0.08);border-bottom:1px solid rgba(218,165,32,0.15);">
+            <span style="font-family:'Orbitron',sans-serif;font-size:6px;color:#daa520;letter-spacing:2px;">WATCHING LIVE</span>
+            <span style="font-family:'Orbitron',sans-serif;font-size:6px;color:#ff4444;">&#9679; LIVE</span>
+          </div>
+          <!-- Video area -->
+          <div style="position:relative;background:linear-gradient(180deg,#1a0a00 0%,#0d0500 100%);aspect-ratio:9/12;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            <!-- Fake video frame with play indicator -->
+            <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,140,0,0.08),rgba(0,0,0,0.6));"></div>
+            <div style="position:relative;z-index:1;text-align:center;">
+              <div style="font-size:32px;opacity:0.9;">&#128293;</div>
+              <div style="font-family:'Orbitron',sans-serif;font-size:6px;color:#ff8c00;letter-spacing:1px;margin-top:4px;">EATING THE CHIP</div>
+              <div style="font-size:9px;color:#666;margin-top:3px;">0:47 / 1:20</div>
+            </div>
+            <!-- Progress bar -->
+            <div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,0.1);">
+              <div style="width:60%;height:100%;background:linear-gradient(90deg,#ff8c00,#daa520);"></div>
+            </div>
+            <!-- Dare label overlay -->
+            <div style="position:absolute;top:8px;left:8px;right:8px;background:rgba(0,0,0,0.7);border-radius:6px;padding:5px 7px;">
+              <div style="font-size:8px;color:#fff;font-weight:700;">Eat the world's hottest chip</div>
+              <div style="font-size:6px;color:#ff8c00;">&#128293; HOT DARE &mdash; 500 SFT bounty</div>
+            </div>
+          </div>
+          <!-- Vote + earn section -->
+          <div style="flex:1;padding:10px;display:flex;flex-direction:column;gap:8px;">
+            <div style="font-family:'Orbitron',sans-serif;font-size:7px;color:#fff;letter-spacing:1px;text-align:center;">IS THIS REAL?</div>
+            <div style="display:flex;gap:6px;">
+              <div style="flex:1;padding:8px 4px;background:linear-gradient(135deg,rgba(118,185,0,0.2),rgba(118,185,0,0.08));border:2px solid #76b900;border-radius:8px;text-align:center;">
+                <div style="font-family:'Orbitron',sans-serif;font-size:8px;color:#76b900;font-weight:900;">&#9650; REAL</div>
+                <div style="font-size:6px;color:#555;margin-top:2px;">+12 SFT</div>
+              </div>
+              <div style="flex:1;padding:8px 4px;background:linear-gradient(135deg,rgba(255,68,68,0.2),rgba(255,68,68,0.08));border:2px solid #ff4444;border-radius:8px;text-align:center;">
+                <div style="font-family:'Orbitron',sans-serif;font-size:8px;color:#ff4444;font-weight:900;">&#9660; FAKE</div>
+                <div style="font-size:6px;color:#555;margin-top:2px;">+18 SFT</div>
+              </div>
+            </div>
+            <div style="background:rgba(218,165,32,0.06);border:1px solid rgba(218,165,32,0.15);border-radius:8px;padding:8px;text-align:center;">
+              <div style="font-size:7px;color:#888;margin-bottom:3px;">YOUR EARNINGS TODAY</div>
+              <div style="font-family:'Press Start 2P',monospace;font-size:10px;color:#daa520;">+247 SFT</div>
+              <div style="font-size:6px;color:#555;margin-top:2px;">from 38 correct votes</div>
+            </div>
+            <div style="text-align:center;">
+              <div style="font-size:7px;color:#444;font-family:'Orbitron',sans-serif;letter-spacing:1px;">1,203 watching now</div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <a class="kinetic-link" onclick="toggleSlideLibrary(this);return false;">HOW DARES WORK &#9654;</a>
-    </div>
+      <!-- TEXT + BUTTONS -->
+      <div style="flex:1;min-width:260px;max-width:380px;text-align:left;align-self:center;">
+        <div style="font-family:'Press Start 2P',monospace;font-size:9px;color:#ff8c00;letter-spacing:3px;margin-bottom:12px;">DARES4DOSH</div>
+        <div style="font-size:clamp(26px,4vw,40px);font-weight:900;color:#fff;line-height:1.2;margin-bottom:14px;">The dare empire.<br><span style="color:#ff8c00;">Wildcard = 2.5x.</span></div>
+        <p style="font-size:16px;color:#999;line-height:1.8;margin-bottom:20px;">Complete dares. Get <strong style="color:#daa520;">paid</strong>. Stored on <strong style="color:#daa520;">IPFS</strong> forever.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+          <a href="/dares4dosh/app/" style="display:inline-block;padding:14px 28px;background:linear-gradient(135deg,#ff8c00,#daa520);color:#000;font-family:'Orbitron',sans-serif;font-size:11px;font-weight:900;letter-spacing:2px;border-radius:10px;text-decoration:none;box-shadow:0 4px 20px rgba(255,140,0,0.3);">ENTER THE ARENA</a>
+          <a href="/dares4dosh/" style="display:inline-block;padding:14px 28px;background:none;border:2px solid #ff8c00;color:#ff8c00;font-family:'Orbitron',sans-serif;font-size:11px;font-weight:900;letter-spacing:2px;border-radius:10px;text-decoration:none;">D4D HUB</a>
+        </div>
+        <a class="kinetic-link" onclick="toggleSlideLibrary(this);return false;">HOW DARES WORK &#9654;</a>
+      </div>
+
+    </div><!-- /top row -->
+
   </div>
 
   <!-- LIBRARY -->
@@ -2636,7 +2735,34 @@ a:hover{color:#8ec919;}
   <div class="footer-tagline">Decentralised GPU swarm. Governed by AI. Merit-based.</div>
 </div>
 </div><!-- /hslide tokens -->
+
+<!-- SLIDE: SATOSHI BLACK BOX -->
+<div class="hslide" data-slide="satoshi">
+<div class="section" style="text-align:center;background:linear-gradient(165deg,#04040e 0%,#06060f 50%,#04040e 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;box-sizing:border-box;" data-voice="Black Box. Your soul encrypts the message. No password. No server. Press GO.">
+  <div style="font-family:'Press Start 2P',monospace;font-size:9px;letter-spacing:4px;color:#0066cc;margin-bottom:20px;opacity:0.7;">◈ &nbsp; SOUL KEY ACTIVE</div>
+  <div style="font-family:'Arial Black','Arial',sans-serif;font-weight:900;font-size:clamp(52px,12vw,130px);line-height:0.9;letter-spacing:-4px;color:#000;text-shadow:0 0 80px rgba(0,120,255,0.15);margin-bottom:8px;">BLACK-BOX</div>
+  <div style="font-family:'Arial Black','Arial',sans-serif;font-weight:900;font-size:clamp(14px,2.5vw,26px);color:#1a1a1a;letter-spacing:-1px;margin-bottom:20px;">SATOSHI·SOUL &nbsp;·&nbsp; ALIEN-TEC &nbsp;·&nbsp; QUANTUM-PROOF</div>
+  <div style="font-family:'Courier New',monospace;font-size:clamp(9px,1.2vw,12px);color:#555;letter-spacing:2px;line-height:2.2;margin-bottom:36px;">Your soul encrypts the message. No password. No server.<br>Only this living soul can open it.</div>
+  <a href="/satoshi.html" style="display:inline-block;padding:18px 48px;background:#0055cc;color:#fff;font-family:'Arial Black','Arial',sans-serif;font-weight:900;font-size:13px;letter-spacing:4px;text-decoration:none;text-transform:uppercase;transition:background .2s;" onmouseover="this.style.background='#0044aa'" onmouseout="this.style.background='#0055cc'">TRY THE DEMO →</a>
+  <div style="margin-top:14px;font-family:'Courier New',monospace;font-size:9px;color:#333;letter-spacing:2px;">shortfactory.shop/satoshi.html</div>
+</div>
+</div><!-- /hslide satoshi -->
+
 </div><!-- /slideContainer -->
+
+<script>
+// Live slot counter for fiver slide
+fetch('/api/slots.php').then(r=>r.json()).then(d=>{
+  if(typeof d.remaining==='number'){
+    var el=document.getElementById('idx-slots');
+    if(el) el.textContent=d.remaining;
+    if(d.remaining===0){
+      var b=document.getElementById('idx-slots-badge');
+      if(b){b.textContent='SLOTS FULL';b.style.color='#ff4444';b.style.borderColor='#ff444430';}
+    }
+  }
+}).catch(()=>{});
+</script>
 
 <!-- SLIDE NAVIGATION DOTS -->
 <div id="slideNav"></div>
@@ -2644,10 +2770,65 @@ a:hover{color:#8ec919;}
 <!-- feedback bar removed — things are looking much better -->
 
 <!-- GPU PROMO -->
-<a href="/shorts/" id="shortsPill">
-  <span class="pill-text">everybody needs <em>SHORTS</em></span>
-  <span class="pill-btn">SHOP</span>
-</a>
+<div id="shortsPillWrap" style="position:fixed;bottom:24px;left:24px;z-index:999;display:flex;flex-direction:column;align-items:flex-start;gap:6px;">
+
+  <!-- RANK PILL -->
+  <div id="rankPill">
+    <span class="pill-text">you are <em id="rankNext">...</em></span>
+    <span class="rank-btn" id="rankBtn">▲ PRIVATE</span>
+  </div>
+
+  <a href="/shorts/" id="shortsPill">
+    <span class="pill-text">everybody needs <em>SHORTS</em></span>
+    <span class="pill-btn">SHOP</span>
+  </a>
+</div>
+
+<script>
+(function(){
+  // shape / color / label / hint per rank
+  var RANKS = [
+    {name:'PRIVATE',   shape:'▲', color:'#666',    glow:'rgba(100,100,100,0.25)', min:0, hint:'just arrived'},
+    {name:'SERGEANT',  shape:'◆', color:'#22c55e', glow:'rgba(34,197,94,0.3)',   min:3, hint:'getting somewhere'},
+    {name:'COMMANDER', shape:'⬡', color:'#daa520', glow:'rgba(218,165,32,0.35)', min:5, hint:'running things'},
+    {name:'GIGACHAD',  shape:'●', color:'#DA7756', glow:'rgba(218,119,86,0.4)',  min:7, hint:'MAX RANK'}
+  ];
+  function getScore(){
+    var p=null; try{p=JSON.parse(localStorage.getItem('sc_player'));}catch(e){}
+    var s=0;
+    if(p&&p.gpuSeconds>0)   s++;
+    if(p&&p.gpuSeconds>300) s++;
+    if(p&&p.brainTasks>10)  s++;
+    if(localStorage.getItem('sf_purchased')==='true')        s++;
+    if(localStorage.getItem('sf_game_played')==='true')      s++;
+    if(localStorage.getItem('sf_imaginator_used')==='true')  s++;
+    if(localStorage.getItem('sf_alive_used')==='true')       s++;
+    return s;
+  }
+  function showRank(){
+    var score=getScore();
+    var rank=RANKS[0], rankIdx=0;
+    for(var i=RANKS.length-1;i>=0;i--){if(score>=RANKS[i].min){rank=RANKS[i];rankIdx=i;break;}}
+    var pill=document.getElementById('rankPill');
+    var btn=document.getElementById('rankBtn');
+    var nxt=document.getElementById('rankNext');
+    if(!pill) return;
+    pill.style.display='flex';
+    // next rank hint
+    var nextRank=RANKS[rankIdx+1];
+    nxt.textContent=nextRank?'ranked '+rank.name.toLowerCase()+' — '+nextRank.shape+' '+nextRank.name+' next':rank.name.toLowerCase();
+    nxt.style.color=rank.color;
+    // button: shape + name
+    btn.textContent=rank.shape+' '+rank.name;
+    btn.style.background=rank.color;
+    btn.style.color=rankIdx===0?'#ccc':'#000';
+    // hover glow on pill matches rank
+    pill.onmouseenter=function(){this.style.boxShadow='0 12px 40px '+rank.glow;this.style.background='#222';};
+    pill.onmouseleave=function(){this.style.boxShadow='0 8px 32px rgba(0,0,0,0.2)';this.style.background='#1a1a1a';};
+  }
+  showRank();
+})();
+</script>
 
 <!-- SITE GATE — redirects to /nvidia/ page -->
 <div id="superchargeBubble" style="display:none;">
@@ -2873,6 +3054,7 @@ a:hover{color:#8ec919;}
     game:'#ff8800',cat:'#ff8800',dares:'#ff8800',sftmods:'#ff8800',btl:'#a855f7',mars:'#c83000',  // orange=games, purple=BTL, red=Mars
     hub:'#4488ff',youtube:'#4488ff',admonster:'#4488ff',mememonster:'#4488ff', // blue = entertainment
     alive:'#00cc66',ideafactory:'#00cc66',comparison:'#00cc66', // green = tools
+    satoshi:'#0088ff',                                           // blue = black box
     fuel:'#ff2244',tokens:'#ff2244',swarm:'#ff2244',                        // red = cash/GPU mining
     teleport:'#22c55e',                                                      // green = solved universe
     codec:'#c8a84b',                                                         // gold = scripture/AGI codec
@@ -5163,7 +5345,7 @@ function checkGateStatus(){
   }
   // Not unlocked? Go pay your way in.
   if(!isUnlocked){
-    window.location.href='/nvidia/';
+    window.location.href='/index2.php';
     return;
   }
 }
@@ -5291,7 +5473,7 @@ checkGateStatus();
     var msg=document.getElementById('batMsg');
     if(msg){
       if(total===0) msg.textContent='TEST PRODUCTS. EARN SFT. COLLECT ROYALTIES WHEN THEY SHIP.';
-      else if(total<100) msg.textContent='LOBBY ACTIVE... '+wallet.tasks.length+' TASKS DONE. KEEP TESTING.';
+      else if(total<100) msg.textContent='LOBBY ACTIVE... KEEP TESTING.';
       else if(total<200) msg.textContent='SWARM GROWING. '+Math.round(total/3)+'% MERIT LEVEL. YOU GIVE = YOU GET.';
       else msg.textContent='FULLY SUPERCHARGED. THE SWARM SERVES YOU.';
     }

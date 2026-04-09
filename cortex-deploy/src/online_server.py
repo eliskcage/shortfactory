@@ -54,6 +54,15 @@ from fork_manager import ForkManager
 from frontal_cortex import FrontalCortex
 from truth_engine import TruthEngine
 from playbook_engine import PlaybookEngine
+try:
+    import sys as _cm_sys, pathlib as _cm_pl
+    _cm_sys.path.insert(0, str(_cm_pl.Path(__file__).parent.parent.parent.parent / 'Desktop' / 'spherenet'))
+    from creature_bridge import CreatureBridge
+    creature = CreatureBridge(creature_id="adam")
+    print('[CREATURE] Mind loaded —', len(creature.mind.spheres), 'spheres')
+except Exception as _e:
+    creature = None
+    print('[CREATURE] Bridge not available:', _e)
 
 import sys as _sys, pathlib as _pl
 _sys.path.insert(0, str(_pl.Path(__file__).parent.parent.parent))
@@ -410,6 +419,15 @@ class OnlineHandler(http.server.SimpleHTTPRequestHandler):
             # Pass rank to strategy engine for rank-gated equation selection
             if strategy_engine:
                 strategy_engine._last_source_info = source_info
+
+            # CREATURE MIND — inject concept context before cortex responds
+            if creature:
+                try:
+                    ctx = creature.process(user_msg)
+                    if ctx["summary"]:
+                        user_msg = user_msg + "\n" + ctx["summary"]
+                except Exception:
+                    pass
 
             reply, debate = cortex.process(user_msg, intent=intent, session_id=session_id, user_rank=user_credits)
             stats = left_brain.get_stats()

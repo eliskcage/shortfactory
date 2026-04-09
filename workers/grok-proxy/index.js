@@ -77,7 +77,7 @@ export default {
       }
 
       const payload = {
-        model: 'grok-2-image',
+        model: body.model || 'grok-imagine-image',
         prompt: body.prompt || '',
         n: Math.min(body.n || 1, 4),
       };

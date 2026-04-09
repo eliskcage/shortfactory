@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1XY2CNLJCE"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1XY2CNLJCE');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>oiloftrop — what's left</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a0a;color:#e2e8f0;line-height:1.6;overflow-x:hidden;}
+
+.bar-wrap{position:sticky;top:0;z-index:100;background:rgba(10,10,10,0.97);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,0.06);padding:14px 24px;}
+.bar-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.bar-title{font-size:13px;font-weight:800;letter-spacing:3px;color:#daa520;text-transform:uppercase;}
+.bar-count{font-size:12px;color:#64748b;letter-spacing:1px;}
+.bar{height:8px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;}
+.bar-fill{height:100%;background:linear-gradient(90deg,#22c55e,#86efac);border-radius:4px;transition:width 0.4s ease;}
+
+.hero{padding:60px 24px 32px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.04);}
+.hero h1{font-size:clamp(28px,6vw,52px);font-weight:900;color:#fff;letter-spacing:4px;text-transform:lowercase;}
+.hero h1 span{color:#daa520;}
+.hero-sub{font-size:13px;color:#475569;margin-top:8px;letter-spacing:1px;}
+.back-link{display:inline-block;margin-top:18px;font-size:10px;color:#64748b;text-decoration:none;letter-spacing:2px;text-transform:uppercase;border:1px solid rgba(255,255,255,0.08);padding:6px 18px;border-radius:4px;transition:all 0.2s;}
+.back-link:hover{color:#daa520;border-color:rgba(218,165,32,0.3);}
+
+.container{max-width:820px;margin:0 auto;padding:0 20px 100px;}
+
+.diff-label{padding:24px 0 6px;font-size:9px;letter-spacing:2.5px;text-transform:uppercase;display:flex;align-items:center;gap:10px;}
+.diff-label::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.05);}
+
+.task-row{display:flex;align-items:center;gap:14px;padding:11px 14px;border-bottom:1px solid rgba(255,255,255,0.03);cursor:pointer;transition:background 0.15s;border-radius:4px;user-select:none;}
+.task-row:hover{background:rgba(255,255,255,0.025);}
+.task-row.done{opacity:0.3;}
+
+.tick{width:18px;height:18px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.15);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+.task-row:hover .tick{border-color:rgba(255,255,255,0.3);}
+.task-row.done .tick{background:#22c55e;border-color:#22c55e;}
+.tick svg{display:none;width:10px;height:10px;}
+.task-row.done .tick svg{display:block;}
+
+.task-text{flex:1;font-size:12.5px;color:#cbd5e1;transition:color 0.2s;letter-spacing:.2px;}
+.task-row.done .task-text{text-decoration:line-through;color:#475569;}
+
+.task-tag{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#475569;background:rgba(255,255,255,0.04);padding:2px 8px;border-radius:3px;white-space:nowrap;flex-shrink:0;border:1px solid rgba(255,255,255,0.05);}
+</style>
+</head>
+<body>
+
+<div class="bar-wrap">
+  <div class="bar-head">
+    <span class="bar-title">oiloftrop</span>
+    <span class="bar-count" id="bar-count">loading…</span>
+  </div>
+  <div class="bar"><div class="bar-fill" id="bar-fill" style="width:0%"></div></div>
+</div>
+
+<div class="hero">
+  <h1>oil<span>of</span>trop</h1>
+  <div class="hero-sub">portfolio · inverted · tick from the top · easiest first</div>
+  <a class="back-link" href="portfolio.html">← portfolio</a>
+</div>
+
+<div class="container" id="task-list"></div>
+
+<script>
+const TASKS = [
+  // ── EASIEST ──────────────────────────────────────────────────
+  {id:'biz1', text:'OCI partnership / credits follow-up', tag:'Biz Dev', diff:0},
+  {id:'biz2', text:'London experts meeting — get on the list', tag:'Biz Dev', diff:0},
+  {id:'mkt1', text:'Marketing push (socials, Reddit, HN)', tag:'ALiVE', diff:0},
+  {id:'grok1', text:'Grokipedia submission accepted', tag:'Shape VM', diff:0},
+  {id:'shp1', text:'shape_api service restart (routing fix activation)', tag:'Shape VM', diff:0},
+  {id:'ss1', text:'App store screenshots', tag:'Play Store', diff:0},
+  {id:'ps3', text:'Play Store listing copy', tag:'Play Store', diff:0},
+  {id:'ps2', text:'Android manifest + icons', tag:'Play Store', diff:0},
+
+  // ── EASY ─────────────────────────────────────────────────────
+  {id:'wlt1', text:'Mobile responsive polish', tag:'Wallet', diff:1},
+  {id:'wlt2', text:'Alert notifications (cost threshold)', tag:'Wallet', diff:1},
+  {id:'ps1', text:'TWA or WebView wrapper', tag:'Play Store', diff:1},
+  {id:'cat1', text:'Leaderboard', tag:'Cat Chaos', diff:1},
+  {id:'art3', text:'Leaderboard UI', tag:'Grok Art', diff:1},
+  {id:'img1', text:'User onboarding flow', tag:'Imaginator', diff:1},
+  {id:'img2', text:'Template library', tag:'Imaginator', diff:1},
+  {id:'cvc1', text:'Public upload gallery', tag:'ComicVID', diff:1},
+  {id:'art1', text:'Generate art (violence / retro categories)', tag:'Grok Art', diff:1},
+  {id:'art2', text:'IPFS image gallery', tag:'Grok Art', diff:1},
+  {id:'cat2', text:'Community room sharing', tag:'Cat Chaos', diff:1},
+  {id:'cvc2', text:'Community submissions', tag:'ComicVID', diff:1},
+  {id:'cvc3', text:'Audio track sync', tag:'ComicVID', diff:1},
+  {id:'bios1', text:'SELECT/BACK universal whistles', tag:'ALIVE BIOS', diff:1},
+  {id:'bios2', text:'Square option cycling with beeps', tag:'ALIVE BIOS', diff:1},
+  {id:'stt1', text:'Station 04 — Valuator (viral DNA radar)', tag:'SF Studio', diff:1},
+  {id:'stt2', text:'Station 05 — Publisher', tag:'SF Studio', diff:1},
+
+  // ── MEDIUM ───────────────────────────────────────────────────
+  {id:'fiv1', text:'api/join-webhook.php — link Stripe payment to DB node record', tag:'Fiver', diff:2},
+  {id:'img3', text:'Analytics dashboard', tag:'Imaginator', diff:2},
+  {id:'img4', text:'Batch processing', tag:'Imaginator', diff:2},
+  {id:'d4d1', text:'VidProof dare recording', tag:'D4D', diff:2},
+  {id:'d4d2', text:'Mint worker live on server', tag:'D4D', diff:2},
+  {id:'d4d3', text:'Community voting', tag:'D4D', diff:2},
+  {id:'alv1', text:'Girl ↔ Boy live pairing test', tag:'ALIVE', diff:2},
+  {id:'alv2', text:'DIAG mode end-to-end', tag:'ALIVE', diff:2},
+  {id:'shp2', text:'Auto-compress loop end-to-end tested on live codebase', tag:'Shape VM', diff:2},
+  {id:'ps4', text:'Play Store submission', tag:'Play Store', diff:2},
+  {id:'ps5', text:'Push notifications', tag:'Play Store', diff:2},
+  {id:'ps6', text:'Background creature sync', tag:'Play Store', diff:2},
+  {id:'ps7', text:'Biometric lock (WebAuthn)', tag:'Play Store', diff:2},
+  {id:'alv3', text:'Play Store packaging', tag:'ALIVE', diff:2},
+  {id:'tok1', text:'Voice "Approved" trigger wired', tag:'Smart Contract', diff:2},
+  {id:'tok2', text:'0.5% auto-skim to SF wallet', tag:'Smart Contract', diff:2},
+  {id:'stt3', text:'Station 06–08 remaining stations', tag:'SF Studio', diff:2},
+  {id:'dh1', text:'User alert system', tag:'Deal Hunter', diff:2},
+  {id:'dh2', text:'Mobile responsive app', tag:'Deal Hunter', diff:2},
+
+  // ── HARD ─────────────────────────────────────────────────────
+  {id:'fiv2', text:'100 Level 1 dividends — payout logic', tag:'Fiver', diff:3},
+  {id:'cvc4', text:'Batch encode queue', tag:'ComicVID', diff:3},
+  {id:'bios3', text:'Code injection execution (Layer 1+2)', tag:'ALIVE BIOS', diff:3},
+  {id:'bios4', text:'Sleep mode consolidation', tag:'ALIVE BIOS', diff:3},
+  {id:'bios5', text:'Creature-to-creature brain sync', tag:'ALIVE BIOS', diff:3},
+  {id:'bios6', text:'Whistle → code trigger pipeline', tag:'ALIVE BIOS', diff:3},
+  {id:'tok3', text:'Rank NFT minting (bottled avatars)', tag:'Token Econ', diff:3},
+  {id:'tok4', text:'On-chain credit verification', tag:'Token Econ', diff:3},
+  {id:'tok5', text:'Studio session booking system', tag:'Token Econ', diff:3},
+  {id:'tok6', text:'Real candy fulfilment partner', tag:'Token Econ', diff:3},
+  {id:'shp3', text:'Multi-file GPO intersection — n-file superposition', tag:'Shape VM', diff:3},
+  {id:'crt1', text:'Deep understanding scoring', tag:'Cortex', diff:3},
+  {id:'crt2', text:'Memory-informed responses (recall relevant past conversations)', tag:'Cortex', diff:3},
+  {id:'alv4', text:'Contribution system integration', tag:'ALIVE', diff:3},
+  {id:'dh3', text:'Price scraping engine', tag:'Deal Hunter', diff:3},
+  {id:'dh4', text:'Deal detection (50%+ off)', tag:'Deal Hunter', diff:3},
+  {id:'dh5', text:'Product database', tag:'Deal Hunter', diff:3},
+  {id:'dh6', text:'User accounts', tag:'Deal Hunter', diff:3},
+  {id:'dh7', text:'Affiliate link integration', tag:'Deal Hunter', diff:3},
+  {id:'dh8', text:'Browser extension', tag:'Deal Hunter', diff:3},
+  {id:'d4d4', text:'SFT smart contract deployed (Base)', tag:'D4D', diff:3},
+  {id:'sc1', text:'Solidity contract deployment (Optimism/Base L2)', tag:'Smart Contract', diff:3},
+  {id:'sc2', text:'Chainlink oracle integration', tag:'Smart Contract', diff:3},
+  {id:'sc3', text:'Token stack integration (SFT / Soul / Candy / Rank NFT)', tag:'Smart Contract', diff:3},
+  {id:'sc4', text:'App Store submission (iOS + Android)', tag:'Smart Contract', diff:3},
+  {id:'art4', text:'Play Store app port', tag:'Grok Art', diff:3},
+  {id:'art5', text:'Apple Store app port', tag:'Grok Art', diff:3},
+
+  // ── HARDEST ──────────────────────────────────────────────────
+  {id:'crt3', text:'Cortex code-writing ability', tag:'Cortex', diff:4},
+  {id:'crt4', text:'Voice output via PersonaPlex (creature speech)', tag:'Cortex', diff:4},
+  {id:'alv5', text:'Cloud AI bridge (level 5)', tag:'ALIVE', diff:4},
+  {id:'fiv3', text:'Phone-size app: swarm empire UI', tag:'Fiver', diff:4},
+  {id:'px1', text:'Install RTX 4090 + WSL2 + CUDA', tag:'PersonaPlex', diff:4},
+  {id:'px2', text:'PersonaPlex server live (local + Nebius)', tag:'PersonaPlex', diff:4},
+];
+
+const DIFF_META = [
+  {label:'Easiest', color:'#22c55e'},
+  {label:'Easy',    color:'#86efac'},
+  {label:'Medium',  color:'#f59e0b'},
+  {label:'Hard',    color:'#ef4444'},
+  {label:'Hardest', color:'#7c3aed'},
+];
+
+const KEY = 'oiloftrop_done_v2';
+const PRESET_DONE = ['ss1','ps3','ps2','ps1','ps4','ps7','d4d1','d4d2','d4d3'];
+let _saved = localStorage.getItem(KEY);
+let done = new Set(_saved !== null ? JSON.parse(_saved) : PRESET_DONE);
+
+function save(){ localStorage.setItem(KEY, JSON.stringify([...done])); }
+
+function updateBar(){
+  const total = TASKS.length;
+  const n = [...done].filter(id => TASKS.find(t=>t.id===id)).length;
+  document.getElementById('bar-fill').style.width = (n / total * 100) + '%';
+  document.getElementById('bar-count').textContent = n + ' / ' + total + ' done';
+}
+
+function render(){
+  const list = document.getElementById('task-list');
+  list.innerHTML = '';
+  let curDiff = -1;
+
+  TASKS.forEach(t => {
+    if(t.diff !== curDiff){
+      curDiff = t.diff;
+      const m = DIFF_META[curDiff];
+      const lbl = document.createElement('div');
+      lbl.className = 'diff-label';
+      lbl.style.color = m.color;
+      lbl.textContent = m.label;
+      list.appendChild(lbl);
+    }
+
+    const isDone = done.has(t.id);
+    const row = document.createElement('div');
+    row.className = 'task-row' + (isDone ? ' done' : '');
+    row.innerHTML = `
+      <div class="tick">
+        <svg viewBox="0 0 10 10" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="1.5,5 4,7.5 8.5,2.5"/>
+        </svg>
+      </div>
+      <div class="task-text">${t.text}</div>
+      <div class="task-tag">${t.tag}</div>
+    `;
+    row.addEventListener('click', () => {
+      if(done.has(t.id)) done.delete(t.id);
+      else done.add(t.id);
+      save();
+      row.classList.toggle('done');
+      updateBar();
+    });
+    list.appendChild(row);
+  });
+}
+
+render();
+updateBar();
+</script>
+</body>
+</html>

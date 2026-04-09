@@ -4,7 +4,7 @@
  * Enables offline mode + Play Store TWA installability.
  */
 
-var CACHE_NAME = 'sf-v18';
+var CACHE_NAME = 'sf-v21';
 var PRECACHE = [
   '/',
   '/hub/',

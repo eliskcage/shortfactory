@@ -1,0 +1,254 @@
+[
+  {
+    "id": "t1",
+    "name": "Editorial Team",
+    "email": "tips@techcrunch.com",
+    "org": "TechCrunch",
+    "role": "News Editor",
+    "type": "press",
+    "sent": "2026-04-02 11:30"
+  },
+  {
+    "id": "t2",
+    "name": "Editorial Team",
+    "email": "pr@wired.co.uk",
+    "org": "Wired UK",
+    "role": "Editor",
+    "type": "press",
+    "sent": "2026-04-02 11:31"
+  },
+  {
+    "id": "t3",
+    "name": "Press Team",
+    "email": "press@spacex.com",
+    "org": "SpaceX",
+    "role": "Press",
+    "type": "space",
+    "sent": "2026-04-02 11:32"
+  },
+  {
+    "id": "t4",
+    "name": "Investment Team",
+    "email": "businessplans@a16z.com",
+    "org": "a16z",
+    "role": "Partner",
+    "type": "vc",
+    "sent": "2026-04-02 11:33"
+  },
+  {
+    "id": "t5",
+    "name": "Psyche Mission Team",
+    "email": "",
+    "org": "NASA JPL",
+    "role": "Mission Lead — use web form at jpl.nasa.gov/contact-jpl",
+    "type": "nasa",
+    "sent": false
+  },
+  {
+    "id": "t6",
+    "name": "Ambre Poilly",
+    "email": "",
+    "org": "Oracle",
+    "role": "Reply to her email in Gmail — she contacted Dan first",
+    "type": "oracle",
+    "sent": false
+  },
+  {
+    "id": "t7",
+    "name": "Daniel Murphy",
+    "email": "",
+    "org": "Oracle UKI",
+    "role": "Director — find email via LinkedIn (format: first.last@oracle.com)",
+    "type": "oracle",
+    "sent": false
+  },
+  {
+    "id": "t8",
+    "name": "Investments Team",
+    "email": "",
+    "org": "Founders Fund",
+    "role": "Partner — no public pitch email, warm intro needed",
+    "type": "vc",
+    "sent": false
+  },
+  {
+    "id": "t9",
+    "name": "News Editors",
+    "email": "newseditors@newscientist.com",
+    "org": "New Scientist",
+    "role": "News Desk",
+    "type": "science_ns_news",
+    "sent": "2026-04-02 10:54"
+  },
+  {
+    "id": "t10",
+    "name": "Daniel Cossins",
+    "email": "daniel.cossins@newscientist.com",
+    "org": "New Scientist",
+    "role": "Features Editor",
+    "type": "science_ns_feat",
+    "sent": "2026-04-02 10:54"
+  },
+  {
+    "id": "t11",
+    "name": "Editorial Team",
+    "email": "editor@sciencealert.com",
+    "org": "ScienceAlert",
+    "role": "Editor",
+    "type": "science_sa",
+    "sent": "2026-04-02 10:54"
+  },
+  {
+    "id": "t12",
+    "name": "Editorial Team",
+    "email": "editorial@popsci.com",
+    "org": "Popular Science",
+    "role": "Editor",
+    "type": "science_ps",
+    "sent": "2026-04-02 10:54"
+  },
+  {
+    "id": "t13",
+    "name": "News Desk",
+    "email": "news@theregister.com",
+    "org": "The Register",
+    "role": "News",
+    "type": "science_reg",
+    "sent": "2026-04-02 10:54"
+  },
+  {
+    "id": "t14",
+    "name": "Holly Faulks",
+    "email": "hfaulks@greeneheaton.co.uk",
+    "org": "Greene & Heaton",
+    "role": "Literary Agent",
+    "type": "publishing",
+    "sent": "2026-04-02 14:32"
+  },
+  {
+    "id": "t15",
+    "name": "Submissions Editor",
+    "email": "submissions@iconbooks.net",
+    "org": "Icon Books",
+    "role": "Submissions",
+    "type": "publishing",
+    "sent": "2026-04-02 14:32"
+  },
+  {
+    "id": "t16",
+    "name": "Editorial Team",
+    "email": "editorial@holistic.news",
+    "org": "Holistic News",
+    "role": "Editor",
+    "type": "health",
+    "sent": "2026-04-03 00:38"
+  },
+  {
+    "id": "t17",
+    "name": "Press Team",
+    "email": "press@neuralink.com",
+    "org": "Neuralink",
+    "role": "Press — 3 opens, forwarded internally",
+    "type": "bci",
+    "sent": "2026-04-03 03:56"
+  },
+  {
+    "id": "t18",
+    "name": "Editorial Team",
+    "email": "editorial@biohackersmagazine.com",
+    "org": "Biohackers Magazine",
+    "role": "Editor",
+    "type": "nootropic",
+    "sent": "2026-04-03 06:04"
+  },
+  {
+    "id": "t19",
+    "name": "Editorial Team",
+    "email": "hello@thequantifiedself.com",
+    "org": "Quantified Self",
+    "role": "Editor",
+    "type": "nootropic",
+    "sent": "2026-04-03 06:04"
+  },
+  {
+    "id": "t20",
+    "name": "Editor",
+    "email": "editor@mindandbrain.co.uk",
+    "org": "Mind & Brain UK",
+    "role": "Editor",
+    "type": "nootropic",
+    "sent": "2026-04-03 06:04"
+  },
+  {
+    "id": "t21",
+    "name": "Alex Jones",
+    "email": "tips@infowars.com",
+    "org": "InfoWars",
+    "role": "Host — NZT² supplement partnership",
+    "type": "nootropic",
+    "sent": "2026-04-03 06:04"
+  },
+  {
+    "id": "t22",
+    "name": "Daniel Cossins",
+    "email": "daniel.cossins@newscientist.com",
+    "org": "New Scientist",
+    "role": "Features Editor — FOLLOW-UP #1",
+    "type": "science_ns_feat",
+    "sent": "2026-04-03 05:27"
+  },
+  {
+    "id": "t23",
+    "name": "News Editors",
+    "email": "newseditors@newscientist.com",
+    "org": "New Scientist",
+    "role": "News Desk — FOLLOW-UP #1 (4 clicks)",
+    "type": "science_ns_news",
+    "sent": "2026-04-03 07:14"
+  },
+  {
+    "id": "t24",
+    "name": "Submissions Editor",
+    "email": "submissions@iconbooks.net",
+    "org": "Icon Books",
+    "role": "Submissions — FOLLOW-UP #1 (2 opens)",
+    "type": "publishing",
+    "sent": "2026-04-03 07:14"
+  },
+  {
+    "id": "t25",
+    "name": "Carrie Plitt",
+    "email": "",
+    "org": "Felicity Bryan Associates",
+    "role": "Literary Agent — PORTAL ONLY: felicitybryan.com/submissions/",
+    "type": "publishing",
+    "sent": false
+  },
+  {
+    "id": "t26",
+    "name": "Alex Jones",
+    "email": "contact@infowars.com",
+    "org": "InfoWars",
+    "role": "Host — retry via contact@ (tips@ may have bounced)",
+    "type": "nootropic",
+    "sent": false
+  },
+  {
+    "id": "t28",
+    "name": "Jordan Peterson",
+    "email": "business@jordanbpeterson.com",
+    "org": "Jordan B Peterson",
+    "role": "Author / Psychologist — Maps of Meaning / Biblical series",
+    "type": "religious",
+    "sent": "2026-04-03 10:38"
+  },
+  {
+    "id": "t27",
+    "name": "Isaac Arthur",
+    "email": "isaacarthur.net/contact/",
+    "org": "Isaac Arthur — YouTube / Science & Futurism",
+    "role": "Science communicator — Venus/AGI collaboration pitch",
+    "type": "collab",
+    "sent": "2026-04-03 10:15"
+  }
+]

@@ -1,0 +1,16 @@
+[Unit]
+Description=Cortex Data Feeds — Wikipedia, Bible, News ingestion every 6 hours
+After=network-online.target cortex.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/var/www/shortfactory.shop/alive/studio
+ExecStart=/usr/bin/python3 /var/www/shortfactory.shop/alive/studio/cortex_feeds.py
+StandardOutput=journal
+StandardError=journal
+TimeoutStartSec=600
+
+[Install]
+WantedBy=multi-user.target

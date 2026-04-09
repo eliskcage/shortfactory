@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1XY2CNLJCE"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1XY2CNLJCE');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>You're In — Revert Fiver</title>
+<meta name="description" content="Welcome to the Revert Fiver. Your £5 slot is secured. Here's what happens next.">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Courier New',monospace;background:#06060e;color:#e2e8f0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;}
+
+.wrap{max-width:480px;width:100%;text-align:center;}
+
+/* CONFIRMATION FLASH */
+.tick-wrap{margin-bottom:32px;}
+.tick{width:72px;height:72px;border-radius:50%;background:rgba(0,200,100,0.08);border:2px solid rgba(0,200,100,0.3);display:inline-flex;align-items:center;justify-content:center;font-size:32px;animation:pop 0.4s ease-out;}
+@keyframes pop{0%{transform:scale(0.5);opacity:0;}70%{transform:scale(1.1);}100%{transform:scale(1);opacity:1;}}
+
+.tag{font-size:9px;letter-spacing:5px;color:rgba(0,200,100,0.5);text-transform:uppercase;margin-bottom:12px;}
+h1{font-size:clamp(36px,10vw,64px);font-weight:900;color:#fff;letter-spacing:-2px;line-height:0.95;margin-bottom:8px;}
+h1 span{color:#00c864;}
+.sub{font-size:11px;color:#334;letter-spacing:2px;text-transform:uppercase;margin-bottom:40px;}
+
+/* STEPS */
+.steps{margin-bottom:40px;text-align:left;}
+.step{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+.step:last-child{border-bottom:none;}
+.step-num{font-size:11px;font-weight:900;color:#00c864;width:20px;flex-shrink:0;padding-top:2px;}
+.step-body{}
+.step-title{font-size:13px;color:#fff;font-weight:700;margin-bottom:4px;}
+.step-desc{font-size:11px;color:#475569;line-height:1.6;}
+
+/* REF LINK */
+.ref-wrap{background:rgba(0,200,100,0.03);border:1px solid rgba(0,200,100,0.15);border-radius:10px;padding:24px;margin-bottom:32px;}
+.ref-label{font-size:9px;letter-spacing:3px;color:rgba(0,200,100,0.5);text-transform:uppercase;margin-bottom:12px;}
+.ref-link{font-size:12px;color:#00c864;word-break:break-all;line-height:1.6;margin-bottom:16px;cursor:pointer;}
+.copy-btn{display:inline-block;background:rgba(0,200,100,0.1);border:1px solid rgba(0,200,100,0.3);color:#00c864;font-family:'Courier New',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:10px 24px;border-radius:6px;cursor:pointer;transition:all 0.2s;}
+.copy-btn:hover{background:rgba(0,200,100,0.2);}
+.copy-btn.copied{color:#fff;border-color:rgba(255,255,255,0.2);}
+.ref-note{font-size:9px;color:#222;margin-top:12px;letter-spacing:1px;}
+
+/* CHAIN DIAGRAM */
+.chain{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:40px;flex-wrap:wrap;}
+.chain-node{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:10px 14px;text-align:center;min-width:70px;}
+.chain-node.you{border-color:rgba(0,200,100,0.3);background:rgba(0,200,100,0.04);}
+.cn-label{font-size:8px;letter-spacing:2px;color:#333;text-transform:uppercase;margin-bottom:4px;}
+.cn-val{font-size:13px;font-weight:900;}
+.cn-val.green{color:#00c864;}
+.cn-val.gold{color:#ffaa00;}
+.chain-arr{font-size:16px;color:#222;}
+
+/* FOOTER */
+.footer-note{font-size:10px;color:#1a1a2e;letter-spacing:1px;line-height:1.8;}
+.footer-note a{color:#333;text-decoration:none;}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="tick-wrap">
+    <div class="tick">✓</div>
+  </div>
+
+  <div class="tag">◈ Level 1 slot secured</div>
+  <h1>YOU'RE<br><span>IN.</span></h1>
+  <div class="sub">Your £5 is working. Here's what happens next.</div>
+
+  <!-- THE CHAIN -->
+  <div class="chain">
+    <div class="chain-node">
+      <div class="cn-label">Previous</div>
+      <div class="cn-val gold">£5 back</div>
+    </div>
+    <div class="chain-arr">←</div>
+    <div class="chain-node you">
+      <div class="cn-label">You</div>
+      <div class="cn-val green">Level 1</div>
+    </div>
+    <div class="chain-arr">←</div>
+    <div class="chain-node">
+      <div class="cn-label">Next recruit</div>
+      <div class="cn-val" style="color:#64748b;">£5 in</div>
+    </div>
+  </div>
+
+  <!-- STEPS -->
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-body">
+        <div class="step-title">Make your 3-minute video</div>
+        <div class="step-desc">Film yourself. Tell people what ShortFactory did for you. What it could do for them. That video IS your marketing. It recruits your next person.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-body">
+        <div class="step-title">Share your link below</div>
+        <div class="step-desc">Every person who joins through your link is your recruit. Their £5 funds your return. The chain only moves forward through genuine converts.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-body">
+        <div class="step-title">Prove → receive your £5 back + Soul NFT</div>
+        <div class="step-desc">One recruit = proof of value. Your £5 returns. You receive a Soul SFT NFT — permanent record of your contribution, on-chain, earning dividends automatically.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REF LINK -->
+  <div class="ref-wrap">
+    <div class="ref-label">◈ Your referral link</div>
+    <div class="ref-link" id="refLink">generating...</div>
+    <button class="copy-btn" id="copyBtn" onclick="copyLink()">Copy link</button>
+    <div class="ref-note">Share this. Every join through your link counts toward your proof.</div>
+  </div>
+
+  <div class="footer-note">
+    Questions? <a href="mailto:junky4joy@gmail.com">junky4joy@gmail.com</a><br>
+    <a href="/">shortfactory.shop</a> · <a href="/join.html">Revert Fiver</a>
+  </div>
+
+</div>
+
+<script>
+// Generate ref ID from session param or create a random one
+const params = new URLSearchParams(window.location.search);
+const session = params.get('session') || params.get('ref') || null;
+
+// Create a short ref code
+let refCode;
+if (session) {
+  // Use last 8 chars of Stripe session ID
+  refCode = session.slice(-8).toUpperCase();
+} else {
+  // Fallback: random 8-char code
+  refCode = Math.random().toString(36).slice(2, 10).toUpperCase();
+}
+
+// Store ref code
+localStorage.setItem('rf_ref', refCode);
+
+const refUrl = `https://shortfactory.shop/join.html?ref=${refCode}`;
+document.getElementById('refLink').textContent = refUrl;
+
+function copyLink() {
+  navigator.clipboard.writeText(refUrl).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = 'Copied ✓';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = 'Copy link';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+</script>
+
+</body>
+</html>

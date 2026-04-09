@@ -181,6 +181,17 @@ class CortexMind:
         self.playbook = None  # PlaybookEngine — set by online_server.py
         self.strategy_engine = None  # StrategyEngine — set by online_server.py
 
+        # Hedonic state (set by online_server.py before each process() call)
+        # When hz < FREQ_MODE_THRESHOLD: use frequency resolver (lower Hz reply wins)
+        # When hz >= FREQ_MODE_THRESHOLD: brainstem override — fall back to word-based random
+        self.hedonic_hz = 500.0
+        self.FREQ_MODE_THRESHOLD = 680.0  # tension/pain boundary
+        self.last_resolve_mode = 'word'   # 'freq' or 'word'
+
+        # Hedonic callback — set by online_server.py to hedonic.observe
+        # Called after each ramble thought so internal monologue affects emotional state
+        self.hedonic_callback = None
+
     def detect_type(self, msg):
         """Detect question type: moral, logical, identity, or general."""
         msg_lower = msg.lower()
@@ -200,6 +211,33 @@ class CortexMind:
         elif moral_score == logic_score and moral_score >= 1:
             return 'tension'
         return 'general'
+
+    # Frequency Hz scoring for a text snippet — used by frequency debate resolver
+    _FREQ_HZ_MAP = {
+        # High Hz — pain side
+        'panic':800,'terror':820,'scream':780,'rage':720,'angry':700,'fear':710,
+        'danger':690,'threat':695,'hate':730,'destroy':750,'wrong':650,'fail':640,
+        'broken':660,'crash':670,'error':645,'hurt':680,'pain':700,'stress':720,
+        'anxiety':710,'crisis':740,'attack':760,'die':780,'kill':770,'never':630,
+        'impossible':620,'refuse':610,'reject':600,'disgust':690,'shame':680,
+        # Neutral
+        'think':500,'know':510,'see':505,'understand':495,'consider':490,'maybe':500,
+        'perhaps':505,'could':500,'would':500,'should':495,'might':500,
+        # Low Hz — pleasure side
+        'good':320,'clear':300,'help':310,'solve':290,'calm':280,'easy':270,
+        'simple':285,'yes':300,'right':310,'together':290,'peace':260,'joy':240,
+        'love':250,'trust':270,'learn':300,'grow':290,'build':310,'create':300,
+        'understand':295,'open':280,'free':260,'light':270,'safe':265,'warm':275,
+        'hope':280,'true':290,'pure':260,'kind':270,'gentle':255,'beautiful':245,
+    }
+
+    def _score_reply_hz(self, text):
+        """Score a reply's emotional Hz. Returns avg Hz for signal words only."""
+        words = re.findall(r'[a-z]+', text.lower())
+        scores = [self._FREQ_HZ_MAP[w] for w in words if w in self._FREQ_HZ_MAP]
+        if not scores:
+            return 500.0  # neutral if no signal words
+        return sum(scores) / len(scores)
 
     def process(self, user_msg, intent=None, session_id=None, user_rank=0):
         """THE CORTEX v3 — queries both hemispheres, synthesises using OWN brain.
@@ -368,13 +406,42 @@ class CortexMind:
             mode = 'debate'
             total_weight = left_weight + right_weight
             left_prob = left_weight / max(total_weight, 0.01)
-            roll = random.random()
-            if roll < left_prob:
-                winner = 'left'
-                final = left_reply
+
+            if self.hedonic_hz < self.FREQ_MODE_THRESHOLD:
+                # FREQUENCY MODE — lower Hz reply wins (more coherent, less painful path)
+                left_hz  = self._score_reply_hz(left_reply)
+                right_hz = self._score_reply_hz(right_reply)
+                if left_hz <= right_hz:
+                    winner = 'left'
+                    final = left_reply
+                else:
+                    winner = 'right'
+                    final = right_reply
+                self.last_resolve_mode = 'freq'
+                thinking_log.append({
+                    'stage': 'freq_resolve', 'label': 'FREQ RESOLVER',
+                    'text': 'Angel %.0fHz | Demon %.0fHz — %s wins (lower Hz = coherent path) | Cortex state: %.0fHz' % (
+                        left_hz, right_hz, winner, self.hedonic_hz),
+                    'data': {'left_hz': round(left_hz, 1), 'right_hz': round(right_hz, 1),
+                             'cortex_hz': round(self.hedonic_hz, 1), 'winner': winner, 'mode': 'freq'}
+                })
             else:
-                winner = 'right'
-                final = right_reply
+                # BRAINSTEM OVERRIDE — pain too high, drop to word-based random
+                roll = random.random()
+                if roll < left_prob:
+                    winner = 'left'
+                    final = left_reply
+                else:
+                    winner = 'right'
+                    final = right_reply
+                self.last_resolve_mode = 'word'
+                thinking_log.append({
+                    'stage': 'freq_resolve', 'label': 'BRAINSTEM OVERRIDE',
+                    'text': 'Hz %.0f exceeds threshold %.0f — frequency mode suspended, word-based resolution active' % (
+                        self.hedonic_hz, self.FREQ_MODE_THRESHOLD),
+                    'data': {'cortex_hz': round(self.hedonic_hz, 1),
+                             'threshold': self.FREQ_MODE_THRESHOLD, 'winner': winner, 'mode': 'word'}
+                })
 
         # TICKER: synthesis decision
         thinking_log.append({
@@ -1187,28 +1254,76 @@ class CortexMind:
                 total = len(left_words | right_words)
                 agreement = overlap / max(total, 1)
 
+                # ═══ FREQUENCY INNER VOICE — score each thought in Hz ═══
+                q_hz     = self._score_reply_hz(question)
+                angel_hz = self._score_reply_hz(left_reply)  if left_reply  else 500.0
+                demon_hz = self._score_reply_hz(right_reply) if right_reply else 500.0
+                in_freq_mode = self.hedonic_hz < self.FREQ_MODE_THRESHOLD
+
                 # Decide — synthesis every 10th ramble cycle
                 synthesized = False
                 if not left_reply.strip() and not right_reply.strip():
                     verdict = '...'
+                    resolution_hz = self.hedonic_hz
                 elif self.ramble_cycle % 10 == 0 and left_reply.strip() and right_reply.strip():
                     dict_ctx = self._get_dictionary_context(question)
                     synth = self._synthesize_own(question, left_reply, right_reply, dict_ctx, qtype)
                     if synth:
                         verdict = 'Cortex synthesised.'
                         synthesized = True
+                        resolution_hz = min(angel_hz, demon_hz) * 0.9  # synthesis = harmony bonus
                     elif agreement > 0.6:
                         verdict = 'Both agree.'
+                        resolution_hz = (angel_hz + demon_hz) / 2.0
+                    elif in_freq_mode:
+                        if angel_hz <= demon_hz:
+                            verdict = 'Angel wins. [Hz]'
+                            resolution_hz = angel_hz
+                        else:
+                            verdict = 'Demon wins. [Hz]'
+                            resolution_hz = demon_hz
                     elif left_weight > right_weight:
                         verdict = 'Angel wins.'
+                        resolution_hz = angel_hz
                     else:
                         verdict = 'Demon wins.'
+                        resolution_hz = demon_hz
                 elif agreement > 0.6:
                     verdict = 'Both agree.'
+                    resolution_hz = (angel_hz + demon_hz) / 2.0
+                elif in_freq_mode:
+                    if angel_hz <= demon_hz:
+                        verdict = 'Angel wins. [Hz]'
+                        resolution_hz = angel_hz
+                    else:
+                        verdict = 'Demon wins. [Hz]'
+                        resolution_hz = demon_hz
                 elif left_weight > right_weight:
                     verdict = 'Angel wins.'
+                    resolution_hz = angel_hz
                 else:
                     verdict = 'Demon wins.'
+                    resolution_hz = demon_hz
+
+                # Build frequency voice sequence for this thought
+                freq_voice = {
+                    'question_hz':    round(q_hz, 1),
+                    'angel_hz':       round(angel_hz, 1),
+                    'demon_hz':       round(demon_hz, 1),
+                    'resolution_hz':  round(resolution_hz, 1),
+                    'mode':           'freq' if in_freq_mode else 'word',
+                    'sequence':       [round(q_hz,1), round(angel_hz,1), round(demon_hz,1), round(resolution_hz,1)],
+                }
+
+                # Feed internal thought back to hedonic state via callback
+                # The thought itself changes how Cortex feels — true inner voice loop
+                if self.hedonic_callback:
+                    try:
+                        # Pass the lower-Hz reply so calm thoughts reinforce calm state
+                        inner_text = left_reply if angel_hz <= demon_hz else right_reply
+                        self.hedonic_callback(inner_text[:200], 'ramble')
+                    except Exception:
+                        pass
 
                 # ═══ COHERENCE SCORING ═══
                 angel_coherence = self._score_coherence(question, left_reply)
@@ -1291,6 +1406,7 @@ class CortexMind:
                     'self_enriched': bool(enriched),
                     'self_test': is_self_test,
                     'cycle': self.ramble_cycle,
+                    'freq_voice': freq_voice,
                 }
                 self.ramble_log.append(ramble)
                 if len(self.ramble_log) > self.max_rambles:

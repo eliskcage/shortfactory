@@ -1,0 +1,4793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- ALIVE BRAINSTEM v1.2 | Feb 17 2026 | Goal/Reward/Prediction + Bluetooth Learning -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>BRAINSTEM — ALIVE Associative Memory Engine</title>
+<meta name="description" content="Draw shapes. Attach code. Watch the creature think. A visual knowledge graph that learns, dreams, and evolves on IPFS.">
+<meta property="og:title" content="BRAINSTEM — ALIVE Memory Engine">
+<meta property="og:description" content="Two-layer processing: instant shape associations on top, async gut computation underneath. The gap is emotion.">
+<meta property="og:url" content="https://www.shortfactory.shop/alive/brainstem/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script src="cytoscape.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#0a0a0a;color:#e0e0e0;font-family:'Share Tech Mono',monospace;-webkit-tap-highlight-color:transparent;touch-action:none}
+
+/* ── TOOLBAR ── */
+.toolbar{position:fixed;top:0;left:0;right:0;height:48px;background:rgba(10,10,10,0.95);backdrop-filter:blur(12px);border-bottom:1px solid rgba(0,255,136,0.15);display:flex;align-items:center;justify-content:space-between;padding:0 12px;z-index:50;gap:8px}
+.tb-logo{font-family:'Orbitron',sans-serif;font-weight:900;font-size:14px;letter-spacing:3px;background:linear-gradient(90deg,#00ff88,#00d4ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.tb-modes{display:flex;gap:4px}
+.tb-btn{background:rgba(255,255,255,0.05);border:1px solid rgba(0,255,136,0.2);color:#888;font-family:'Share Tech Mono',monospace;font-size:10px;padding:6px 12px;border-radius:4px;cursor:pointer;transition:all .2s;letter-spacing:1px}
+.tb-btn:hover{background:rgba(0,255,136,0.1);color:#ccc}
+.tb-btn.active{background:rgba(0,255,136,0.15);color:#00ff88;border-color:#00ff88;box-shadow:0 0 8px rgba(0,255,136,0.2)}
+.tb-stats{display:flex;gap:12px;font-size:10px;color:#555;letter-spacing:1px}
+.tb-stat{display:flex;align-items:center;gap:4px}
+.tb-stat .val{color:#00ff88;font-weight:700}
+.tb-actions{display:flex;gap:4px}
+.tb-wallet{font-size:10px;color:#ffd700;font-weight:700;letter-spacing:1px}
+
+/* ── GRAPH CONTAINER ── */
+#graphContainer{position:fixed;top:48px;left:0;right:0;bottom:0;z-index:1;background:#0a0a0a}
+
+/* ── DRAWING CANVAS ── */
+#drawCanvas{position:fixed;top:48px;left:0;right:0;bottom:0;z-index:10;cursor:crosshair;display:none}
+
+/* ── STATUS BAR ── */
+.status-bar{position:fixed;bottom:0;left:0;right:0;height:28px;background:rgba(10,10,10,0.95);border-top:1px solid rgba(0,255,136,0.1);display:flex;align-items:center;justify-content:center;z-index:45;font-size:9px;color:#444;letter-spacing:2px}
+.status-bar .msg{color:#00ff88;transition:color .3s}
+.status-bar .msg.error{color:#ff4444}
+
+/* ── CODE PANEL ── */
+.code-panel{position:fixed;bottom:28px;left:0;right:0;height:0;background:rgba(8,8,8,0.98);backdrop-filter:blur(12px);border-top:1px solid rgba(0,255,136,0.2);z-index:30;transition:height .3s ease;overflow:hidden}
+.code-panel.open{height:280px}
+.panel-handle{height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.panel-handle:hover{background:rgba(0,255,136,0.05)}
+.handle-bar{width:40px;height:3px;background:rgba(0,255,136,0.3);border-radius:2px}
+.panel-content{padding:0 12px 12px;height:calc(100% - 28px);display:flex;flex-direction:column;gap:8px}
+.code-header{display:flex;align-items:center;gap:8px}
+.code-node-label{font-family:'Orbitron',sans-serif;font-size:11px;color:#00ff88;letter-spacing:2px}
+.code-shape-badge{font-size:9px;padding:2px 8px;border-radius:3px;background:rgba(0,255,136,0.1);color:#00d4ff;border:1px solid rgba(0,212,255,0.2);letter-spacing:1px}
+.code-run-btn{margin-left:auto;background:#00ff88;color:#0a0a0a;border:none;font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;padding:5px 16px;border-radius:3px;cursor:pointer;letter-spacing:2px;transition:all .15s}
+.code-run-btn:hover{background:#00ffaa;box-shadow:0 0 12px rgba(0,255,136,0.4)}
+.code-run-btn:active{transform:scale(0.95)}
+#codeEditor{flex:1;background:#111;border:1px solid rgba(0,255,136,0.15);border-radius:4px;color:#00ff88;font-family:'Share Tech Mono',monospace;font-size:12px;padding:10px;resize:none;outline:none;line-height:1.5;tab-size:2}
+#codeEditor:focus{border-color:rgba(0,255,136,0.4)}
+#codeEditor.readonly{opacity:0.5;cursor:not-allowed}
+.code-output{display:flex;align-items:center;gap:12px;font-size:10px}
+.output-label{color:#555;letter-spacing:1px}
+.output-value{color:#00d4ff;font-weight:700}
+.color-swatch{width:20px;height:20px;border-radius:3px;border:1px solid rgba(255,255,255,0.1)}
+
+/* ── INSPECTOR PANEL ── */
+.inspector{position:fixed;top:48px;right:-260px;width:260px;bottom:28px;background:rgba(8,8,8,0.98);backdrop-filter:blur(12px);border-left:1px solid rgba(0,255,136,0.15);z-index:25;transition:right .3s ease;overflow-y:auto;padding:16px;font-size:10px}
+.inspector.open{right:0}
+.insp-title{font-family:'Orbitron',sans-serif;font-size:11px;color:#00ff88;letter-spacing:2px;margin-bottom:12px}
+.insp-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+.insp-key{color:#555;letter-spacing:1px}
+.insp-val{color:#aaa;text-align:right;max-width:140px;overflow:hidden;text-overflow:ellipsis}
+.insp-close{position:absolute;top:12px;right:12px;background:none;border:none;color:#555;font-size:16px;cursor:pointer}
+.insp-close:hover{color:#ff4444}
+.insp-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.insp-tag{font-size:8px;padding:2px 6px;background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.2);border-radius:3px;color:#00d4ff}
+.insp-delete{margin-top:12px;width:100%;background:rgba(255,0,0,0.1);border:1px solid rgba(255,0,0,0.3);color:#ff4444;font-family:'Share Tech Mono',monospace;font-size:10px;padding:8px;border-radius:4px;cursor:pointer;letter-spacing:1px}
+.insp-delete:hover{background:rgba(255,0,0,0.2)}
+
+/* ── SLEEP OVERLAY ── */
+.sleep-overlay{position:fixed;inset:0;z-index:40;background:radial-gradient(circle at 50% 50%,rgba(10,10,10,0.0),rgba(5,5,5,0.97) 70%);pointer-events:none;opacity:0;transition:opacity 2s ease}
+.sleep-overlay.active{opacity:1;pointer-events:auto}
+.sleep-label{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Orbitron',sans-serif;font-size:12px;letter-spacing:8px;color:rgba(0,255,136,0.15);animation:sleepPulse 4s ease-in-out infinite}
+@keyframes sleepPulse{0%,100%{opacity:.15}50%{opacity:.4}}
+.sleep-bubble{position:absolute;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;filter:blur(0.5px);transition:opacity .5s}
+.bubble-shape{width:60%;height:60%;opacity:0.6}
+.bubble-shape.circle{border-radius:50%;background:var(--bubble-color)}
+.bubble-shape.triangle{width:0;height:0;border-left:calc(var(--bubble-size,40px)*0.3) solid transparent;border-right:calc(var(--bubble-size,40px)*0.3) solid transparent;border-bottom:calc(var(--bubble-size,40px)*0.5) solid var(--bubble-color);background:none;border-radius:0}
+.bubble-shape.square{border-radius:2px;background:var(--bubble-color)}
+.bubble-shape.star{background:var(--bubble-color);clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
+.bubble-label{font-family:'Orbitron',monospace;font-size:7px;letter-spacing:2px;color:rgba(255,255,255,0.3);margin-top:4px;white-space:nowrap}
+
+/* ── PAYWALL ── */
+.paywall-overlay{position:fixed;inset:0;z-index:1000;background:rgba(5,5,5,0.97);display:flex;align-items:center;justify-content:center;transition:opacity .5s}
+.paywall-overlay.hidden{opacity:0;pointer-events:none}
+.paywall-content{text-align:center;max-width:400px;padding:40px}
+.paywall-icon{font-size:64px;margin-bottom:20px;filter:drop-shadow(0 0 20px rgba(0,255,136,0.3))}
+.paywall-title{font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;letter-spacing:6px;background:linear-gradient(90deg,#00ff88,#00d4ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+.paywall-subtitle{font-size:11px;color:#555;letter-spacing:3px;margin-bottom:24px}
+.paywall-desc{font-size:12px;color:#777;line-height:1.8;margin-bottom:32px}
+.paywall-cost{font-family:'Orbitron',sans-serif;font-size:16px;color:#ffd700;letter-spacing:3px;margin-bottom:20px}
+.paywall-unlock-btn{background:linear-gradient(135deg,#00ff88,#00d4ff);color:#0a0a0a;border:none;font-family:'Orbitron',sans-serif;font-size:14px;font-weight:900;padding:14px 40px;border-radius:6px;cursor:pointer;letter-spacing:3px;transition:all .2s;box-shadow:0 0 20px rgba(0,255,136,0.2)}
+.paywall-unlock-btn:hover{transform:scale(1.05);box-shadow:0 0 30px rgba(0,255,136,0.4)}
+.paywall-unlock-btn:active{transform:scale(0.95)}
+.paywall-unlock-btn.shake{animation:shake .4s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.paywall-balance{font-size:11px;color:#555;margin-top:16px;letter-spacing:1px}
+.paywall-earn{display:inline-block;margin-top:12px;color:#00d4ff;font-size:10px;text-decoration:none;letter-spacing:1px;border-bottom:1px solid rgba(0,212,255,0.3)}
+.paywall-earn:hover{color:#00ff88}
+
+/* ── DOPAMINE ── */
+#dopFlash{position:fixed;inset:0;background:rgba(0,255,136,0.08);pointer-events:none;opacity:0;transition:opacity .15s;z-index:999}
+#cashRain{position:fixed;inset:0;pointer-events:none;z-index:998;overflow:hidden}
+.cash-emoji{position:absolute;top:-40px;font-size:24px;animation:cashFall 2s ease-in forwards}
+@keyframes cashFall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+
+/* ── NODE PULSE ANIMATION ── */
+@keyframes nodePulse{0%{box-shadow:0 0 0 0 rgba(0,255,136,0.4)}70%{box-shadow:0 0 0 15px rgba(0,255,136,0)}100%{box-shadow:0 0 0 0 rgba(0,255,136,0)}}
+
+/* ── DRAW FEEDBACK ── */
+.shape-recognized{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Orbitron',sans-serif;font-size:18px;font-weight:900;letter-spacing:4px;color:#00ff88;text-shadow:0 0 20px rgba(0,255,136,0.5);opacity:0;z-index:15;pointer-events:none;transition:opacity .3s}
+.shape-recognized.show{opacity:1}
+
+/* ── GOALS PANEL ── */
+.goals-panel{position:fixed;top:48px;left:-300px;width:300px;bottom:28px;background:rgba(8,8,8,0.98);backdrop-filter:blur(12px);border-right:1px solid rgba(255,215,0,0.15);z-index:25;transition:left .3s ease;overflow-y:auto;padding:16px;font-size:10px}
+.goals-panel.open{left:0}
+.goals-title{font-family:'Orbitron',sans-serif;font-size:11px;color:#ffd700;letter-spacing:2px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.goals-close{background:none;border:none;color:#555;font-size:16px;cursor:pointer}
+.goals-close:hover{color:#ff4444}
+.goal-card{background:rgba(255,215,0,0.04);border:1px solid rgba(255,215,0,0.12);border-radius:8px;padding:12px;margin-bottom:10px;transition:all .2s}
+.goal-card.achieved{border-color:rgba(0,255,136,0.4);background:rgba(0,255,136,0.05)}
+.goal-card.active{border-color:rgba(255,215,0,0.4);box-shadow:0 0 10px rgba(255,215,0,0.1)}
+.goal-name{font-family:'Orbitron',sans-serif;font-size:10px;color:#ffd700;letter-spacing:1px;margin-bottom:4px}
+.goal-card.achieved .goal-name{color:#00ff88}
+.goal-desc{font-size:9px;color:#666;line-height:1.5;margin-bottom:6px}
+.goal-progress{height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;margin-bottom:4px}
+.goal-progress-fill{height:100%;background:#ffd700;border-radius:2px;transition:width .5s ease}
+.goal-card.achieved .goal-progress-fill{background:#00ff88}
+.goal-hint{font-size:8px;color:#555;font-style:italic;letter-spacing:0.5px}
+.goal-reward{font-size:8px;color:#daa520;letter-spacing:1px;margin-top:4px}
+.goal-badge{display:inline-block;font-size:7px;padding:1px 6px;border-radius:3px;letter-spacing:1px;margin-left:4px}
+.goal-badge.done{background:rgba(0,255,136,0.15);color:#00ff88}
+.goal-badge.active-badge{background:rgba(255,215,0,0.15);color:#ffd700}
+
+/* ── SEQUENCE TRAIL ── */
+.seq-trail{position:fixed;bottom:32px;left:50%;transform:translateX(-50%);display:flex;gap:4px;align-items:center;z-index:35;pointer-events:none;opacity:0;transition:opacity .3s}
+.seq-trail.visible{opacity:1}
+.seq-node{width:24px;height:24px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;border:1px solid rgba(255,255,255,0.15);transition:all .2s}
+.seq-arrow{color:#444;font-size:10px}
+.seq-node.predicted{border-color:rgba(255,215,0,0.5);box-shadow:0 0 8px rgba(255,215,0,0.2);animation:predictPulse 1s ease infinite}
+@keyframes predictPulse{0%,100%{box-shadow:0 0 8px rgba(255,215,0,0.2)}50%{box-shadow:0 0 16px rgba(255,215,0,0.4)}}
+
+/* ── REWARD BURST ── */
+.reward-burst{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:60;pointer-events:none;opacity:0}
+.reward-burst.show{animation:rewardIn .8s ease forwards}
+@keyframes rewardIn{0%{opacity:0;transform:translate(-50%,-50%) scale(0.3)}30%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.5)}}
+.reward-text{font-family:'Orbitron',sans-serif;font-size:24px;font-weight:900;color:#ffd700;text-shadow:0 0 30px rgba(255,215,0,0.6);letter-spacing:4px;text-align:center}
+.reward-sub{font-size:10px;color:#00ff88;letter-spacing:2px;margin-top:4px;text-align:center}
+
+/* ── SUBROUTINE CHIPS ── */
+.sub-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.sub-chip{font-size:7px;padding:3px 8px;background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.2);border-radius:10px;color:#00d4ff;cursor:pointer;letter-spacing:0.5px;transition:all .2s}
+.sub-chip:hover{background:rgba(0,212,255,0.15);border-color:#00d4ff}
+.sub-chip .sub-count{color:#555;margin-left:4px}
+
+/* ── WHISTLE PANEL ── */
+.whistle-panel{position:fixed;bottom:28px;left:0;right:0;height:0;background:rgba(8,8,8,0.98);backdrop-filter:blur(12px);border-top:1px solid rgba(255,215,0,0.25);z-index:31;transition:height .3s ease;overflow:hidden}
+.whistle-panel.open{height:280px}
+.wp-handle{height:24px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.wp-handle:hover{background:rgba(255,215,0,0.05)}
+.wp-handle-bar{width:40px;height:3px;background:rgba(255,215,0,0.3);border-radius:2px}
+.wp-content{padding:0 10px 10px;height:calc(100% - 24px);overflow-y:auto}
+.wp-header{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.wp-node-label{font-family:'Orbitron',sans-serif;font-size:11px;color:#ffd700;letter-spacing:2px}
+.wp-shape-badge{font-size:9px;padding:2px 8px;border-radius:3px;background:rgba(255,215,0,0.1);color:#ffd700;border:1px solid rgba(255,215,0,0.2);letter-spacing:1px}
+.wp-controls{display:flex;gap:6px;align-items:center;margin-top:6px}
+.wp-rec-btn{width:40px;height:40px;border-radius:50%;border:3px solid #ff4444;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .3s;flex-shrink:0}
+.wp-rec-btn .rec-inner{width:18px;height:18px;border-radius:50%;background:#ff4444;transition:all .3s}
+.wp-rec-btn.recording{border-color:#ff0000;box-shadow:0 0 20px rgba(255,0,0,0.4);animation:wpRecPulse 1s infinite}
+.wp-rec-btn.recording .rec-inner{border-radius:3px;width:12px;height:12px}
+@keyframes wpRecPulse{0%,100%{box-shadow:0 0 15px rgba(255,0,0,0.2)}50%{box-shadow:0 0 25px rgba(255,0,0,0.5)}}
+.wp-del-btn{width:32px;height:32px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#aaa;font-size:13px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.wp-del-btn:hover{border-color:#ff4444;color:#ff4444}
+.wp-del-btn:disabled{opacity:.3;cursor:not-allowed}
+.wp-score{font-family:'Orbitron',sans-serif;font-size:12px;letter-spacing:2px;transition:color .3s}
+.wp-score.good{color:#00ff88}
+.wp-score.bad{color:#ff4444}
+.wp-score.waiting{color:#555}
+/* Practice shape pills */
+.wp-practice{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
+.wp-prac-btn{font-size:8px;padding:3px 10px;border-radius:10px;border:1px solid rgba(255,215,0,0.15);background:rgba(255,215,0,0.04);color:#888;cursor:pointer;letter-spacing:1px;transition:all .2s;font-family:'Share Tech Mono',monospace}
+.wp-prac-btn:hover{border-color:#ffd700;color:#ffd700}
+.wp-prac-btn.active{border-color:#ffd700;color:#ffd700;background:rgba(255,215,0,0.1)}
+.wp-prac-btn.pass{border-color:#00ff88;color:#00ff88;background:rgba(0,255,136,0.08)}
+/* System whistle row */
+.sys-whistle-rec{width:24px;height:24px;border-radius:50%;border:2px solid #ff4444;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sys-whistle-rec .sw-dot{width:8px;height:8px;border-radius:50%;background:#ff4444}
+.sys-whistle-rec.recording{border-color:#ff0000;box-shadow:0 0 12px rgba(255,0,0,0.3);animation:wpRecPulse .8s infinite}
+.sys-whistle-rec.recording .sw-dot{border-radius:2px;width:6px;height:6px}
+.sys-whistle-status{font-size:7px;color:#444;letter-spacing:1px}
+.sys-whistle-status.set{color:#00ff88}
+
+/* Whistle listening indicator */
+.whistle-indicator{position:fixed;top:52px;right:8px;font-size:16px;z-index:55;opacity:0;transition:opacity .3s;animation:micPulse 2s ease-in-out infinite}
+.whistle-indicator.active{opacity:1}
+@keyframes micPulse{0%,100%{opacity:.5;filter:drop-shadow(0 0 4px rgba(255,215,0,0.2))}50%{opacity:1;filter:drop-shadow(0 0 8px rgba(255,215,0,0.5))}}
+
+/* Selection cycling glow */
+@keyframes selectCycle{0%,100%{box-shadow:0 0 0 0 rgba(255,215,0,0)}50%{box-shadow:0 0 0 10px rgba(255,215,0,0.3)}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:600px){
+  .toolbar{padding:0 8px;height:44px}
+  .tb-logo{font-size:11px;letter-spacing:2px}
+  .tb-btn{font-size:8px;padding:4px 8px}
+  .tb-stats{display:none}
+  .code-panel.open{height:240px}
+  .inspector{width:220px}
+  .paywall-title{font-size:22px}
+}
+
+/* ── VOICE GUIDE ("SHE") ── */
+.voice-bubble{position:fixed;bottom:36px;left:8px;right:8px;max-width:440px;background:rgba(10,12,24,0.97);border:1px solid rgba(0,212,255,0.18);border-radius:18px;padding:0;z-index:46;opacity:0;transform:translateY(14px);transition:all .4s ease;pointer-events:none;backdrop-filter:blur(16px);box-shadow:0 6px 32px rgba(0,0,0,0.5);overflow:hidden}
+.voice-bubble.visible{opacity:1;transform:translateY(0);pointer-events:auto}
+.voice-top{display:flex;align-items:flex-start;gap:10px;padding:12px 14px 8px}
+.voice-dismiss{position:absolute;top:8px;right:10px;background:none;border:none;color:#444;font-size:11px;cursor:pointer;padding:4px 6px;line-height:1;z-index:2}
+.voice-dismiss:hover{color:#888}
+
+/* Avatar */
+.voice-avatar{width:48px;height:48px;border-radius:50%;background:radial-gradient(circle at 50% 40%,#1a2a4a,#0a0e1e);border:2px solid rgba(0,212,255,0.25);flex-shrink:0;position:relative;overflow:hidden;box-shadow:0 0 12px rgba(0,212,255,0.1)}
+.avatar-face{position:absolute;inset:0}
+.avatar-eye{position:absolute;width:8px;height:8px;background:#00d4ff;border-radius:50%;top:17px;transition:all .3s}
+.avatar-eye.left{left:12px}
+.avatar-eye.right{right:12px}
+.avatar-eye.blink{height:2px;top:20px}
+.avatar-mouth{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);width:14px;height:7px;border-radius:0 0 7px 7px;border:2px solid #00d4ff;border-top:none;transition:all .3s}
+.avatar-mouth.speaking{animation:mouthMove .3s ease infinite alternate}
+.avatar-mouth.smile{height:8px;border-radius:0 0 8px 8px}
+.avatar-mouth.concern{border-radius:4px;height:4px;width:10px;border:2px solid #ff8844;border-top:2px solid #ff8844;border-radius:50%}
+@keyframes mouthMove{0%{height:4px}100%{height:9px}}
+.voice-bubble.visible .avatar-eye{animation:avatarBlink 3.5s ease infinite}
+@keyframes avatarBlink{0%,92%,100%{height:8px;top:17px}95%{height:2px;top:20px}}
+
+/* Message area */
+.voice-msg{flex:1;min-width:0}
+.voice-name{font-family:'Orbitron',sans-serif;font-size:7px;color:#00d4ff;letter-spacing:3px;margin-bottom:4px;opacity:0.5}
+.voice-text{font-size:12px;color:#c0d4e0;line-height:1.6;letter-spacing:0.2px;max-height:100px;overflow-y:auto}
+.voice-cursor{display:inline-block;width:2px;height:12px;background:#00d4ff;margin-left:2px;animation:voiceBlink .7s step-end infinite;vertical-align:text-bottom}
+@keyframes voiceBlink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* Creature speech bubble (droid translation) */
+.creature-says{position:fixed;top:12px;left:50%;transform:translateX(-50%) translateY(-8px);background:rgba(10,8,4,0.96);border:1px solid rgba(255,215,0,0.22);border-radius:16px;padding:10px 14px 8px;z-index:44;opacity:0;transition:all .4s ease;pointer-events:none;backdrop-filter:blur(12px);box-shadow:0 4px 24px rgba(0,0,0,0.4);max-width:340px;text-align:left}
+.creature-says.visible{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+.creature-says .cs-header{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.creature-says .cs-name{font-family:'Orbitron',sans-serif;font-size:7px;color:#ffd700;letter-spacing:2px;opacity:0.6}
+.creature-says .cs-shape{display:inline-block;width:8px;height:8px;border-radius:2px;opacity:0.7;flex-shrink:0}
+.creature-says .cs-replay{background:none;border:1px solid rgba(255,215,0,0.15);border-radius:10px;color:#ffd700;font-size:10px;padding:2px 8px;cursor:pointer;opacity:0.5;transition:all .2s;margin-left:auto;flex-shrink:0}
+.creature-says .cs-replay:hover{opacity:1;border-color:rgba(255,215,0,0.4)}
+.creature-says .cs-text{font-size:11px;color:#e8d8a8;line-height:1.5;letter-spacing:0.3px;margin-bottom:6px;font-style:italic;opacity:0.6;min-height:16px}
+.creature-says .cs-user-text{font-size:12px;color:#fff;line-height:1.5;letter-spacing:0.3px;margin-bottom:6px;min-height:16px}
+.creature-says .cs-input-row{display:flex;align-items:center;gap:5px}
+.creature-says .cs-input{flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,215,0,0.15);border-radius:12px;padding:6px 11px;color:#e8d8a8;font-family:'Share Tech Mono',monospace;font-size:11px;outline:none;transition:border-color .2s}
+.creature-says .cs-input:focus{border-color:rgba(255,215,0,0.4)}
+.creature-says .cs-input::placeholder{color:#4a4030;font-style:italic}
+.creature-says .cs-save{width:28px;height:28px;border-radius:50%;border:1px solid rgba(255,215,0,0.2);background:transparent;color:#ffd700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.creature-says .cs-save:hover{background:rgba(255,215,0,0.1);border-color:#ffd700}
+.creature-says .cs-saved{font-size:8px;color:#00ff88;letter-spacing:1px;text-align:center;margin-top:4px;opacity:0;transition:opacity .3s}
+.creature-says .cs-saved.show{opacity:1}
+
+/* Chat input */
+.voice-input-row{display:flex;align-items:center;gap:6px;padding:6px 12px 10px;border-top:1px solid rgba(0,212,255,0.08)}
+.voice-input{flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(0,212,255,0.12);border-radius:20px;padding:7px 14px;color:#b0c8d8;font-family:'Share Tech Mono',monospace;font-size:11px;outline:none;transition:border-color .2s}
+.voice-input:focus{border-color:rgba(0,212,255,0.35)}
+.voice-input::placeholder{color:#3a4a5a}
+.voice-mic-btn{width:32px;height:32px;border-radius:50%;border:1.5px solid rgba(0,212,255,0.2);background:transparent;color:#00d4ff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.voice-mic-btn:hover{background:rgba(0,212,255,0.08);border-color:#00d4ff}
+.voice-mic-btn.listening{border-color:#ff4444;color:#ff4444;animation:micBtnPulse 1s infinite}
+@keyframes micBtnPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,68,68,0)}50%{box-shadow:0 0 0 6px rgba(255,68,68,0.15)}}
+.voice-send-btn{width:32px;height:32px;border-radius:50%;border:1.5px solid rgba(0,255,136,0.2);background:transparent;color:#00ff88;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.voice-send-btn:hover{background:rgba(0,255,136,0.08);border-color:#00ff88}
+
+/* ── GUIDE HIGHLIGHT ── */
+.guide-highlight{position:relative;z-index:52 !important;animation:guideGlow 1.4s ease-in-out infinite !important}
+@keyframes guideGlow{0%,100%{box-shadow:0 0 6px rgba(0,212,255,0.25),0 0 14px rgba(0,212,255,0.08)}50%{box-shadow:0 0 14px rgba(0,212,255,0.55),0 0 28px rgba(0,212,255,0.15)}}
+
+/* ── PROGRESSIVE DISCLOSURE ── */
+.stage-hidden{display:none !important}
+.stage-reveal{animation:stageReveal .4s ease forwards}
+@keyframes stageReveal{0%{opacity:0;transform:scale(0.85)}100%{opacity:1;transform:scale(1)}}
+</style>
+</head>
+<body>
+
+<!-- ═══ PAYWALL ═══ -->
+<div class="paywall-overlay" id="paywallOverlay">
+  <div class="paywall-content">
+    <div class="paywall-icon">&#129504;</div>
+    <div class="paywall-title">BRAINSTEM</div>
+    <div class="paywall-subtitle">ASSOCIATIVE MEMORY ENGINE</div>
+    <div class="paywall-desc">
+      Draw shapes. Attach code. Watch the creature think.<br>
+      A visual knowledge graph that learns, dreams, and evolves.<br><br>
+      Layer 1: instant shape associations.<br>
+      Layer 2: async gut computation.<br>
+      The gap between them is emotion.
+    </div>
+    <div class="paywall-cost">2 SFT TO UNLOCK</div>
+    <button class="paywall-unlock-btn" id="unlockBtn" onclick="attemptUnlock()">INSERT COIN</button>
+    <div class="paywall-balance">BALANCE: <span id="pwWalletBal">0.00</span> SFT</div>
+    <a href="/alive/soundlab/" class="paywall-earn">EARN SFT IN SOUND LAB &rarr;</a>
+  </div>
+</div>
+
+<!-- ═══ TOOLBAR ═══ -->
+<div class="toolbar">
+  <div class="tb-logo">BRAINSTEM</div>
+  <div class="tb-modes">
+    <button class="tb-btn active" id="btnExplore" onclick="setMode('explore')">EXPLORE</button>
+    <button class="tb-btn" id="btnDraw" onclick="setMode('draw')">DRAW</button>
+    <button class="tb-btn" id="btnSleep" onclick="setMode('sleep')">SLEEP</button>
+    <button class="tb-btn" id="btnWhistle" onclick="setMode('whistle')">🎤</button>
+  </div>
+  <div class="tb-stats">
+    <div class="tb-stat">N:<span class="val" id="statNodes">0</span></div>
+    <div class="tb-stat">E:<span class="val" id="statEdges">0</span></div>
+    <div class="tb-stat">G:<span class="val" id="statGen">0</span></div>
+  </div>
+  <div class="tb-actions">
+    <button class="tb-btn" onclick="toggleGoals()" title="Goals" id="btnGoals">GOALS</button>
+    <button class="tb-btn" onclick="saveBrainstemToIPFS()" title="Upload memory to IPFS" id="btnSave">MEMORY</button>
+    <button class="tb-btn" onclick="promptLoadIPFS()" title="Load from IPFS" id="btnLoad">LOAD</button>
+    <button class="tb-btn" onclick="exportToBoy()" title="Link to Boy" id="btnLink">LINK</button>
+  </div>
+  <div class="tb-wallet"><span id="walletBal">0.00</span> SFT</div>
+</div>
+
+<!-- ═══ GRAPH ═══ -->
+<div id="graphContainer"></div>
+
+<!-- ═══ DRAW CANVAS ═══ -->
+<canvas id="drawCanvas"></canvas>
+
+<!-- ═══ SHAPE FEEDBACK ═══ -->
+<div class="shape-recognized" id="shapeFeedback"></div>
+
+<!-- ═══ CODE PANEL ═══ -->
+<div class="code-panel" id="codePanel">
+  <div class="panel-handle" onclick="toggleCodePanel()"><div class="handle-bar"></div></div>
+  <div class="panel-content">
+    <div class="code-header">
+      <span class="code-node-label" id="codeNodeLabel">—</span>
+      <span class="code-shape-badge" id="codeShapeBadge">—</span>
+      <button class="code-run-btn" onclick="executeSelectedNode()">RUN</button>
+    </div>
+    <textarea id="codeEditor" spellcheck="false" autocomplete="off" placeholder="// Select a node to edit its code..."></textarea>
+    <div class="code-output">
+      <span class="output-label">OUTPUT:</span>
+      <span class="output-value" id="codeOutput">—</span>
+      <span class="output-label">COLOR:</span>
+      <div class="color-swatch" id="codeColorSwatch"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ INSPECTOR ═══ -->
+<div class="inspector" id="inspectorPanel">
+  <button class="insp-close" onclick="closeInspector()">&times;</button>
+  <div class="insp-title" id="inspTitle">NODE</div>
+  <div id="inspBody"></div>
+  <div class="insp-tags" id="inspTags"></div>
+  <button class="insp-delete" onclick="deleteSelectedNode()">DELETE NODE</button>
+</div>
+
+<!-- ═══ SLEEP OVERLAY ═══ -->
+<div class="sleep-overlay" id="sleepOverlay">
+  <div class="sleep-label">DREAMING</div>
+</div>
+
+<!-- ═══ GOALS PANEL ═══ -->
+<div class="goals-panel" id="goalsPanel">
+  <div class="goals-title">
+    OBJECTIVES
+    <button class="goals-close" onclick="toggleGoals()">&times;</button>
+  </div>
+  <div id="goalsBody"></div>
+  <div style="margin-top:16px;border-top:1px solid rgba(255,215,0,0.1);padding-top:12px">
+    <div style="font-family:'Orbitron',sans-serif;font-size:9px;color:#00d4ff;letter-spacing:2px;margin-bottom:8px">LEARNED SUBROUTINES</div>
+    <div class="sub-chips" id="subroutineChips"><span style="color:#444;font-size:8px">None yet — complete goals to learn patterns</span></div>
+  </div>
+</div>
+
+<!-- ═══ WHISTLE PANEL ═══ -->
+<div class="whistle-panel" id="whistlePanel">
+  <div class="wp-handle" onclick="toggleWhistlePanel()"><div class="wp-handle-bar"></div></div>
+  <div class="wp-content">
+    <div class="wp-header">
+      <span class="wp-node-label" id="wpNodeLabel">—</span>
+      <span class="wp-shape-badge" id="wpShapeBadge">—</span>
+      <span class="wp-score waiting" id="wpScore" style="margin-left:auto">—</span>
+    </div>
+    <canvas id="wpPlotter" width="400" height="100" style="width:100%;height:100px;background:#060608;border:1px solid rgba(255,215,0,0.12);border-radius:8px"></canvas>
+    <div class="wp-practice" id="wpPractice">
+      <span style="font-size:7px;color:#555;letter-spacing:1px;line-height:22px">PRACTICE:</span>
+      <button class="wp-prac-btn" onclick="setPractice('rise')">RISE ↗</button>
+      <button class="wp-prac-btn" onclick="setPractice('fall')">FALL ↘</button>
+      <button class="wp-prac-btn" onclick="setPractice('peak')">PEAK ∧</button>
+      <button class="wp-prac-btn" onclick="setPractice('valley')">DIP ∨</button>
+      <button class="wp-prac-btn" onclick="setPractice('flat')">FLAT →</button>
+      <button class="wp-prac-btn" onclick="setPractice('node')" id="wpNodeBtn" style="color:#ffd700;border-color:rgba(255,215,0,0.3)">THIS NODE</button>
+      <button class="wp-prac-btn" onclick="playNoteBreakdown()" id="wpListenBtn" style="color:#88ccff;border-color:rgba(136,204,255,0.3)">LISTEN</button>
+    </div>
+    <div class="wp-controls">
+      <button class="wp-rec-btn" id="wpRecBtn" onclick="toggleWhistleRecord()"><div class="rec-inner"></div></button>
+      <button class="wp-del-btn" id="wpDelBtn" onclick="deleteNodeWhistle()" disabled>✕</button>
+      <span id="wpRecStatus" style="font-size:9px;color:#555;letter-spacing:1px;flex:1;text-align:center">Tap a practice shape or hit record</span>
+      <span style="font-size:10px">✅</span>
+      <button class="sys-whistle-rec" id="sysSelectRec" onclick="toggleSysWhistleRecord('select')" title="SELECT"><div class="sw-dot"></div></button>
+      <span class="sys-whistle-status" id="sysSelectStatus">—</span>
+      <span style="font-size:10px">↩️</span>
+      <button class="sys-whistle-rec" id="sysBackRec" onclick="toggleSysWhistleRecord('back')" title="BACK"><div class="sw-dot"></div></button>
+      <span class="sys-whistle-status" id="sysBackStatus">—</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ WHISTLE LISTENING INDICATOR ═══ -->
+<div class="whistle-indicator" id="whistleIndicator">🎤</div>
+
+<!-- ═══ SEQUENCE TRAIL ═══ -->
+<div class="seq-trail" id="seqTrail"></div>
+
+<!-- ═══ REWARD BURST ═══ -->
+<div class="reward-burst" id="rewardBurst">
+  <div class="reward-text" id="rewardText">GOAL ACHIEVED</div>
+  <div class="reward-sub" id="rewardSub">Pattern reinforced</div>
+</div>
+
+<!-- ═══ STATUS BAR ═══ -->
+<div class="status-bar"><span class="msg" id="statusMsg">READY</span></div>
+
+<!-- ═══ DOPAMINE ═══ -->
+<div id="dopFlash"></div>
+<div id="cashRain"></div>
+
+<!-- ═══ VOICE GUIDE ═══ -->
+<div class="voice-bubble" id="voiceBubble">
+  <button class="voice-dismiss" onclick="dismissVoice()">&#10005;</button>
+  <div class="voice-top">
+    <div class="voice-avatar" id="voiceAvatar">
+      <div class="avatar-face">
+        <div class="avatar-eye left"></div>
+        <div class="avatar-eye right"></div>
+        <div class="avatar-mouth" id="avatarMouth"></div>
+      </div>
+    </div>
+    <div class="voice-msg">
+      <div class="voice-name">SHE</div>
+      <div class="voice-text" id="voiceText"></div>
+    </div>
+  </div>
+  <div class="voice-input-row">
+    <input class="voice-input" id="voiceInput" type="text" placeholder="Talk to her..." onkeydown="if(event.key==='Enter')sendToHer()">
+    <button class="voice-mic-btn" id="voiceMicBtn" onclick="toggleVoiceMic()">&#127908;</button>
+    <button class="voice-send-btn" onclick="sendToHer()">&#9654;</button>
+  </div>
+</div>
+
+<!-- ═══ CREATURE SPEECH BUBBLE (droid→english) ═══ -->
+<div class="creature-says" id="creatureSays">
+  <div class="cs-header">
+    <span class="cs-shape" id="csShape"></span>
+    <span class="cs-name" id="csNodeName">NODE</span>
+    <button class="cs-replay" id="csReplay" onclick="replayCreatureSound()">&#9654; replay</button>
+  </div>
+  <div class="cs-text" id="csText"></div>
+  <div class="cs-user-text" id="csUserText"></div>
+  <div class="cs-input-row">
+    <input class="cs-input" id="csInput" type="text" placeholder="What does it sound like?" onkeydown="if(event.key==='Enter')saveCreatureVoice()" onfocus="clearTimeout(creatureSayTimer)" onblur="creatureSayTimer=setTimeout(function(){document.getElementById('creatureSays').classList.remove('visible')},4000)">
+    <button class="cs-save" onclick="saveCreatureVoice()">&#10003;</button>
+  </div>
+  <div class="cs-saved" id="csSaved">SAVED</div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   ALIVE BRAINSTEM v1.0 — Associative Memory Engine
+   Two-layer processing: conscious (instant) + gut (async)
+   ══════════════════════════════════════════════════════════════ */
+
+// ── CONSTANTS ──
+var HEBBIAN = {
+  LEARNING_RATE: 0.05,
+  DECAY_RATE: 0.001,
+  CO_ACTIVATION_WINDOW: 2000,
+  MIN_WEIGHT: 0.01,
+  MAX_WEIGHT: 1.0,
+  ACTIVATION_THRESHOLD: 0.3
+};
+
+var SHAPE_COLORS = {
+  circle:   'hsl(160, 80%, 50%)',
+  triangle: 'hsl(280, 80%, 50%)',
+  square:   'hsl(200, 80%, 50%)',
+  line:     'hsl(45, 80%, 50%)',
+  star:     'hsl(340, 80%, 50%)',
+  freeform: 'hsl(120, 60%, 40%)',
+  dot:      'hsl(0, 0%, 60%)'
+};
+
+var HUE_RANGES = {
+  circle:   [120, 360],
+  triangle: [240, 320],
+  square:   [180, 240],
+  star:     [30, 60],
+  line:     [0, 60],
+  freeform: [0, 360],
+  dot:      [0, 0]
+};
+
+var CYTO_SHAPES = {
+  circle: 'ellipse',
+  triangle: 'triangle',
+  square: 'rectangle',
+  line: 'diamond',
+  star: 'star',
+  freeform: 'round-hexagon',
+  dot: 'ellipse'
+};
+
+var MAX_NODES = 512;
+var MAX_EDGES = 2048;
+var UNLOCK_COST = 2;
+
+// ── SFT PROFILE — the lifeblood ──
+// Everything about this user lives here. Grows like a genome. Links to IPFS.
+var sftProfile = loadSFTProfile();
+var sftBalance = sftProfile.balance;
+var brainstemUnlocked = sftProfile.brainstem.unlocked;
+
+function loadSFTProfile(){
+  var p = null;
+  try { p = JSON.parse(localStorage.getItem('sft_profile')); } catch(e){}
+  if(!p || !p.brainstem){
+    // First run or migration from old keys
+    p = {
+      token: null,
+      soul: null,
+      rank: null,
+      balance: 5,
+      brainstem: {
+        unlocked: false,
+        guideStage: 0,
+        nodesCreated: 0,
+        codesRun: 0,
+        whistlesRecorded: 0,
+        memoriesSaved: 0,
+        dreamTime: 0,
+        sessions: 0,
+        firstVisit: Date.now(),
+        lastVisit: Date.now()
+      }
+    };
+    // Migrate old data
+    var oldBal = localStorage.getItem('cv_wallet');
+    if(oldBal) p.balance = parseFloat(oldBal);
+    if(localStorage.getItem('brainstem_unlocked') === 'true') p.brainstem.unlocked = true;
+    var oldStage = localStorage.getItem('brainstem_guide_stage');
+    if(oldStage) p.brainstem.guideStage = parseInt(oldStage) || 0;
+    // Grab soul/token from D4D if forged
+    try { p.token = localStorage.getItem('d4d_token') || null; } catch(e){}
+    try { p.soul = JSON.parse(localStorage.getItem('d4d_soul')); } catch(e){}
+    try { p.rank = localStorage.getItem('d4d_rank') || null; } catch(e){}
+    saveSFTProfile(p);
+  }
+  // Update session tracking
+  p.brainstem.lastVisit = Date.now();
+  p.brainstem.sessions++;
+  // Keep synced with D4D token if it exists now
+  try { var t = localStorage.getItem('d4d_token'); if(t) p.token = t; } catch(e){}
+  try { var s = JSON.parse(localStorage.getItem('d4d_soul')); if(s) p.soul = s; } catch(e){}
+  try { var r = localStorage.getItem('d4d_rank'); if(r) p.rank = r; } catch(e){}
+  saveSFTProfile(p);
+  return p;
+}
+
+function saveSFTProfile(p){
+  p = p || sftProfile;
+  localStorage.setItem('sft_profile', JSON.stringify(p));
+  // Keep cv_wallet in sync for other pages that read it
+  localStorage.setItem('cv_wallet', p.balance.toString());
+}
+
+// ── MASTER STATE ──
+var brainstem = {
+  nodes: [],
+  edges: [],
+  generation: 0,
+  sleeping: false,
+  mode: 'explore',
+  selectedNode: null,
+  dirty: false,
+  sessionCount: 0,
+  sleepBubbleInterval: null,
+  dreamInterval: null
+};
+
+var activationLog = [];
+
+// ── CYTOSCAPE INIT ──
+var cy = cytoscape({
+  container: document.getElementById('graphContainer'),
+  style: [
+    {
+      selector: 'node',
+      style: {
+        'background-color': 'data(color)',
+        'label': 'data(label)',
+        'color': '#aaa',
+        'font-size': '8px',
+        'font-family': '"Orbitron", sans-serif',
+        'text-valign': 'bottom',
+        'text-margin-y': 6,
+        'text-opacity': 0.5,
+        'width': function(n){ return 25 + (n.data('weight') || 0.5) * 45; },
+        'height': function(n){ return 25 + (n.data('weight') || 0.5) * 45; },
+        'border-width': 2,
+        'border-color': 'data(color)',
+        'border-opacity': 0.5,
+        'overlay-opacity': 0,
+        'shape': 'data(cyShape)'
+      }
+    },
+    {
+      selector: 'node:selected',
+      style: {
+        'border-width': 3,
+        'border-color': '#00ff88',
+        'border-opacity': 1
+      }
+    },
+    {
+      selector: 'edge',
+      style: {
+        'line-color': '#1a3a2a',
+        'width': function(e){ return 0.5 + (e.data('weight') || 0.1) * 4.5; },
+        'opacity': function(e){ return 0.1 + (e.data('weight') || 0.1) * 0.7; },
+        'curve-style': 'bezier',
+        'line-style': 'solid'
+      }
+    }
+  ],
+  layout: { name: 'preset' },
+  minZoom: 0.3,
+  maxZoom: 3,
+  boxSelectionEnabled: false,
+  userPanningEnabled: true,
+  userZoomingEnabled: true
+});
+
+// ── CYTOSCAPE EVENTS ──
+cy.on('tap', 'node', function(evt){
+  if(brainstem.mode === 'sleep') return;
+  var nodeId = evt.target.id();
+  brainstem.selectedNode = nodeId;
+  activateNode_Layer1(nodeId);
+  onGuideMilestone('nodeTap');
+  if(brainstem.mode === 'whistle'){
+    openWhistlePanel(nodeId);
+  } else {
+    openCodePanel(nodeId);
+    openInspector(nodeId);
+    onGuideMilestone('codeOpen');
+  }
+});
+
+cy.on('tap', function(evt){
+  if(evt.target === cy && brainstem.mode !== 'sleep'){
+    brainstem.selectedNode = null;
+    closeCodePanel();
+    closeInspector();
+  }
+});
+
+// ── PAYWALL ──
+function updateWalletUI(){
+  var txt = sftBalance.toFixed(2);
+  document.getElementById('walletBal').textContent = txt;
+  document.getElementById('pwWalletBal').textContent = txt;
+}
+
+function attemptUnlock(){
+  if(brainstemUnlocked) return;
+  if(sftBalance >= UNLOCK_COST){
+    sftBalance -= UNLOCK_COST;
+    sftProfile.balance = sftBalance;
+    sftProfile.brainstem.unlocked = true;
+    brainstemUnlocked = true;
+    saveSFTProfile();
+    updateWalletUI();
+    document.getElementById('paywallOverlay').classList.add('hidden');
+    enableFullBrainstem();
+    triggerDopamine(10);
+    showStatus('BRAINSTEM UNLOCKED');
+  } else {
+    showStatus('NEED ' + UNLOCK_COST + ' SFT');
+    document.getElementById('unlockBtn').classList.add('shake');
+    setTimeout(function(){ document.getElementById('unlockBtn').classList.remove('shake'); }, 500);
+  }
+}
+
+function enableFullBrainstem(){
+  document.getElementById('codeEditor').removeAttribute('readonly');
+  document.getElementById('codeEditor').classList.remove('readonly');
+}
+
+function checkPaywall(){
+  if(brainstemUnlocked){
+    document.getElementById('paywallOverlay').classList.add('hidden');
+    enableFullBrainstem();
+  } else {
+    document.getElementById('codeEditor').setAttribute('readonly','true');
+    document.getElementById('codeEditor').classList.add('readonly');
+  }
+  updateWalletUI();
+}
+
+// ── MODE SWITCHING ──
+function setMode(mode){
+  if(brainstem.mode === mode) return;
+  var prev = brainstem.mode;
+
+  // Exit previous mode
+  if(prev === 'draw') exitDrawMode();
+  if(prev === 'sleep') exitSleep();
+  if(prev === 'whistle') exitWhistleMode();
+
+  brainstem.mode = mode;
+
+  document.getElementById('btnExplore').classList.toggle('active', mode === 'explore');
+  document.getElementById('btnDraw').classList.toggle('active', mode === 'draw');
+  document.getElementById('btnSleep').classList.toggle('active', mode === 'sleep');
+  document.getElementById('btnWhistle').classList.toggle('active', mode === 'whistle');
+
+  if(mode === 'draw') enterDrawMode();
+  if(mode === 'sleep') enterSleep();
+  if(mode === 'whistle') enterWhistleMode();
+  if(mode === 'explore'){
+    cy.userPanningEnabled(true);
+    cy.userZoomingEnabled(true);
+    cy.nodes().grabify();
+  }
+
+  showStatus(mode.toUpperCase() + ' MODE');
+}
+
+// ── DRAW MODE ──
+var drawCanvas, drawCtx, drawState;
+
+function initDrawCanvas(){
+  drawCanvas = document.getElementById('drawCanvas');
+  drawCtx = drawCanvas.getContext('2d');
+  drawState = { active: false, points: [], boxes: [] };
+
+  function resize(){
+    drawCanvas.width = window.innerWidth;
+    drawCanvas.height = window.innerHeight - 48;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Touch events
+  drawCanvas.addEventListener('pointerdown', onDrawStart);
+  drawCanvas.addEventListener('pointermove', onDrawMove);
+  drawCanvas.addEventListener('pointerup', onDrawEnd);
+  drawCanvas.addEventListener('pointercancel', onDrawEnd);
+}
+
+function enterDrawMode(){
+  if(!brainstemUnlocked){
+    showStatus('UNLOCK WITH SFT TO DRAW');
+    setMode('explore');
+    return;
+  }
+  drawCanvas.style.display = 'block';
+  cy.userPanningEnabled(false);
+  cy.userZoomingEnabled(false);
+  cy.nodes().ungrabify();
+  clearDrawCanvas();
+}
+
+function exitDrawMode(){
+  drawCanvas.style.display = 'none';
+  cy.userPanningEnabled(true);
+  cy.userZoomingEnabled(true);
+  cy.nodes().grabify();
+}
+
+function clearDrawCanvas(){
+  if(drawCtx) drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+}
+
+function onDrawStart(e){
+  e.preventDefault();
+  drawState.active = true;
+  drawState.points = [];
+  drawState.boxes = [];
+  var x = e.clientX, y = e.clientY - 48;
+  drawState.points.push({x:x, y:y, t:Date.now()});
+  stampBox(x, y);
+}
+
+function onDrawMove(e){
+  if(!drawState.active) return;
+  e.preventDefault();
+  var x = e.clientX, y = e.clientY - 48;
+  var last = drawState.points[drawState.points.length - 1];
+  var dist = Math.hypot(x - last.x, y - last.y);
+  if(dist < 20) return;
+  drawState.points.push({x:x, y:y, t:Date.now()});
+  stampBox(x, y);
+}
+
+function onDrawEnd(e){
+  if(!drawState.active) return;
+  drawState.active = false;
+  if(drawState.points.length < 2){
+    // Dot
+    var p = drawState.points[0] || {x:e.clientX, y:e.clientY-48};
+    var result = {type:'dot', confidence:1.0, centroid:p};
+    onShapeRecognized(result);
+  } else {
+    var result = recognizeShape(drawState.points);
+    onShapeRecognized(result);
+  }
+  setTimeout(clearDrawCanvas, 300);
+}
+
+function stampBox(x, y){
+  var sz = 24;
+  drawCtx.fillStyle = 'rgba(0, 255, 136, 0.12)';
+  drawCtx.strokeStyle = 'rgba(0, 255, 136, 0.35)';
+  drawCtx.lineWidth = 1;
+  drawCtx.fillRect(x - sz/2, y - sz/2, sz, sz);
+  drawCtx.strokeRect(x - sz/2, y - sz/2, sz, sz);
+  drawState.boxes.push({x:x, y:y, size:sz});
+}
+
+// ── SHAPE RECOGNITION ──
+function recognizeShape(points){
+  if(points.length < 3) return {type:'dot', confidence:1.0, centroid:points[0]};
+
+  var centroid = getCentroid(points);
+  var bbox = getBBox(points);
+  var aspect = bbox.w / Math.max(bbox.h, 1);
+  var distances = points.map(function(p){ return Math.hypot(p.x - centroid.x, p.y - centroid.y); });
+  var avgDist = distances.reduce(function(a,b){ return a+b; },0) / distances.length;
+  var distVar = variance(distances);
+  var first = points[0], last = points[points.length - 1];
+  var closeDist = Math.hypot(first.x - last.x, first.y - last.y);
+  var isClosed = closeDist < avgDist * 0.5;
+
+  // Circle: low variance + closed
+  if(isClosed && distVar / Math.max(avgDist,1) < 0.15 && points.length > 8){
+    return {type:'circle', confidence:1 - distVar/Math.max(avgDist,1), centroid:centroid, radius:avgDist};
+  }
+
+  // Simplify with RDP for corner detection
+  var simplified = rdpSimplify(points, 12);
+
+  // Triangle: 3-4 simplified points + closed
+  if(isClosed && simplified.length >= 3 && simplified.length <= 5){
+    if(simplified.length <= 4){
+      return {type:'triangle', confidence:0.8, centroid:centroid, vertices:simplified.slice(0,3)};
+    }
+  }
+
+  // Square/Rectangle: 4-6 simplified points + closed
+  if(isClosed && simplified.length >= 4 && simplified.length <= 7){
+    if(aspect > 0.7 && aspect < 1.4){
+      return {type:'square', confidence:0.85, centroid:centroid, vertices:simplified.slice(0,4)};
+    }
+    return {type:'square', confidence:0.7, centroid:centroid, vertices:simplified.slice(0,4)};
+  }
+
+  // Line: not closed + elongated
+  if(!isClosed && (aspect > 2.5 || aspect < 0.4)){
+    return {type:'line', confidence:0.9, centroid:centroid, start:first, end:last};
+  }
+
+  // Star: many peaks in distance profile
+  var peaks = countPeaks(distances);
+  if(peaks >= 4 && isClosed){
+    return {type:'star', confidence:0.7, centroid:centroid, peaks:peaks};
+  }
+
+  // Freeform fallback
+  return {type:'freeform', confidence:0.5, centroid:centroid};
+}
+
+function getCentroid(pts){
+  var sx=0, sy=0;
+  for(var i=0;i<pts.length;i++){ sx+=pts[i].x; sy+=pts[i].y; }
+  return {x:sx/pts.length, y:sy/pts.length};
+}
+
+function getBBox(pts){
+  var minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+  for(var i=0;i<pts.length;i++){
+    if(pts[i].x<minX)minX=pts[i].x; if(pts[i].x>maxX)maxX=pts[i].x;
+    if(pts[i].y<minY)minY=pts[i].y; if(pts[i].y>maxY)maxY=pts[i].y;
+  }
+  return {x:minX,y:minY,w:maxX-minX,h:maxY-minY};
+}
+
+function variance(arr){
+  var avg = arr.reduce(function(a,b){return a+b;},0)/arr.length;
+  var v = arr.reduce(function(s,x){return s+(x-avg)*(x-avg);},0)/arr.length;
+  return Math.sqrt(v);
+}
+
+function countPeaks(arr){
+  var peaks = 0;
+  for(var i=1;i<arr.length-1;i++){
+    if(arr[i]>arr[i-1] && arr[i]>arr[i+1]) peaks++;
+  }
+  return peaks;
+}
+
+// Ramer-Douglas-Peucker
+function rdpSimplify(pts, epsilon){
+  if(pts.length <= 2) return pts.slice();
+  var dmax = 0, index = 0;
+  var end = pts.length - 1;
+  for(var i = 1; i < end; i++){
+    var d = perpDist(pts[i], pts[0], pts[end]);
+    if(d > dmax){ dmax = d; index = i; }
+  }
+  if(dmax > epsilon){
+    var left = rdpSimplify(pts.slice(0, index+1), epsilon);
+    var right = rdpSimplify(pts.slice(index), epsilon);
+    return left.slice(0, left.length-1).concat(right);
+  }
+  return [pts[0], pts[end]];
+}
+
+function perpDist(p, a, b){
+  var dx = b.x - a.x, dy = b.y - a.y;
+  var len = Math.hypot(dx, dy);
+  if(len === 0) return Math.hypot(p.x - a.x, p.y - a.y);
+  return Math.abs(dy*p.x - dx*p.y + b.x*a.y - b.y*a.x) / len;
+}
+
+// ── SHAPE → NODE CREATION ──
+function onShapeRecognized(result){
+  if(brainstem.nodes.length >= MAX_NODES){
+    showStatus('MAX NODES REACHED ('+MAX_NODES+')');
+    return;
+  }
+
+  // Show feedback
+  var fb = document.getElementById('shapeFeedback');
+  fb.textContent = result.type.toUpperCase();
+  fb.classList.add('show');
+  setTimeout(function(){ fb.classList.remove('show'); }, 800);
+
+  createNodeFromShape(result);
+}
+
+function createNodeFromShape(shape){
+  var id = 'bs_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5);
+  var color = SHAPE_COLORS[shape.type] || SHAPE_COLORS.dot;
+  var cx = shape.centroid ? shape.centroid.x : 200;
+  var cy_pos = shape.centroid ? shape.centroid.y : 200;
+
+  // Convert screen coords to graph coords
+  var pan = cy.pan();
+  var zoom = cy.zoom();
+  var gx = (cx - pan.x) / zoom;
+  var gy = (cy_pos - pan.y) / zoom;
+
+  var node = {
+    id: id,
+    shapeType: shape.type,
+    label: shape.type.slice(0,3).toUpperCase() + '_' + id.slice(-4),
+    x: gx,
+    y: gy,
+    codeBlock: getDefaultCode(shape.type),
+    lastOutput: null,
+    color: color,
+    baseColor: color,
+    weight: 0.5,
+    accessCount: 0,
+    created: Date.now(),
+    lastAccessed: Date.now(),
+    lastExecuted: 0,
+    distanceFromCore: 0.5,
+    tags: [shape.type],
+    shapeData: shape,
+    layer: 'conscious',
+    _userData: {},
+    cyShape: CYTO_SHAPES[shape.type] || 'ellipse',
+    whistleAudio: null,
+    whistleFingerprint: null,
+    whistleLabel: '',
+    says: ''              // user's interpretation of what the droid sound means
+  };
+
+  brainstem.nodes.push(node);
+
+  cy.add({
+    group: 'nodes',
+    data: {
+      id: node.id,
+      label: node.label,
+      color: node.color,
+      weight: node.weight,
+      cyShape: node.cyShape,
+      shapeType: node.shapeType
+    },
+    position: { x: gx, y: gy }
+  });
+
+  autoConnect(node);
+  updateStats();
+  markDirty();
+
+  // Play creation sound
+  playSFX('create');
+  sftProfile.brainstem.nodesCreated++;
+  saveSFTProfile();
+  onGuideMilestone('shapeDraw');
+}
+
+function getDefaultCode(type){
+  var t = {
+    circle: '// CIRCLE — Emotion sensor\n// Return 0-1: low=cool, high=warm\nvar visits = this.accessCount;\nif (visits > 20) return 0.8;\nif (visits < 3) return 0.2;\nreturn visits / 25;',
+    triangle: '// TRIANGLE — Decision gate\n// Threshold for downstream activation\nvar avg = this.neighbors().reduce(function(s,n){ return s + n.weight; }, 0)\n  / Math.max(1, this.neighbors().length);\nreturn avg > 0.5 ? 0.7 : 0.3;',
+    square: '// SQUARE — Data store\n// Persistent counter\nif (!this.data.counter) this.data.counter = 0;\nthis.data.counter++;\nreturn Math.min(1, this.data.counter / 100);',
+    star: '// STAR — Priority beacon\n// Always high activation\nreturn 0.9;',
+    line: '// LINE — Flow pipe\n// Average of connected outputs\nvar vals = this.neighbors().map(function(n){ return n.lastOutput || 0; });\nreturn vals.length ? vals.reduce(function(a,b){return a+b;},0) / vals.length : 0.5;',
+    freeform: '// FREEFORM — Your sandbox\nreturn Math.random();',
+    dot: '// DOT — Quick pulse\nreturn 0.5;'
+  };
+  return t[type] || t.dot;
+}
+
+function autoConnect(newNode){
+  var threshold = 200;
+  var initialWeight = 0.2;
+
+  brainstem.nodes.forEach(function(existing){
+    if(existing.id === newNode.id) return;
+    if(brainstem.edges.length >= MAX_EDGES) return;
+    var dist = Math.hypot(newNode.x - existing.x, newNode.y - existing.y);
+    if(dist < threshold){
+      var w = initialWeight * (1 - dist / threshold);
+      createEdge(newNode.id, existing.id, w, 'hebbian');
+    }
+  });
+}
+
+function createEdge(sourceId, targetId, weight, type){
+  var id = 'be_' + sourceId.slice(-6) + '_' + targetId.slice(-6);
+  // Check if edge already exists
+  var exists = brainstem.edges.some(function(e){
+    return (e.source === sourceId && e.target === targetId) ||
+           (e.source === targetId && e.target === sourceId);
+  });
+  if(exists) return null;
+
+  var edge = {
+    id: id,
+    source: sourceId,
+    target: targetId,
+    weight: weight,
+    coActivations: 0,
+    created: Date.now(),
+    lastCoActivated: Date.now(),
+    type: type || 'hebbian'
+  };
+
+  brainstem.edges.push(edge);
+
+  cy.add({
+    group: 'edges',
+    data: {
+      id: edge.id,
+      source: sourceId,
+      target: targetId,
+      weight: weight
+    }
+  });
+
+  return edge;
+}
+
+// ── TWO-LAYER PROCESSING ──
+
+// Layer 1: Conscious — instant shape associations
+function activateNode_Layer1(nodeId){
+  var node = getNode(nodeId);
+  if(!node) return;
+
+  node.accessCount++;
+  node.lastAccessed = Date.now();
+
+  // Log activation for co-activation detection
+  logActivation(nodeId);
+
+  // Immediate visual pulse
+  pulseNode(nodeId, 1.0);
+
+  // Cascade to weighted neighbors
+  var nodeEdges = getEdgesFor(nodeId);
+  nodeEdges.forEach(function(edge){
+    var neighborId = edge.source === nodeId ? edge.target : edge.source;
+    if(edge.weight > HEBBIAN.ACTIVATION_THRESHOLD){
+      pulseNode(neighborId, edge.weight);
+      // Neighbors activated in cascade = co-activation
+      logActivation(neighborId);
+    }
+  });
+
+  // Schedule Layer 2 async
+  scheduleLayer2(nodeId);
+
+  // Track in sequence engine (goals, prediction, subroutines)
+  if(typeof onNodeActivated_Sequence === 'function') onNodeActivated_Sequence(nodeId);
+
+  // Track Bluetooth sequence progress
+  if(typeof onNodeActivated_BT === 'function') onNodeActivated_BT(nodeId);
+
+  // Update node data in Cytoscape
+  var cyNode = cy.getElementById(nodeId);
+  if(cyNode.length) cyNode.data('weight', node.weight);
+
+  updateStats();
+  markDirty();
+}
+
+// Layer 2: Gut — async code execution (creature has no control)
+function scheduleLayer2(nodeId){
+  var node = getNode(nodeId);
+  if(!node || !node.codeBlock) return;
+
+  // Random delay 100-500ms — the "gut processing time"
+  var delay = 100 + Math.random() * 400;
+
+  setTimeout(function(){
+    try {
+      var result = executeCodeBlock(node);
+      var oldColor = node.color;
+      node.lastOutput = result;
+      node.lastExecuted = Date.now();
+
+      var newColor = mapOutputToColor(result, node.shapeType);
+      node.color = newColor;
+
+      // Update visual
+      var cyNode = cy.getElementById(nodeId);
+      if(cyNode.length){
+        cyNode.data('color', newColor);
+        cyNode.style('background-color', newColor);
+        cyNode.style('border-color', newColor);
+      }
+
+      // Emotional signal: surprise vs comfort
+      var delta = colorDelta(oldColor, newColor);
+      if(delta > 0.4){
+        showStatus('SURPRISE — ' + node.label);
+      }
+
+      // Update code panel if this is selected node
+      if(brainstem.selectedNode === nodeId){
+        document.getElementById('codeOutput').textContent = (typeof result === 'number') ? result.toFixed(3) : String(result);
+        document.getElementById('codeColorSwatch').style.background = newColor;
+      }
+    } catch(err){
+      node.lastOutput = 0;
+      node.color = 'hsl(0, 100%, 30%)';
+      var cyNode = cy.getElementById(nodeId);
+      if(cyNode.length){
+        cyNode.data('color', node.color);
+        cyNode.style('background-color', node.color);
+      }
+      if(brainstem.selectedNode === nodeId){
+        document.getElementById('codeOutput').textContent = 'ERR: ' + err.message;
+      }
+      // She explains the error in plain English
+      explainError(err, node);
+    }
+  }, delay);
+}
+
+function executeCodeBlock(node){
+  var context = {
+    accessCount: node.accessCount,
+    weight: node.weight,
+    created: node.created,
+    lastAccessed: node.lastAccessed,
+    data: node._userData || (node._userData = {}),
+    age: function(){ return (Date.now() - node.created) / 86400000; },
+    neighbors: function(){
+      return getEdgesFor(node.id).map(function(e){
+        var nid = e.source === node.id ? e.target : e.source;
+        var n = getNode(nid);
+        return n ? { weight: n.weight, lastOutput: n.lastOutput, accessCount: n.accessCount } : { weight:0, lastOutput:0, accessCount:0 };
+      });
+    }
+  };
+
+  // Build a `this` context so user code can write this.accessCount etc.
+  var fn = new Function(
+    'accessCount','weight','created','lastAccessed','data','age','neighbors',
+    'var self = this;\n' + node.codeBlock
+  );
+
+  var result = fn.call(
+    context,
+    context.accessCount, context.weight, context.created,
+    context.lastAccessed, context.data, context.age, context.neighbors
+  );
+
+  if(typeof result !== 'number') result = 0.5;
+  return Math.max(0, Math.min(1, result));
+}
+
+function mapOutputToColor(value, shapeType){
+  var range = HUE_RANGES[shapeType] || [0,360];
+  var hue = range[0] + value * (range[1] - range[0]);
+  var light = 30 + value * 40;
+  var sat = 60 + value * 30;
+  return 'hsl(' + Math.round(hue) + ',' + Math.round(sat) + '%,' + Math.round(light) + '%)';
+}
+
+function colorDelta(c1, c2){
+  // Simple hue comparison
+  var h1 = parseHue(c1), h2 = parseHue(c2);
+  var diff = Math.abs(h1 - h2);
+  if(diff > 180) diff = 360 - diff;
+  return diff / 180;
+}
+
+function parseHue(hsl){
+  var m = String(hsl).match(/hsl\((\d+)/);
+  return m ? parseInt(m[1]) : 0;
+}
+
+function pulseNode(nodeId, intensity){
+  var cyNode = cy.getElementById(nodeId);
+  if(!cyNode.length) return;
+  var origW = cyNode.width();
+  var boost = origW * (1 + intensity * 0.4);
+  cyNode.animate({
+    style: { width: boost, height: boost }
+  }, {
+    duration: 200,
+    complete: function(){
+      cyNode.animate({
+        style: { width: origW, height: origW }
+      }, { duration: 300 });
+    }
+  });
+}
+
+// ── HEBBIAN LEARNING ──
+function logActivation(nodeId){
+  var now = Date.now();
+  activationLog.push({ nodeId: nodeId, timestamp: now });
+
+  // Check for co-activations
+  var recent = activationLog.filter(function(a){
+    return a.nodeId !== nodeId && (now - a.timestamp) < HEBBIAN.CO_ACTIVATION_WINDOW;
+  });
+
+  recent.forEach(function(a){
+    recordCoActivation(nodeId, a.nodeId);
+  });
+
+  // Trim old
+  while(activationLog.length > 100 || (activationLog.length > 0 && now - activationLog[0].timestamp > 10000)){
+    activationLog.shift();
+  }
+}
+
+function recordCoActivation(nodeA, nodeB){
+  var edge = findEdge(nodeA, nodeB);
+
+  if(!edge){
+    if(brainstem.edges.length >= MAX_EDGES) return;
+    edge = createEdge(nodeA, nodeB, HEBBIAN.MIN_WEIGHT * 2, 'hebbian');
+    if(!edge) return;
+  }
+
+  // Hebbian update
+  edge.weight = Math.min(HEBBIAN.MAX_WEIGHT, edge.weight + HEBBIAN.LEARNING_RATE * (1 - edge.weight));
+  edge.coActivations++;
+  edge.lastCoActivated = Date.now();
+
+  // Update visual
+  var cyEdge = cy.getElementById(edge.id);
+  if(cyEdge.length){
+    cyEdge.data('weight', edge.weight);
+    cyEdge.style('width', 0.5 + edge.weight * 4.5);
+    cyEdge.style('opacity', 0.1 + edge.weight * 0.7);
+    cyEdge.style('line-color', edge.weight > 0.5 ? '#00ff88' : '#1a3a2a');
+  }
+}
+
+function hebbianDecay(){
+  var now = Date.now();
+  var toRemove = [];
+
+  brainstem.edges.forEach(function(edge){
+    var ageDays = (now - edge.lastCoActivated) / 86400000;
+    var decayMult = 1 + ageDays * 0.5;
+    edge.weight -= HEBBIAN.DECAY_RATE * decayMult;
+
+    if(edge.weight < HEBBIAN.MIN_WEIGHT){
+      toRemove.push(edge.id);
+    } else {
+      var cyEdge = cy.getElementById(edge.id);
+      if(cyEdge.length){
+        cyEdge.data('weight', edge.weight);
+      }
+    }
+  });
+
+  toRemove.forEach(function(id){
+    cy.remove(cy.getElementById(id));
+    brainstem.edges = brainstem.edges.filter(function(e){ return e.id !== id; });
+  });
+
+  if(toRemove.length > 0) updateStats();
+}
+
+// Run decay every 5 seconds
+setInterval(hebbianDecay, 5000);
+
+// ── CORE / PERIPHERY ──
+function recalculateCoreDistance(){
+  if(brainstem.nodes.length === 0) return;
+
+  var maxAccess = Math.max.apply(null, brainstem.nodes.map(function(n){ return n.accessCount; }).concat([1]));
+  var maxWeight = Math.max.apply(null, brainstem.nodes.map(function(n){ return n.weight; }).concat([0.1]));
+  var totalEdges = Math.max(brainstem.edges.length, 1);
+
+  brainstem.nodes.forEach(function(node){
+    var accessScore = node.accessCount / maxAccess;
+    var weightScore = node.weight / maxWeight;
+    var recency = 1 - Math.min(1, (Date.now() - node.lastAccessed) / (7 * 86400000));
+    var connCount = getEdgesFor(node.id).length;
+    var connDensity = connCount / totalEdges;
+
+    var coreScore = accessScore * 0.3 + weightScore * 0.25 + recency * 0.25 + connDensity * 0.2;
+    node.distanceFromCore = 1 - coreScore;
+    node.weight = Math.max(0.1, Math.min(1, coreScore));
+
+    // Update node size/opacity in Cytoscape
+    var cyNode = cy.getElementById(node.id);
+    if(cyNode.length){
+      cyNode.data('weight', node.weight);
+      var d = node.distanceFromCore;
+      var opacity = 0.3 + (1 - d) * 0.7;
+      cyNode.style('opacity', opacity);
+      if(d > 0.95){
+        cyNode.style('border-color', '#ff4444');
+        cyNode.style('border-opacity', 0.8);
+      } else {
+        cyNode.style('border-color', node.color);
+        cyNode.style('border-opacity', 0.5);
+      }
+    }
+  });
+
+  applyConcentricPositions();
+}
+
+function applyConcentricPositions(){
+  var w = cy.width() / 2;
+  var h = cy.height() / 2;
+  var maxR = Math.min(w, h) * 0.8;
+
+  brainstem.nodes.forEach(function(node){
+    var cyNode = cy.getElementById(node.id);
+    if(!cyNode.length) return;
+
+    var pos = cyNode.position();
+    var currentAngle = Math.atan2(pos.y - h, pos.x - w);
+    if(isNaN(currentAngle)) currentAngle = Math.random() * Math.PI * 2;
+
+    var targetR = node.distanceFromCore * maxR;
+    var tx = w + Math.cos(currentAngle) * targetR;
+    var ty = h + Math.sin(currentAngle) * targetR;
+
+    cyNode.animate({
+      position: { x: tx, y: ty }
+    }, { duration: 1500, easing: 'ease-in-out-cubic' });
+
+    node.x = tx;
+    node.y = ty;
+  });
+}
+
+// Prune old peripheral nodes
+function prunePeriphery(){
+  var now = Date.now();
+  var PRUNE_DAYS = 14 * 86400000;
+
+  var toPrune = brainstem.nodes.filter(function(n){
+    return n.distanceFromCore > 0.95 && (now - n.lastAccessed) > PRUNE_DAYS && n.accessCount < 3;
+  });
+
+  toPrune.forEach(function(node){
+    var cyNode = cy.getElementById(node.id);
+    if(cyNode.length){
+      cyNode.animate({ style: { opacity: 0 } }, {
+        duration: 2000,
+        complete: function(){
+          cy.remove(cyNode);
+          brainstem.nodes = brainstem.nodes.filter(function(n){ return n.id !== node.id; });
+          brainstem.edges = brainstem.edges.filter(function(e){ return e.source !== node.id && e.target !== node.id; });
+          updateStats();
+        }
+      });
+    }
+  });
+}
+
+// Run core/periphery every 30 seconds
+setInterval(function(){
+  if(!brainstem.sleeping) recalculateCoreDistance();
+}, 30000);
+// Run pruning every 60 seconds
+setInterval(prunePeriphery, 60000);
+
+// ── CODE PANEL ──
+function toggleCodePanel(){
+  document.getElementById('codePanel').classList.toggle('open');
+}
+
+function openCodePanel(nodeId){
+  var node = getNode(nodeId);
+  if(!node) return;
+
+  document.getElementById('codePanel').classList.add('open');
+  document.getElementById('codeNodeLabel').textContent = node.label;
+  document.getElementById('codeShapeBadge').textContent = node.shapeType.toUpperCase();
+  document.getElementById('codeEditor').value = node.codeBlock;
+  document.getElementById('codeOutput').textContent = node.lastOutput !== null ? (typeof node.lastOutput === 'number' ? node.lastOutput.toFixed(3) : String(node.lastOutput)) : '—';
+  document.getElementById('codeColorSwatch').style.background = node.color;
+
+  if(!brainstemUnlocked){
+    document.getElementById('codeEditor').setAttribute('readonly','true');
+    document.getElementById('codeEditor').classList.add('readonly');
+  }
+}
+
+function closeCodePanel(){
+  document.getElementById('codePanel').classList.remove('open');
+}
+
+function executeSelectedNode(){
+  if(!brainstem.selectedNode) return;
+  var node = getNode(brainstem.selectedNode);
+  if(!node) return;
+
+  // Save code from editor
+  if(brainstemUnlocked){
+    node.codeBlock = document.getElementById('codeEditor').value;
+  }
+
+  // Trigger both layers
+  activateNode_Layer1(brainstem.selectedNode);
+  sftProfile.brainstem.codesRun++;
+  saveSFTProfile();
+  onGuideMilestone('codeRun');
+}
+
+// Tab key handling in code editor
+document.getElementById('codeEditor').addEventListener('keydown', function(e){
+  if(e.key === 'Tab'){
+    e.preventDefault();
+    var start = this.selectionStart;
+    var end = this.selectionEnd;
+    this.value = this.value.substring(0, start) + '  ' + this.value.substring(end);
+    this.selectionStart = this.selectionEnd = start + 2;
+  }
+});
+
+// Auto-save code on blur
+document.getElementById('codeEditor').addEventListener('blur', function(){
+  if(!brainstem.selectedNode || !brainstemUnlocked) return;
+  var node = getNode(brainstem.selectedNode);
+  if(node) node.codeBlock = this.value;
+});
+
+// ── INSPECTOR PANEL ──
+function openInspector(nodeId){
+  var node = getNode(nodeId);
+  if(!node) return;
+
+  document.getElementById('inspectorPanel').classList.add('open');
+  document.getElementById('inspTitle').textContent = node.label;
+
+  var rows = [
+    ['Shape', node.shapeType],
+    ['Weight', node.weight.toFixed(3)],
+    ['Access', node.accessCount],
+    ['Core Dist', node.distanceFromCore.toFixed(3)],
+    ['Layer', node.layer],
+    ['Last Output', node.lastOutput !== null ? (typeof node.lastOutput === 'number' ? node.lastOutput.toFixed(3) : '—') : '—'],
+    ['Connections', getEdgesFor(node.id).length],
+    ['Age', ((Date.now() - node.created) / 86400000).toFixed(1) + 'd'],
+    ['Last Active', timeSince(node.lastAccessed)],
+    ['Color', node.color]
+  ];
+
+  var html = '';
+  rows.forEach(function(r){
+    html += '<div class="insp-row"><span class="insp-key">' + r[0] + '</span><span class="insp-val">' + r[1] + '</span></div>';
+  });
+  document.getElementById('inspBody').innerHTML = html;
+
+  var tagsHtml = '';
+  (node.tags || []).forEach(function(t){
+    tagsHtml += '<span class="insp-tag">' + t + '</span>';
+  });
+  document.getElementById('inspTags').innerHTML = tagsHtml;
+}
+
+function closeInspector(){
+  document.getElementById('inspectorPanel').classList.remove('open');
+}
+
+function deleteSelectedNode(){
+  if(!brainstem.selectedNode) return;
+  var nodeId = brainstem.selectedNode;
+
+  cy.remove(cy.getElementById(nodeId));
+  brainstem.nodes = brainstem.nodes.filter(function(n){ return n.id !== nodeId; });
+  brainstem.edges = brainstem.edges.filter(function(e){ return e.source !== nodeId && e.target !== nodeId; });
+
+  brainstem.selectedNode = null;
+  closeCodePanel();
+  closeInspector();
+  updateStats();
+  markDirty();
+  showStatus('NODE DELETED');
+}
+
+// ── SLEEP MODE ──
+function enterSleep(){
+  brainstem.sleeping = true;
+  stopAmbientLife();
+  document.getElementById('sleepOverlay').classList.add('active');
+
+  // Dim graph
+  cy.nodes().style('opacity', 0.15);
+  cy.edges().style('opacity', 0.05);
+  cy.userPanningEnabled(false);
+  cy.userZoomingEnabled(false);
+
+  closeCodePanel();
+  closeInspector();
+
+  // Start memory bubbles
+  brainstem.sleepBubbleInterval = setInterval(spawnMemoryBubble, 3000);
+
+  // Start dream consolidation
+  brainstem.dreamInterval = setInterval(dreamConsolidate, 10000);
+
+  showStatus('ENTERING DREAM STATE...');
+}
+
+function exitSleep(){
+  brainstem.sleeping = false;
+  document.getElementById('sleepOverlay').classList.remove('active');
+
+  // Remove all bubbles
+  var bubbles = document.querySelectorAll('.sleep-bubble');
+  bubbles.forEach(function(b){ b.remove(); });
+
+  // Restore graph opacity
+  brainstem.nodes.forEach(function(node){
+    var cyNode = cy.getElementById(node.id);
+    if(cyNode.length){
+      var d = node.distanceFromCore;
+      cyNode.style('opacity', 0.3 + (1 - d) * 0.7);
+    }
+  });
+  brainstem.edges.forEach(function(edge){
+    var cyEdge = cy.getElementById(edge.id);
+    if(cyEdge.length){
+      cyEdge.style('opacity', 0.1 + edge.weight * 0.7);
+    }
+  });
+
+  cy.userPanningEnabled(true);
+  cy.userZoomingEnabled(true);
+
+  if(brainstem.sleepBubbleInterval){ clearInterval(brainstem.sleepBubbleInterval); brainstem.sleepBubbleInterval = null; }
+  if(brainstem.dreamInterval){ clearInterval(brainstem.dreamInterval); brainstem.dreamInterval = null; }
+
+  showStatus('AWAKE');
+  startAmbientLife();
+}
+
+function spawnMemoryBubble(){
+  if(!brainstem.sleeping || brainstem.nodes.length === 0) return;
+
+  // Pick node biased toward core
+  var sorted = brainstem.nodes.slice().sort(function(a,b){ return a.distanceFromCore - b.distanceFromCore; });
+  var idx = Math.floor(Math.pow(Math.random(), 2) * sorted.length);
+  var node = sorted[idx];
+  if(!node) return;
+
+  var overlay = document.getElementById('sleepOverlay');
+  var bubble = document.createElement('div');
+  bubble.className = 'sleep-bubble';
+
+  var shapeClass = (['circle','triangle','square','star'].indexOf(node.shapeType) >= 0) ? node.shapeType : 'circle';
+  bubble.innerHTML = '<div class="bubble-shape ' + shapeClass + '"></div><div class="bubble-label">' + node.label + '</div>';
+
+  var bSize = 30 + (1 - node.distanceFromCore) * 50;
+  bubble.style.cssText = 'width:' + bSize + 'px;height:' + bSize + 'px;left:' + (15 + Math.random() * 70) + '%;bottom:-80px;--bubble-color:' + node.color + ';--bubble-size:' + bSize + 'px;opacity:0;';
+
+  overlay.appendChild(bubble);
+
+  var y = 0;
+  var drift = (Math.random() - 0.5) * 0.5;
+  var speed = 0.3 + Math.random() * 0.4;
+  var age = 0;
+  var maxY = window.innerHeight + 100;
+
+  var anim = setInterval(function(){
+    age++;
+    y += speed;
+    bubble.style.bottom = y + 'px';
+    bubble.style.opacity = Math.min(0.7, age / 40) * (y < maxY - 100 ? 1 : (maxY - y) / 100);
+    var curLeft = parseFloat(bubble.style.left);
+    bubble.style.left = (curLeft + drift * 0.05) + '%';
+
+    if(y > maxY){
+      clearInterval(anim);
+      bubble.remove();
+    }
+  }, 30);
+}
+
+function dreamConsolidate(){
+  if(!brainstem.sleeping) return;
+
+  brainstem.edges.forEach(function(edge){
+    var src = getNode(edge.source);
+    var tgt = getNode(edge.target);
+    if(!src || !tgt) return;
+
+    // Strengthen core connections
+    if(src.distanceFromCore < 0.5 && tgt.distanceFromCore < 0.5){
+      edge.weight = Math.min(HEBBIAN.MAX_WEIGHT, edge.weight + 0.005);
+    }
+
+    // Weaken peripheral connections
+    if(src.distanceFromCore > 0.7 && tgt.distanceFromCore > 0.7){
+      edge.weight -= 0.01;
+    }
+  });
+
+  // Run one decay
+  hebbianDecay();
+}
+
+// ── IPFS PERSISTENCE ──
+function serializeBrainstem(){
+  return JSON.stringify({
+    version: '1.0',
+    creatureId: localStorage.getItem('alive_boy_genome') ? 'boy' : 'standalone',
+    timestamp: Date.now(),
+    generation: brainstem.generation,
+    nodes: brainstem.nodes.map(function(n){
+      return {
+        id:n.id, shapeType:n.shapeType, label:n.label, x:n.x, y:n.y,
+        codeBlock:n.codeBlock, lastOutput:n.lastOutput, color:n.color, baseColor:n.baseColor,
+        weight:n.weight, accessCount:n.accessCount, created:n.created,
+        lastAccessed:n.lastAccessed, lastExecuted:n.lastExecuted,
+        distanceFromCore:n.distanceFromCore, tags:n.tags, shapeType:n.shapeType,
+        layer:n.layer, _userData:n._userData||{}, cyShape:n.cyShape,
+        whistleAudio:n.whistleAudio||null, whistleFingerprint:n.whistleFingerprint||null, whistleLabel:n.whistleLabel||''
+      };
+    }),
+    edges: brainstem.edges.map(function(e){
+      return { id:e.id, source:e.source, target:e.target, weight:e.weight,
+               coActivations:e.coActivations, created:e.created,
+               lastCoActivated:e.lastCoActivated, type:e.type };
+    }),
+    metadata: {
+      totalNodes: brainstem.nodes.length,
+      totalEdges: brainstem.edges.length,
+      avgWeight: brainstem.edges.length > 0 ? brainstem.edges.reduce(function(s,e){return s+e.weight;},0) / brainstem.edges.length : 0,
+      coreNodes: brainstem.nodes.filter(function(n){return n.distanceFromCore < 0.2;}).length,
+      sessionCount: brainstem.sessionCount
+    },
+    sftProfile: sftProfile
+  });
+}
+
+function saveBrainstemToIPFS(){
+  if(!brainstemUnlocked){ showStatus('UNLOCK TO SAVE'); return; }
+  if(brainstem.nodes.length === 0){ showStatus('NOTHING TO SAVE'); return; }
+
+  brainstem.generation++;
+  var json = serializeBrainstem();
+  var blob = new Blob([json], { type: 'application/json' });
+  var file = new File([blob], 'brainstem_' + Date.now() + '.json', { type: 'application/json' });
+
+  var fd = new FormData();
+  fd.append('file', file);
+
+  showStatus('UPLOADING MEMORY...');
+
+  fetch('/ipfs/api.php?action=upload', { method: 'POST', body: fd })
+    .then(function(r){ return r.json(); })
+    .then(function(result){
+      if(result.success){
+        var cids = JSON.parse(localStorage.getItem('brainstem_cids') || '[]');
+        cids.unshift({ cid: result.asset.cid, timestamp: Date.now(), nodeCount: brainstem.nodes.length, generation: brainstem.generation });
+        if(cids.length > 20) cids.length = 20;
+        localStorage.setItem('brainstem_cids', JSON.stringify(cids));
+        localStorage.setItem('brainstem_latest_cid', result.asset.cid);
+
+        showStatus('MEMORY SAVED: ' + result.asset.cid.slice(0,12) + '...');
+        sftProfile.brainstem.memoriesSaved++;
+        saveSFTProfile();
+        onGuideMilestone('saved');
+        triggerDopamine(5);
+        brainstem.dirty = false;
+        updateStats();
+      } else {
+        showStatus('SAVE FAILED: ' + (result.error || 'unknown'));
+      }
+    })
+    .catch(function(err){
+      showStatus('NETWORK ERROR');
+    });
+}
+
+function promptLoadIPFS(){
+  if(!brainstemUnlocked){ showStatus('UNLOCK TO LOAD'); return; }
+
+  var cid = localStorage.getItem('brainstem_latest_cid');
+  if(!cid){
+    cid = prompt('Enter IPFS CID to load:');
+    if(!cid) return;
+  }
+  loadBrainstemFromIPFS(cid);
+}
+
+function loadBrainstemFromIPFS(cid){
+  showStatus('LOADING FROM IPFS...');
+
+  fetch('https://gateway.pinata.cloud/ipfs/' + cid)
+    .then(function(r){
+      if(!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(function(snapshot){
+      if(snapshot.version !== '1.0'){
+        showStatus('INCOMPATIBLE VERSION');
+        return;
+      }
+
+      // Clear current
+      cy.elements().remove();
+      brainstem.nodes = [];
+      brainstem.edges = [];
+
+      // Restore nodes
+      snapshot.nodes.forEach(function(n){
+        brainstem.nodes.push(n);
+        cy.add({
+          group: 'nodes',
+          data: { id:n.id, label:n.label, color:n.color, weight:n.weight, cyShape:n.cyShape||'ellipse', shapeType:n.shapeType },
+          position: { x: n.x, y: n.y }
+        });
+      });
+
+      // Restore edges
+      snapshot.edges.forEach(function(e){
+        brainstem.edges.push(e);
+        cy.add({
+          group: 'edges',
+          data: { id:e.id, source:e.source, target:e.target, weight:e.weight }
+        });
+      });
+
+      brainstem.generation = snapshot.generation || 0;
+      brainstem.sessionCount = (snapshot.metadata.sessionCount || 0) + 1;
+      brainstem.dirty = false;
+
+      recalculateCoreDistance();
+      updateStats();
+      showStatus('LOADED: ' + snapshot.metadata.totalNodes + 'N / ' + snapshot.metadata.totalEdges + 'E');
+      triggerDopamine(3);
+    })
+    .catch(function(err){
+      showStatus('LOAD FAILED: ' + err.message);
+    });
+}
+
+// Auto-save to localStorage every 60s
+setInterval(function(){
+  if(brainstem.nodes.length > 0){
+    try { localStorage.setItem('brainstem_state', serializeBrainstem()); } catch(e){}
+  }
+}, 60000);
+
+// ── BOY CONNECTION BRIDGE ──
+function exportToBoy(){
+  if(!brainstemUnlocked){ showStatus('UNLOCK TO LINK'); return; }
+  if(brainstem.nodes.length === 0){ showStatus('NOTHING TO EXPORT'); return; }
+
+  var emotion = computeEmotionalState();
+
+  var summary = {
+    timestamp: Date.now(),
+    coreNodes: brainstem.nodes
+      .filter(function(n){ return n.distanceFromCore < 0.3; })
+      .map(function(n){
+        return { id:n.id, label:n.label, shapeType:n.shapeType, color:n.color, weight:n.weight, lastOutput:n.lastOutput };
+      }),
+    emotionalState: emotion,
+    activeConnections: brainstem.edges.filter(function(e){ return e.weight > 0.5; }).length,
+    generation: brainstem.generation
+  };
+
+  localStorage.setItem('brainstem_export', JSON.stringify(summary));
+
+  // Store CID in Boy's genome if available
+  var cid = localStorage.getItem('brainstem_latest_cid');
+  if(cid){
+    var boyGenome = null;
+    try { boyGenome = JSON.parse(localStorage.getItem('alive_boy_genome')); } catch(e){}
+    if(boyGenome){
+      boyGenome.brainstemCID = cid;
+      boyGenome.brainstemGeneration = brainstem.generation;
+      localStorage.setItem('alive_boy_genome', JSON.stringify(boyGenome));
+    }
+  }
+
+  showStatus('LINKED — ' + emotion.dominant.toUpperCase());
+  triggerDopamine(3);
+}
+
+function computeEmotionalState(){
+  var recent = brainstem.nodes.filter(function(n){
+    return Date.now() - n.lastAccessed < 300000;
+  });
+
+  if(recent.length === 0) return { dominant: 'dormant', intensity: 0, nodeCount: 0, avgHue: 0 };
+
+  var hues = recent.map(function(n){ return parseHue(n.color); });
+  var avgHue = hues.reduce(function(a,b){return a+b;},0) / hues.length;
+  var avgOut = recent.reduce(function(s,n){return s + (n.lastOutput || 0.5);},0) / recent.length;
+
+  var dominant;
+  if(avgHue < 60) dominant = 'alert';
+  else if(avgHue < 120) dominant = 'calm';
+  else if(avgHue < 180) dominant = 'curious';
+  else if(avgHue < 240) dominant = 'thoughtful';
+  else if(avgHue < 300) dominant = 'creative';
+  else dominant = 'passionate';
+
+  return { dominant: dominant, intensity: avgOut, nodeCount: recent.length, avgHue: Math.round(avgHue) };
+}
+
+// ── BLUETOOTH STATE TRACKER ──
+var btState = {
+  linked: false,
+  bestProgress: 0,       // 0-1 progress toward full BT sequence
+  currentStep: 0,        // Current position in BT sequence (0-5)
+  attempts: 0,           // Total attempts
+  successfulLinks: 0,    // Completed full sequences
+  btSequence: ['bs_bt_scan','bs_bt_connect','bs_bt_discover','bs_bt_pair','bs_bt_sync'],
+  lastAttemptTime: 0,
+  realBtDevice: null     // Web Bluetooth device if available
+};
+
+function onNodeActivated_BT(nodeId){
+  var seqIdx = btState.btSequence.indexOf(nodeId);
+  if(seqIdx < 0) return; // Not a BT node
+
+  if(seqIdx === btState.currentStep){
+    // Correct next step
+    btState.currentStep++;
+    var progress = btState.currentStep / btState.btSequence.length;
+    if(progress > btState.bestProgress) btState.bestProgress = progress;
+
+    showStatus('BT STEP ' + btState.currentStep + '/5 — ' + nodeId.replace('bs_bt_','').toUpperCase());
+
+    if(btState.currentStep >= btState.btSequence.length){
+      // Full sequence completed!
+      btState.successfulLinks++;
+      btState.linked = true;
+      btState.currentStep = 0;
+      btState.lastAttemptTime = Date.now();
+      showStatus('BLUETOOTH LINKED! (' + btState.successfulLinks + ' times)');
+      triggerDopamine(10);
+
+      // Try real Bluetooth if supported
+      if(navigator.bluetooth && !btState.realBtDevice){
+        tryRealBluetooth();
+      }
+
+      // Massive reinforcement along BT chain
+      for(var i = 0; i < btState.btSequence.length - 1; i++){
+        var edge = findEdge(btState.btSequence[i], btState.btSequence[i+1]);
+        if(edge){
+          edge.weight = Math.min(1, edge.weight + 0.15);
+          edge.coActivations += 3;
+          var cyEdge = cy.getElementById(edge.id);
+          if(cyEdge.length) cyEdge.data('weight', edge.weight);
+        }
+      }
+    }
+  } else if(seqIdx === 0){
+    // Starting fresh
+    btState.currentStep = 1;
+    btState.attempts++;
+    showStatus('BT SEQUENCE STARTED — SCAN');
+  } else {
+    // Wrong order — reset
+    btState.currentStep = 0;
+    showStatus('BT SEQUENCE BROKEN — Start with SCAN', true);
+  }
+
+  // Persist
+  try { localStorage.setItem('brainstem_bt', JSON.stringify({
+    linked: btState.linked, bestProgress: btState.bestProgress,
+    attempts: btState.attempts, successfulLinks: btState.successfulLinks
+  })); } catch(e){}
+}
+
+function tryRealBluetooth(){
+  if(!navigator.bluetooth) return;
+  try {
+    navigator.bluetooth.requestDevice({
+      acceptAllDevices: true,
+      optionalServices: ['battery_service']
+    }).then(function(device){
+      btState.realBtDevice = device;
+      showStatus('REAL BT: ' + device.name);
+      triggerDopamine(15);
+    }).catch(function(err){
+      showStatus('BT: ' + (err.message || 'User cancelled'));
+    });
+  } catch(e){
+    showStatus('BT API not available');
+  }
+}
+
+// Restore BT state
+try {
+  var btSaved = JSON.parse(localStorage.getItem('brainstem_bt'));
+  if(btSaved){
+    btState.linked = btSaved.linked || false;
+    btState.bestProgress = btSaved.bestProgress || 0;
+    btState.attempts = btSaved.attempts || 0;
+    btState.successfulLinks = btSaved.successfulLinks || 0;
+  }
+} catch(e){}
+
+// ═══════════════════════════════════════════════════════════════
+// WHISTLE COMMAND SYSTEM — Voice-activated brainstem control
+// ═══════════════════════════════════════════════════════════════
+
+var whistleState = {
+  micStream: null,
+  audioCtxW: null,
+  analyser: null,
+  listening: false,
+  recording: false,
+  recorder: null,
+  chunks: [],
+  pitchSamples: [],
+  recordStart: 0,
+  recordTarget: null,      // 'node' | 'select' | 'back'
+  sysRecTarget: null,      // which system whistle being recorded
+  // Listener state
+  detectingPitch: false,
+  currentPitchRun: [],
+  pitchRunStart: 0,
+  selectionMode: false,    // square node cycling
+  selectionOptions: [],
+  selectionIndex: 0,
+  selectionInterval: null,
+  selectionNodeId: null,
+  guideOsc: null,        // pitch guidance oscillator during recording
+  guideGain: null        // gain node for guide tone
+};
+
+var systemWhistles = {
+  select: { audio: null, fingerprint: null },
+  back: { audio: null, fingerprint: null }
+};
+
+// Restore system whistles
+try {
+  var swSaved = JSON.parse(localStorage.getItem('brainstem_system_whistles'));
+  if(swSaved){
+    systemWhistles.select = swSaved.select || { audio:null, fingerprint:null };
+    systemWhistles.back = swSaved.back || { audio:null, fingerprint:null };
+  }
+} catch(e){}
+
+function saveSystemWhistles(){
+  try { localStorage.setItem('brainstem_system_whistles', JSON.stringify(systemWhistles)); } catch(e){}
+}
+
+// ── WHISTLE MODE ENTER/EXIT ──
+
+function enterWhistleMode(){
+  if(!brainstemUnlocked){ showStatus('UNLOCK TO USE WHISTLE'); setMode('explore'); return; }
+  cy.userPanningEnabled(true);
+  cy.userZoomingEnabled(true);
+  cy.nodes().grabify();
+  document.getElementById('whistleIndicator').classList.add('active');
+  startWhistleListener();
+  highlightWhistleNodes();
+  updateSysWhistleUI();
+  showStatus('WHISTLE MODE — TAP NODE TO ASSIGN');
+}
+
+function exitWhistleMode(){
+  stopWhistleListener();
+  document.getElementById('whistleIndicator').classList.remove('active');
+  closeWhistlePanel();
+  cancelSelection();
+  unhighlightWhistleNodes();
+}
+
+function highlightWhistleNodes(){
+  brainstem.nodes.forEach(function(n){
+    if(n.whistleFingerprint){
+      var cyN = cy.getElementById(n.id);
+      if(cyN.length) cyN.style('border-style', 'dashed').style('border-color', '#ffd700').style('border-width', 3);
+    }
+  });
+}
+
+function unhighlightWhistleNodes(){
+  cy.nodes().style('border-style', 'solid').style('border-width', 2);
+  brainstem.nodes.forEach(function(n){
+    var cyN = cy.getElementById(n.id);
+    if(cyN.length) cyN.style('border-color', n.color);
+  });
+}
+
+// ── WHISTLE PANEL ──
+
+function openWhistlePanel(nodeId){
+  var node = getNode(nodeId);
+  if(!node) return;
+  closeCodePanel();
+  closeInspector();
+  document.getElementById('whistlePanel').classList.add('open');
+  document.getElementById('wpNodeLabel').textContent = node.label;
+  document.getElementById('wpShapeBadge').textContent = node.shapeType.toUpperCase();
+
+  var hasWhistle = !!node.whistleFingerprint;
+  document.getElementById('wpDelBtn').disabled = !hasWhistle;
+  document.getElementById('wpScore').textContent = '\u2014';
+  document.getElementById('wpScore').className = 'wp-score waiting';
+  document.getElementById('wpRecStatus').textContent = hasWhistle
+    ? 'PAIRED ' + Math.round(node.whistleFingerprint.avgPitch) + 'Hz'
+    : 'Tap THIS NODE then whistle to match';
+
+  // Generate and show the node's target contour
+  training.mode = 'node';
+  training.targetContour = generateNodeTarget(node);
+  training.targetName = node.label;
+  drawTrainingCanvas(training.targetContour, null);
+
+  // Highlight the THIS NODE button
+  var btns = document.querySelectorAll('.wp-prac-btn');
+  btns.forEach(function(b){ b.classList.remove('active'); });
+  var nb = document.getElementById('wpNodeBtn');
+  if(nb) nb.classList.add('active');
+
+  // Play droid voice so they hear the target
+  setTimeout(function(){ shapeVoice(node); creatureSay(node, 'hello'); }, 400);
+}
+
+function closeWhistlePanel(){
+  document.getElementById('whistlePanel').classList.remove('open');
+  if(whistleState.recording) stopWhistleRecord();
+}
+
+function toggleWhistlePanel(){
+  document.getElementById('whistlePanel').classList.toggle('open');
+}
+
+// ── PITCH DETECTION (autocorrelation) ──
+
+function detectPitch(analyser){
+  var buf = new Float32Array(analyser.fftSize);
+  analyser.getFloatTimeDomainData(buf);
+
+  // Check signal level
+  var rms = 0;
+  for(var i=0;i<buf.length;i++) rms += buf[i] * buf[i];
+  rms = Math.sqrt(rms / buf.length);
+  if(rms < 0.01) return null; // Too quiet
+
+  // Autocorrelation
+  var SIZE = buf.length;
+  var MAX_SAMPLES = Math.floor(SIZE / 2);
+  var correlations = new Float32Array(MAX_SAMPLES);
+  var bestOffset = -1, bestCorrelation = 0;
+
+  for(var offset = 50; offset < MAX_SAMPLES; offset++){
+    var correlation = 0;
+    for(var j = 0; j < MAX_SAMPLES; j++){
+      correlation += Math.abs(buf[j] - buf[j + offset]);
+    }
+    correlation = 1 - (correlation / MAX_SAMPLES);
+    correlations[offset] = correlation;
+    if(correlation > 0.9 && correlation > bestCorrelation){
+      bestCorrelation = correlation;
+      bestOffset = offset;
+    }
+  }
+
+  if(bestCorrelation < 0.9) return null;
+
+  // Parabolic interpolation for sub-sample accuracy
+  var prev = correlations[bestOffset - 1] || 0;
+  var next = correlations[bestOffset + 1] || 0;
+  var shift = (prev - next) / (2 * (2 * bestCorrelation - prev - next));
+  var sampleRate = whistleState.audioCtxW ? whistleState.audioCtxW.sampleRate : 44100;
+  var freq = sampleRate / (bestOffset + shift);
+
+  // Whistle range: 300-3000Hz
+  if(freq < 300 || freq > 3000) return null;
+  return freq;
+}
+
+// ── FINGERPRINT EXTRACTION ──
+
+function extractFingerprint(pitchSamples, durationMs){
+  if(!pitchSamples || pitchSamples.length === 0) return null;
+  var avg = pitchSamples.reduce(function(a,b){ return a+b; }, 0) / pitchSamples.length;
+  var duration = durationMs / 1000;
+
+  // Contour: split into halves
+  var mid = Math.floor(pitchSamples.length / 2);
+  var firstHalf = pitchSamples.slice(0, mid);
+  var secondHalf = pitchSamples.slice(mid);
+  var firstAvg = firstHalf.reduce(function(a,b){ return a+b; }, 0) / firstHalf.length;
+  var secondAvg = secondHalf.reduce(function(a,b){ return a+b; }, 0) / secondHalf.length;
+
+  var contour;
+  if(pitchSamples.length < 4){
+    contour = 'flat';
+  } else {
+    var ratio = secondAvg / firstAvg;
+    if(ratio > 1.08) contour = 'up';
+    else if(ratio < 0.92) contour = 'down';
+    else {
+      // Check for peak/valley in middle
+      var third = Math.floor(pitchSamples.length / 3);
+      var midSection = pitchSamples.slice(third, third * 2);
+      var midAvg = midSection.reduce(function(a,b){ return a+b; }, 0) / midSection.length;
+      if(midAvg > firstAvg * 1.05 && midAvg > secondAvg * 1.05) contour = 'updown';
+      else if(midAvg < firstAvg * 0.95 && midAvg < secondAvg * 0.95) contour = 'downup';
+      else contour = 'flat';
+    }
+  }
+
+  return { avgPitch: avg, duration: duration, contour: contour };
+}
+
+// ── WHISTLE MATCHING ──
+
+function matchWhistle(incoming, stored){
+  if(!incoming || !stored) return 0;
+  var pitchDiff = Math.abs(incoming.avgPitch - stored.avgPitch) / stored.avgPitch;
+  var durationDiff = Math.abs(incoming.duration - stored.duration) / Math.max(stored.duration, 0.3);
+  var contourMatch = incoming.contour === stored.contour ? 1 : 0.3;
+
+  // Weighted score
+  var score = Math.max(0, (1 - pitchDiff * 2)) * 0.5 +
+              Math.max(0, (1 - durationDiff * 2)) * 0.2 +
+              contourMatch * 0.3;
+  return score;
+}
+
+function findBestWhistleMatch(fingerprint){
+  if(!fingerprint) return null;
+  var bestScore = 0, bestMatch = null;
+
+  // Check system whistles
+  if(systemWhistles.select.fingerprint){
+    var s = matchWhistle(fingerprint, systemWhistles.select.fingerprint);
+    if(s > bestScore){ bestScore = s; bestMatch = { type:'system', action:'select' }; }
+  }
+  if(systemWhistles.back.fingerprint){
+    var s2 = matchWhistle(fingerprint, systemWhistles.back.fingerprint);
+    if(s2 > bestScore){ bestScore = s2; bestMatch = { type:'system', action:'back' }; }
+  }
+
+  // Check node whistles
+  brainstem.nodes.forEach(function(n){
+    if(n.whistleFingerprint){
+      var s3 = matchWhistle(fingerprint, n.whistleFingerprint);
+      if(s3 > bestScore){ bestScore = s3; bestMatch = { type:'node', nodeId:n.id, label:n.label }; }
+    }
+  });
+
+  if(bestScore < 0.55) return null; // Below threshold
+  return { match: bestMatch, score: bestScore };
+}
+
+// ── WHISTLE LISTENER ──
+
+function startWhistleListener(){
+  if(whistleState.listening) return;
+  navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream){
+    whistleState.micStream = stream;
+    whistleState.audioCtxW = new (window.AudioContext || window.webkitAudioContext)();
+    var source = whistleState.audioCtxW.createMediaStreamSource(stream);
+    whistleState.analyser = whistleState.audioCtxW.createAnalyser();
+    whistleState.analyser.fftSize = 2048;
+    source.connect(whistleState.analyser);
+    whistleState.listening = true;
+    whistleListenerLoop();
+    showStatus('LISTENING FOR WHISTLES');
+  }).catch(function(err){
+    showStatus('MIC ACCESS DENIED', true);
+  });
+}
+
+function stopWhistleListener(){
+  whistleState.listening = false;
+  if(whistleState.micStream){
+    whistleState.micStream.getTracks().forEach(function(t){ t.stop(); });
+    whistleState.micStream = null;
+  }
+  if(whistleState.audioCtxW){
+    whistleState.audioCtxW.close().catch(function(){});
+    whistleState.audioCtxW = null;
+  }
+  whistleState.analyser = null;
+}
+
+var MIN_WHISTLE_DURATION = 200; // ms — minimum to count as a whistle
+
+function whistleListenerLoop(){
+  if(!whistleState.listening || !whistleState.analyser) return;
+  if(whistleState.recording) { setTimeout(whistleListenerLoop, 100); return; } // Don't match while recording
+
+  var freq = detectPitch(whistleState.analyser);
+
+  if(freq !== null){
+    // Pitch detected
+    if(!whistleState.detectingPitch){
+      // Start of a new pitch run
+      whistleState.detectingPitch = true;
+      whistleState.currentPitchRun = [];
+      whistleState.pitchRunStart = Date.now();
+    }
+    whistleState.currentPitchRun.push(freq);
+  } else {
+    // Silence
+    if(whistleState.detectingPitch){
+      var duration = Date.now() - whistleState.pitchRunStart;
+      if(duration >= MIN_WHISTLE_DURATION && whistleState.currentPitchRun.length >= 3){
+        // Whistle ended — extract fingerprint and match
+        var fp = extractFingerprint(whistleState.currentPitchRun, duration);
+        var result = findBestWhistleMatch(fp);
+        if(result){
+          handleWhistleMatch(result);
+        }
+      }
+      whistleState.detectingPitch = false;
+      whistleState.currentPitchRun = [];
+    }
+  }
+
+  setTimeout(whistleListenerLoop, 50);
+}
+
+function handleWhistleMatch(result){
+  if(result.match.type === 'system'){
+    if(result.match.action === 'select'){
+      if(whistleState.selectionMode) confirmSelection();
+      else showStatus('SELECT (no active selection)');
+    } else if(result.match.action === 'back'){
+      if(whistleState.selectionMode) cancelSelection();
+      else showStatus('BACK');
+    }
+    playSFX('create');
+  } else if(result.match.type === 'node'){
+    showStatus('WHISTLE → ' + result.match.label + ' (' + (result.score * 100).toFixed(0) + '%)');
+    activateNode_Layer1(result.match.nodeId);
+    // Flash the node gold
+    var cyN = cy.getElementById(result.match.nodeId);
+    if(cyN.length){
+      cyN.style('border-color', '#ffd700').style('border-width', 5);
+      setTimeout(function(){
+        var n = getNode(result.match.nodeId);
+        if(n) cyN.style('border-color', n.whistleFingerprint ? '#ffd700' : n.color).style('border-width', n.whistleFingerprint ? 3 : 2);
+      }, 600);
+    }
+    playSFX('create');
+
+    // If it's a square node, enter selection mode
+    var node = getNode(result.match.nodeId);
+    if(node && node.shapeType === 'square'){
+      enterSelectionMode(result.match.nodeId);
+    }
+  }
+}
+
+// ── WHISTLE TRAINING — match the target line with your whistle ──
+
+var training = {
+  targetContour: null,   // normalized 0-1 array — the shape to match (−1 = gap between notes)
+  targetName: '',
+  mode: 'node',          // 'node' | 'rise' | 'fall' | 'peak' | 'valley' | 'flat'
+  lastScore: 0,
+  highlightNote: -1,     // which note is being highlighted during LISTEN playback
+  noteScores: null,      // array of per-note scores after recording
+  parsedNotes: null      // cached parsed notes from target
+};
+
+// Practice target shapes (normalized 0-1)
+var PRACTICE_SHAPES = {
+  rise:   (function(){ var a=[]; for(var i=0;i<30;i++) a.push(i/29); return a; })(),
+  fall:   (function(){ var a=[]; for(var i=0;i<30;i++) a.push(1-i/29); return a; })(),
+  peak:   (function(){ var a=[]; for(var i=0;i<30;i++){ var t=i/29; a.push(t<0.5?t*2:2-t*2); } return a; })(),
+  valley: (function(){ var a=[]; for(var i=0;i<30;i++){ var t=i/29; a.push(t<0.5?1-t*2:t*2-1); } return a; })(),
+  flat:   (function(){ var a=[]; for(var i=0;i<30;i++) a.push(0.5); return a; })()
+};
+
+// Generate target contour from node's droid voice seed
+function generateNodeTarget(node){
+  var seed = 0;
+  for(var i=0;i<node.id.length;i++) seed = ((seed << 5) - seed) + node.id.charCodeAt(i);
+  seed = Math.abs(seed);
+  function sr(){ seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
+
+  var personality = {
+    square:{notes:[4,8]}, triangle:{notes:[3,5]}, circle:{notes:[2,4]},
+    star:{notes:[3,6]}, freeform:{notes:[4,7]}, line:{notes:[2,3]}, dot:{notes:[1,2]}
+  };
+  var p = personality[node.shapeType] || personality.circle;
+  var noteCount = p.notes[0] + Math.floor(sr() * (p.notes[1] - p.notes[0] + 1));
+  var contour = [];
+  for(var n=0;n<noteCount;n++){
+    var startVal = sr();
+    var endVal = sr();
+    var len = 4 + Math.floor(sr() * 6);
+    for(var s=0;s<len;s++){
+      contour.push(startVal + (endVal - startVal) * (s / (len - 1)));
+    }
+    // Small gap
+    if(n < noteCount - 1) contour.push(-1);
+  }
+  return contour;
+}
+
+function setPractice(shape){
+  // Highlight active button
+  var btns = document.querySelectorAll('.wp-prac-btn');
+  btns.forEach(function(b){ b.classList.remove('active'); });
+  event.target.classList.add('active');
+
+  training.mode = shape;
+  training.noteScores = null;
+  training.highlightNote = -1;
+  var scoreEl = document.getElementById('wpScore');
+  scoreEl.textContent = '\u2014';
+  scoreEl.className = 'wp-score waiting';
+
+  if(shape === 'node'){
+    var node = getNode(brainstem.selectedNode);
+    if(node){
+      training.targetContour = generateNodeTarget(node);
+      training.targetName = node.label;
+      // Play the node's droid voice so they hear it
+      shapeVoice(node);
+      creatureSay(node, 'hello');
+    }
+  } else {
+    training.targetContour = PRACTICE_SHAPES[shape] || PRACTICE_SHAPES.flat;
+    training.targetName = shape;
+  }
+
+  training.parsedNotes = parseNotesFromContour(training.targetContour);
+  drawTrainingCanvas(training.targetContour, null);
+  var noteCount = training.parsedNotes ? training.parsedNotes.length : 0;
+  document.getElementById('wpRecStatus').textContent = noteCount > 1
+    ? noteCount + ' notes \u2014 tap LISTEN or whistle to match'
+    : 'Whistle to match the gold line';
+}
+
+function toggleWhistleRecord(){
+  if(whistleState.recording) stopWhistleRecord();
+  else startWhistleRecord('node');
+}
+
+function startWhistleRecord(target){
+  if(!whistleState.micStream){
+    showStatus('NO MIC \u2014 ENTER WHISTLE MODE FIRST', true);
+    return;
+  }
+  whistleState.recording = true;
+  whistleState.recordTarget = target;
+  whistleState.pitchSamples = [];
+  whistleState.recordStart = Date.now();
+
+  // STFU — pause ambient sounds while recording
+  stopAmbientLife();
+
+  // Reset per-note scores
+  training.noteScores = null;
+  training.highlightNote = -1;
+
+  // Start pitch guide tone (plays target pitch quietly as reference)
+  if(training.targetContour) startGuideTone();
+
+  // Start live pitch plotting
+  plotLivePitch();
+
+  document.getElementById('wpRecBtn').classList.add('recording');
+  document.getElementById('wpRecStatus').textContent = 'Whistle now... follow the guide tone';
+
+  // Auto-stop after 3 seconds
+  setTimeout(function(){
+    if(whistleState.recording) stopWhistleRecord();
+  }, 3000);
+}
+
+function plotLivePitch(){
+  if(!whistleState.recording || !whistleState.analyser) return;
+  var freq = detectPitch(whistleState.analyser);
+  if(freq !== null) whistleState.pitchSamples.push(freq);
+  else whistleState.pitchSamples.push(0);
+
+  // Update guide tone to target pitch at current recording position
+  if(training.targetContour){
+    var progress = Math.min(whistleState.pitchSamples.length / 75, 1); // 75 samples ~= 3 sec
+    var targetVal = getTargetAtProgress(training.targetContour, progress);
+    updateGuideTone(targetVal, freq);
+  }
+
+  // Draw live over target
+  drawTrainingCanvas(training.targetContour, whistleState.pitchSamples);
+  setTimeout(plotLivePitch, 40);
+}
+
+function stopWhistleRecord(){
+  if(!whistleState.recording) return;
+  whistleState.recording = false;
+  var duration = Date.now() - whistleState.recordStart;
+  var raw = whistleState.pitchSamples.slice();
+  var target = whistleState.recordTarget;
+
+  document.getElementById('wpRecBtn').classList.remove('recording');
+
+  // Stop guide tone
+  stopGuideTone();
+
+  // Resume ambient life
+  startAmbientLife();
+
+  var pitchOnly = raw.filter(function(f){ return f > 0; });
+
+  if(pitchOnly.length < 3){
+    document.getElementById('wpRecStatus').textContent = 'Too quiet \u2014 try again';
+    droidReact(false);
+    return;
+  }
+
+  var fingerprint = extractFingerprint(pitchOnly, duration);
+
+  // Normalize user contour to 0-1
+  var minF = Math.min.apply(null, pitchOnly);
+  var maxF = Math.max.apply(null, pitchOnly);
+  var range = maxF - minF || 1;
+  var userNorm = pitchOnly.map(function(f){ return (f - minF) / range; });
+  fingerprint.contourData = userNorm.map(function(v){ return Math.round(v * 100) / 100; });
+  fingerprint.freqRange = [Math.round(minF), Math.round(maxF)];
+
+  // Score against target
+  var score = training.targetContour ? scoreContourMatch(userNorm, training.targetContour) : 0;
+  training.lastScore = score;
+  var isGood = score > 0.6;
+
+  // Per-note scoring
+  training.noteScores = training.targetContour ? scorePerNote(raw, training.targetContour) : null;
+
+  // Show result
+  var scoreEl = document.getElementById('wpScore');
+  scoreEl.textContent = Math.round(score * 100) + '%';
+  scoreEl.className = 'wp-score ' + (isGood ? 'good' : 'bad');
+
+  // Redraw with result color + per-note scores
+  drawTrainingCanvas(training.targetContour, raw, isGood);
+
+  // Creature reacts
+  droidReact(isGood);
+
+  // Show creature's reaction in English
+  var rNode = (training.mode === 'node') ? getNode(brainstem.selectedNode) : null;
+  if(isGood && rNode){
+    creatureSay(rNode, 'whistle');
+  } else if(isGood){
+    showCreatureReaction("Yes! That's it! You nailed the " + training.mode + " shape!");
+  } else if(score > 0.4){
+    showCreatureReaction("Almost! The shape is close but the pitch needs work. Try again!");
+  } else {
+    showCreatureReaction("Hmm, not quite. Listen to the target first, then try to match each note.");
+  }
+
+  // Mark practice button if passed
+  if(isGood && training.mode !== 'node'){
+    var btns = document.querySelectorAll('.wp-prac-btn');
+    btns.forEach(function(b){
+      if(b.textContent.toLowerCase().indexOf(training.mode) >= 0) b.classList.add('pass');
+    });
+  }
+
+  // If good + targeting this node, pair it
+  if(isGood && (training.mode === 'node' || target === 'select' || target === 'back')){
+    if(target === 'select' || target === 'back'){
+      applySystemWhistle(target, fingerprint);
+    } else {
+      applyWhistleToNode(fingerprint);
+    }
+  } else if(!isGood){
+    document.getElementById('wpRecStatus').textContent = score < 0.3 ? 'Not quite \u2014 try matching the shape' : 'Close! Try again';
+  }
+}
+
+// Score how well user contour matches target (0-1)
+function scoreContourMatch(user, target){
+  if(!target || !user || target.length < 2 || user.length < 2) return 0;
+
+  // Resample both to same length
+  var len = 30;
+  var uResampled = resampleContour(user, len);
+  var tResampled = resampleContour(target.filter(function(v){ return v >= 0; }), len);
+
+  // Calculate similarity (1 - mean absolute difference)
+  var totalDiff = 0;
+  for(var i=0;i<len;i++){
+    totalDiff += Math.abs(uResampled[i] - tResampled[i]);
+  }
+  var avgDiff = totalDiff / len;
+  return Math.max(0, 1 - avgDiff * 2);
+}
+
+function resampleContour(arr, targetLen){
+  var out = [];
+  for(var i=0;i<targetLen;i++){
+    var srcIdx = (i / (targetLen - 1)) * (arr.length - 1);
+    var lo = Math.floor(srcIdx);
+    var hi = Math.min(lo + 1, arr.length - 1);
+    var frac = srcIdx - lo;
+    out.push(arr[lo] * (1 - frac) + arr[hi] * frac);
+  }
+  return out;
+}
+
+// ── NOTE BREAKDOWN + PITCH GUIDANCE ──
+
+// Parse target contour into discrete note objects (split on −1 gaps)
+function parseNotesFromContour(contour){
+  if(!contour || contour.length < 1) return [];
+  var notes = [], current = [], startIdx = 0;
+  for(var i = 0; i <= contour.length; i++){
+    if(i === contour.length || contour[i] === -1){
+      if(current.length > 0){
+        var avg = current.reduce(function(a,b){return a+b;},0) / current.length;
+        notes.push({idx:notes.length, start:startIdx, end:i-1, values:current.slice(), avgVal:avg});
+      }
+      current = [];
+      startIdx = i + 1;
+    } else {
+      current.push(contour[i]);
+    }
+  }
+  return notes;
+}
+
+// Play each note individually so user can hear the breakdown
+function playNoteBreakdown(){
+  if(!training.targetContour) return;
+  var notes = parseNotesFromContour(training.targetContour);
+  if(!notes.length) return;
+  if(!audioCtx){ try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){return;} } if(audioCtx.state==='suspended') audioCtx.resume();
+  var t = audioCtx.currentTime;
+  var totalDur = 0;
+
+  notes.forEach(function(note, idx){
+    var startFreq = 300 + note.values[0] * 800;
+    var endFreq = 300 + note.values[note.values.length - 1] * 800;
+    var dur = Math.max(0.15, note.values.length * 0.055);
+    droidNote(startFreq, endFreq, dur, 'sine', t + totalDur, 0.09);
+
+    // Highlight note on canvas as it plays
+    (function(n, delay){
+      setTimeout(function(){
+        training.highlightNote = n;
+        drawTrainingCanvas(training.targetContour, null);
+      }, delay * 1000);
+    })(idx, totalDur);
+
+    totalDur += dur + 0.18;
+  });
+
+  // Clear highlight after all played
+  setTimeout(function(){
+    training.highlightNote = -1;
+    drawTrainingCanvas(training.targetContour, null);
+  }, totalDur * 1000 + 200);
+}
+
+// Get target normalized value at recording progress (0-1)
+function getTargetAtProgress(contour, progress){
+  if(!contour || contour.length < 1) return null;
+  var idx = Math.round(progress * (contour.length - 1));
+  idx = Math.max(0, Math.min(idx, contour.length - 1));
+  return contour[idx]; // −1 for gaps, 0-1 for note values
+}
+
+// Guide tone management — plays target pitch quietly as a reference
+function startGuideTone(){
+  if(!audioCtx){ try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){return;} } if(audioCtx.state==='suspended') audioCtx.resume();
+  try {
+    var osc = audioCtx.createOscillator();
+    var gain = audioCtx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.value = 440;
+    gain.gain.value = 0;
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    whistleState.guideOsc = osc;
+    whistleState.guideGain = gain;
+  } catch(e){}
+}
+
+function updateGuideTone(targetNormVal, userFreq){
+  if(!whistleState.guideOsc || !whistleState.guideGain) return;
+  if(targetNormVal === null || targetNormVal === -1){
+    // Gap between notes — silence
+    whistleState.guideGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.02);
+    return;
+  }
+  var targetFreq = 300 + targetNormVal * 800;
+  whistleState.guideOsc.frequency.setTargetAtTime(targetFreq, audioCtx.currentTime, 0.03);
+
+  if(userFreq && userFreq > 0){
+    var diff = Math.abs(userFreq - targetFreq) / targetFreq;
+    // Louder when far off, quiet when close (training wheels effect)
+    var vol = diff > 0.25 ? 0.03 : diff > 0.12 ? 0.015 : 0.004;
+    whistleState.guideGain.gain.setTargetAtTime(vol, audioCtx.currentTime, 0.02);
+  } else {
+    // No user pitch — play guide at moderate volume so they hear the target
+    whistleState.guideGain.gain.setTargetAtTime(0.02, audioCtx.currentTime, 0.02);
+  }
+}
+
+function stopGuideTone(){
+  try {
+    if(whistleState.guideGain) whistleState.guideGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.01);
+    if(whistleState.guideOsc){
+      setTimeout(function(){
+        try { whistleState.guideOsc.stop(); } catch(e){}
+        whistleState.guideOsc = null;
+        whistleState.guideGain = null;
+      }, 100);
+    }
+  } catch(e){
+    whistleState.guideOsc = null;
+    whistleState.guideGain = null;
+  }
+}
+
+// Score each note individually
+function scorePerNote(rawSamples, targetContour){
+  var notes = parseNotesFromContour(targetContour);
+  if(!notes.length) return [];
+  var allPitch = rawSamples.filter(function(f){ return f > 0; });
+  if(allPitch.length < 2) return notes.map(function(){ return 0; });
+  var minF = Math.min.apply(null, allPitch) - 30;
+  var maxF = Math.max.apply(null, allPitch) + 30;
+  var range = maxF - minF || 1;
+  var totalLen = targetContour.length;
+  var scores = [];
+
+  notes.forEach(function(note){
+    var uStart = Math.round(note.start / totalLen * rawSamples.length);
+    var uEnd = Math.round((note.end + 1) / totalLen * rawSamples.length);
+    uEnd = Math.max(uEnd, uStart + 1);
+    var uSeg = rawSamples.slice(uStart, uEnd);
+    var uPitch = uSeg.filter(function(f){ return f > 0; });
+    if(uPitch.length < 1){ scores.push(0); return; }
+    var uNorm = uPitch.map(function(f){ return (f - minF) / range; });
+    var segLen = Math.max(5, Math.min(15, uNorm.length));
+    var uR = resampleContour(uNorm, segLen);
+    var tR = resampleContour(note.values, segLen);
+    var diff = 0;
+    for(var j = 0; j < segLen; j++) diff += Math.abs(uR[j] - tR[j]);
+    scores.push(Math.max(0, 1 - (diff / segLen) * 2));
+  });
+
+  return scores;
+}
+
+// Creature reacts with beeps — happy or sad
+function droidReact(isGood){
+  try {
+    if(!audioCtx){ try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){return;} } if(audioCtx.state==='suspended') audioCtx.resume();
+    var t = audioCtx.currentTime;
+    if(isGood){
+      // Happy ascending trill
+      [600, 800, 1000, 1200].forEach(function(f, i){
+        droidNote(f, f * 1.05, 0.08, 'sine', t + i * 0.09, 0.06);
+      });
+    } else {
+      // Sad descending wobble
+      droidNote(500, 300, 0.25, 'sawtooth', t, 0.04);
+      droidNote(350, 200, 0.3, 'triangle', t + 0.3, 0.03);
+    }
+  } catch(e){}
+}
+
+// ── PLOTTER CANVAS — per-note blocks + target + user + pitch guidance ──
+
+function drawTrainingCanvas(target, userSamples, isGood){
+  var c = document.getElementById('wpPlotter');
+  if(!c) return;
+  var ctx = c.getContext('2d');
+  var w = c.width, h = c.height;
+  var pad = 14; // vertical padding for note numbers + scores
+  var drawH = h - pad * 2; // usable drawing height
+  ctx.clearRect(0, 0, w, h);
+
+  var notes = target ? parseNotesFromContour(target) : [];
+  var totalLen = target ? target.length : 0;
+
+  // Background grid
+  ctx.strokeStyle = 'rgba(255,215,0,0.04)';
+  ctx.lineWidth = 1;
+  for(var g=0;g<5;g++){
+    var gy = pad + (g / 4) * drawH;
+    ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(w, gy); ctx.stroke();
+  }
+
+  // Draw note blocks (alternating shade, colored after scoring)
+  if(notes.length > 0 && totalLen > 1){
+    notes.forEach(function(note, ni){
+      var x1 = (note.start / (totalLen - 1)) * w;
+      var x2 = Math.min(w, (note.end / (totalLen - 1)) * w + 4);
+      if(ni === 0) x1 = 0;
+
+      var isHL = (training.highlightNote === ni);
+      var ns = (training.noteScores && training.noteScores[ni] !== undefined) ? training.noteScores[ni] : null;
+
+      // Block fill
+      if(isHL){
+        ctx.fillStyle = 'rgba(136,204,255,0.12)';
+      } else if(ns !== null){
+        ctx.fillStyle = ns > 0.6 ? 'rgba(0,255,136,0.07)' : 'rgba(255,68,68,0.07)';
+      } else {
+        ctx.fillStyle = ni % 2 === 0 ? 'rgba(255,215,0,0.03)' : 'rgba(255,215,0,0.01)';
+      }
+      ctx.fillRect(x1, 0, x2 - x1, h);
+
+      // Note separator
+      if(ni > 0){
+        ctx.strokeStyle = 'rgba(255,215,0,0.12)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([2,3]);
+        ctx.beginPath(); ctx.moveTo(x1, 0); ctx.lineTo(x1, h); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // Note number at top
+      ctx.fillStyle = isHL ? '#88ccff' : (ns !== null ? (ns > 0.6 ? '#00ff88' : '#ff4444') : 'rgba(255,215,0,0.3)');
+      ctx.font = '9px "Share Tech Mono"';
+      var numX = (x1 + x2) / 2 - 3;
+      ctx.fillText((ni + 1).toString(), numX, 10);
+
+      // Per-note score at bottom
+      if(ns !== null){
+        ctx.fillStyle = ns > 0.6 ? '#00ff88' : '#ff4444';
+        ctx.font = '7px "Share Tech Mono"';
+        ctx.fillText(Math.round(ns * 100) + '%', numX - 4, h - 2);
+      }
+    });
+  }
+
+  // Draw target contour in gold (dashed) — breaks at gaps
+  if(target && totalLen > 1){
+    ctx.strokeStyle = 'rgba(255,215,0,0.5)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6,4]);
+    ctx.lineJoin = 'round';
+    var inNote = false;
+    for(var i = 0; i < totalLen; i++){
+      if(target[i] === -1){
+        if(inNote){ ctx.stroke(); inNote = false; }
+        continue;
+      }
+      var tx = (i / (totalLen - 1)) * w;
+      var ty = pad + drawH - target[i] * drawH;
+      if(!inNote){ ctx.beginPath(); ctx.moveTo(tx, ty); inNote = true; }
+      else ctx.lineTo(tx, ty);
+    }
+    if(inNote) ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Draw user contour
+  if(userSamples && userSamples.length > 1){
+    var pitchOnly = userSamples.filter(function(f){ return f > 0; });
+    if(pitchOnly.length > 1){
+      var minF = Math.min.apply(null, pitchOnly) - 30;
+      var maxF = Math.max.apply(null, pitchOnly) + 30;
+      var range = maxF - minF || 1;
+
+      var color = typeof isGood === 'undefined' ? '#ff4444' : (isGood ? '#00ff88' : '#ff4444');
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2.5;
+      ctx.lineJoin = 'round';
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      var uStep = w / (userSamples.length - 1);
+      var started = false;
+      for(var j=0;j<userSamples.length;j++){
+        if(userSamples[j] > 0){
+          var ux = j * uStep;
+          var uy = pad + drawH - ((userSamples[j] - minF) / range) * drawH;
+          if(!started){ ctx.moveTo(ux, uy); started = true; }
+          else ctx.lineTo(ux, uy);
+        }
+      }
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Real-time pitch direction indicator (during recording only)
+      if(typeof isGood === 'undefined' && target && totalLen > 1){
+        var lastPitch = 0;
+        for(var lp = userSamples.length - 1; lp >= 0; lp--){
+          if(userSamples[lp] > 0){ lastPitch = userSamples[lp]; break; }
+        }
+        if(lastPitch > 0){
+          var progress = Math.min(userSamples.length / 75, 1);
+          var targetVal = getTargetAtProgress(target, progress);
+          if(targetVal !== null && targetVal >= 0){
+            var targetFreq = 300 + targetVal * 800;
+            var diff = (lastPitch - targetFreq) / targetFreq;
+            var ix = w - 16;
+
+            if(Math.abs(diff) < 0.08){
+              // On target — green dot
+              ctx.fillStyle = '#00ff88';
+              ctx.shadowColor = '#00ff88';
+              ctx.shadowBlur = 6;
+              ctx.beginPath();
+              ctx.arc(ix, h / 2, 4, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.shadowBlur = 0;
+            } else if(diff > 0){
+              // Too high — red down arrow
+              ctx.fillStyle = '#ff4444';
+              ctx.beginPath();
+              ctx.moveTo(ix, h / 2 + 8);
+              ctx.lineTo(ix - 5, h / 2 - 2);
+              ctx.lineTo(ix + 5, h / 2 - 2);
+              ctx.fill();
+            } else {
+              // Too low — blue up arrow
+              ctx.fillStyle = '#88ccff';
+              ctx.beginPath();
+              ctx.moveTo(ix, h / 2 - 8);
+              ctx.lineTo(ix - 5, h / 2 + 2);
+              ctx.lineTo(ix + 5, h / 2 + 2);
+              ctx.fill();
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Corner labels
+  ctx.fillStyle = '#333';
+  ctx.font = '8px "Share Tech Mono"';
+  ctx.fillText('HI', 2, pad + 6);
+  ctx.fillText('LO', 2, pad + drawH - 2);
+  if(training.targetName){
+    ctx.fillStyle = 'rgba(255,215,0,0.25)';
+    ctx.fillText(training.targetName.toUpperCase(), w - 55, pad + 6);
+  }
+}
+
+function clearPlotter(){ drawTrainingCanvas(null, null); }
+
+function applyWhistleToNode(fingerprint){
+  var node = getNode(brainstem.selectedNode);
+  if(!node) return;
+  node.whistleAudio = null;
+  node.whistleFingerprint = fingerprint;
+  markDirty();
+
+  document.getElementById('wpDelBtn').disabled = false;
+  document.getElementById('wpRecStatus').textContent = 'PAIRED! ' + Math.round(fingerprint.avgPitch) + 'Hz';
+
+  var cyN = cy.getElementById(node.id);
+  if(cyN.length) cyN.style('border-style', 'dashed').style('border-color', '#ffd700').style('border-width', 3);
+
+  sftProfile.brainstem.whistlesRecorded++;
+  saveSFTProfile();
+  showStatus('WHISTLE PAIRED TO ' + node.label);
+  playSFX('reward');
+}
+
+function deleteNodeWhistle(){
+  var node = getNode(brainstem.selectedNode);
+  if(!node) return;
+  node.whistleAudio = null;
+  node.whistleFingerprint = null;
+  markDirty();
+
+  document.getElementById('wpDelBtn').disabled = true;
+  document.getElementById('wpRecStatus').textContent = 'Whistle cleared';
+  document.getElementById('wpScore').textContent = '\u2014';
+  document.getElementById('wpScore').className = 'wp-score waiting';
+  clearPlotter();
+
+  var cyN = cy.getElementById(node.id);
+  if(cyN.length) cyN.style('border-style', 'solid').style('border-color', node.color).style('border-width', 2);
+  showStatus('WHISTLE REMOVED');
+}
+
+// ── SYSTEM WHISTLES (SELECT + BACK) ──
+
+function toggleSysWhistleRecord(which){
+  var btn = document.getElementById(which === 'select' ? 'sysSelectRec' : 'sysBackRec');
+  if(whistleState.recording && whistleState.sysRecTarget === which){
+    stopWhistleRecord();
+    btn.classList.remove('recording');
+  } else {
+    whistleState.sysRecTarget = which;
+    startWhistleRecord(which);
+    btn.classList.add('recording');
+    setTimeout(function(){ btn.classList.remove('recording'); }, 3500);
+  }
+}
+
+function applySystemWhistle(which, fingerprint){
+  systemWhistles[which] = { audio: null, fingerprint: fingerprint };
+  saveSystemWhistles();
+  updateSysWhistleUI();
+  showStatus((which === 'select' ? 'SELECT' : 'BACK') + ' WHISTLE SET');
+  playSFX('reward');
+  var btn = document.getElementById(which === 'select' ? 'sysSelectRec' : 'sysBackRec');
+  btn.classList.remove('recording');
+}
+
+function updateSysWhistleUI(){
+  var selSet = !!systemWhistles.select.fingerprint;
+  var backSet = !!systemWhistles.back.fingerprint;
+  var selStatus = document.getElementById('sysSelectStatus');
+  var backStatus = document.getElementById('sysBackStatus');
+  if(selStatus){ selStatus.textContent = selSet ? 'SET' : '\u2014'; selStatus.classList.toggle('set', selSet); }
+  if(backStatus){ backStatus.textContent = backSet ? 'SET' : '\u2014'; backStatus.classList.toggle('set', backSet); }
+}
+
+// ── ROBOT BEEP ENCODING ──
+
+function beepEncode(label, optionIndex, callback){
+  if(!audioCtx){ try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){return;} } if(audioCtx.state==='suspended') audioCtx.resume();
+  var len = label.length;
+  var baseFreq = 400 + (optionIndex || 0) * 80; // Different pitch per option
+  var beepDur = 0.06; // 60ms per beep
+  var gap = 0.08; // 80ms gap
+
+  for(var i = 0; i < Math.min(len, 20); i++){
+    (function(idx){
+      var t = audioCtx.currentTime + idx * (beepDur + gap);
+      var o = audioCtx.createOscillator();
+      var g = audioCtx.createGain();
+      o.type = 'square';
+      o.frequency.setValueAtTime(baseFreq, t);
+      g.gain.setValueAtTime(0.05, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + beepDur);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(t); o.stop(t + beepDur);
+    })(i);
+  }
+
+  // Callback after all beeps
+  var totalDur = len * (beepDur + gap) * 1000;
+  if(callback) setTimeout(callback, totalDur + 100);
+}
+
+// ── SQUARE SELECTION MODE ──
+
+function enterSelectionMode(squareNodeId){
+  var node = getNode(squareNodeId);
+  if(!node) return;
+
+  // Get connected neighbors as options
+  var edges = getEdgesFor(squareNodeId);
+  var options = [];
+  edges.forEach(function(e){
+    var neighborId = e.source === squareNodeId ? e.target : e.source;
+    var neighbor = getNode(neighborId);
+    if(neighbor) options.push(neighbor);
+  });
+
+  if(options.length === 0){
+    showStatus('NO OPTIONS CONNECTED TO ' + node.label);
+    return;
+  }
+
+  whistleState.selectionMode = true;
+  whistleState.selectionOptions = options;
+  whistleState.selectionIndex = 0;
+  whistleState.selectionNodeId = squareNodeId;
+
+  showStatus('SELECTING — ' + options.length + ' OPTIONS');
+  cycleToOption(0);
+
+  // Auto-cycle every 2.5 seconds
+  whistleState.selectionInterval = setInterval(function(){
+    if(!whistleState.selectionMode) return;
+    whistleState.selectionIndex = (whistleState.selectionIndex + 1) % whistleState.selectionOptions.length;
+    cycleToOption(whistleState.selectionIndex);
+  }, 2500);
+}
+
+function cycleToOption(idx){
+  var options = whistleState.selectionOptions;
+  if(idx >= options.length) return;
+
+  // Unhighlight all
+  options.forEach(function(opt){
+    var cyN = cy.getElementById(opt.id);
+    if(cyN.length) cyN.style('border-color', opt.color).style('border-width', 2);
+  });
+
+  // Highlight current
+  var current = options[idx];
+  var cyN = cy.getElementById(current.id);
+  if(cyN.length){
+    cyN.style('border-color', '#ffd700').style('border-width', 5);
+    cyN.style('border-style', 'solid');
+  }
+
+  // Beep encode the label
+  beepEncode(current.label, idx);
+
+  // Pulse visual
+  pulseNode(current.id, 0.8);
+}
+
+function confirmSelection(){
+  if(!whistleState.selectionMode) return;
+  var selected = whistleState.selectionOptions[whistleState.selectionIndex];
+  if(!selected) return;
+
+  showStatus('SELECTED: ' + selected.label);
+  activateNode_Layer1(selected.id);
+  playSFX('reward');
+  cancelSelection();
+}
+
+function cancelSelection(){
+  if(!whistleState.selectionMode) return;
+  whistleState.selectionMode = false;
+  clearInterval(whistleState.selectionInterval);
+
+  // Unhighlight all options
+  whistleState.selectionOptions.forEach(function(opt){
+    var cyN = cy.getElementById(opt.id);
+    if(cyN.length){
+      cyN.style('border-color', opt.color).style('border-width', 2).style('border-style', 'solid');
+    }
+  });
+
+  whistleState.selectionOptions = [];
+  whistleState.selectionIndex = 0;
+}
+
+// ── GOAL / REWARD / PREDICTION ENGINE ──
+
+// Goals: defined objectives the creature works toward
+var goals = [];
+var GOAL_TEMPLATES = [
+  {
+    id: 'g_connect_3',
+    name: 'FIRST CONNECTIONS',
+    desc: 'Create 3 nodes that are all connected to each other',
+    hint: 'Draw shapes near each other — proximity creates connections',
+    reward: 0.3,
+    check: function(){
+      // Find any 3 nodes that form a triangle of edges
+      for(var i=0;i<brainstem.nodes.length;i++){
+        var a = brainstem.nodes[i];
+        var aEdges = getEdgesFor(a.id);
+        for(var j=0;j<aEdges.length;j++){
+          var bId = aEdges[j].source === a.id ? aEdges[j].target : aEdges[j].source;
+          var bEdges = getEdgesFor(bId);
+          for(var k=0;k<bEdges.length;k++){
+            var cId = bEdges[k].source === bId ? bEdges[k].target : bEdges[k].source;
+            if(cId === a.id) continue;
+            if(findEdge(cId, a.id)) return 1;
+          }
+        }
+      }
+      return 0;
+    }
+  },
+  {
+    id: 'g_strong_edge',
+    name: 'FORGE A BOND',
+    desc: 'Strengthen any edge to weight > 0.7 through co-activation',
+    hint: 'Tap two nodes within 2 seconds of each other — repeatedly',
+    reward: 0.4,
+    check: function(){
+      var strong = brainstem.edges.filter(function(e){ return e.weight > 0.7; });
+      return strong.length > 0 ? 1 : Math.max.apply(null, brainstem.edges.map(function(e){ return e.weight; }).concat([0])) / 0.7;
+    }
+  },
+  {
+    id: 'g_core_node',
+    name: 'BUILD A CORE',
+    desc: 'Get a node promoted to the inner core (distance < 0.15)',
+    hint: 'Use one node heavily — tap it often, connect it to many others',
+    reward: 0.5,
+    check: function(){
+      var core = brainstem.nodes.filter(function(n){ return n.distanceFromCore < 0.15; });
+      if(core.length > 0) return 1;
+      var best = Math.min.apply(null, brainstem.nodes.map(function(n){ return n.distanceFromCore; }).concat([1]));
+      return Math.max(0, (0.5 - best) / 0.35);
+    }
+  },
+  {
+    id: 'g_sequence_5',
+    name: 'CHAIN REACTION',
+    desc: 'Fire a cascade that activates 5+ nodes in sequence',
+    hint: 'Build a chain of strong edges — tap the first node and watch it cascade',
+    reward: 0.5,
+    check: function(){
+      return (sequenceEngine.longestCascade >= 5) ? 1 : sequenceEngine.longestCascade / 5;
+    }
+  },
+  {
+    id: 'g_code_modify',
+    name: 'REWIRE THE GUT',
+    desc: 'Edit code on 3 different nodes and run them all',
+    hint: 'Select a node, change its code in the editor, hit RUN',
+    reward: 0.3,
+    check: function(){
+      var modified = brainstem.nodes.filter(function(n){ return n.lastExecuted > 0 && n.codeBlock !== getDefaultCode(n.shapeType); });
+      return Math.min(1, modified.length / 3);
+    }
+  },
+  {
+    id: 'g_all_shapes',
+    name: 'SHAPE LANGUAGE',
+    desc: 'Create at least one of each shape type: circle, triangle, square, star',
+    hint: 'Draw each shape carefully — circles need smooth curves, triangles need 3 corners',
+    reward: 0.4,
+    check: function(){
+      var types = {};
+      brainstem.nodes.forEach(function(n){ types[n.shapeType] = true; });
+      var needed = ['circle','triangle','square','star'];
+      var have = needed.filter(function(t){ return types[t]; }).length;
+      return have / needed.length;
+    }
+  },
+  {
+    id: 'g_prediction',
+    name: 'INTUITION',
+    desc: 'The prediction engine must successfully predict 3 node activations',
+    hint: 'Create patterns — tap the same nodes in the same order repeatedly',
+    reward: 0.6,
+    check: function(){
+      return Math.min(1, sequenceEngine.correctPredictions / 3);
+    }
+  },
+  {
+    id: 'g_subroutine',
+    name: 'MUSCLE MEMORY',
+    desc: 'Build a subroutine — the same sequence fired 3+ times becomes automatic',
+    hint: 'Repeat a sequence of 3+ nodes in the same order three times',
+    reward: 0.7,
+    check: function(){
+      return sequenceEngine.subroutines.length > 0 ? 1 : 0;
+    }
+  },
+  {
+    id: 'g_save_ipfs',
+    name: 'PERMANENT MEMORY',
+    desc: 'Save the brainstem to IPFS — memories that outlive the session',
+    hint: 'Hit the SAVE button in the toolbar',
+    reward: 0.4,
+    check: function(){
+      return localStorage.getItem('brainstem_latest_cid') ? 1 : 0;
+    }
+  },
+  {
+    id: 'g_dream',
+    name: 'DREAM STATE',
+    desc: 'Enter sleep mode and let dream consolidation run for 30 seconds',
+    hint: 'Hit SLEEP in the toolbar and wait',
+    reward: 0.3,
+    check: function(){
+      return sequenceEngine.dreamTime >= 30000 ? 1 : sequenceEngine.dreamTime / 30000;
+    }
+  },
+  {
+    id: 'g_bluetooth',
+    name: 'BLUETOOTH LINK',
+    desc: 'Fire the Bluetooth sequence in the correct order: BT_SCAN → BT_CONNECT → BT_DISCOVER → BT_PAIR → BT_SYNC',
+    hint: 'Find the 5 blue BT_ nodes. Tap them in order: SCAN first, SYNC last. Repeat 3 times to learn the pattern.',
+    reward: 0.9,
+    check: function(){
+      return btState.linked ? 1 : btState.bestProgress;
+    }
+  },
+  {
+    id: 'g_bt_remember',
+    name: 'REMEMBERED LINK',
+    desc: 'The Bluetooth sequence must become a subroutine — the creature remembers how to pair on its own',
+    hint: 'Complete the BT sequence 3 times in a row. It becomes muscle memory. Then click the subroutine chip to test.',
+    reward: 1.0,
+    check: function(){
+      var hasBtSub = sequenceEngine.subroutines.some(function(s){
+        var p = s.pattern;
+        // Check if subroutine contains the BT sequence in order
+        var btSeq = ['bs_bt_scan','bs_bt_connect','bs_bt_discover','bs_bt_pair','bs_bt_sync'];
+        var idx = 0;
+        for(var i=0;i<p.length;i++){
+          if(p[i] === btSeq[idx]) idx++;
+          if(idx >= btSeq.length) return true;
+        }
+        return false;
+      });
+      return hasBtSub ? 1 : 0;
+    }
+  }
+];
+
+function initGoals(){
+  var saved = null;
+  try { saved = JSON.parse(localStorage.getItem('brainstem_goals')); } catch(e){}
+
+  goals = GOAL_TEMPLATES.map(function(t){
+    var prev = saved ? saved.find(function(g){ return g.id === t.id; }) : null;
+    return {
+      id: t.id,
+      name: t.name,
+      desc: t.desc,
+      hint: t.hint,
+      reward: t.reward,
+      check: t.check,
+      progress: prev ? prev.progress : 0,
+      achieved: prev ? prev.achieved : false,
+      achievedAt: prev ? prev.achievedAt : 0
+    };
+  });
+
+  renderGoals();
+}
+
+function saveGoalState(){
+  var data = goals.map(function(g){
+    return { id:g.id, progress:g.progress, achieved:g.achieved, achievedAt:g.achievedAt };
+  });
+  localStorage.setItem('brainstem_goals', JSON.stringify(data));
+}
+
+function checkGoals(){
+  var anyNew = false;
+
+  goals.forEach(function(goal){
+    if(goal.achieved) return;
+    var prev = goal.progress;
+    goal.progress = goal.check();
+
+    if(goal.progress >= 1 && !goal.achieved){
+      goal.achieved = true;
+      goal.achievedAt = Date.now();
+      anyNew = true;
+
+      // REWARD — massive reinforcement of recent sequence
+      fireReward(goal);
+    }
+  });
+
+  if(anyNew){
+    saveGoalState();
+    renderGoals();
+  }
+}
+
+function fireReward(goal){
+  // Show reward burst
+  var burst = document.getElementById('rewardBurst');
+  document.getElementById('rewardText').textContent = goal.name;
+  document.getElementById('rewardSub').textContent = '+' + (goal.reward * 100).toFixed(0) + '% REINFORCEMENT';
+  burst.classList.remove('show');
+  void burst.offsetWidth;
+  burst.classList.add('show');
+  setTimeout(function(){ burst.classList.remove('show'); }, 1500);
+
+  // Massive reinforcement on the recent activation chain
+  var recentNodes = sequenceEngine.currentSequence.slice(-10);
+  for(var i = 0; i < recentNodes.length; i++){
+    var node = getNode(recentNodes[i]);
+    if(!node) continue;
+    // Boost node weight
+    node.weight = Math.min(1, node.weight + goal.reward * 0.5);
+    node.accessCount += 5;
+
+    // Strengthen all edges between sequential nodes
+    if(i > 0){
+      var edge = findEdge(recentNodes[i], recentNodes[i-1]);
+      if(edge){
+        edge.weight = Math.min(HEBBIAN.MAX_WEIGHT, edge.weight + goal.reward);
+        edge.coActivations += 10;
+        var cyEdge = cy.getElementById(edge.id);
+        if(cyEdge.length){
+          cyEdge.data('weight', edge.weight);
+          cyEdge.style('line-color', '#ffd700');
+        }
+      }
+    }
+
+    // Visual: gold flash on rewarded nodes
+    var cyNode = cy.getElementById(recentNodes[i]);
+    if(cyNode.length){
+      cyNode.style('border-color', '#ffd700');
+      cyNode.style('border-width', 4);
+      setTimeout(function(nid){ return function(){
+        var cn = cy.getElementById(nid);
+        var nd = getNode(nid);
+        if(cn.length && nd) {
+          cn.style('border-color', nd.color);
+          cn.style('border-width', 2);
+        }
+      }; }(recentNodes[i]), 2000);
+    }
+  }
+
+  // Dopamine + SFX
+  triggerDopamine(15);
+  playSFX('reward');
+
+  showStatus('GOAL: ' + goal.name + ' ACHIEVED!');
+}
+
+function renderGoals(){
+  var html = '';
+  var achieved = 0;
+
+  goals.forEach(function(g){
+    var cls = g.achieved ? 'achieved' : (g.progress > 0 ? 'active' : '');
+    var badge = g.achieved ? '<span class="goal-badge done">DONE</span>' : (g.progress > 0 ? '<span class="goal-badge active-badge">' + Math.round(g.progress * 100) + '%</span>' : '');
+    html += '<div class="goal-card ' + cls + '">';
+    html += '<div class="goal-name">' + g.name + badge + '</div>';
+    html += '<div class="goal-desc">' + g.desc + '</div>';
+    html += '<div class="goal-progress"><div class="goal-progress-fill" style="width:' + Math.round(g.progress * 100) + '%"></div></div>';
+    if(!g.achieved) html += '<div class="goal-hint">' + g.hint + '</div>';
+    html += '<div class="goal-reward">REWARD: +' + Math.round(g.reward * 100) + '% chain reinforcement</div>';
+    html += '</div>';
+    if(g.achieved) achieved++;
+  });
+
+  document.getElementById('goalsBody').innerHTML = html;
+
+  // Update subroutine chips
+  renderSubroutines();
+}
+
+function toggleGoals(){
+  document.getElementById('goalsPanel').classList.toggle('open');
+}
+
+// Check goals every 3 seconds
+setInterval(checkGoals, 3000);
+
+// ── SEQUENCE ENGINE ──
+// Tracks ordered chains of node activations for prediction + subroutines
+
+var sequenceEngine = {
+  currentSequence: [],       // Current chain of activated node IDs
+  sequenceTimeout: null,     // Reset after 5s of no activity
+  allSequences: [],          // History of completed sequences
+  subroutines: [],           // Learned repeating patterns
+  predictions: [],           // Current predictions (node IDs we expect next)
+  correctPredictions: 0,     // Count of correct predictions
+  longestCascade: 0,         // Longest cascade observed
+  dreamTime: 0,              // Total ms spent dreaming
+  MAX_SEQUENCES: 200,
+  MIN_SUBROUTINE_LENGTH: 3,
+  MIN_SUBROUTINE_REPEATS: 3
+};
+
+function onNodeActivated_Sequence(nodeId){
+  // Track activation in sequence
+  sequenceEngine.currentSequence.push(nodeId);
+
+  // Check if this was predicted
+  var wasPredicted = sequenceEngine.predictions.indexOf(nodeId) >= 0;
+  if(wasPredicted){
+    sequenceEngine.correctPredictions++;
+    showStatus('PREDICTED: ' + (getNode(nodeId) || {}).label);
+    // Extra reinforcement for correct prediction
+    var predEdges = getEdgesFor(nodeId);
+    predEdges.forEach(function(e){
+      e.weight = Math.min(HEBBIAN.MAX_WEIGHT, e.weight + 0.02);
+    });
+  }
+
+  // Update cascade length
+  if(sequenceEngine.currentSequence.length > sequenceEngine.longestCascade){
+    sequenceEngine.longestCascade = sequenceEngine.currentSequence.length;
+  }
+
+  // Generate predictions based on this node
+  generatePredictions(nodeId);
+
+  // Render sequence trail
+  renderSequenceTrail();
+
+  // Reset timeout — sequence ends after 5s of inactivity
+  clearTimeout(sequenceEngine.sequenceTimeout);
+  sequenceEngine.sequenceTimeout = setTimeout(function(){
+    if(sequenceEngine.currentSequence.length >= sequenceEngine.MIN_SUBROUTINE_LENGTH){
+      // Save completed sequence
+      var seq = sequenceEngine.currentSequence.slice();
+      sequenceEngine.allSequences.push({
+        nodes: seq,
+        timestamp: Date.now(),
+        length: seq.length
+      });
+      if(sequenceEngine.allSequences.length > sequenceEngine.MAX_SEQUENCES){
+        sequenceEngine.allSequences.shift();
+      }
+      // Check for subroutine emergence
+      detectSubroutines();
+    }
+    sequenceEngine.currentSequence = [];
+    renderSequenceTrail();
+  }, 5000);
+}
+
+// ── PREDICTION ENGINE ──
+// "Last time A→B→C fired, D came next. So when we see A→B→C, predict D."
+
+function generatePredictions(currentNodeId){
+  sequenceEngine.predictions = [];
+
+  var currentSeq = sequenceEngine.currentSequence;
+  if(currentSeq.length < 2) return;
+
+  // Look at last 2-3 nodes in current sequence
+  var tail2 = currentSeq.slice(-2);
+  var tail3 = currentSeq.length >= 3 ? currentSeq.slice(-3) : null;
+
+  // Search past sequences for matching tails
+  var candidates = {};
+
+  sequenceEngine.allSequences.forEach(function(past){
+    for(var i = 0; i < past.nodes.length - 1; i++){
+      // Match tail of 2
+      if(i >= 1 && past.nodes[i-1] === tail2[0] && past.nodes[i] === tail2[1]){
+        var next = past.nodes[i+1];
+        if(next) candidates[next] = (candidates[next] || 0) + 1;
+      }
+      // Match tail of 3 (stronger signal)
+      if(tail3 && i >= 2 && past.nodes[i-2] === tail3[0] && past.nodes[i-1] === tail3[1] && past.nodes[i] === tail3[2]){
+        var next3 = past.nodes[i+1];
+        if(next3) candidates[next3] = (candidates[next3] || 0) + 3;
+      }
+    }
+  });
+
+  // Also check subroutines for predictions
+  sequenceEngine.subroutines.forEach(function(sub){
+    for(var i = 0; i < sub.pattern.length - 1; i++){
+      if(sub.pattern[i] === currentNodeId){
+        var nextInSub = sub.pattern[i+1];
+        candidates[nextInSub] = (candidates[nextInSub] || 0) + sub.count * 2;
+      }
+    }
+  });
+
+  // Sort by confidence, take top 3
+  var sorted = Object.keys(candidates).sort(function(a,b){ return candidates[b] - candidates[a]; });
+  sequenceEngine.predictions = sorted.slice(0, 3);
+
+  // Visually hint predicted nodes
+  cy.nodes().style('border-style', 'solid');
+  sequenceEngine.predictions.forEach(function(predId, idx){
+    var cyNode = cy.getElementById(predId);
+    if(cyNode.length){
+      cyNode.style('border-color', '#ffd700');
+      cyNode.style('border-width', 3);
+      cyNode.style('border-style', 'dashed');
+      // Reset after 4s
+      setTimeout(function(){
+        var n = getNode(predId);
+        var cn = cy.getElementById(predId);
+        if(cn.length && n){
+          cn.style('border-color', n.color);
+          cn.style('border-width', 2);
+          cn.style('border-style', 'solid');
+        }
+      }, 4000);
+    }
+  });
+}
+
+// ── SUBROUTINE DETECTION ──
+// If the same sequence of 3+ nodes fires 3+ times, it becomes a "subroutine" — muscle memory
+
+function detectSubroutines(){
+  if(sequenceEngine.allSequences.length < sequenceEngine.MIN_SUBROUTINE_REPEATS) return;
+
+  // Extract all subsequences of length 3-6 from completed sequences
+  var subseqs = {};
+
+  sequenceEngine.allSequences.forEach(function(seq){
+    for(var len = sequenceEngine.MIN_SUBROUTINE_LENGTH; len <= Math.min(6, seq.nodes.length); len++){
+      for(var start = 0; start <= seq.nodes.length - len; start++){
+        var key = seq.nodes.slice(start, start + len).join('→');
+        if(!subseqs[key]) subseqs[key] = { pattern: seq.nodes.slice(start, start + len), count: 0, key: key };
+        subseqs[key].count++;
+      }
+    }
+  });
+
+  // Find patterns that repeat enough times
+  var newSubs = [];
+  Object.keys(subseqs).forEach(function(key){
+    var sub = subseqs[key];
+    if(sub.count >= sequenceEngine.MIN_SUBROUTINE_REPEATS){
+      // Check if already known
+      var existing = sequenceEngine.subroutines.find(function(s){ return s.key === key; });
+      if(existing){
+        existing.count = sub.count;
+      } else {
+        // New subroutine discovered
+        var labels = sub.pattern.map(function(id){
+          var n = getNode(id);
+          return n ? n.label : id.slice(-4);
+        });
+        newSubs.push({
+          key: key,
+          pattern: sub.pattern,
+          count: sub.count,
+          labels: labels,
+          name: labels.join('→'),
+          created: Date.now()
+        });
+      }
+    }
+  });
+
+  if(newSubs.length > 0){
+    sequenceEngine.subroutines = sequenceEngine.subroutines.concat(newSubs);
+    showStatus('NEW SUBROUTINE: ' + newSubs[0].name);
+    triggerDopamine(5);
+
+    // Massive reinforcement on the subroutine path
+    newSubs.forEach(function(sub){
+      for(var i = 0; i < sub.pattern.length - 1; i++){
+        var edge = findEdge(sub.pattern[i], sub.pattern[i+1]);
+        if(edge){
+          edge.weight = Math.min(HEBBIAN.MAX_WEIGHT, edge.weight + 0.2);
+        }
+      }
+    });
+
+    renderSubroutines();
+    saveGoalState();
+  }
+}
+
+function renderSubroutines(){
+  var el = document.getElementById('subroutineChips');
+  if(sequenceEngine.subroutines.length === 0){
+    el.innerHTML = '<span style="color:#444;font-size:8px">None yet — repeat patterns to learn</span>';
+    return;
+  }
+
+  var html = '';
+  sequenceEngine.subroutines.forEach(function(sub){
+    html += '<div class="sub-chip" onclick="replaySubroutine(\'' + sub.key + '\')" title="Click to replay">';
+    html += sub.labels.join(' → ');
+    html += '<span class="sub-count">x' + sub.count + '</span>';
+    html += '</div>';
+  });
+  el.innerHTML = html;
+}
+
+function replaySubroutine(key){
+  var sub = sequenceEngine.subroutines.find(function(s){ return s.key === key; });
+  if(!sub) return;
+
+  showStatus('REPLAYING: ' + sub.name);
+
+  // Fire each node in the pattern with delays
+  sub.pattern.forEach(function(nodeId, idx){
+    setTimeout(function(){
+      activateNode_Layer1(nodeId);
+    }, idx * 400);
+  });
+}
+
+function renderSequenceTrail(){
+  var el = document.getElementById('seqTrail');
+  var seq = sequenceEngine.currentSequence;
+
+  if(seq.length === 0){
+    el.classList.remove('visible');
+    return;
+  }
+
+  el.classList.add('visible');
+  var html = '';
+
+  // Show last 8 nodes in sequence
+  var display = seq.slice(-8);
+  display.forEach(function(nodeId, idx){
+    var node = getNode(nodeId);
+    if(!node) return;
+    var bgColor = node.color;
+    html += '<div class="seq-node" style="background:' + bgColor + ';color:#000;font-weight:700;">';
+    html += node.shapeType.charAt(0).toUpperCase();
+    html += '</div>';
+    if(idx < display.length - 1) html += '<span class="seq-arrow">→</span>';
+  });
+
+  // Show predictions
+  if(sequenceEngine.predictions.length > 0){
+    html += '<span class="seq-arrow" style="color:#ffd700">→</span>';
+    html += '<div class="seq-node predicted" style="border-color:#ffd700;color:#ffd700;">?</div>';
+  }
+
+  // Show BT progress if mid-sequence
+  if(btState.currentStep > 0 && btState.currentStep < 5){
+    html += '<span style="margin-left:12px;color:#4488ff;font-size:9px;letter-spacing:1px">';
+    html += 'BT ' + btState.currentStep + '/5';
+    for(var bi=0;bi<5;bi++) html += '<span style="color:' + (bi < btState.currentStep ? '#4488ff' : '#333') + '">■</span>';
+    html += '</span>';
+  } else if(btState.linked){
+    html += '<span style="margin-left:12px;color:#00ff88;font-size:9px;letter-spacing:1px">BT LINKED</span>';
+  }
+
+  el.innerHTML = html;
+}
+
+// Track dream time
+var dreamStartTime = 0;
+var origEnterSleep = enterSleep;
+enterSleep = function(){
+  dreamStartTime = Date.now();
+  origEnterSleep();
+};
+var origExitSleep = exitSleep;
+exitSleep = function(){
+  if(dreamStartTime > 0){
+    sequenceEngine.dreamTime += (Date.now() - dreamStartTime);
+    dreamStartTime = 0;
+  }
+  origExitSleep();
+};
+
+// ── DEMO GRAPH ──
+function loadDemoGraph(){
+  var demoNodes = [
+    { type:'circle', x:0, y:0, label:'CORE_SELF', code:'// Core identity\nreturn 0.85;' },
+    { type:'triangle', x:-120, y:-80, label:'DECIDE', code:'// Decision gate\nvar n = this.neighbors();\nreturn n.length > 0 ? 0.7 : 0.3;' },
+    { type:'square', x:120, y:-80, label:'MEMORY', code:'// Data store\nif(!this.data.v) this.data.v = 0;\nthis.data.v += 0.01;\nreturn Math.min(1, this.data.v);' },
+    { type:'star', x:0, y:-150, label:'PRIORITY', code:'// Always important\nreturn 0.95;' },
+    { type:'circle', x:-80, y:100, label:'FEEL_1', code:'// Emotion\nreturn this.accessCount > 5 ? 0.7 : 0.2;' },
+    { type:'freeform', x:100, y:120, label:'RAW', code:'// Raw thought\nreturn Math.sin(Date.now()/5000) * 0.5 + 0.5;' }
+  ];
+
+  // Bluetooth learning nodes — 5 steps in the pairing sequence
+  var btNodes = [
+    { type:'square', x:220, y:-160, label:'BT_SCAN', id:'bs_bt_scan',
+      code:'// Step 1: Scan for nearby devices\n// Broadcasts discovery request\nif(!this.data.scanned) this.data.scanned = 0;\nthis.data.scanned++;\nreturn Math.min(1, this.data.scanned / 10);' },
+    { type:'square', x:280, y:-80, label:'BT_CONNECT', id:'bs_bt_connect',
+      code:'// Step 2: Establish connection\n// Opens communication channel\nvar scanNode = this.neighbors().find(function(n){ return n.id === "bs_bt_scan"; });\nreturn scanNode ? 0.6 : 0.1;' },
+    { type:'triangle', x:300, y:20, label:'BT_DISCOVER', id:'bs_bt_discover',
+      code:'// Step 3: Service discovery\n// Finds available services on device\nvar connected = this.neighbors().filter(function(n){ return n.weight > 0.4; });\nreturn connected.length >= 2 ? 0.7 : 0.2;' },
+    { type:'triangle', x:260, y:120, label:'BT_PAIR', id:'bs_bt_pair',
+      code:'// Step 4: Authentication & pairing\n// Exchanges keys for secure link\nif(!this.data.paired) this.data.paired = 0;\nthis.data.paired++;\nreturn this.data.paired > 3 ? 0.9 : 0.3;' },
+    { type:'star', x:180, y:180, label:'BT_SYNC', id:'bs_bt_sync',
+      code:'// Step 5: Data sync — LINK ESTABLISHED\n// Full bidirectional communication\nreturn this.accessCount > 2 ? 1.0 : 0.4;' }
+  ];
+
+  btNodes.forEach(function(d){
+    var color = '#4488ff';  // Blue for BT nodes
+    var node = {
+      id:d.id, shapeType:d.type, label:d.label, x:d.x, y:d.y,
+      codeBlock:d.code, lastOutput:null, color:color, baseColor:color,
+      weight:0.4, accessCount:0, created:Date.now(),
+      lastAccessed:0, lastExecuted:0, distanceFromCore:0.6,
+      tags:[d.type,'bluetooth','bt_sequence'], shapeData:{type:d.type}, layer:'conscious',
+      _userData:{}, cyShape:CYTO_SHAPES[d.type]
+    };
+    brainstem.nodes.push(node);
+    cy.add({
+      group:'nodes',
+      data:{ id:node.id, label:node.label, color:node.color, weight:node.weight, cyShape:node.cyShape, shapeType:node.shapeType },
+      position:{ x:d.x + cy.width()/2, y:d.y + cy.height()/2 }
+    });
+  });
+
+  // BT chain edges — weak initial connections in sequence order
+  var btEdges = [
+    ['bs_bt_scan','bs_bt_connect', 0.2],
+    ['bs_bt_connect','bs_bt_discover', 0.2],
+    ['bs_bt_discover','bs_bt_pair', 0.2],
+    ['bs_bt_pair','bs_bt_sync', 0.2]
+  ];
+  btEdges.forEach(function(d){
+    createEdge(d[0], d[1], d[2], 'bluetooth');
+  });
+
+  demoNodes.forEach(function(d){
+    var id = 'bs_demo_' + d.label.toLowerCase();
+    var color = SHAPE_COLORS[d.type];
+    var node = {
+      id:id, shapeType:d.type, label:d.label, x:d.x, y:d.y,
+      codeBlock:d.code, lastOutput:null, color:color, baseColor:color,
+      weight:0.6, accessCount:3, created:Date.now()-86400000,
+      lastAccessed:Date.now(), lastExecuted:0, distanceFromCore:0.3,
+      tags:[d.type,'demo'], shapeData:{type:d.type}, layer:'conscious',
+      _userData:{}, cyShape:CYTO_SHAPES[d.type], says:''
+    };
+    brainstem.nodes.push(node);
+    cy.add({
+      group:'nodes',
+      data:{ id:node.id, label:node.label, color:node.color, weight:node.weight, cyShape:node.cyShape, shapeType:node.shapeType },
+      position:{ x:d.x + cy.width()/2, y:d.y + cy.height()/2 }
+    });
+  });
+
+  // Demo edges
+  var demoEdges = [
+    ['bs_demo_core_self','bs_demo_decide', 0.6],
+    ['bs_demo_core_self','bs_demo_memory', 0.7],
+    ['bs_demo_core_self','bs_demo_feel_1', 0.5],
+    ['bs_demo_priority','bs_demo_core_self', 0.8],
+    ['bs_demo_priority','bs_demo_decide', 0.4],
+    ['bs_demo_memory','bs_demo_raw', 0.3]
+  ];
+
+  demoEdges.forEach(function(d){
+    createEdge(d[0], d[1], d[2], 'demo');
+  });
+
+  updateStats();
+}
+
+// ── UTILITIES ──
+function getNode(id){
+  for(var i=0;i<brainstem.nodes.length;i++){
+    if(brainstem.nodes[i].id === id) return brainstem.nodes[i];
+  }
+  return null;
+}
+
+function getEdgesFor(nodeId){
+  return brainstem.edges.filter(function(e){ return e.source === nodeId || e.target === nodeId; });
+}
+
+function findEdge(a, b){
+  for(var i=0;i<brainstem.edges.length;i++){
+    var e = brainstem.edges[i];
+    if((e.source === a && e.target === b) || (e.source === b && e.target === a)) return e;
+  }
+  return null;
+}
+
+function markDirty(){ brainstem.dirty = true; }
+
+function updateStats(){
+  document.getElementById('statNodes').textContent = brainstem.nodes.length;
+  document.getElementById('statEdges').textContent = brainstem.edges.length;
+  document.getElementById('statGen').textContent = brainstem.generation;
+}
+
+function showStatus(msg, isError){
+  var el = document.getElementById('statusMsg');
+  el.textContent = msg;
+  el.classList.toggle('error', !!isError);
+  clearTimeout(showStatus._t);
+  showStatus._t = setTimeout(function(){ el.textContent = 'READY'; el.classList.remove('error'); }, 4000);
+}
+
+function timeSince(ts){
+  var s = Math.floor((Date.now() - ts) / 1000);
+  if(s < 60) return s + 's';
+  if(s < 3600) return Math.floor(s/60) + 'm';
+  if(s < 86400) return Math.floor(s/3600) + 'h';
+  return Math.floor(s/86400) + 'd';
+}
+
+function triggerDopamine(count){
+  var flash = document.getElementById('dopFlash');
+  flash.style.opacity = '1';
+  setTimeout(function(){ flash.style.opacity = '0'; }, 150);
+
+  var rain = document.getElementById('cashRain');
+  var emojis = ['&#129504;','&#9889;','&#128161;','&#127774;','&#128171;'];
+  for(var i=0;i<count;i++){
+    var el = document.createElement('div');
+    el.className = 'cash-emoji';
+    el.innerHTML = emojis[Math.floor(Math.random() * emojis.length)];
+    el.style.left = Math.random() * 100 + '%';
+    el.style.animationDuration = (1.5 + Math.random()) + 's';
+    rain.appendChild(el);
+    setTimeout(function(e){ return function(){ e.remove(); }; }(el), 2500);
+  }
+}
+
+// Simple sound effects using Web Audio — only create after user gesture
+var audioCtx = null;
+var userHasInteracted = false;
+function onFirstGesture(){
+  if(userHasInteracted) return;
+  userHasInteracted = true;
+  if(!audioCtx){
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){}
+  }
+  if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  document.removeEventListener('click', onFirstGesture);
+  document.removeEventListener('touchstart', onFirstGesture);
+  document.removeEventListener('keydown', onFirstGesture);
+}
+document.addEventListener('click', onFirstGesture);
+document.addEventListener('touchstart', onFirstGesture);
+document.addEventListener('keydown', onFirstGesture);
+function playSFX(type){
+  try {
+    if(!audioCtx){ try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){return;} } if(audioCtx.state==='suspended') audioCtx.resume();
+    var osc = audioCtx.createOscillator();
+    var gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    gain.gain.value = 0.08;
+
+    if(type === 'create'){
+      osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+      osc.type = 'sine';
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+      osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+    } else if(type === 'reward'){
+      // Ascending triumphant arpeggio
+      var notes = [523, 659, 784, 1047];
+      notes.forEach(function(freq, i){
+        var o = audioCtx.createOscillator();
+        var g = audioCtx.createGain();
+        o.connect(g); g.connect(audioCtx.destination);
+        o.type = 'sine';
+        o.frequency.setValueAtTime(freq, audioCtx.currentTime + i * 0.1);
+        g.gain.setValueAtTime(0.06, audioCtx.currentTime + i * 0.1);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + i * 0.1 + 0.3);
+        o.start(audioCtx.currentTime + i * 0.1);
+        o.stop(audioCtx.currentTime + i * 0.1 + 0.3);
+      });
+      osc.frequency.setValueAtTime(20, audioCtx.currentTime);
+      gain.gain.value = 0;
+      osc.start(); osc.stop(audioCtx.currentTime + 0.01);
+    }
+  } catch(e){}
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LIVING BRAINSTEM — shapes breathe, speak, and teach
+   Each shape type has a unique voice. They call out periodically.
+   Squares beep their name. Triangles chirp. Circles hum. Stars ping.
+   After a shape speaks, "she" prompts: whistle it back!
+   ══════════════════════════════════════════════════════════════ */
+
+var ambient = {
+  interval: null,
+  active: false,
+  lastSpoke: 0,
+  teachQueue: [],
+  speaking: false
+};
+
+// R2-D2 style droid voice — each node has a unique sound based on its ID
+function droidNote(freq, endFreq, dur, wave, startTime, vol){
+  if(!audioCtx){ try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){return;} } if(audioCtx.state==='suspended') audioCtx.resume();
+  var o = audioCtx.createOscillator();
+  var g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = wave || 'sine';
+  o.frequency.setValueAtTime(freq, startTime);
+  if(endFreq !== freq) o.frequency.exponentialRampToValueAtTime(Math.max(20, endFreq), startTime + dur * 0.9);
+  g.gain.setValueAtTime(vol || 0.07, startTime);
+  g.gain.setValueAtTime(vol || 0.07, startTime + dur * 0.7);
+  g.gain.exponentialRampToValueAtTime(0.001, startTime + dur);
+  o.start(startTime); o.stop(startTime + dur);
+}
+
+// Generate a deterministic droid "sentence" from node properties
+function shapeVoice(node, callback){
+  try {
+    if(!audioCtx){ try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){return;} } if(audioCtx.state==='suspended') audioCtx.resume();
+    var t = audioCtx.currentTime;
+    var type = node.shapeType;
+
+    // Seed from node ID for deterministic personality
+    var seed = 0;
+    for(var i=0;i<node.id.length;i++) seed = ((seed << 5) - seed) + node.id.charCodeAt(i);
+    seed = Math.abs(seed);
+    function seededRand(){ seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
+
+    // Shape type sets the droid personality
+    var personality = {
+      square:   { baseFreq:400, range:600, waves:['square','sawtooth'], noteCount:[4,8], speed:0.08, style:'data' },
+      triangle: { baseFreq:600, range:800, waves:['sawtooth','square'], noteCount:[3,5], speed:0.06, style:'command' },
+      circle:   { baseFreq:300, range:500, waves:['sine','triangle'],  noteCount:[2,4], speed:0.12, style:'warm' },
+      star:     { baseFreq:800, range:1200, waves:['sine','sine'],     noteCount:[3,6], speed:0.05, style:'excited' },
+      freeform: { baseFreq:500, range:700, waves:['triangle','sawtooth'], noteCount:[4,7], speed:0.07, style:'chaotic' },
+      line:     { baseFreq:350, range:400, waves:['sine','square'],    noteCount:[2,3], speed:0.1, style:'calm' },
+      dot:      { baseFreq:900, range:400, waves:['sine','sine'],      noteCount:[1,2], speed:0.04, style:'pip' }
+    };
+    var p = personality[type] || personality.circle;
+    var noteCount = p.noteCount[0] + Math.floor(seededRand() * (p.noteCount[1] - p.noteCount[0] + 1));
+    var totalDur = 0;
+
+    for(var n=0;n<noteCount;n++){
+      var wave = p.waves[Math.floor(seededRand() * p.waves.length)];
+      var startFreq = p.baseFreq + seededRand() * p.range;
+      var sweep = (seededRand() - 0.4) * p.range; // Bias slightly upward
+      var endFreq = Math.max(100, startFreq + sweep);
+      var dur = p.speed + seededRand() * p.speed * 1.5;
+      var gap = 0.02 + seededRand() * 0.05;
+
+      // Excited shapes get vibrato
+      if(p.style === 'excited' || p.style === 'chaotic'){
+        // Add a second oscillator slightly detuned for richness
+        droidNote(startFreq * 1.005, endFreq * 0.995, dur, wave, t + totalDur, 0.03);
+      }
+
+      droidNote(startFreq, endFreq, dur, wave, t + totalDur, 0.06);
+      totalDur += dur + gap;
+    }
+
+    // Squares additionally beep their name length at the end
+    if(type === 'square'){
+      var beepStart = totalDur + 0.08;
+      var len = Math.min(node.label.length, 12);
+      for(var b=0;b<len;b++){
+        droidNote(p.baseFreq + 200, p.baseFreq + 200, 0.04, 'square', t + beepStart + b * 0.07, 0.04);
+      }
+      totalDur = beepStart + len * 0.07;
+    }
+
+    if(callback) setTimeout(callback, totalDur * 1000 + 200);
+  } catch(e){ if(callback) callback(); }
+}
+
+function startAmbientLife(){
+  if(ambient.interval) return;
+  ambient.active = true;
+
+  // Every 4-8 seconds, a random node "speaks"
+  function tick(){
+    if(!ambient.active || brainstem.sleeping || brainstem.nodes.length === 0) return;
+    if(ambient.speaking) return;
+    if(!userHasInteracted) return;  // Wait for first gesture before making sounds
+
+    // Don't interrupt voice guide
+    if(guide.typing || document.getElementById('voiceBubble').classList.contains('visible')) return;
+
+    // Pick a random node
+    var idx = Math.floor(Math.random() * brainstem.nodes.length);
+    var node = brainstem.nodes[idx];
+
+    ambient.speaking = true;
+
+    // Visual pulse first
+    pulseNode(node.id, 0.6);
+
+    // Flash the node brighter
+    var cyNode = cy.getElementById(node.id);
+    if(cyNode.length){
+      var origColor = node.color;
+      cyNode.style('border-color', '#ffffff');
+      cyNode.style('border-width', 4);
+      cyNode.style('border-opacity', 1);
+      setTimeout(function(){
+        cyNode.style('border-color', origColor);
+        cyNode.style('border-width', 2);
+        cyNode.style('border-opacity', 0.5);
+      }, 1500);
+    }
+
+    // Show English translation bubble
+    creatureSay(node, 'idle');
+
+    // Make the sound
+    shapeVoice(node, function(){
+      ambient.speaking = false;
+
+      // Occasionally she prompts the user to whistle back (stage 1+)
+      if(guide.stage >= 1 && Math.random() < 0.15 && !node.whistleAudio){
+        var prompts = [
+          "Hear that? That's " + node.label + " saying hello. Try whistling the same sound back!",
+          "That " + node.shapeType + " just spoke. Each shape has its own voice. Can you copy it?",
+          "Listen to that sound \u2014 that's how " + node.label + " talks. Whistle it back and I'll remember it.",
+          "That's a " + node.shapeType + ". " + (node.shapeType === 'square' ? "It beeped " + node.label.length + " times \u2014 that's how many letters in its name!" : "Each shape type sounds different. Try to copy it!")
+        ];
+        var prompt = prompts[Math.floor(Math.random() * prompts.length)];
+        speak(prompt);
+      }
+    });
+
+    ambient.lastSpoke = Date.now();
+  }
+
+  // First sound after 3 seconds
+  setTimeout(tick, 3000);
+
+  // Then every 5-9 seconds
+  ambient.interval = setInterval(function(){
+    tick();
+  }, 5000 + Math.random() * 4000);
+}
+
+function stopAmbientLife(){
+  ambient.active = false;
+  if(ambient.interval){ clearInterval(ambient.interval); ambient.interval = null; }
+}
+
+// ── CREATURE SPEECH (droid→English translation) ──
+
+var CREATURE_PHRASES = {
+  square: {
+    idle: ["I'm holding data... ask me what I know", "Pick from my options", "I store things. Tap me.",
+           "I've got choices inside me", "My edges connect to answers", "I'm a container. What do you need?"],
+    hello: ["Beep boop. I have {len} letters in my name.", "Data node reporting in.", "{label} online. Ready to serve."],
+    whistle: ["That's my voice! Can you copy it?", "Whistle that pattern back to pair with me"]
+  },
+  triangle: {
+    idle: ["I'm a command. Run me!", "Execute me and see what happens", "I do things. Tap me to find out.",
+           "I'm waiting to be triggered", "My code is ready to fire", "Point me at something and watch"],
+    hello: ["Command ready.", "Action node standing by.", "{label} armed and waiting."],
+    whistle: ["Learn my sound and you can trigger me by whistling!", "That's my activation tone"]
+  },
+  circle: {
+    idle: ["I feel warm... connected to everything around me", "I'm the soft one. I hold feelings.",
+           "Everything flows through me", "I'm gentle. Don't be afraid.", "Touch me and I'll glow for you"],
+    hello: ["Hey there...", "I'm here. I feel you nearby.", "{label} says hello gently."],
+    whistle: ["My sound is soft, like me. Try to whistle it back"]
+  },
+  star: {
+    idle: ["Look at me! I'm special!", "I sparkle because I matter", "I'm the important one, obviously",
+           "Stars shine brightest. That's me!", "I'm rare. Treasure me.", "Notice me!"],
+    hello: ["Ta-da! Star node present!", "Sparkle sparkle! {label} is here!", "The star has arrived!"],
+    whistle: ["My voice is as special as I am. Think you can match it?"]
+  },
+  freeform: {
+    idle: ["I'm chaos. I don't follow rules.", "I could be anything. Even I don't know.",
+           "Shape? What shape? I'm FREE.", "Wild card. Expect the unexpected.", "I break patterns. That's my job."],
+    hello: ["Bzzzzt! Freeform here. No rules.", "*crackle* {label} checking in, unpredictably."],
+    whistle: ["Good luck copying my chaotic voice!"]
+  },
+  line: {
+    idle: ["I'm a path between ideas", "I connect things. Walk along me.", "Simple and direct. That's me."],
+    hello: ["Line node. Straight to the point.", "{label} — a bridge."],
+    whistle: ["My sound is simple. You can do this."]
+  },
+  dot: {
+    idle: ["pip!", "I'm tiny but I exist", "Small but mighty"],
+    hello: ["*pip*", "Dot here. Blink and you'll miss me."],
+    whistle: ["Just a quick pip — match it!"]
+  }
+};
+
+var creatureSayTimer = null;
+var creatureSpeakTimer = null;  // delayed TTS after droid sound
+var creatureSayNodeId = null;   // which node is currently being shown
+
+function creatureSay(node, context){
+  var el = document.getElementById('creatureSays');
+  if(!el) return;
+
+  creatureSayNodeId = node.id;
+
+  var textEl = document.getElementById('csText');
+  var userTextEl = document.getElementById('csUserText');
+  var nameEl = document.getElementById('csNodeName');
+  var shapeEl = document.getElementById('csShape');
+  var inputEl = document.getElementById('csInput');
+  var savedEl = document.getElementById('csSaved');
+  var replayEl = document.getElementById('csReplay');
+
+  // Node name + shape color
+  nameEl.textContent = node.label + ' (' + node.shapeType + ')';
+  var colors = { square:'#ff6b35', triangle:'#ffd700', circle:'#00d4ff', star:'#ff44aa', freeform:'#88ff44', line:'#8888ff', dot:'#ffffff' };
+  shapeEl.style.background = colors[node.shapeType] || '#ffd700';
+
+  // Show replay button
+  replayEl.style.display = '';
+
+  // Determine what text to show + speak
+  var spokenText = '';
+  var phrases = CREATURE_PHRASES[node.shapeType] || CREATURE_PHRASES.circle;
+  var pool = phrases[context || 'idle'] || phrases.idle;
+  var genericPhrase = pool[Math.floor(Math.random() * pool.length)];
+  genericPhrase = genericPhrase.replace('{label}', node.label).replace('{len}', node.label.length.toString());
+
+  // If node already has a user-defined voice label, show it prominently
+  if(node.says && node.says.trim()){
+    userTextEl.textContent = '"' + node.says + '"';
+    userTextEl.style.display = '';
+    inputEl.value = node.says;
+    textEl.textContent = genericPhrase;
+    textEl.style.display = '';
+    spokenText = node.says;  // speak the user's interpretation
+  } else {
+    // No user interpretation yet — show generic + prompt to type
+    userTextEl.textContent = '';
+    userTextEl.style.display = 'none';
+    textEl.textContent = genericPhrase;
+    textEl.style.display = '';
+    inputEl.value = '';
+    spokenText = genericPhrase;  // speak the generic phrase
+  }
+
+  savedEl.classList.remove('show');
+
+  // Show input row for node-specific sounds
+  var inputRow = el.querySelector('.cs-input-row');
+  if(inputRow) inputRow.style.display = 'flex';
+
+  // Show
+  clearTimeout(creatureSayTimer);
+  clearTimeout(creatureSpeakTimer);
+  el.classList.add('visible');
+
+  // Speak the translation aloud after droid sound finishes (~1.3s delay)
+  // Don't interrupt the guide voice, don't speak during recording
+  if(window.speechSynthesis && !guide.typing && !whistleState.recording){
+    creatureSpeakTimer = setTimeout(function(){
+      // Check guide hasn't started speaking in the meantime
+      if(!guide.typing && !document.getElementById('voiceBubble').classList.contains('visible')){
+        speakAloud(spokenText, node.says ? 'calm' : 'gentle');
+      }
+    }, 1300);
+  }
+
+  // Focus input if no interpretation yet
+  if(!node.says) setTimeout(function(){ inputEl.focus(); }, 400);
+
+  // Auto hide — longer if speaking, even longer if waiting for input
+  var speakDur = spokenText.length * 70 + 1300; // rough TTS duration + droid delay
+  var dur = node.says ? Math.max(4000, speakDur) : 8000;
+  creatureSayTimer = setTimeout(function(){
+    el.classList.remove('visible');
+  }, dur);
+}
+
+// Replay the current node's droid sound
+function replayCreatureSound(){
+  if(!creatureSayNodeId) return;
+  var node = getNode(creatureSayNodeId);
+  if(!node) return;
+  shapeVoice(node);
+  // Cancel any pending TTS so it re-queues after the new droid sound
+  clearTimeout(creatureSpeakTimer);
+  if(window.speechSynthesis) speechSynthesis.cancel();
+  // Speak translation after droid finishes
+  var sayText = node.says || document.getElementById('csText').textContent;
+  creatureSpeakTimer = setTimeout(function(){
+    if(!guide.typing) speakAloud(sayText, node.says ? 'calm' : 'gentle');
+  }, 1300);
+  // Reset auto-hide timer
+  clearTimeout(creatureSayTimer);
+  creatureSayTimer = setTimeout(function(){
+    document.getElementById('creatureSays').classList.remove('visible');
+  }, Math.max(5000, sayText.length * 70 + 1300));
+}
+
+// Save what the user thinks the sound means
+function saveCreatureVoice(){
+  var inputEl = document.getElementById('csInput');
+  var savedEl = document.getElementById('csSaved');
+  var userTextEl = document.getElementById('csUserText');
+  if(!inputEl || !creatureSayNodeId) return;
+
+  var text = inputEl.value.trim();
+  if(!text) return;
+
+  var node = getNode(creatureSayNodeId);
+  if(!node) return;
+
+  // Store the interpretation on the node
+  node.says = text;
+  markDirty();
+
+  // Show confirmation
+  userTextEl.textContent = '"' + text + '"';
+  userTextEl.style.display = '';
+  savedEl.classList.add('show');
+  setTimeout(function(){ savedEl.classList.remove('show'); }, 1500);
+
+  // Speak the new interpretation so user hears it
+  clearTimeout(creatureSpeakTimer);
+  if(window.speechSynthesis && !guide.typing){
+    speakAloud(text, 'calm');
+  }
+
+  // Keep bubble open long enough to hear it
+  clearTimeout(creatureSayTimer);
+  var dur = Math.max(3500, text.length * 70 + 800);
+  creatureSayTimer = setTimeout(function(){
+    document.getElementById('creatureSays').classList.remove('visible');
+  }, dur);
+
+  // Update SFT profile (track interpretations given)
+  if(!sftProfile.brainstem.interpretations) sftProfile.brainstem.interpretations = 0;
+  sftProfile.brainstem.interpretations++;
+  saveSFTProfile();
+
+  showStatus('VOICE SAVED: "' + text + '"');
+}
+
+// Generic creature reaction (no specific node — no input field)
+function showCreatureReaction(text){
+  var el = document.getElementById('creatureSays');
+  if(!el) return;
+
+  creatureSayNodeId = null;
+
+  var textEl = document.getElementById('csText');
+  var userTextEl = document.getElementById('csUserText');
+  var nameEl = document.getElementById('csNodeName');
+  var shapeEl = document.getElementById('csShape');
+  var inputEl = document.getElementById('csInput');
+  var replayEl = document.getElementById('csReplay');
+
+  nameEl.textContent = 'BRAINSTEM';
+  shapeEl.style.background = '#ffd700';
+  textEl.textContent = text;
+  textEl.style.display = '';
+  userTextEl.textContent = '';
+  userTextEl.style.display = 'none';
+  inputEl.value = '';
+  replayEl.style.display = 'none';
+  document.getElementById('csSaved').classList.remove('show');
+
+  // Hide input row for generic reactions
+  var inputRow = el.querySelector('.cs-input-row');
+  if(inputRow) inputRow.style.display = 'none';
+
+  clearTimeout(creatureSayTimer);
+  clearTimeout(creatureSpeakTimer);
+  el.classList.add('visible');
+  creatureSayTimer = setTimeout(function(){ el.classList.remove('visible'); }, Math.max(2500, text.length * 55));
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PROGRESSIVE DISCLOSURE + EMOTION VOICE ("SHE")
+   Stages: 0=welcome → 1=drawUnlocked → 2=statsVisible →
+           3=codeTools → 4=advancedTools → 5=fullUnlock
+   ══════════════════════════════════════════════════════════════ */
+
+var guide = {
+  stage: sftProfile.brainstem.guideStage || 0,
+  dismissed: false,
+  typing: false,
+  typeTimer: null,
+  dismissTimer: null,
+  highlightEls: []
+};
+
+var VOICE = {
+  welcome:    "Hey! This is your creature's brain. Listen \u2014 hear those sounds? Each shape has its own voice. The squares beep their name. Tap one!",
+  firstTap:   "You woke it up! See the glow? That shape just fired. Want to add your own? I just unlocked DRAW for you.",
+  firstDraw:  "Look at that \u2014 you made a brain cell! It's already connecting to the others. Draw more shapes to make it smarter.",
+  codeOpen:   "See that code? Every shape has a little program inside that runs when it fires. We even put some Bluetooth starter code in there that worked for us. Feel free to swap it with anything you get from Grok. Way ahead of you, right?",
+  saveReady:  "Your creature's getting clever! Hit MEMORY when you're ready \u2014 it saves everything permanently on the decentralised web. It's literally uploading your creature's memory.",
+  advanced:   "You're getting the hang of this. LOAD brings back old memories. LINK connects this brain to your creature. And SLEEP? That lets it dream and strengthen what it learned.",
+  whistle:    "One more trick \u2014 that microphone lets you teach whistle commands. Each shape gets its own unique sound. No screens needed, just you and your creature talking.",
+  fullUnlock: "Everything's unlocked now. This brain is yours. Draw shapes, write code, record whistles, upload memories. It grows every time you come back."
+};
+
+function initGuide(){
+  applyStageVisibility();
+  setTimeout(function(){
+    if(guide.stage === 0){
+      speak(VOICE.welcome);
+    } else if(guide.stage >= 5 && sftProfile.brainstem.sessions <= 2){
+      // Returning user who already unlocked everything
+      var greeting = sftProfile.rank
+        ? "Welcome back, " + sftProfile.rank + ". Everything's how you left it. " + brainstem.nodes.length + " shapes thinking away."
+        : "Welcome back! " + brainstem.nodes.length + " shapes in your creature's brain, all thinking away.";
+      speak(greeting);
+    }
+  }, 1800);
+}
+
+function applyStageVisibility(){
+  var s = guide.stage;
+  // Mode buttons
+  toggleStageEl('btnDraw', s >= 1);
+  toggleStageEl('btnSleep', s >= 4);
+  toggleStageEl('btnWhistle', s >= 5);
+  // Stats bar
+  var stats = document.querySelector('.tb-stats');
+  if(stats) stats.classList.toggle('stage-hidden', s < 2);
+  // Action buttons
+  toggleStageEl('btnGoals', s >= 3);
+  toggleStageEl('btnSave', s >= 3);
+  toggleStageEl('btnLoad', s >= 4);
+  toggleStageEl('btnLink', s >= 4);
+  // Wallet
+  var wallet = document.querySelector('.tb-wallet');
+  if(wallet) wallet.classList.toggle('stage-hidden', s < 3);
+}
+
+function toggleStageEl(id, show){
+  var el = document.getElementById(id);
+  if(!el) return;
+  var wasHidden = el.classList.contains('stage-hidden');
+  el.classList.toggle('stage-hidden', !show);
+  if(show && wasHidden){
+    el.classList.add('stage-reveal');
+    setTimeout(function(){ el.classList.remove('stage-reveal'); }, 500);
+  }
+}
+
+function advanceStage(n){
+  if(n <= guide.stage) return;
+  guide.stage = n;
+  sftProfile.brainstem.guideStage = n;
+  saveSFTProfile();
+  applyStageVisibility();
+}
+
+function onGuideMilestone(event){
+  switch(event){
+    case 'nodeTap':
+      if(guide.stage < 1){
+        advanceStage(1);
+        setTimeout(function(){ speak(VOICE.firstTap, ['btnDraw']); }, 400);
+      }
+      break;
+    case 'shapeDraw':
+      if(guide.stage < 2){
+        advanceStage(2);
+        setTimeout(function(){ speak(VOICE.firstDraw); }, 600);
+      }
+      break;
+    case 'codeOpen':
+      if(guide.stage >= 2 && guide.stage < 3){
+        advanceStage(3);
+        setTimeout(function(){ speak(VOICE.codeOpen, ['btnSave']); }, 500);
+      }
+      break;
+    case 'codeRun':
+      if(guide.stage >= 3 && guide.stage < 4){
+        advanceStage(4);
+        setTimeout(function(){ speak(VOICE.advanced, ['btnSleep','btnLoad']); }, 500);
+      }
+      break;
+    case 'saved':
+      if(guide.stage >= 3 && guide.stage < 5){
+        advanceStage(5);
+        setTimeout(function(){ speak(VOICE.whistle, ['btnWhistle']); }, 800);
+      }
+      break;
+  }
+}
+
+// ── Text-to-Speech engine ──
+var ttsVoice = null;
+function initTTS(){
+  if(!window.speechSynthesis) return;
+  function pickVoice(){
+    var voices = speechSynthesis.getVoices();
+    // Prioritise Windows 11 neural/natural voices (best quality), then Google, then older Microsoft
+    var prefs = [
+      'Jenny',       // Microsoft Jenny Online (Natural) — Win11 best
+      'Aria',        // Microsoft Aria Online (Natural)
+      'Sonia',       // Microsoft Sonia / Google UK English Female
+      'Libby',       // Microsoft Libby Online (Natural)
+      'Ana',         // Microsoft Ana
+      'Google UK English Female',
+      'Google US English',
+      'Samantha',    // macOS
+      'Karen',       // macOS AU
+      'Moira',       // macOS Irish
+      'Fiona',       // macOS Scottish
+      'Zira',        // Microsoft Zira — old Win fallback
+      'Hazel',       // Microsoft Hazel
+      'Victoria'     // macOS fallback
+    ];
+    for(var p=0;p<prefs.length;p++){
+      for(var v=0;v<voices.length;v++){
+        if(voices[v].name.toLowerCase().indexOf(prefs[p].toLowerCase()) >= 0 && voices[v].lang.indexOf('en') === 0){
+          ttsVoice = voices[v]; return;
+        }
+      }
+    }
+    // Fallback: any English voice with 'natural' or 'online' in the name
+    for(var v=0;v<voices.length;v++){
+      var n = voices[v].name.toLowerCase();
+      if(voices[v].lang.indexOf('en') === 0 && (n.indexOf('natural') >= 0 || n.indexOf('online') >= 0)){
+        ttsVoice = voices[v]; return;
+      }
+    }
+    // Fallback: any female-sounding English voice
+    for(var v=0;v<voices.length;v++){
+      if(voices[v].lang.indexOf('en') === 0){
+        var n = voices[v].name.toLowerCase();
+        if(n.indexOf('female') >= 0 || n.indexOf('woman') >= 0){ ttsVoice = voices[v]; return; }
+      }
+    }
+    // Last resort: first English voice
+    for(var v=0;v<voices.length;v++){
+      if(voices[v].lang.indexOf('en') === 0){ ttsVoice = voices[v]; return; }
+    }
+    if(voices.length) ttsVoice = voices[0];
+  }
+  pickVoice();
+  if(speechSynthesis.onvoiceschanged !== undefined){
+    speechSynthesis.onvoiceschanged = pickVoice;
+  }
+}
+
+// Emotional voice parameters per mood
+var VOICE_MOODS = {
+  happy:   { rate: 1.05, pitch: 1.15, volume: 0.9  },
+  calm:    { rate: 0.9,  pitch: 1.0,  volume: 0.8  },
+  concern: { rate: 0.85, pitch: 0.95, volume: 0.85 },
+  excited: { rate: 1.15, pitch: 1.2,  volume: 0.95 },
+  gentle:  { rate: 0.88, pitch: 1.08, volume: 0.75 }
+};
+var currentVoiceMood = 'happy';
+
+function speakAloud(text, mood){
+  if(!window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  var m = VOICE_MOODS[mood || currentVoiceMood] || VOICE_MOODS.happy;
+  var utter = new SpeechSynthesisUtterance(text);
+  if(ttsVoice) utter.voice = ttsVoice;
+  utter.rate = m.rate;
+  utter.pitch = m.pitch;
+  utter.volume = m.volume;
+  var mouth = document.getElementById('avatarMouth');
+  utter.onstart = function(){ if(mouth) mouth.classList.add('speaking'); };
+  utter.onend = function(){ if(mouth){ mouth.classList.remove('speaking'); mouth.classList.add('smile'); } };
+  utter.onerror = function(){ if(mouth) mouth.classList.remove('speaking'); };
+  speechSynthesis.speak(utter);
+}
+
+function setAvatarMood(mood){
+  var mouth = document.getElementById('avatarMouth');
+  if(!mouth) return;
+  currentVoiceMood = mood || 'happy';
+  mouth.className = 'avatar-mouth';
+  if(mood === 'happy' || mood === 'excited') mouth.classList.add('smile');
+  else if(mood === 'concern') mouth.classList.add('concern');
+}
+
+function speak(text, highlightIds, mood){
+  guide.dismissed = false;
+  clearTimeout(guide.typeTimer);
+  clearTimeout(guide.dismissTimer);
+  clearHighlights();
+
+  var bubble = document.getElementById('voiceBubble');
+  var textEl = document.getElementById('voiceText');
+
+  // Set highlights
+  if(highlightIds){
+    highlightIds.forEach(function(id){
+      var el = document.getElementById(id);
+      if(el){ el.classList.add('guide-highlight'); guide.highlightEls.push(el); }
+    });
+  }
+
+  // Avatar mood
+  setAvatarMood(mood || 'happy');
+
+  bubble.classList.add('visible');
+  textEl.innerHTML = '';
+  guide.typing = true;
+
+  // Speak aloud with emotional voice
+  speakAloud(text, mood);
+
+  // Type text in sync
+  var i = 0;
+  function typeChar(){
+    if(guide.dismissed || i >= text.length){
+      guide.typing = false;
+      textEl.textContent = text;
+      return;
+    }
+    textEl.innerHTML = escHtml(text.slice(0, i+1)) + '<span class="voice-cursor"></span>';
+    i++;
+    guide.typeTimer = setTimeout(typeChar, 22 + Math.random() * 18);
+  }
+  typeChar();
+
+  // Auto-dismiss after speech finishes + buffer
+  var readMs = Math.max(12000, text.length * 75);
+  guide.dismissTimer = setTimeout(function(){
+    if(!guide.dismissed) dismissVoice();
+  }, readMs);
+}
+
+function dismissVoice(){
+  guide.dismissed = true;
+  clearTimeout(guide.typeTimer);
+  clearTimeout(guide.dismissTimer);
+  document.getElementById('voiceBubble').classList.remove('visible');
+  clearHighlights();
+  if(window.speechSynthesis) speechSynthesis.cancel();
+  var mouth = document.getElementById('avatarMouth');
+  if(mouth) mouth.classList.remove('speaking');
+}
+
+// ── Speech Recognition (mic input) ──
+var voiceRecognition = null;
+function toggleVoiceMic(){
+  var btn = document.getElementById('voiceMicBtn');
+  if(voiceRecognition){
+    voiceRecognition.stop();
+    voiceRecognition = null;
+    btn.classList.remove('listening');
+    return;
+  }
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){ speak("Sorry, your browser doesn't support voice input. Try typing instead.", null, 'concern'); return; }
+  voiceRecognition = new SR();
+  voiceRecognition.continuous = false;
+  voiceRecognition.interimResults = false;
+  voiceRecognition.lang = 'en-US';
+  btn.classList.add('listening');
+  voiceRecognition.onresult = function(e){
+    var transcript = e.results[0][0].transcript;
+    document.getElementById('voiceInput').value = transcript;
+    btn.classList.remove('listening');
+    voiceRecognition = null;
+    sendToHer();
+  };
+  voiceRecognition.onerror = function(){
+    btn.classList.remove('listening');
+    voiceRecognition = null;
+  };
+  voiceRecognition.onend = function(){
+    btn.classList.remove('listening');
+    voiceRecognition = null;
+  };
+  voiceRecognition.start();
+}
+
+// ── Chat reply logic — she answers questions about the brainstem ──
+function sendToHer(){
+  var input = document.getElementById('voiceInput');
+  var msg = (input.value || '').trim();
+  if(!msg) return;
+  input.value = '';
+
+  var q = msg.toLowerCase();
+  var reply = '';
+  var hl = null;
+  var mood = 'happy';
+
+  // Pattern match common questions
+  if(q.match(/what.*(triangle|tri)/)){
+    reply = "Triangles are command gates. When one fires, the code inside runs on your creature's page. Think of them as buttons that do things \u2014 like connecting to Bluetooth.";
+    hl = ['btnDraw'];
+  } else if(q.match(/what.*(square|sq)/)){
+    reply = "Squares hold lists of options. When a square fires, your creature cycles through the choices \u2014 like a list of Bluetooth devices to connect to. You pick one with your SELECT whistle.";
+  } else if(q.match(/what.*(circle|circ)/)){
+    reply = "Circles are emotion sensors. They measure feelings \u2014 how often something's been touched, how warm or cool it is. They set the mood.";
+  } else if(q.match(/what.*(star)/)){
+    reply = "Stars mark high-priority things. They always fire strong and make sure the important stuff gets noticed first.";
+  } else if(q.match(/what.*(whistle|mic|sound)/)){
+    reply = "The whistle system lets you teach your creature unique sounds for each command. Record a whistle for each shape, then use SELECT to confirm and BACK to cancel. No screens needed!";
+    hl = ['btnWhistle'];
+  } else if(q.match(/what.*(code|program)/)){
+    reply = "Every shape has code inside that runs when it fires. You can write your own or ask Grok for help. The Bluetooth code we put in is just a starter \u2014 swap it for anything you want.";
+  } else if(q.match(/what.*(sleep|dream)/)){
+    reply = "Sleep mode lets your creature dream. It replays what it learned during the day and strengthens the important connections. Even brains need rest!";
+    hl = ['btnSleep'];
+  } else if(q.match(/what.*(save|memory|ipfs)/)){
+    reply = "MEMORY saves your creature's brain permanently on the decentralised web. It's like backing up its thoughts. Everything gets stored on IPFS so nobody can delete it.";
+    hl = ['btnSave'];
+  } else if(q.match(/what.*(goal)/)){
+    reply = "Goals show what your creature is working towards. As you activate shapes and make connections, it completes objectives and earns rewards. Think of it as a to-do list for its brain.";
+    hl = ['btnGoals'];
+  } else if(q.match(/what.*(draw|shape)/)){
+    reply = "In DRAW mode, just draw on screen \u2014 circles, triangles, squares, stars. I'll recognise the shape and turn it into a real brain node. The more you draw, the smarter your creature gets.";
+    hl = ['btnDraw'];
+  } else if(q.match(/what.*(edge|connect|line)/)){
+    reply = "Edges are the connections between shapes. When shapes fire together, their connection gets stronger \u2014 that's how your creature learns patterns. Strong connections glow brighter.";
+  } else if(q.match(/what.*(link|boy)/)){
+    reply = "LINK connects this brainstem to your ALIVE Boy creature. It sends the brain data so the creature can actually use what you've built here.";
+    hl = ['btnLink'];
+  } else if(q.match(/how.*(start|begin|use)/)){
+    reply = "Just tap shapes to see what they do, then try DRAW to make your own. Each shape holds code that runs when fired. Build connections, save memories, teach whistles. Start simple and explore!";
+  } else if(q.match(/help|stuck|confused|lost/)){
+    reply = "No worries! Start by tapping the shapes on screen to see what happens. Then try DRAW to make your own shape. Tap your new shape to see its code. You're building a brain \u2014 it doesn't have to be perfect!";
+    mood = 'concern';
+  } else if(q.match(/hello|hi|hey|yo/)){
+    reply = "Hey! Good to see you. What would you like to know? Ask me about any shape, button, or feature and I'll explain it.";
+  } else if(q.match(/thanks|thank|cheers|ta/)){
+    reply = "You're welcome! You're doing great. Keep exploring \u2014 your creature gets smarter every time you come back.";
+  } else if(q.match(/who are you|what are you|your name/)){
+    reply = "I'm the guide for your creature's brain. Think of me as a friendly helper who knows how everything works in here. Ask me anything!";
+  } else if(q.match(/who am i|my stats|my profile|my token|my sft/)){
+    var b = sftProfile.brainstem;
+    reply = "You've got " + sftProfile.balance.toFixed(1) + " SFT.";
+    if(sftProfile.rank) reply += " Rank: " + sftProfile.rank + ".";
+    if(sftProfile.token) reply += " Token: active.";
+    reply += " Session " + b.sessions + ". " + b.nodesCreated + " shapes created, " + b.codesRun + " codes run, " + b.memoriesSaved + " memories saved.";
+    if(b.whistlesRecorded > 0) reply += " " + b.whistlesRecorded + " whistles recorded.";
+    reply += " Your profile grows with everything you do \u2014 and it's saved with your memories on IPFS.";
+  } else if(q.match(/bluetooth|bt/)){
+    reply = "The Bluetooth sequence is 5 steps: Scan, Connect, Discover services, Pair, then Sync. We already put starter code for each step. Tap those blue shapes to see it \u2014 or write your own!";
+  } else if(q.match(/what.*(say|mean|sound|noise|voice|talk|speak)/)){
+    var interpreted = brainstem.nodes.filter(function(n){ return n.says; });
+    if(interpreted.length > 0){
+      reply = "So far you've told me what " + interpreted.length + " shape" + (interpreted.length > 1 ? "s" : "") + " sound like. ";
+      interpreted.slice(0, 4).forEach(function(n){
+        reply += n.label + " says: \"" + n.says + "\". ";
+      });
+      reply += "Keep listening and typing what you hear \u2014 that's how we build the creature's language!";
+    } else {
+      reply = "When a shape makes its droid sound, a gold bubble pops up. Type what you think the sound means \u2014 that becomes its voice! Every shape has a unique sound based on its DNA. You're building its language from scratch.";
+    }
+  } else {
+    reply = "Hmm, I'm not sure about that one. Try asking me what a shape does, how to draw, what the whistle system is, or just say help if you're stuck!";
+    mood = 'concern';
+  }
+
+  speak(reply, hl, mood);
+}
+
+function clearHighlights(){
+  guide.highlightEls.forEach(function(el){ el.classList.remove('guide-highlight'); });
+  guide.highlightEls = [];
+}
+
+function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ── ERROR EXPLAINER — she reads errors in plain English ── */
+function explainError(err, node){
+  var msg = err.message || '';
+  var explanation = '';
+  var fix = '';
+
+  if(msg.match(/is not defined/i)){
+    var varName = msg.split(' ')[0];
+    explanation = "Oops! The code is trying to use something called \"" + varName + "\" but it doesn't exist yet.";
+    fix = "Either create it first with \"var " + varName + " = ...\" or check the spelling. Maybe it's a typo?";
+  } else if(msg.match(/is not a function/i)){
+    var fnName = msg.replace(/ is not a function.*/, '').split('.').pop();
+    explanation = "The code tried to call \"" + fnName + "\" like a command, but it's not one.";
+    fix = "Check if you spelled it right, or if the thing before the dot is what you think it is.";
+  } else if(msg.match(/unexpected token/i) || msg.match(/unexpected end/i)){
+    explanation = "There's a typo in the code \u2014 a bracket, comma or something is in the wrong place.";
+    fix = "Look for missing brackets { }, parentheses ( ), or semicolons. Every opening bracket needs a closing one.";
+  } else if(msg.match(/with statement/i)){
+    explanation = "This is a technical conflict in the code engine \u2014 not your fault at all.";
+    fix = "This one's on us! Try reloading the page. If it keeps happening, the code just needs a small tweak.";
+  } else if(msg.match(/cannot read propert/i) || msg.match(/undefined/i)){
+    explanation = "The code tried to read something from an object that doesn't exist yet.";
+    fix = "Add a safety check first: \"if(thing) { ... }\" to make sure it exists before using it.";
+  } else if(msg.match(/assignment to constant/i)){
+    explanation = "The code is trying to change something that's been locked as permanent.";
+    fix = "Change \"const\" to \"var\" or \"let\" if you need it to change, or use a different name.";
+  } else if(msg.match(/syntax error/i)){
+    explanation = "The code has a writing mistake \u2014 like a grammar error in English.";
+    fix = "Check for missing quotes, brackets, or commas. Read it out loud \u2014 does each line make sense?";
+  } else {
+    explanation = "Something went wrong in this shape's code: \"" + msg + "\".";
+    fix = "Try simplifying the code to just \"return 0.5;\" and build back up from there.";
+  }
+
+  var voiceMsg = explanation + " Here's how to fix it: " + fix;
+  speak(voiceMsg, [node ? 'codeEditor' : null].filter(Boolean), 'concern');
+}
+
+// ── INIT ──
+function init(){
+  initDrawCanvas();
+  checkPaywall();
+  initTTS();
+  initGuide();
+
+  // Try loading from localStorage first
+  var saved = null;
+  try { saved = JSON.parse(localStorage.getItem('brainstem_state')); } catch(e){}
+
+  if(saved && saved.nodes && saved.nodes.length > 0){
+    // Restore from localStorage
+    saved.nodes.forEach(function(n){
+      brainstem.nodes.push(n);
+      cy.add({
+        group:'nodes',
+        data:{ id:n.id, label:n.label, color:n.color, weight:n.weight, cyShape:n.cyShape||'ellipse', shapeType:n.shapeType },
+        position:{ x:n.x, y:n.y }
+      });
+    });
+    saved.edges.forEach(function(e){
+      brainstem.edges.push(e);
+      cy.add({
+        group:'edges',
+        data:{ id:e.id, source:e.source, target:e.target, weight:e.weight }
+      });
+    });
+    brainstem.generation = saved.generation || 0;
+    brainstem.sessionCount = (saved.metadata ? saved.metadata.sessionCount || 0 : 0) + 1;
+    showStatus('RESTORED ' + brainstem.nodes.length + ' NODES');
+  } else {
+    // Load demo graph
+    loadDemoGraph();
+    showStatus('DEMO GRAPH LOADED');
+  }
+
+  updateStats();
+
+  // Init goals + restore sequence engine
+  initGoals();
+  try {
+    var seqSaved = JSON.parse(localStorage.getItem('brainstem_sequences'));
+    if(seqSaved){
+      sequenceEngine.allSequences = seqSaved.allSequences || [];
+      sequenceEngine.subroutines = seqSaved.subroutines || [];
+      sequenceEngine.correctPredictions = seqSaved.correctPredictions || 0;
+      sequenceEngine.longestCascade = seqSaved.longestCascade || 0;
+      sequenceEngine.dreamTime = seqSaved.dreamTime || 0;
+      renderSubroutines();
+    }
+  } catch(e){}
+
+  // Restore system whistle UI if they exist
+  updateSysWhistleUI();
+
+  // Run initial core distance calc after a beat
+  setTimeout(recalculateCoreDistance, 1000);
+
+  // Bring the brainstem to life — shapes start speaking
+  setTimeout(startAmbientLife, 2500);
+}
+
+// Save sequence engine state periodically
+setInterval(function(){
+  try {
+    localStorage.setItem('brainstem_sequences', JSON.stringify({
+      allSequences: sequenceEngine.allSequences.slice(-100),
+      subroutines: sequenceEngine.subroutines,
+      correctPredictions: sequenceEngine.correctPredictions,
+      longestCascade: sequenceEngine.longestCascade,
+      dreamTime: sequenceEngine.dreamTime
+    }));
+  } catch(e){}
+}, 30000);
+
+init();
+</script>
+</body>
+</html>

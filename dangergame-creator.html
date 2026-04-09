@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ShortFactory — Danger Game Creator Hub</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --pink:#ff3cac;--cyan:#00e5ff;--green:#00ff88;--gold:#ffcc00;
+  --bg:#03040a;--card:#080b14;--border:#1a1f2e;
+}
+body{background:var(--bg);color:#c8d8e8;font-family:'Courier New',monospace;min-height:100vh}
+
+/* ── HEADER ── */
+.header{text-align:center;padding:40px 20px 30px;border-bottom:1px solid var(--border)}
+.logo{font-size:11px;letter-spacing:6px;color:var(--cyan);text-transform:uppercase;margin-bottom:8px}
+.title{font-size:32px;letter-spacing:4px;color:#fff;text-transform:uppercase;text-shadow:0 0 30px var(--pink)}
+.sub{font-size:11px;color:#4a6a8a;letter-spacing:2px;margin-top:8px}
+.ref-pill{display:inline-block;margin-top:16px;padding:6px 20px;border:1px solid var(--cyan);border-radius:20px;font-size:12px;color:var(--cyan);letter-spacing:3px}
+.ref-val{color:#fff;font-weight:bold}
+
+/* ── SECTION HEADERS ── */
+.section{max-width:1200px;margin:0 auto;padding:40px 20px}
+.sec-title{font-size:13px;letter-spacing:5px;text-transform:uppercase;color:var(--cyan);margin-bottom:24px;border-bottom:1px solid var(--border);padding-bottom:12px}
+
+/* ── TIMELINE ── */
+.timeline{position:relative;padding:20px 0 40px}
+.tl-spine{position:absolute;top:60px;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--pink),var(--cyan),var(--green));opacity:0.4}
+.tl-beats{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;position:relative;z-index:2}
+.beat{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px 10px;text-align:center;transition:all 0.2s;cursor:default;position:relative}
+.beat:hover{transform:translateY(-4px);border-color:var(--cyan)}
+.beat-num{font-size:22px;font-weight:bold;margin-bottom:4px}
+.beat-time{font-size:9px;letter-spacing:2px;color:#4a6a8a;margin-bottom:8px;text-transform:uppercase}
+.beat-name{font-size:11px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.beat-desc{font-size:9px;color:#4a6a8a;line-height:1.5}
+.beat-emotion{font-size:9px;margin-top:6px;padding:3px 6px;border-radius:4px;letter-spacing:1px}
+.b1{border-top:3px solid var(--pink)} .b1 .beat-num{color:var(--pink)}
+.b2{border-top:3px solid #ff6644}    .b2 .beat-num{color:#ff6644}
+.b3{border-top:3px solid #ff2222}    .b3 .beat-num{color:#ff2222}
+.b4{border-top:3px solid var(--gold)}.b4 .beat-num{color:var(--gold)}
+.b5{border-top:3px solid var(--cyan)}.b5 .beat-num{color:var(--cyan)}
+.b6{border-top:3px solid #6699ff}    .b6 .beat-num{color:#6699ff}
+.b7{border-top:3px solid #aa44ff}    .b7 .beat-num{color:#aa44ff}
+.b8{border-top:3px solid var(--green)}.b8 .beat-num{color:var(--green)}
+
+.beat-psi{font-size:9px;color:#3a5a7a;margin-top:4px;font-style:italic}
+
+/* connector dots */
+.beat::before{content:'';position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);width:10px;height:10px;border-radius:50%;background:currentColor}
+.b1::before{color:var(--pink)} .b2::before{color:#ff6644} .b3::before{color:#ff2222}
+.b4::before{color:var(--gold)} .b5::before{color:var(--cyan)} .b6::before{color:#6699ff}
+.b7::before{color:#aa44ff}     .b8::before{color:var(--green)}
+
+/* ── FLOW DIAGRAM ── */
+.flow{display:flex;align-items:center;gap:0;flex-wrap:nowrap;overflow-x:auto;padding:20px 0}
+.flow-node{flex-shrink:0;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 16px;text-align:center;min-width:120px}
+.flow-node.highlight{border-color:var(--cyan)}
+.flow-node.hot{border-color:var(--pink)}
+.flow-node.win{border-color:var(--green)}
+.flow-node .fn-icon{font-size:22px;margin-bottom:4px}
+.flow-node .fn-label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#4a8aaa}
+.flow-node .fn-val{font-size:11px;color:#fff;margin-top:2px}
+.flow-arrow{flex-shrink:0;color:#2a4a6a;font-size:20px;padding:0 4px}
+.flow-split{display:flex;flex-direction:column;gap:6px;flex-shrink:0}
+.flow-split .flow-node{min-width:100px;padding:8px 12px}
+
+/* ── THEME GRID ── */
+.theme-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.theme-card{background:var(--card);border:2px solid var(--border);border-radius:8px;padding:16px;text-align:center;cursor:pointer;transition:all 0.2s;position:relative}
+.theme-card:hover{transform:translateY(-3px)}
+.theme-card.active{border-color:var(--cyan);background:#0a1520}
+.theme-card.done{border-color:var(--green)}
+.theme-card.soon{opacity:0.5;cursor:default}
+.theme-icon{font-size:32px;margin-bottom:8px}
+.theme-name{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#8ab4ca;margin-bottom:4px}
+.theme-status{font-size:9px;letter-spacing:1px}
+.theme-status.ready{color:var(--green)}
+.theme-status.coming{color:#4a6a8a}
+.theme-badge{position:absolute;top:6px;right:6px;font-size:8px;padding:2px 6px;border-radius:8px;letter-spacing:1px}
+.badge-live{background:#00ff8820;border:1px solid var(--green);color:var(--green)}
+.badge-wip{background:#ffcc0010;border:1px solid #ffcc0040;color:var(--gold)}
+
+/* ── CUSTOMIZE PANEL ── */
+.customize{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:28px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#4a6a8a}
+.field input,.field select{background:#040608;border:1px solid var(--border);color:#c8d8e8;padding:10px 14px;border-radius:6px;font-family:'Courier New',monospace;font-size:13px;outline:none;transition:border-color 0.2s}
+.field input:focus,.field select:focus{border-color:var(--cyan)}
+.field .hint{font-size:9px;color:#2a4a6a;line-height:1.5}
+.code-display{font-size:28px;letter-spacing:8px;color:var(--pink);text-align:center;padding:16px;background:#0a0205;border:1px solid #ff3cac22;border-radius:8px;margin-top:8px;font-weight:bold}
+
+/* ── REWARD PANEL ── */
+.reward-bar{display:flex;gap:16px;flex-wrap:wrap}
+.reward-card{flex:1;min-width:160px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;text-align:center}
+.reward-num{font-size:28px;font-weight:bold;color:var(--green)}
+.reward-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#4a6a8a;margin-top:4px}
+.reward-sub{font-size:10px;color:#2a4a6a;margin-top:6px;line-height:1.5}
+
+/* ── ACTION BUTTONS ── */
+.action-row{display:flex;gap:16px;flex-wrap:wrap;margin-top:24px}
+.btn{flex:1;min-width:200px;padding:16px 24px;border-radius:8px;border:none;font-family:'Courier New',monospace;font-size:12px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;text-align:center}
+.btn-yt{background:linear-gradient(135deg,#ff0000,#cc0000);color:#fff}
+.btn-yt:hover{transform:translateY(-2px);box-shadow:0 8px 24px #ff000040}
+.btn-deploy{background:linear-gradient(135deg,var(--pink),#cc2299);color:#fff}
+.btn-deploy:hover{transform:translateY(-2px);box-shadow:0 8px 24px #ff3cac40}
+.btn-preview{background:transparent;border:1px solid var(--cyan);color:var(--cyan)}
+.btn-preview:hover{background:#0ff1}
+.btn-icon{font-size:18px;margin-right:8px}
+
+/* ── TUTORIAL STEPS ── */
+.steps{display:flex;flex-direction:column;gap:0}
+.step{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--border)}
+.step:last-child{border-bottom:none}
+.step-num{width:32px;height:32px;flex-shrink:0;background:var(--card);border:1px solid var(--cyan);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--cyan);font-weight:bold}
+.step-body{flex:1}
+.step-title{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#fff;margin-bottom:4px}
+.step-desc{font-size:11px;color:#4a6a8a;line-height:1.6}
+.step-tip{font-size:10px;color:var(--cyan);margin-top:6px;font-style:italic}
+
+/* ── STATUS LOG ── */
+.log{background:#020408;border:1px solid var(--border);border-radius:8px;padding:16px;font-size:11px;color:#00ff88;line-height:2;max-height:180px;overflow-y:auto}
+.log .err{color:#ff4444}
+.log .warn{color:#ffaa00}
+.log .ok{color:var(--green)}
+.log .info{color:#4a8aaa}
+
+/* ── FOOTER ── */
+footer{text-align:center;padding:40px;font-size:10px;color:#1a2a3a;letter-spacing:2px;border-top:1px solid var(--border)}
+footer em{color:#0ff3;font-style:normal}
+
+@media(max-width:700px){
+  .tl-beats{grid-template-columns:repeat(4,1fr)}
+  .field-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">ShortFactory · Creator Network</div>
+  <div class="title">Danger Game Builder</div>
+  <div class="sub">Build the funnel · Earn the soul · Own the cut</div>
+  <div style="margin-top:12px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+    <a href="/dangergame-creator2.html" style="display:inline-block;padding:8px 22px;background:linear-gradient(135deg,var(--pink),#cc2299);color:#fff;text-decoration:none;border-radius:20px;font-size:10px;letter-spacing:3px;text-transform:uppercase;font-family:'Courier New',monospace">▶ FILM VERSION</a>
+    <a href="/dangergame-command.html" style="display:inline-block;padding:8px 22px;background:linear-gradient(135deg,#222,#111);border:1px solid var(--cyan);color:var(--cyan);text-decoration:none;border-radius:20px;font-size:10px;letter-spacing:3px;text-transform:uppercase;font-family:'Courier New',monospace">⚡ COMMAND CENTER</a>
+  </div>
+  <div class="ref-pill">YOUR REF CODE: <span class="ref-val" id="ref-display">—</span></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     SECTION 1 — THE ARCHITECTURE: 8-BEAT TIMELINE
+══════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="sec-title">01 — The 8-Beat Architecture · Every Danger Game Follows This Spine</div>
+
+  <div class="timeline">
+    <div class="tl-spine"></div>
+    <div class="tl-beats">
+
+      <div class="beat b1">
+        <div class="beat-num">1</div>
+        <div class="beat-time">0 – 3s</div>
+        <div class="beat-name">THE HOOK</div>
+        <div class="beat-desc">Danger prop in frame. Character, weapon, stakes established. Zero context given.</div>
+        <div class="beat-psi">ψ: p↑ n↑ f=0</div>
+        <div class="beat-emotion" style="background:#ff3cac15;border:1px solid #ff3cac33;color:var(--pink)">ATTENTION</div>
+      </div>
+
+      <div class="beat b2">
+        <div class="beat-num">2</div>
+        <div class="beat-time">3 – 8s</div>
+        <div class="beat-name">THE COUNTDOWN</div>
+        <div class="beat-desc">Timer ticking. Heartbeat audio. Character frozen. Viewer cannot look away.</div>
+        <div class="beat-psi">ψ: p=0 n↑ f↓→0</div>
+        <div class="beat-emotion" style="background:#ff664415;border:1px solid #ff664433;color:#ff6644">DREAD</div>
+      </div>
+
+      <div class="beat b3">
+        <div class="beat-num">3</div>
+        <div class="beat-time">8s</div>
+        <div class="beat-name">THE COLLISION</div>
+        <div class="beat-desc">JUMPSCARE. Loud impact. Flash frame. Everything breaks. Brain fires sideways.</div>
+        <div class="beat-psi">ψ: [p,n] → ⊕</div>
+        <div class="beat-emotion" style="background:#ff222215;border:1px solid #ff222233;color:#ff2222">SHOCK</div>
+      </div>
+
+      <div class="beat b4">
+        <div class="beat-num">4</div>
+        <div class="beat-time">8 – 11s</div>
+        <div class="beat-name">THE LIFT</div>
+        <div class="beat-desc">Aftermath. Floating objects. Music hits. "Don't let your dreams be dreams." Death → life reversal.</div>
+        <div class="beat-psi">ψ: f fires → laugh/awe</div>
+        <div class="beat-emotion" style="background:#ffcc0015;border:1px solid #ffcc0033;color:var(--gold)">RELEASE</div>
+      </div>
+
+      <div class="beat b5">
+        <div class="beat-num">5</div>
+        <div class="beat-time">11 – 16s</div>
+        <div class="beat-name">THE GAME REVEAL</div>
+        <div class="beat-desc">4-digit input appears. TinyURL shown on screen. The puzzle is live. Stakes reestablished.</div>
+        <div class="beat-psi">ψ: p↑ f↑ (invested)</div>
+        <div class="beat-emotion" style="background:#00e5ff15;border:1px solid #00e5ff33;color:var(--cyan)">CURIOSITY</div>
+      </div>
+
+      <div class="beat b6">
+        <div class="beat-num">6</div>
+        <div class="beat-time">16s+</div>
+        <div class="beat-name">THE LINK</div>
+        <div class="beat-desc">TinyURL burns on screen. "Can you crack the code?" Loop or hold. CTA to bio link.</div>
+        <div class="beat-psi">ψ: desire to complete</div>
+        <div class="beat-emotion" style="background:#6699ff15;border:1px solid #6699ff33;color:#6699ff">DRIVE</div>
+      </div>
+
+      <div class="beat b7">
+        <div class="beat-num">7</div>
+        <div class="beat-time">LANDING</div>
+        <div class="beat-name">THE GAME</div>
+        <div class="beat-desc">Interactive. Wrong = brutal death screen, retry. Correct = the door opens. Reward earned.</div>
+        <div class="beat-psi">ψ: loop until merger</div>
+        <div class="beat-emotion" style="background:#aa44ff15;border:1px solid #aa44ff33;color:#aa44ff">TENSION→WIN</div>
+      </div>
+
+      <div class="beat b8">
+        <div class="beat-num">8</div>
+        <div class="beat-time">WIN</div>
+        <div class="beat-name">THE GATE</div>
+        <div class="beat-desc">Soul Sphere. 92% completion wall. Advertainment revealed. Empire begins. Your cut earned.</div>
+        <div class="beat-psi">ψ: [1,1,1] achieved</div>
+        <div class="beat-emotion" style="background:#00ff8815;border:1px solid #00ff8833;color:var(--green)">RESURRECTION</div>
+      </div>
+
+    </div><!-- /tl-beats -->
+  </div><!-- /timeline -->
+
+  <!-- FLOW DIAGRAM -->
+  <div style="margin-top:32px">
+    <div style="font-size:10px;letter-spacing:3px;color:#4a6a8a;text-transform:uppercase;margin-bottom:12px">Full Funnel Flow</div>
+    <div class="flow">
+      <div class="flow-node hot"><div class="fn-icon">📱</div><div class="fn-label">YouTube / TikTok</div><div class="fn-val">Your Video</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node highlight"><div class="fn-icon">🔗</div><div class="fn-label">TinyURL</div><div class="fn-val">Bio Link</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node hot"><div class="fn-icon">🎮</div><div class="fn-label">Danger Game</div><div class="fn-val">Your Theme</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-split">
+        <div class="flow-node" style="border-color:#ff4444"><div class="fn-label" style="color:#ff4444">❌ Wrong</div><div class="fn-val">Retry</div></div>
+        <div class="flow-node win"><div class="fn-label" style="color:var(--green)">✓ Correct</div><div class="fn-val">→ Gate</div></div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node highlight"><div class="fn-icon">◉</div><div class="fn-label">Soul Sphere</div><div class="fn-val">92% Wall</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node win"><div class="fn-icon">💰</div><div class="fn-label">Advertainment</div><div class="fn-val">Your Cut</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     SECTION 2 — HOW TO BUILD YOUR VIDEO
+══════════════════════════════════════════════════ -->
+<div class="section" style="border-top:1px solid var(--border)">
+  <div class="sec-title">02 — How To Build Your Funnel Video · The Proven Method</div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-title">Film the Hook (Beats 1–2)</div>
+        <div class="step-desc">Your character, your danger prop. Doesn't need to be real — it needs to feel real. Dark room. Close crop. Countdown timer visible on screen. 3–8 seconds of pure tension. No talking.</div>
+        <div class="step-tip">↳ GTA: health bar draining. Squid Games: gun, guard, clock. Horror: jumper cables, chair.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-title">Cut the Jumpscare (Beat 3)</div>
+        <div class="step-desc">Hard cut to impact frame at the exact moment the timer hits zero. Loud bang. Flash white. Then 2 frames of aftermath — floating objects, blood, gamepad, whatever fits your theme. This is the mechanism. The brain fires sideways.</div>
+        <div class="step-tip">↳ Don't overexplain it. 1 frame of shock is worth 10 seconds of buildup.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <div class="step-title">The Lift (Beat 4)</div>
+        <div class="step-desc">Audio reversal. The motivational hit — "Don't Let Your Dreams Be Dreams" or your theme's equivalent. The surreal aftermath lingers. Floating objects. Slow motion. This is where love triggers. From death comes meaning.</div>
+        <div class="step-tip">↳ The music does the work here. Choose it carefully — it's the emotional keystone.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <div class="step-title">Burn the Game (Beats 5–6)</div>
+        <div class="step-desc">4-digit code box appears on screen. Your TinyURL burns in large text. "Can you crack the code?" Text overlaid. Stay on this for 5+ seconds. Put TinyURL in bio. This is the bridge from view to click.</div>
+        <div class="step-tip">↳ Get your TinyURL from the panel below. It contains your ref code — every soul it funnels is credited to you.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <div class="step-title">Upload &amp; Track</div>
+        <div class="step-desc">Hit the YouTube button below. OAuth connects your channel. Video uploads. Sonar tracks every soul your link funnels. Your dashboard shows earnings in real time.</div>
+        <div class="step-tip">↳ The code rotates every 24h — daily return traffic built in. Every day = a new game.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     SECTION 2B — PLAY THE LIVE DEMO
+══════════════════════════════════════════════════ -->
+<div class="section" style="border-top:1px solid var(--border);padding-top:32px;padding-bottom:32px">
+  <div class="sec-title">02B — Play The Live Demo · See The Full Flow</div>
+  <!-- ★ Featured: Original ADVERTainment machine -->
+  <div style="background:linear-gradient(135deg,#0d0618 0%,#0a0414 100%);border:2px solid #ffd700;border-radius:16px;padding:28px;position:relative;overflow:hidden;margin-bottom:20px">
+    <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#ff0040,#8a2be2,#ffd700,#00ff88)"></div>
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <div style="font-size:48px">🎭</div>
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#ffd700;margin-bottom:4px">★ THE ORIGINAL ★</div>
+        <div style="font-size:18px;font-weight:700;color:#fff;letter-spacing:2px;margin-bottom:6px">ADVERTainment Machine</div>
+        <div style="font-size:11px;color:#6688aa;line-height:1.7">The one that exploded. You perform behind the words. 6 scene interactions. Vote on others. Your premiere. Your version. 30% user · 30% outcome · 10% brand · 30% magic. This is the blueprint everything else is built on.</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;min-width:160px">
+        <a href="/squid-advertainment.html" target="_blank" style="display:block;text-align:center;padding:14px 20px;background:linear-gradient(135deg,#ff0040,#8a2be2);color:#fff;text-decoration:none;border-radius:8px;font-family:'Courier New',monospace;font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:bold">EXPERIENCE IT →</a>
+        <div style="text-align:center;font-size:9px;color:#2a4a6a;letter-spacing:2px">Act · Scene · Vote · Premiere · Review</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:16px;align-items:stretch;flex-wrap:wrap">
+
+    <div style="flex:1;min-width:260px;background:var(--card);border:1px solid #ff3cac44;border-radius:12px;padding:24px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--pink),var(--cyan))"></div>
+      <div style="font-size:32px;margin-bottom:10px">🦑</div>
+      <div style="font-size:13px;letter-spacing:3px;text-transform:uppercase;color:var(--pink);margin-bottom:6px">Squid Games</div>
+      <div style="font-size:11px;color:#4a6a8a;line-height:1.7;margin-bottom:18px">The original. Tension → jumpscare → quiz game → credits → soul gate. The proven blueprint. Everything else is built on this spine.</div>
+      <a href="/squid-challenge.html" target="_blank" style="display:block;text-align:center;padding:12px 20px;background:linear-gradient(135deg,var(--pink),#cc2299);color:#fff;text-decoration:none;border-radius:6px;font-family:'Courier New',monospace;font-size:11px;letter-spacing:3px;text-transform:uppercase">PLAY NOW →</a>
+      <div style="text-align:center;margin-top:8px;font-size:9px;color:#2a4a6a;letter-spacing:2px">With code gate + soul redirect active</div>
+    </div>
+
+    <div style="flex:1;min-width:260px;background:var(--card);border:1px solid #00ff8844;border-radius:12px;padding:24px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--green),var(--cyan))"></div>
+      <div style="font-size:32px;margin-bottom:10px">🔗</div>
+      <div style="font-size:13px;letter-spacing:3px;text-transform:uppercase;color:var(--green);margin-bottom:6px">With Your Ref Code</div>
+      <div style="font-size:11px;color:#4a6a8a;line-height:1.7;margin-bottom:18px">See how it works with your code baked in. Every soul that enters via this URL is tracked to you. This is the link your TinyURL points to.</div>
+      <button onclick="playWithRef()" style="display:block;width:100%;text-align:center;padding:12px 20px;background:linear-gradient(135deg,var(--green),#009955);color:#000;border:none;border-radius:6px;font-family:'Courier New',monospace;font-size:11px;letter-spacing:3px;text-transform:uppercase;cursor:pointer">PLAY WITH YOUR REF →</button>
+      <div style="text-align:center;margin-top:8px;font-size:9px;color:#2a4a6a;letter-spacing:2px">Uses the code + ref you configured above</div>
+    </div>
+
+    <div style="flex:1;min-width:260px;background:var(--card);border:1px solid #6699ff44;border-radius:12px;padding:24px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#6699ff,var(--pink))"></div>
+      <div style="font-size:32px;margin-bottom:10px">◉</div>
+      <div style="font-size:13px;letter-spacing:3px;text-transform:uppercase;color:#6699ff;margin-bottom:6px">Soul Gate</div>
+      <div style="font-size:11px;color:#4a6a8a;line-height:1.7;margin-bottom:18px">The destination. Win the game → land here. The 92% wall. Your cut begins the moment a soul completes it via your link.</div>
+      <a href="/index.php" target="_blank" style="display:block;text-align:center;padding:12px 20px;background:linear-gradient(135deg,#6699ff,#4455cc);color:#fff;text-decoration:none;border-radius:6px;font-family:'Courier New',monospace;font-size:11px;letter-spacing:3px;text-transform:uppercase">ENTER SOUL GATE →</a>
+      <div style="text-align:center;margin-top:8px;font-size:9px;color:#2a4a6a;letter-spacing:2px">The 92% completion wall</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     SECTION 3 — THEME LIBRARY
+══════════════════════════════════════════════════ -->
+<div class="section" style="border-top:1px solid var(--border)">
+  <div class="sec-title">03 — Theme Library · Pick Your Game World</div>
+  <div class="theme-grid">
+
+    <div class="theme-card done active" data-theme="squidgames" onclick="selectTheme(this,'squidgames')">
+      <span class="theme-badge badge-live">LIVE</span>
+      <div class="theme-icon">🦑</div>
+      <div class="theme-name">Squid Games</div>
+      <div class="theme-status ready">Ready to deploy</div>
+    </div>
+
+    <div class="theme-card done" data-theme="gta" onclick="selectTheme(this,'gta')">
+      <span class="theme-badge badge-live">LIVE</span>
+      <div class="theme-icon">🚗</div>
+      <div class="theme-name">GTA</div>
+      <div class="theme-status ready">Ready to deploy</div>
+    </div>
+
+    <div class="theme-card soon" data-theme="fnaf">
+      <span class="theme-badge badge-wip">SOON</span>
+      <div class="theme-icon">🐻</div>
+      <div class="theme-name">Five Nights</div>
+      <div class="theme-status coming">In production</div>
+    </div>
+
+    <div class="theme-card soon" data-theme="amongus">
+      <span class="theme-badge badge-wip">SOON</span>
+      <div class="theme-icon">🚀</div>
+      <div class="theme-name">Among Us</div>
+      <div class="theme-status coming">In production</div>
+    </div>
+
+    <div class="theme-card soon" data-theme="cod">
+      <span class="theme-badge badge-wip">SOON</span>
+      <div class="theme-icon">💣</div>
+      <div class="theme-name">Call of Duty</div>
+      <div class="theme-status coming">In production</div>
+    </div>
+
+    <div class="theme-card soon" data-theme="saw">
+      <span class="theme-badge badge-wip">SOON</span>
+      <div class="theme-icon">⚙️</div>
+      <div class="theme-name">Saw</div>
+      <div class="theme-status coming">In production</div>
+    </div>
+
+    <div class="theme-card soon" data-theme="strangerthings">
+      <span class="theme-badge badge-wip">SOON</span>
+      <div class="theme-icon">🔴</div>
+      <div class="theme-name">Stranger Things</div>
+      <div class="theme-status coming">In production</div>
+    </div>
+
+    <div class="theme-card soon" data-theme="anime">
+      <span class="theme-badge badge-wip">SOON</span>
+      <div class="theme-icon">⚔️</div>
+      <div class="theme-name">Attack on Titan</div>
+      <div class="theme-status coming">In production</div>
+    </div>
+
+    <div class="theme-card soon" data-theme="minecraft">
+      <span class="theme-badge badge-wip">SOON</span>
+      <div class="theme-icon">⛏️</div>
+      <div class="theme-name">Minecraft</div>
+      <div class="theme-status coming">In production</div>
+    </div>
+
+    <div class="theme-card soon" data-theme="blackmirror">
+      <span class="theme-badge badge-wip">SOON</span>
+      <div class="theme-icon">📺</div>
+      <div class="theme-name">Black Mirror</div>
+      <div class="theme-status coming">In production</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     SECTION 4 — CONFIGURE YOUR GAME
+══════════════════════════════════════════════════ -->
+<div class="section" style="border-top:1px solid var(--border)">
+  <div class="sec-title">04 — Configure Your Game · Your Code · Your Link</div>
+  <div class="customize">
+    <div class="field-row">
+      <div class="field">
+        <label>Your Creator Name</label>
+        <input type="text" id="creator-name" placeholder="e.g. DARKWAVE_DAN" oninput="updateRef()">
+        <div class="hint">Shown in your soul funnels dashboard. No spaces.</div>
+      </div>
+      <div class="field">
+        <label>Today's 4-Digit Code</label>
+        <input type="text" id="game-code" placeholder="e.g. 7734" maxlength="4" oninput="updateCode()" style="font-size:20px;letter-spacing:8px;text-align:center">
+        <div class="hint">Change daily. Rotates = daily return traffic.</div>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Your TinyURL</label>
+        <input type="text" id="tinyurl" placeholder="tinyurl.com/sf-YOURCODE" oninput="updateLinks()">
+        <div class="hint">Burn this into your video. Every click tracked to you.</div>
+      </div>
+      <div class="field">
+        <label>Soul Gate URL (auto-set)</label>
+        <input type="text" id="gate-url" value="https://shortfactory.shop/index.php" oninput="updateLinks()">
+        <div class="hint">Winning the game sends the player here with your ref code.</div>
+      </div>
+    </div>
+
+    <div style="margin-top:8px">
+      <div style="font-size:10px;letter-spacing:2px;color:#4a6a8a;text-transform:uppercase;margin-bottom:8px">Your Game URL (put this in your TinyURL)</div>
+      <input type="text" id="full-game-url" style="width:100%;background:#040608;border:1px solid var(--border);color:var(--cyan);padding:10px 14px;border-radius:6px;font-family:'Courier New',monospace;font-size:12px;outline:none" readonly onclick="this.select()">
+    </div>
+
+    <div style="text-align:center;margin-top:16px">
+      <div style="font-size:10px;letter-spacing:2px;color:#4a6a8a;text-transform:uppercase">Today's Code Displayed In Your Video</div>
+      <div class="code-display" id="code-display">????</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     SECTION 5 — YOUR CUT
+══════════════════════════════════════════════════ -->
+<div class="section" style="border-top:1px solid var(--border)">
+  <div class="sec-title">05 — Your Cut · How The Reward Works</div>
+  <div class="reward-bar">
+    <div class="reward-card">
+      <div class="reward-num">20%</div>
+      <div class="reward-label">Your Cut</div>
+      <div class="reward-sub">Of all ad revenue generated by souls you funnelled via your ref code</div>
+    </div>
+    <div class="reward-card">
+      <div class="reward-num" id="souls-funnelled" style="color:var(--cyan)">0</div>
+      <div class="reward-label">Souls Funnelled</div>
+      <div class="reward-sub">Completed 92%+ via your link this month</div>
+    </div>
+    <div class="reward-card">
+      <div class="reward-num" id="est-earnings" style="color:var(--gold)">£0</div>
+      <div class="reward-label">Est. Earnings</div>
+      <div class="reward-sub">Based on current advertainment rate per soul</div>
+    </div>
+    <div class="reward-card">
+      <div class="reward-num" style="color:var(--pink)">∞</div>
+      <div class="reward-label">Duration</div>
+      <div class="reward-sub">Your ref is permanent. Souls you brought in earn you forever.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     SECTION 6 — DEPLOY
+══════════════════════════════════════════════════ -->
+<div class="section" style="border-top:1px solid var(--border)">
+  <div class="sec-title">06 — Deploy · Two Buttons · Done</div>
+
+  <div style="font-size:11px;color:#4a6a8a;line-height:1.8;margin-bottom:20px">
+    Button 1 — Upload your danger game video to your YouTube channel (OAuth, one click).<br>
+    Button 2 — Deploy your configured game page to ShortFactory. Your tinyurl points here.
+  </div>
+
+  <div class="action-row">
+    <button class="btn btn-yt" onclick="youtubeUpload()">
+      <span class="btn-icon">▶</span> Upload to YouTube
+    </button>
+    <button class="btn btn-deploy" onclick="deployGame()">
+      <span class="btn-icon">⚡</span> Deploy Game to ShortFactory
+    </button>
+    <button class="btn btn-preview" onclick="previewGame()">
+      <span class="btn-icon">◉</span> Preview Game
+    </button>
+  </div>
+
+  <div class="log" id="deploy-log" style="margin-top:20px">
+    <span class="info">» Creator Hub loaded · Select theme and configure above ·</span><br>
+    <span class="info">» Ref code auto-generated from your creator name ·</span><br>
+    <span class="info">» Awaiting deployment ·</span>
+  </div>
+</div>
+
+<footer>
+  SHORTFACTORY LTD · DANGER GAME CREATOR NETWORK<br><br>
+  <em>Build the funnel · Earn the soul · Own the cut</em><br><br>
+  Every soul that enters through your link is credited to you. Forever.
+</footer>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────
+let selectedTheme = 'squidgames';
+const GAME_URLS = {
+  squidgames: '/squid-challenge.html',
+  gta:        '/game-gta.html',
+};
+const THEME_LABELS = {
+  squidgames: 'Squid Games',
+  gta: 'GTA',
+};
+
+// ── REF CODE ──────────────────────────────────────────────────
+function hashStr(s){
+  let h=0;for(let i=0;i<s.length;i++){h=(Math.imul(31,h)+s.charCodeAt(i))|0}
+  return Math.abs(h).toString(36).toUpperCase().padStart(6,'0');
+}
+
+function updateRef(){
+  const name = document.getElementById('creator-name').value.trim().replace(/\s+/g,'_').toUpperCase() || 'CREATOR';
+  const code = hashStr(name);
+  document.getElementById('ref-display').textContent = name+'-'+code;
+  updateLinks();
+}
+
+function updateCode(){
+  const c = document.getElementById('game-code').value || '????';
+  document.getElementById('code-display').textContent = c;
+}
+
+function updateLinks(){
+  const name = document.getElementById('creator-name').value.trim().replace(/\s+/g,'_').toUpperCase() || 'CREATOR';
+  const refCode = hashStr(name);
+  const gate = document.getElementById('gate-url').value || 'https://shortfactory.shop/index.php';
+  const gamePath = GAME_URLS[selectedTheme] || '/squid-challenge.html';
+  const gameCode = document.getElementById('game-code').value || '0000';
+  const url = `https://shortfactory.shop${gamePath}?ref=${name}-${refCode}&code=${gameCode}&gate=${encodeURIComponent(gate+'?ref='+name+'-'+refCode)}`;
+  document.getElementById('full-game-url').value = url;
+}
+
+// ── THEME SELECT ───────────────────────────────────────────────
+function selectTheme(el, theme){
+  if(el.classList.contains('soon')) return;
+  document.querySelectorAll('.theme-card').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  selectedTheme = theme;
+  updateLinks();
+  log('info', '» Theme selected: ' + (THEME_LABELS[theme]||theme));
+}
+
+// ── LOG ────────────────────────────────────────────────────────
+function log(type, msg){
+  const el = document.getElementById('deploy-log');
+  el.innerHTML += `<span class="${type}">${msg}</span><br>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+// ── YOUTUBE UPLOAD ─────────────────────────────────────────────
+function youtubeUpload(){
+  log('info','» Opening YouTube OAuth ...');
+  // Google OAuth scopes needed: youtube.upload
+  const clientId = ''; // pull from config_imaginator.php
+  const scope = 'https://www.googleapis.com/auth/youtube.upload';
+  const redirectUri = encodeURIComponent(window.location.origin+'/auth_imaginator.php');
+  if(!clientId){
+    log('warn','» YouTube upload: OAuth client ID not configured.');
+    log('info','» Manually upload your video to YouTube, paste URL in TinyURL field.');
+    return;
+  }
+  const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=token&scope=${encodeURIComponent(scope)}`;
+  window.open(oauthUrl,'_blank','width=500,height=600');
+  log('ok','» Google auth window opened · Authorise YouTube access · ');
+}
+
+// ── DEPLOY GAME ────────────────────────────────────────────────
+function deployGame(){
+  const name = document.getElementById('creator-name').value.trim();
+  const code = document.getElementById('game-code').value.trim();
+  if(!name){ log('err','» ERROR: Enter your creator name first.'); return; }
+  if(!code || code.length !== 4){ log('err','» ERROR: Enter a 4-digit game code.'); return; }
+
+  log('info','» Deploying '+THEME_LABELS[selectedTheme]+' game ...');
+  log('info','» Creator: '+name+' · Code: '+code);
+
+  const payload = {
+    creator: name,
+    ref: document.getElementById('ref-display').textContent,
+    theme: selectedTheme,
+    code: code,
+    gate: document.getElementById('gate-url').value,
+    tinyurl: document.getElementById('tinyurl').value,
+  };
+
+  fetch('/dangergame-deploy.php', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  })
+  .then(r=>r.json())
+  .then(d=>{
+    if(d.ok){
+      log('ok','» DEPLOYED · Your game is live at: '+d.url);
+      log('ok','» Point your TinyURL to: '+d.url);
+      log('ok','» Ref tracking active · Souls incoming ·');
+    } else {
+      log('err','» Deploy failed: '+(d.error||'Unknown error'));
+    }
+  })
+  .catch(e=>{
+    log('warn','» Deploy endpoint offline · File the game manually ·');
+    log('info','» Copy full-game-url above into your TinyURL for now ·');
+  });
+}
+
+// ── PREVIEW ────────────────────────────────────────────────────
+function previewGame(){
+  const url = document.getElementById('full-game-url').value;
+  if(!url){ log('err','» Configure your game first.'); return; }
+  window.open(url,'_blank');
+}
+
+// ── PLAY WITH REF ───────────────────────────────────────────────
+function playWithRef(){
+  const url = document.getElementById('full-game-url').value;
+  if(!url || url.includes('YOURCODE')){ log('err','» Set your creator name + code first.'); return; }
+  window.open(url,'_blank');
+}
+
+// ── INIT ───────────────────────────────────────────────────────
+(function(){
+  // Auto ref code from localStorage if returning creator
+  const saved = localStorage.getItem('sf_creator');
+  if(saved){
+    try{
+      const d = JSON.parse(saved);
+      document.getElementById('creator-name').value = d.name||'';
+      document.getElementById('game-code').value = d.code||'';
+      document.getElementById('tinyurl').value = d.tinyurl||'';
+    }catch(e){}
+  }
+
+  // Auto-generate today's code suggestion (DDMM rotates daily)
+  const now = new Date();
+  const auto = String(now.getDate()).padStart(2,'0') + String(now.getMonth()+1).padStart(2,'0');
+  if(!document.getElementById('game-code').value){
+    document.getElementById('game-code').value = auto;
+  }
+
+  updateRef();
+  updateCode();
+  updateLinks();
+
+  // Save on change
+  ['creator-name','game-code','tinyurl'].forEach(id=>{
+    document.getElementById(id).addEventListener('input',()=>{
+      localStorage.setItem('sf_creator', JSON.stringify({
+        name: document.getElementById('creator-name').value,
+        code: document.getElementById('game-code').value,
+        tinyurl: document.getElementById('tinyurl').value,
+      }));
+    });
+  });
+})();
+</script>
+</body>
+</html>

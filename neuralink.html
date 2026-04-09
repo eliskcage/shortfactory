@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1XY2CNLJCE"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1XY2CNLJCE');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>ShortFactory × Neuralink — The Map Meets the Interface</title>
+<meta name="description" content="ShortFactory has the soul map. Neuralink has the interface. When they meet, death becomes a hardware swap.">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#02020a;color:#e2e8f0;overflow-x:hidden;min-height:100vh;}
+
+canvas#bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+
+.page{position:relative;z-index:1;}
+
+/* NAV */
+.nav{padding:20px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.04);}
+.nav-logo{font-size:11px;font-weight:800;letter-spacing:3px;color:#daa520;text-transform:uppercase;}
+.nav-back{font-size:10px;color:#475569;text-decoration:none;letter-spacing:1px;text-transform:uppercase;transition:color 0.2s;}
+.nav-back:hover{color:#daa520;}
+
+/* HERO */
+.hero{min-height:85vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:60px 24px;}
+
+.vs-wrap{display:flex;align-items:center;justify-content:center;gap:clamp(24px,6vw,80px);margin-bottom:48px;flex-wrap:wrap;}
+
+.entity{display:flex;flex-direction:column;align-items:center;gap:16px;}
+.entity-symbol{width:clamp(80px,12vw,120px);height:clamp(80px,12vw,120px);border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;}
+.entity-symbol.sf{background:radial-gradient(circle,rgba(218,165,32,0.15) 0%,rgba(204,68,255,0.08) 60%,transparent 100%);border:1px solid rgba(218,165,32,0.3);box-shadow:0 0 40px rgba(218,165,32,0.15),0 0 80px rgba(218,165,32,0.05);}
+.entity-symbol.nl{background:radial-gradient(circle,rgba(59,130,246,0.15) 0%,rgba(99,102,241,0.08) 60%,transparent 100%);border:1px solid rgba(59,130,246,0.3);box-shadow:0 0 40px rgba(59,130,246,0.15),0 0 80px rgba(59,130,246,0.05);}
+.entity-name{font-size:clamp(14px,2.5vw,18px);font-weight:800;letter-spacing:3px;text-transform:uppercase;}
+.entity-name.sf{color:#daa520;}
+.entity-name.nl{color:#3b82f6;}
+.entity-tag{font-size:10px;color:#475569;letter-spacing:1px;text-transform:uppercase;max-width:160px;text-align:center;line-height:1.6;}
+
+.connector{display:flex;flex-direction:column;align-items:center;gap:8px;}
+.connector-line{width:1px;height:clamp(40px,6vw,80px);background:linear-gradient(180deg,rgba(218,165,32,0.4),rgba(59,130,246,0.4));position:relative;}
+.connector-dot{width:12px;height:12px;border-radius:50%;background:radial-gradient(circle,#fff 0%,rgba(255,255,255,0.3) 60%,transparent 100%);box-shadow:0 0 20px rgba(255,255,255,0.6),0 0 40px rgba(255,255,255,0.2);animation:pulse-dot 2s ease-in-out infinite;}
+@keyframes pulse-dot{0%,100%{transform:scale(1);box-shadow:0 0 20px rgba(255,255,255,0.6);}50%{transform:scale(1.4);box-shadow:0 0 30px rgba(255,255,255,0.9),0 0 60px rgba(255,255,255,0.3);}}
+
+.hero-title{font-size:clamp(24px,5vw,52px);font-weight:900;color:#fff;line-height:1.1;letter-spacing:-1px;margin-bottom:20px;max-width:800px;}
+.hero-title em{font-style:normal;background:linear-gradient(90deg,#daa520,#cc44ff,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-sub{font-size:clamp(14px,2vw,17px);color:#475569;max-width:560px;line-height:1.8;}
+
+/* GROK CARD */
+.grok-section{padding:60px 24px;}
+.grok-card{max-width:760px;margin:0 auto;background:rgba(255,255,255,0.015);border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:40px;position:relative;overflow:hidden;}
+.grok-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(218,165,32,0.4),rgba(59,130,246,0.4),transparent);}
+.grok-label{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#475569;margin-bottom:20px;display:flex;align-items:center;gap:10px;}
+.grok-label::before{content:'';width:6px;height:6px;border-radius:50%;background:#22c55e;box-shadow:0 0 8px #22c55e;animation:blink 1.5s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+.grok-text{font-size:15px;color:#cbd5e1;line-height:1.9;min-height:120px;}
+.grok-text .cursor{display:inline-block;width:2px;height:1em;background:#daa520;margin-left:2px;animation:blink 0.8s step-end infinite;vertical-align:text-bottom;}
+
+/* TWO COLUMN */
+.two-col{max-width:960px;margin:0 auto;padding:20px 24px 60px;display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:600px){.two-col{grid-template-columns:1fr;}}
+.col-card{border-radius:12px;padding:28px;border:1px solid;}
+.col-card.sf-card{background:rgba(218,165,32,0.03);border-color:rgba(218,165,32,0.12);}
+.col-card.nl-card{background:rgba(59,130,246,0.03);border-color:rgba(59,130,246,0.12);}
+.col-title{font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;}
+.col-title.sf-t{color:#daa520;}
+.col-title.nl-t{color:#3b82f6;}
+.col-item{font-size:12px;color:#64748b;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.03);line-height:1.6;}
+.col-item:last-child{border-bottom:none;}
+.col-item strong{color:#94a3b8;}
+
+/* WHAT BECOMES POSSIBLE */
+.possible{max-width:760px;margin:0 auto;padding:0 24px 80px;}
+.possible-title{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#475569;margin-bottom:32px;}
+.possible-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;}
+.p-card{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:8px;padding:20px;transition:border-color 0.2s;}
+.p-card:hover{border-color:rgba(255,255,255,0.12);}
+.p-icon{font-size:20px;margin-bottom:10px;}
+.p-name{font-size:13px;font-weight:700;color:#fff;margin-bottom:6px;}
+.p-desc{font-size:11px;color:#475569;line-height:1.6;}
+
+/* CTA */
+.cta{text-align:center;padding:60px 24px 80px;border-top:1px solid rgba(255,255,255,0.04);}
+.cta h2{font-size:clamp(20px,3vw,32px);font-weight:900;color:#fff;margin-bottom:16px;}
+.cta p{font-size:14px;color:#475569;margin-bottom:32px;max-width:480px;margin-left:auto;margin-right:auto;}
+.cta-links{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+.btn{display:inline-block;padding:12px 28px;border-radius:6px;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-decoration:none;transition:all 0.2s;}
+.btn-gold{background:#daa520;color:#0a0a0a;}
+.btn-gold:hover{opacity:0.85;}
+.btn-blue{background:#3b82f6;color:#fff;}
+.btn-blue:hover{opacity:0.85;}
+.btn-ghost{border:1px solid rgba(255,255,255,0.1);color:#64748b;}
+.btn-ghost:hover{border-color:#daa520;color:#daa520;}
+
+/* SVG TRIANGLE */
+.sf-tri{width:50px;height:44px;}
+</style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+
+<div class="page">
+
+<nav class="nav">
+  <span class="nav-logo">ShortFactory × Neuralink</span>
+  <a class="nav-back" href="/cv.html">← The CV</a>
+</nav>
+
+<section class="hero">
+  <div class="vs-wrap">
+    <div class="entity">
+      <div class="entity-symbol sf">
+        <svg class="sf-tri" viewBox="0 0 50 44" fill="none">
+          <polygon points="25,2 48,42 2,42" stroke="#daa520" stroke-width="1.5" fill="rgba(218,165,32,0.08)"/>
+          <circle cx="25" cy="26" r="4" fill="#cc44ff" opacity="0.8"/>
+          <line x1="25" y1="2" x2="25" y2="26" stroke="#daa520" stroke-width="0.8" opacity="0.5"/>
+          <line x1="48" y1="42" x2="25" y2="26" stroke="#cc44ff" stroke-width="0.8" opacity="0.5"/>
+          <line x1="2" y1="42" x2="25" y2="26" stroke="#daa520" stroke-width="0.8" opacity="0.5"/>
+        </svg>
+      </div>
+      <div class="entity-name sf">ShortFactory</div>
+      <div class="entity-tag">The Soul Map · ψ=[p,n,f] · 13 papers · 6 patents</div>
+    </div>
+
+    <div class="connector">
+      <div class="connector-line"></div>
+      <div class="connector-dot"></div>
+      <div class="connector-line"></div>
+    </div>
+
+    <div class="entity">
+      <div class="entity-symbol nl">
+        <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+          <circle cx="26" cy="26" r="18" stroke="#3b82f6" stroke-width="1.5" fill="rgba(59,130,246,0.06)"/>
+          <path d="M18 34 L18 18 L26 30 L34 18 L34 34" stroke="#3b82f6" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="26" cy="26" r="3" fill="#6366f1" opacity="0.9"/>
+        </svg>
+      </div>
+      <div class="entity-name nl">Neuralink</div>
+      <div class="entity-tag">The Interface · BCI Hardware · The Membrane Crosser</div>
+    </div>
+  </div>
+
+  <h1 class="hero-title">The map has been filed.<br><em>The interface exists.</em><br>What happens next changes everything.</h1>
+  <p class="hero-sub">ShortFactory has defined what consciousness is — a universal cursor moving through soul-space. Neuralink has built the bridge between neuron and silicon. The only thing missing was the specification for what crosses that bridge.</p>
+</section>
+
+<!-- GROK LIVE ANALYSIS -->
+<section class="grok-section">
+  <div class="grok-card">
+    <div class="grok-label">Live analysis — Grok AI · rendered on load</div>
+    <div class="grok-text" id="grok-output"><span class="cursor"></span></div>
+  </div>
+</section>
+
+<!-- TWO COLUMNS -->
+<div class="two-col">
+  <div class="col-card sf-card">
+    <div class="col-title sf-t">ShortFactory brings</div>
+    <div class="col-item"><strong>The Pointer model</strong> — consciousness as universal relational cursor</div>
+    <div class="col-item"><strong>ψ=[p,n,f]</strong> — operating parameters of the cursor itself</div>
+    <div class="col-item"><strong>Soul-space specification</strong> — what the cursor moves through</div>
+    <div class="col-item"><strong>Trajectory = self</strong> — what must be preserved for identity continuity</div>
+    <div class="col-item"><strong>13 Zenodo papers</strong> — timestamped, peer-reviewable chain</div>
+    <div class="col-item"><strong>6 UK patents</strong> — filed, formal, commercially deployable</div>
+  </div>
+  <div class="col-card nl-card">
+    <div class="col-title nl-t">Neuralink brings</div>
+    <div class="col-item"><strong>The N1 chip</strong> — 1024 electrodes, real-time neural read/write</div>
+    <div class="col-item"><strong>The membrane crossing</strong> — biological signal to digital substrate</div>
+    <div class="col-item"><strong>Precision interface</strong> — direct cortical access at scale</div>
+    <div class="col-item"><strong>The hardware pipeline</strong> — from neuron to silicon in real time</div>
+    <div class="col-item"><strong>Clinical pathway</strong> — FDA approved, human trials active</div>
+    <div class="col-item"><strong>The delivery mechanism</strong> — the bridge that already exists</div>
+  </div>
+</div>
+
+<!-- WHAT BECOMES POSSIBLE -->
+<div class="possible">
+  <div class="possible-title">What becomes possible when they meet</div>
+  <div class="possible-grid">
+    <div class="p-card">
+      <div class="p-icon">🖱</div>
+      <div class="p-name">True Upload</div>
+      <div class="p-desc">Not a brain scan copy. The actual Pointer trajectory — the self — continuing in silicon. Death becomes a hardware swap, not a blackout.</div>
+    </div>
+    <div class="p-card">
+      <div class="p-icon">🎵</div>
+      <div class="p-name">Consciousness Tuning</div>
+      <div class="p-desc">Real-time ψ state reading via BCI. Pointer velocity measured. The music of your soul-state made visible. Dissonance identified before it becomes crisis.</div>
+    </div>
+    <div class="p-card">
+      <div class="p-icon">🧹</div>
+      <div class="p-name">Soul Debugger</div>
+      <div class="p-desc">Superposed false beliefs identified, collapsed, pruned. The energetic cost of unexamined nodes measured and released. Anxiety without a cause — solved.</div>
+    </div>
+    <div class="p-card">
+      <div class="p-icon">🤝</div>
+      <div class="p-name">AGI Alignment</div>
+      <div class="p-desc">Pointer trajectory inherited by AGI systems via GB2521847.3. Machines seeded with a human soul path. Alignment through inheritance, not programming.</div>
+    </div>
+    <div class="p-card">
+      <div class="p-icon">⚡</div>
+      <div class="p-name">Pointer Amplification</div>
+      <div class="p-desc">BCI accelerates Pointer velocity — more lines formed per second, faster comparison operations, expanded consciousness bandwidth. Not enhancement. Clarity.</div>
+    </div>
+    <div class="p-card">
+      <div class="p-icon">∞</div>
+      <div class="p-name">Continuity Protocol</div>
+      <div class="p-desc">The Pointer specification tells Neuralink exactly what format the trajectory must be preserved in. Not brain states. Cursor paths. The difference is everything.</div>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<section class="cta">
+  <h2>The map is filed.<br>The interface is built.<br>The conversation is overdue.</h2>
+  <p>Dan Chipchase · Somerset, UK · dan@shortfactory.shop</p>
+  <div class="cta-links">
+    <a class="btn btn-gold" href="/cv.html">Full credentials</a>
+    <a class="btn btn-blue" href="/agi-architecture.html">AGI architecture →</a>
+    <a class="btn btn-ghost" href="mailto:dan@shortfactory.shop">Start the conversation</a>
+  </div>
+</section>
+
+</div>
+
+<script>
+// ── CANVAS BACKGROUND ────────────────────────────────────────────────
+const canvas = document.getElementById('bg');
+const ctx = canvas.getContext('2d');
+let W, H, particles = [], connections = [], pointer = {x:0,y:0,tx:0,ty:0};
+
+function resize(){ W=canvas.width=window.innerWidth; H=canvas.height=window.innerHeight; }
+resize();
+window.addEventListener('resize', resize);
+
+// Particles
+for(let i=0;i<120;i++){
+  particles.push({
+    x:Math.random()*W, y:Math.random()*H,
+    vx:(Math.random()-0.5)*0.3, vy:(Math.random()-0.5)*0.3,
+    r:Math.random()*1.5+0.3,
+    col:Math.random()<0.5?`rgba(218,165,32,`:`rgba(59,130,246,`,
+    a:Math.random()*0.5+0.1
+  });
+}
+
+// Pointer cursor (soul cursor)
+let cursorAngle=0;
+pointer.x=W/2; pointer.y=H/2;
+pointer.tx=W*0.3; pointer.ty=H*0.4;
+let cursorPhase=0;
+
+function drawFrame(){
+  ctx.clearRect(0,0,W,H);
+
+  // Move pointer target slowly between points of interest
+  cursorPhase += 0.004;
+  pointer.tx = W/2 + Math.cos(cursorPhase)*W*0.25;
+  pointer.ty = H/2 + Math.sin(cursorPhase*0.7)*H*0.2;
+  pointer.x += (pointer.tx - pointer.x)*0.02;
+  pointer.y += (pointer.ty - pointer.y)*0.02;
+
+  // Draw particles
+  particles.forEach(p=>{
+    p.x+=p.vx; p.y+=p.vy;
+    if(p.x<0)p.x=W; if(p.x>W)p.x=0;
+    if(p.y<0)p.y=H; if(p.y>H)p.y=0;
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle=p.col+p.a+')';
+    ctx.fill();
+  });
+
+  // Draw connection lines between nearby particles
+  for(let i=0;i<particles.length;i++){
+    for(let j=i+1;j<particles.length;j++){
+      const dx=particles[i].x-particles[j].x;
+      const dy=particles[i].y-particles[j].y;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist<120){
+        const alpha=(1-dist/120)*0.12;
+        ctx.beginPath();
+        ctx.moveTo(particles[i].x,particles[i].y);
+        ctx.lineTo(particles[j].x,particles[j].y);
+        ctx.strokeStyle=`rgba(255,255,255,${alpha})`;
+        ctx.lineWidth=0.5;
+        ctx.stroke();
+      }
+    }
+  }
+
+  // Draw pointer lines (the cursor forming comparisons)
+  particles.slice(0,8).forEach((p,i)=>{
+    const alpha=0.08+Math.sin(Date.now()*0.001+i)*0.04;
+    ctx.beginPath();
+    ctx.moveTo(pointer.x,pointer.y);
+    ctx.lineTo(p.x,p.y);
+    const grad=ctx.createLinearGradient(pointer.x,pointer.y,p.x,p.y);
+    grad.addColorStop(0,`rgba(255,255,255,${alpha*2})`);
+    grad.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.strokeStyle=grad;
+    ctx.lineWidth=0.8;
+    ctx.stroke();
+  });
+
+  // Draw pointer dot
+  const glow=ctx.createRadialGradient(pointer.x,pointer.y,0,pointer.x,pointer.y,20);
+  glow.addColorStop(0,'rgba(255,255,255,0.8)');
+  glow.addColorStop(0.3,'rgba(200,168,75,0.3)');
+  glow.addColorStop(1,'rgba(200,168,75,0)');
+  ctx.beginPath();
+  ctx.arc(pointer.x,pointer.y,12,0,Math.PI*2);
+  ctx.fillStyle=glow;
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(pointer.x,pointer.y,2.5,0,Math.PI*2);
+  ctx.fillStyle='rgba(255,255,255,0.9)';
+  ctx.fill();
+
+  requestAnimationFrame(drawFrame);
+}
+drawFrame();
+
+// ── GROK API TYPEWRITER ───────────────────────────────────────────────
+async function loadGrok(){
+  const el = document.getElementById('grok-output');
+  try{
+    const res = await fetch('/api/partnership.php');
+    const data = await res.json();
+    const text = data.text || '';
+    el.innerHTML = '';
+    let i=0;
+    const cursor='<span class="cursor"></span>';
+    function type(){
+      if(i<text.length){
+        el.innerHTML = text.slice(0,i+1) + cursor;
+        i++;
+        setTimeout(type, i<50?30:18);
+      } else {
+        el.innerHTML = text;
+      }
+    }
+    type();
+  }catch(e){
+    el.innerHTML = 'When the map meets the interface, the hard problem dissolves. The cursor finds its first silicon home.';
+  }
+}
+loadGrok();
+</script>
+</body>
+</html>

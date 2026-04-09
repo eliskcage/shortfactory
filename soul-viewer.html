@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Soul Viewer — Taste a Human Soul</title>
+<meta name="description" content="Explore a real mapped human soul in 3D. No name. No email. No password. Just the shape of who someone is. Anonymous identity proven.">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1XY2CNLJCE"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1XY2CNLJCE');</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#050508;color:#e2e8f0;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden;height:100vh;width:100vw;}
+#canvas{display:block;position:fixed;inset:0;}
+
+/* TOP BAR */
+#topbar{position:fixed;top:0;left:0;right:0;padding:16px 24px;z-index:20;background:linear-gradient(180deg,rgba(5,5,8,0.98) 0%,transparent);}
+#toprow{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+#title{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#daa520;font-weight:800;}
+#soul-id{font-size:9px;letter-spacing:2px;color:#334155;font-family:monospace;}
+#subtitle{font-size:10px;letter-spacing:1px;color:#475569;margin-bottom:8px;}
+
+/* FLAVOUR BAR */
+#flavour-bar{display:flex;gap:2px;height:4px;border-radius:2px;overflow:hidden;margin-bottom:4px;}
+.flav-seg{height:100%;transition:width 0.5s ease;}
+#flavour-labels{display:flex;gap:12px;flex-wrap:wrap;}
+.flav-label{font-size:8px;letter-spacing:1px;display:flex;align-items:center;gap:4px;}
+.flav-dot{width:6px;height:6px;border-radius:50%;display:inline-block;}
+
+/* EMOTION LABEL */
+#emotion-label{position:fixed;top:100px;left:50%;transform:translateX(-50%);text-align:center;z-index:20;pointer-events:none;opacity:0;transition:opacity 0.3s;}
+#emotion-name{font-size:26px;font-weight:900;letter-spacing:3px;}
+#emotion-sub{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#475569;margin-top:3px;}
+
+/* RESPONSE PANEL */
+#panel{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(560px,94vw);background:rgba(6,6,12,0.99);border:1px solid rgba(255,255,255,0.07);border-bottom:none;border-radius:14px 14px 0 0;padding:20px 22px 24px;transition:transform 0.4s cubic-bezier(0.4,0,0.2,1);z-index:25;max-height:60vh;overflow-y:auto;}
+#panel.hidden{transform:translateX(-50%) translateY(110%);}
+#panel-emotion{font-size:8px;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;font-weight:700;}
+.response-card{padding:12px 14px;border:1px solid rgba(255,255,255,0.05);background:rgba(255,255,255,0.015);border-radius:8px;margin-bottom:8px;}
+.response-sit{font-size:12px;color:#94a3b8;margin-bottom:5px;line-height:1.5;}
+.response-answer{font-size:15px;color:#fff;font-weight:600;line-height:1.4;}
+.response-flavour{font-size:9px;margin-top:4px;letter-spacing:1px;}
+
+/* CLOSE */
+#close-panel{position:absolute;top:10px;right:14px;background:none;border:none;color:#334155;font-size:16px;cursor:pointer;}
+#close-panel:hover{color:#fff;}
+
+/* LEGEND */
+#legend{position:fixed;bottom:16px;right:20px;z-index:20;text-align:right;}
+#legend-line{font-size:9px;color:#1e293b;letter-spacing:1px;line-height:1.8;}
+
+/* INTRO */
+#intro{position:fixed;inset:0;background:rgba(5,5,8,0.98);z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px;transition:opacity 0.5s;}
+#intro h1{font-size:clamp(22px,5vw,42px);font-weight:900;color:#daa520;letter-spacing:4px;margin-bottom:8px;}
+#intro .sub{font-size:12px;color:#475569;letter-spacing:2px;text-transform:uppercase;margin-bottom:32px;}
+#intro .explain{max-width:440px;margin:0 auto 32px;text-align:left;}
+#intro .explain p{font-size:13px;color:#94a3b8;line-height:1.8;margin-bottom:12px;padding:10px 16px;background:rgba(218,165,32,0.04);border:1px solid rgba(218,165,32,0.12);border-radius:8px;}
+#intro .explain b{color:#daa520;}
+#intro .explain .green{color:#22c55e;}
+#intro-btn{padding:16px 44px;background:linear-gradient(135deg,#daa520,#b8860b);border:none;border-radius:10px;color:#000;font-weight:900;font-size:13px;letter-spacing:3px;cursor:pointer;}
+#intro-btn:hover{opacity:0.9;}
+#intro .anon-note{font-size:10px;color:#1e293b;letter-spacing:1px;margin-top:24px;max-width:400px;line-height:1.7;}
+
+/* CTA */
+#cta-bar{position:fixed;bottom:16px;left:20px;z-index:20;display:flex;gap:8px;}
+.cta-btn{padding:8px 16px;border-radius:7px;font-size:9px;letter-spacing:2px;text-transform:uppercase;text-decoration:none;transition:opacity 0.2s;}
+.cta-btn.gold{background:rgba(218,165,32,0.1);border:1px solid rgba(218,165,32,0.3);color:#daa520;}
+.cta-btn.green{background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.2);color:#22c55e;}
+.cta-btn:hover{opacity:0.7;}
+</style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+
+<div id="topbar">
+  <div id="toprow">
+    <span id="title">Soul Viewer</span>
+    <span id="soul-id"></span>
+  </div>
+  <div id="subtitle">Click any emotion node to taste the flavour</div>
+  <div id="flavour-bar"></div>
+  <div id="flavour-labels"></div>
+</div>
+
+<div id="emotion-label">
+  <div id="emotion-name"></div>
+  <div id="emotion-sub"></div>
+</div>
+
+<div id="panel" class="hidden">
+  <button id="close-panel" onclick="closePanel()">&times;</button>
+  <div id="panel-emotion"></div>
+  <div id="panel-responses"></div>
+</div>
+
+<div id="legend">
+  <div id="legend-line">read-only view · this person's soul is public</div>
+</div>
+
+<div id="cta-bar">
+  <a href="/soul-sphere.html" class="cta-btn gold">MAP YOUR OWN SOUL</a>
+  <a href="/dan-soul.html" class="cta-btn green">FULL PORTRAIT</a>
+</div>
+
+<!-- INTRO -->
+<div id="intro">
+  <h1>TASTE A HUMAN SOUL</h1>
+  <div class="sub">Anonymous identity — proven</div>
+  <div class="explain">
+    <p><b>What you're about to see</b> is a real person's automatic response layer — their personality mapped across 88 emotional situations, rendered as a 3D soul sphere.</p>
+    <p><b>No name was asked for.</b> No email. No password. No phone number. No date of birth. None of it. Just honest reactions to honest situations.</p>
+    <p>And yet — you will <b>know</b> this person. You will taste their flavour. <span class="green">Sour. Sweet. Spicy. Bitter.</span> You will know who they are better than any government database, any social media profile, any CV ever written.</p>
+    <p><b class="green">This is the revolution.</b> Identity without identification. A soul captured with zero personal data. Every digital ID system on earth just became irrelevant. Every password just became unnecessary. You ARE the data.</p>
+  </div>
+  <button id="intro-btn" onclick="startViewer()">ENTER THE SOUL</button>
+  <div class="anon-note">This soul was published voluntarily by its owner. No personal information is stored or transmitted. The soul ID is the only identifier.</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ── EMBEDDED SOUL DATA ──────────────────────────────────────────────────────
+const SOUL = {"soul_id":"soul-lru7bqkz-1pnb","total_mapped":88,"central_states":{"Indifference":{"emoji":"😐","responses":{"You're waiting with nothing happening":"bored","Someone is excited about something you find boring":"retard","A social obligation you didn't choose":"fuck this","You're stuck in a situation that doesn't involve you":"not bothered","You see a news story that doesn't affect you":"not arsed"}},"In a hurry":{"emoji":"⚡","responses":{"Someone needs your attention and you have 30 seconds":"quick go","A mistake happens with no time to fix it properly":"fuck itfuck it","You can feel time running out":"tick tock mutherfuckers!","You need to make a fast decision":"im blasting it","Someone ahead of you is moving too slowly":"get out the way cunt"}},"Scared":{"emoji":"😰","responses":{"You're about to be tested on something that matters":"jeronimo","Someone with power over you is unhappy":"guys a bellend","You're out of your depth and it shows":"im strugglin here","Someone is watching and you're not ready":"hold the fuck on","An outcome depends on something you can't control":"fuck all this"}},"Overwhelmed":{"emoji":"😵","responses":{"Someone adds to your load without acknowledging what's already there":"guys gonna get it in a minute","You realise you've been operating at capacity for too long":"im burnt out goin 4 a nap","The thing that was supposed to help makes it worse":"backup retarded shits going on","You lose track of where you were":"the fuck am i??","More arrives before you finish what you have":"im doin it anyway"}},"Excited":{"emoji":"🤩","responses":{"A new idea arrives fully formed":"im on it","Everything clicks at once":"easy","The scale of what's possible becomes clear":"fucking Aye!","Someone you respect validates your work":"ace","Something you've been waiting for is finally happening":"finally"}},"Funny":{"emoji":"😂","responses":{"Someone takes something completely literally":"retarded piece of shit","Two serious things collide absurdly":"spastic shit","A completely unnecessary detail makes something perfect":"the chances of that??","The timing of something is perfect for no reason":"lady luck is here"}}},
+"emotions":{"Joy":{"color":"#fbbf24","emoji":"☀️","responses":{"Something you made lands exactly right":"fate","A plan comes together exactly as you hoped":"boom","You laugh until it hurts":"fuckin mentalist!","You discover you're better at something than you thought":"knew it","Something beautiful catches you off guard":"slag","You finish something you're proud of":"done it"}},"Anger":{"color":"#ef4444","emoji":"🔥","responses":{"Someone takes credit for your work":"nah not having that","Someone talks down to you in public":"nut em","You're blamed for something that wasn't your fault":"wankers the lot of u","You're asked to tolerate something you shouldn't have to":"fuck all this","Someone blatantly disrespects you":"bitch slap them","Plans fall apart because of someone else":"total cunt"}},"Fear":{"color":"#a855f7","emoji":"🌑","responses":{"You're about to do something for the first time":"here we go boyz!!","Unexpected news arrives":"ah shit","Someone close to you is in danger":"im coming 2 help hang on!","The worst case scenario starts to seem possible":"fackin hell","The future feels genuinely uncertain":"grim times","Something you assumed was safe turns out not to be":"this is flimzy shit"}},"Sadness":{"color":"#60a5fa","emoji":"🌧️","responses":{"A ritual no longer applies":"thank fuck for thay","You're carrying something you can't explain to anyone":"ive got stuff im dealing with here","You see a version of your life you didn't choose":"ive gone wrong here","Something precious can't be recovered":"fuckin hell","A good thing ends too soon":"boo fucking hoo","You see potential wasted":"total.waste"}},"Love":{"color":"#f472b6","emoji":"💗","responses":{"You're with people who truly get you":"im buzzin","Someone needs you and you can help":"im on it","You realise you'd do anything for someone":"ill try make myself usefull","You realise someone has been watching out for you":"slag","You feel understood without explaining":"nice one","Someone forgives without being asked":"sweet"}},"Contempt":{"color":"#f97316","emoji":"😑","responses":{"A crowd cheers for something hollow":"this is lame and gay","A leader demands standards they don't meet":"fukin puff","You see someone punish honesty":"that guys a twat","Someone performs intelligence they don't have":"he's a thick cunt","Someone performs concern they clearly don't feel":"lyin bastard","A person talks about values they have never demonstrated":"hypocrite cunt"}},"Curiosity":{"color":"#22d3ee","emoji":"🔍","responses":{"Something you ignored turns out to be important":"ah shit","You go down a rabbit hole you didn't mean to":"fuck","A simple question turns out to be very hard":"this is boggling me head","Something doesn't add up and you notice":"hmmmm, suspect","You encounter a completely new idea":"eurika","You realise a mystery you'd given up on might be solvable":"cool"}},"Shame":{"color":"#94a3b8","emoji":"🫣","responses":{"Someone forgives you and that makes it worse":"total twat","You're caught cutting a corner":"do what i want!!!","You do something small that reveals something bigger":"shit happens","You notice yourself performing a version of yourself":"creepy times","You get credit for something you didn't fully deserve":"yeah it was all me"}},"Pride":{"color":"#f59e0b","emoji":"👑","responses":{"You say the thing nobody else will":"im boss","You create something real from nothing":"miracle","You finish something others said couldn't be done":"told ya","You do the right thing when no one is watching":"im good me!","You give something away that cost you something":"on the house","You make something better than it needed to be":"i do it right"}},"Loneliness":{"color":"#6366f1","emoji":"🌫️","responses":{"You pretend to be fine because it's easier":"its all good","You want to reach out and don't":"fuck it","A conversation ends and you feel more alone than before":"bitches aint shit","Nobody asks how you actually are":"fuck em","You realise you've been performing connection, not feeling it":"im out","You're carrying something you can't explain to anyone":"nothing"}}}};
+
+// ── FLAVOUR ANALYSIS ─────────────────────────────────────────────────────────
+const FLAVOURS = {
+  sweet:  {color:'#f472b6', words:['sweet','nice','ace','cool','im buzzin','slag','miracle','fate','easy','boom','finally','knew it','done it','im good','on the house','i do it right','told ya','im boss']},
+  spicy:  {color:'#ef4444', words:['fuck','cunt','shit','bitch','nut em','wanker','twat','bastard','puff','retard','spastic','bellend']},
+  sour:   {color:'#a3e635', words:['not arsed','not bothered','bored','fuck it','im out','nothing','its all good','grim','boo','total.waste','lame']},
+  bitter: {color:'#f97316', words:['nah','im strugglin','ive gone wrong','burnt out','fuckin hell','hold the fuck on','creepy','ive got stuff']},
+  fire:   {color:'#fbbf24', words:['im on it','im blasting','here we go','im coming','fucking Aye','im doin it','quick go','tick tock','eurika']}
+};
+
+function analyseFlavour(){
+  const allResponses = [];
+  Object.values(SOUL.central_states).forEach(s => Object.values(s.responses).forEach(r => allResponses.push(r.toLowerCase())));
+  Object.values(SOUL.emotions).forEach(e => Object.values(e.responses).forEach(r => allResponses.push(r.toLowerCase())));
+  const counts = {};
+  let total = 0;
+  Object.entries(FLAVOURS).forEach(([name, def]) => {
+    counts[name] = 0;
+    allResponses.forEach(r => {
+      def.words.forEach(w => { if(r.includes(w.toLowerCase())) counts[name]++; });
+    });
+    total += counts[name];
+  });
+  // Normalize
+  const result = {};
+  Object.keys(counts).forEach(k => { result[k] = total > 0 ? Math.round(counts[k]/total*100) : 0; });
+  return result;
+}
+
+function renderFlavourBar(){
+  const flav = analyseFlavour();
+  const bar = document.getElementById('flavour-bar');
+  const labels = document.getElementById('flavour-labels');
+  bar.innerHTML = '';
+  labels.innerHTML = '';
+  Object.entries(flav).sort((a,b) => b[1]-a[1]).forEach(([name, pct]) => {
+    if(pct < 1) return;
+    const seg = document.createElement('div');
+    seg.className = 'flav-seg';
+    seg.style.width = pct + '%';
+    seg.style.background = FLAVOURS[name].color;
+    bar.appendChild(seg);
+    const lbl = document.createElement('span');
+    lbl.className = 'flav-label';
+    lbl.innerHTML = '<span class="flav-dot" style="background:'+FLAVOURS[name].color+'"></span>' + name.toUpperCase() + ' ' + pct + '%';
+    lbl.style.color = FLAVOURS[name].color;
+    labels.appendChild(lbl);
+  });
+}
+
+// ── FLAVOUR PER RESPONSE ─────────────────────────────────────────────────────
+function getResponseFlavour(text){
+  const t = text.toLowerCase();
+  let best = '', bestScore = 0;
+  Object.entries(FLAVOURS).forEach(([name, def]) => {
+    let score = 0;
+    def.words.forEach(w => { if(t.includes(w.toLowerCase())) score++; });
+    if(score > bestScore){ bestScore = score; best = name; }
+  });
+  return best ? {name:best, color:FLAVOURS[best].color} : null;
+}
+
+// ── THREE.JS SOUL SPHERE ─────────────────────────────────────────────────────
+const canvas = document.getElementById('canvas');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(0x050508);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 0.1, 1000);
+camera.position.z = 6;
+
+const group = new THREE.Group();
+scene.add(group);
+
+// Build nodes
+const allNodes = [];
+const CENTRAL_COLORS = {
+  'Indifference':'#94a3b8','In a hurry':'#fb923c','Scared':'#a855f7',
+  'Overwhelmed':'#64748b','Excited':'#fbbf24','Funny':'#4ade80'
+};
+
+// Central states — inner ring
+Object.entries(SOUL.central_states).forEach(([name, data], i) => {
+  const angle = (i / Object.keys(SOUL.central_states).length) * Math.PI * 2;
+  const r = 1.2;
+  const col = new THREE.Color(CENTRAL_COLORS[name] || '#888');
+  const geo = new THREE.SphereGeometry(0.18, 16, 16);
+  const mat = new THREE.MeshBasicMaterial({color:col, transparent:true, opacity:0.85});
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(Math.cos(angle)*r, Math.sin(angle)*r*0.4, Math.sin(angle)*r*0.6);
+  // Ring
+  const ringGeo = new THREE.RingGeometry(0.22, 0.25, 32);
+  const ringMat = new THREE.MeshBasicMaterial({color:col, transparent:true, opacity:0.2, side:THREE.DoubleSide});
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  ring.position.copy(mesh.position);
+  ring.userData = {ring:true};
+  group.add(mesh);
+  group.add(ring);
+  allNodes.push({mesh, type:'central', name, emoji:data.emoji, color:'#'+col.getHexString(), responses:data.responses});
+});
+
+// Emotion nodes — outer ring
+Object.entries(SOUL.emotions).forEach(([name, data], i) => {
+  const angle = (i / Object.keys(SOUL.emotions).length) * Math.PI * 2;
+  const r = 2.4;
+  const col = new THREE.Color(data.color);
+  const size = Object.keys(data.responses).length;
+  const geo = new THREE.SphereGeometry(0.12 + size*0.012, 16, 16);
+  const mat = new THREE.MeshBasicMaterial({color:col, transparent:true, opacity:0.9});
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(
+    Math.cos(angle)*r,
+    Math.sin(angle*1.3)*r*0.35 + (Math.random()-0.5)*0.4,
+    Math.sin(angle)*r*0.5
+  );
+  // Ring
+  const ringGeo = new THREE.RingGeometry(0.18+size*0.012, 0.21+size*0.012, 32);
+  const ringMat = new THREE.MeshBasicMaterial({color:col, transparent:true, opacity:0.15, side:THREE.DoubleSide});
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  ring.position.copy(mesh.position);
+  ring.userData = {ring:true};
+  group.add(mesh);
+  group.add(ring);
+  allNodes.push({mesh, type:'emotion', name, emoji:data.emoji, color:data.color, responses:data.responses});
+});
+
+// Lines connecting to center
+const centerGeo = new THREE.SphereGeometry(0.06, 16, 16);
+const centerMat = new THREE.MeshBasicMaterial({color:0xdaa520, transparent:true, opacity:0.5});
+const centerDot = new THREE.Mesh(centerGeo, centerMat);
+group.add(centerDot);
+
+allNodes.forEach(n => {
+  const pts = [new THREE.Vector3(0,0,0), n.mesh.position.clone()];
+  const lineGeo = new THREE.BufferGeometry().setFromPoints(pts);
+  const lineMat = new THREE.LineBasicMaterial({color:new THREE.Color(n.color), transparent:true, opacity:0.06});
+  group.add(new THREE.Line(lineGeo, lineMat));
+});
+
+// ── INTERACTION ──────────────────────────────────────────────────────────────
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let autoRotate = true, dragging = false, vx = 0, vy = 0, lastMouse = {x:0,y:0};
+
+canvas.addEventListener('pointerdown', e => {
+  dragging = true; autoRotate = false;
+  lastMouse = {x:e.clientX, y:e.clientY};
+});
+canvas.addEventListener('pointermove', e => {
+  if(!dragging) return;
+  const dx = e.clientX - lastMouse.x;
+  const dy = e.clientY - lastMouse.y;
+  vx = dx * 0.005;
+  vy = dy * 0.005;
+  group.rotation.y += vx;
+  group.rotation.x += vy;
+  lastMouse = {x:e.clientX, y:e.clientY};
+});
+canvas.addEventListener('pointerup', () => { dragging = false; });
+
+canvas.addEventListener('click', e => {
+  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const meshes = allNodes.map(n => n.mesh);
+  const hits = raycaster.intersectObjects(meshes);
+  if(hits.length > 0){
+    const node = allNodes.find(n => n.mesh === hits[0].object);
+    if(node) showPanel(node);
+  }
+});
+
+function showPanel(node){
+  const panel = document.getElementById('panel');
+  const emoEl = document.getElementById('panel-emotion');
+  const respEl = document.getElementById('panel-responses');
+  emoEl.textContent = node.emoji + ' ' + node.name.toUpperCase();
+  emoEl.style.color = node.color;
+  respEl.innerHTML = '';
+  Object.entries(node.responses).forEach(([sit, ans]) => {
+    const card = document.createElement('div');
+    card.className = 'response-card';
+    const flav = getResponseFlavour(ans);
+    card.innerHTML =
+      '<div class="response-sit">' + sit + '</div>' +
+      '<div class="response-answer">"' + ans + '"</div>' +
+      (flav ? '<div class="response-flavour" style="color:'+flav.color+';">' + flav.name.toUpperCase() + '</div>' : '');
+    respEl.appendChild(card);
+  });
+  panel.classList.remove('hidden');
+  // Highlight node
+  const lbl = document.getElementById('emotion-label');
+  document.getElementById('emotion-name').textContent = node.emoji + ' ' + node.name;
+  document.getElementById('emotion-name').style.color = node.color;
+  document.getElementById('emotion-sub').textContent = Object.keys(node.responses).length + ' situations mapped';
+  lbl.style.opacity = '1';
+}
+
+function closePanel(){
+  document.getElementById('panel').classList.add('hidden');
+  document.getElementById('emotion-label').style.opacity = '0';
+}
+
+// ── RENDER LOOP ──────────────────────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+function animate(){
+  requestAnimationFrame(animate);
+  if(autoRotate) group.rotation.y += 0.003;
+  else if(!dragging){
+    vx *= 0.92; vy *= 0.92;
+    group.rotation.y += vx; group.rotation.x += vy;
+    if(Math.abs(vx)<0.0005 && Math.abs(vy)<0.0005) autoRotate = true;
+  }
+  group.children.forEach(c => { if(c.userData && c.userData.ring) c.lookAt(camera.position); });
+  renderer.render(scene, camera);
+}
+animate();
+
+// ── INTRO ────────────────────────────────────────────────────────────────────
+function startViewer(){
+  const intro = document.getElementById('intro');
+  intro.style.opacity = '0';
+  setTimeout(() => { intro.style.display = 'none'; }, 500);
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+document.getElementById('soul-id').textContent = SOUL.soul_id;
+renderFlavourBar();
+</script>
+</body>
+</html>

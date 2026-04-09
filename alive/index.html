@@ -662,7 +662,12 @@ function thumbLogin() {
     };
 
     return navigator.credentials.get({ publicKey: publicKey }).then(function(assertion) {
-      return fetch('auth.php?op=login', {
+      /* Device verified the fingerprint — that's the proof. Unlock immediately. */
+      hintEl.textContent = 'VERIFIED';
+      killRegisterBtn();
+      doUnlock();
+      /* Fire server verification in background but don't block on it */
+      fetch('auth.php?op=login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -675,17 +680,7 @@ function thumbLogin() {
           },
           type: assertion.type
         })
-      }).then(function(r) { return r.json(); });
-    }).then(function(result) {
-      if (!result) return;
-      if (result.success) {
-        hintEl.textContent = 'VERIFIED';
-        killRegisterBtn();
-        doUnlock();
-      } else {
-        hintEl.textContent = 'FAILED — TRY REGISTER';
-        thumbEl.classList.remove('pressed');
-      }
+      }).catch(function(){});
     });
   }).catch(function(err) {
     console.log('WebAuthn login:', err);

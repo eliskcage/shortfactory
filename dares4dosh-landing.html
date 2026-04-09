@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="DARES4DOSH — Dare economy app. Prove yourself. Earn XMR. Evolve your soul.">
+<title>DARES4DOSH — Dare Economy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#050505;color:#e2e8f0;font-family:'Share Tech Mono',monospace;overflow-x:hidden;}
+
+/* ── HERO ── */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px 40px;position:relative;}
+
+/* Background grid */
+.hero::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(255,140,0,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,140,0,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;}
+
+/* Radial glow behind phone */
+.hero::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:600px;background:radial-gradient(circle,rgba(255,140,0,0.06) 0%,transparent 70%);pointer-events:none;}
+
+.hero-label{font-family:'Orbitron',monospace;font-size:10px;letter-spacing:6px;color:#ff8c00;text-transform:uppercase;margin-bottom:16px;opacity:0.8;}
+
+.hero-title{font-family:'Orbitron',monospace;font-size:clamp(28px,6vw,52px);font-weight:900;color:#fff;letter-spacing:4px;text-align:center;margin-bottom:8px;text-shadow:0 0 40px rgba(255,140,0,0.4);}
+
+.hero-title span{color:#ff8c00;}
+
+.hero-sub{font-size:13px;color:#64748b;letter-spacing:2px;text-align:center;margin-bottom:48px;}
+
+/* ── PHONE MOCKUP ── */
+.phone-wrap{position:relative;z-index:2;}
+
+.phone{
+  width:320px;
+  height:640px;
+  background:#0a0a0a;
+  border-radius:44px;
+  border:2px solid rgba(255,140,0,0.3);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.8),
+    0 30px 80px rgba(0,0,0,0.8),
+    0 0 60px rgba(255,140,0,0.08),
+    inset 0 0 0 1px rgba(255,255,255,0.04);
+  position:relative;
+  overflow:hidden;
+}
+
+/* Notch */
+.phone-notch{
+  position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:100px;height:26px;
+  background:#0a0a0a;
+  border-radius:0 0 18px 18px;
+  z-index:10;
+  border:2px solid rgba(255,140,0,0.15);
+  border-top:none;
+}
+
+/* Side buttons */
+.phone::before{
+  content:'';position:absolute;
+  right:-3px;top:120px;
+  width:3px;height:60px;
+  background:rgba(255,140,0,0.2);
+  border-radius:0 2px 2px 0;
+  box-shadow:0 80px 0 rgba(255,140,0,0.2);
+}
+.phone::after{
+  content:'';position:absolute;
+  left:-3px;top:100px;
+  width:3px;height:40px;
+  background:rgba(255,140,0,0.15);
+  border-radius:2px 0 0 2px;
+  box-shadow:0 56px 0 rgba(255,140,0,0.15);
+}
+
+.phone-screen{
+  position:absolute;inset:0;
+  border-radius:42px;
+  overflow:hidden;
+}
+
+.phone-screen iframe{
+  width:375px;
+  height:100%;
+  border:none;
+  transform-origin:top left;
+  transform:scale(0.853);
+  /* Scale 375px viewport down to 320px */
+}
+
+/* Glow ring around phone */
+.phone-glow{
+  position:absolute;inset:-20px;
+  border-radius:64px;
+  background:radial-gradient(ellipse at center,rgba(255,140,0,0.06) 0%,transparent 70%);
+  pointer-events:none;
+}
+
+/* Bottom pill */
+.phone-bar{
+  position:absolute;bottom:10px;left:50%;transform:translateX(-50%);
+  width:100px;height:4px;
+  background:rgba(255,255,255,0.15);
+  border-radius:2px;
+  z-index:10;
+}
+
+/* ── CTA ── */
+.cta-row{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-top:40px;position:relative;z-index:2;}
+
+.btn{
+  display:inline-block;padding:14px 32px;
+  font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:3px;
+  text-decoration:none;border-radius:8px;
+  transition:transform 0.2s,box-shadow 0.2s;
+  cursor:pointer;
+}
+.btn:hover{transform:scale(1.04);}
+.btn-primary{background:linear-gradient(135deg,#ff8c00,#daa520);color:#000;box-shadow:0 4px 24px rgba(255,140,0,0.3);}
+.btn-primary:hover{box-shadow:0 6px 32px rgba(255,140,0,0.5);}
+.btn-ghost{background:none;border:1px solid rgba(255,140,0,0.3);color:#ff8c00;}
+.btn-ghost:hover{border-color:#ff8c00;box-shadow:0 0 20px rgba(255,140,0,0.15);}
+
+/* ── STATS STRIP ── */
+.stats{display:flex;gap:0;justify-content:center;border-top:1px solid rgba(255,255,255,0.04);border-bottom:1px solid rgba(255,255,255,0.04);margin:60px 0 0;}
+.stat{padding:28px 40px;text-align:center;border-right:1px solid rgba(255,255,255,0.04);}
+.stat:last-child{border-right:none;}
+.stat-n{font-family:'Orbitron',monospace;font-size:26px;font-weight:900;color:#ff8c00;}
+.stat-l{font-size:10px;color:#475569;letter-spacing:2px;text-transform:uppercase;margin-top:4px;}
+
+/* ── FEATURES ── */
+.features{max-width:900px;margin:60px auto;padding:0 24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;}
+.feat{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:28px 24px;transition:border-color 0.2s;}
+.feat:hover{border-color:rgba(255,140,0,0.2);}
+.feat-icon{font-size:28px;margin-bottom:14px;}
+.feat-title{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:#fff;letter-spacing:2px;margin-bottom:8px;}
+.feat-desc{font-size:12px;color:#64748b;line-height:1.7;}
+
+/* ── FOOTER ── */
+footer{text-align:center;padding:40px 20px;border-top:1px solid rgba(255,255,255,0.04);font-size:11px;color:#334155;letter-spacing:1px;}
+footer a{color:#ff8c00;text-decoration:none;}
+
+@media(max-width:400px){
+  .phone{width:280px;height:560px;}
+  .phone-screen iframe{width:375px;transform:scale(0.747);}
+  .stat{padding:20px 20px;}
+  .stat-n{font-size:20px;}
+}
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <div class="hero-label">Now live · Beta · <a href="/dares4dosh/v2.html" style="color:#ff8c00;text-decoration:none;border-bottom:1px solid rgba(255,140,0,0.4);">V2.0 CORTEX →</a></div>
+  <h1 class="hero-title">DARES<span>4</span>DOSH <span style="font-size:0.4em;color:#64748b;letter-spacing:2px;">V1.0</span></h1>
+  <p class="hero-sub">Dare economy · Prove yourself · Earn XMR · Evolve your soul</p>
+
+  <div class="phone-wrap">
+    <div class="phone-glow"></div>
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <iframe
+          src="/dares4dosh/app/"
+          title="DARES4DOSH App"
+          allow="camera; microphone; autoplay"
+          loading="lazy"
+        ></iframe>
+      </div>
+      <div class="phone-bar"></div>
+    </div>
+  </div>
+
+  <div class="cta-row">
+    <a href="https://stinkindigger.info/" class="btn btn-primary" target="_blank">ENTER THE ARENA</a>
+    <a href="https://www.shortfactory.shop/portfolio.html" class="btn btn-ghost">VIEW PROGRESS</a>
+  </div>
+</section>
+
+<div style="max-width:680px;margin:60px auto 0;padding:0 24px;text-align:center;">
+  <p style="font-family:'Orbitron',monospace;font-size:clamp(22px,4vw,36px);font-weight:900;color:#fff;line-height:1.3;margin-bottom:20px;">A dare can be<br><span style="color:#ff8c00;">anything.</span></p>
+  <p style="font-size:14px;color:#94a3b8;line-height:1.9;margin-bottom:40px;">A job. A delivery. A smart contract. A tattoo filmed for advertainment. A man quitting his job in the worst way possible. A local fight with a referee. Whatever it is — it goes on IPFS. Permanently. <span style="color:#fff;">No delete button.</span></p>
+  <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-bottom:48px;">
+    <a href="https://stinkindigger.info/" class="btn btn-primary" target="_blank">ENTER THE ARENA</a>
+    <a href="https://www.shortfactory.shop/dares4dosh-architecture.html" class="btn btn-ghost">ARCHITECTURE →</a>
+  </div>
+</div>
+
+<div style="max-width:680px;margin:0 auto 60px;padding:0 24px;">
+  <div style="border:1px solid rgba(255,140,0,0.15);border-radius:12px;padding:32px;background:rgba(255,140,0,0.03);">
+    <div style="font-family:'Orbitron',monospace;font-size:11px;letter-spacing:4px;color:#ff8c00;margin-bottom:16px;">THE SELF-MODIFYING ECONOMY</div>
+    <p style="font-size:13px;color:#94a3b8;line-height:1.9;">Designed to 95% completion. Currently in testing phase. Shipping soon.</p>
+    <div style="margin-top:20px;display:flex;gap:12px;align-items:center;">
+      <div style="flex:1;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;">
+        <div style="width:95%;height:100%;background:linear-gradient(90deg,#ff8c00,#daa520);border-radius:2px;"></div>
+      </div>
+      <span style="font-family:'Orbitron',monospace;font-size:11px;color:#ff8c00;font-weight:700;">95%</span>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:20px;font-size:10px;letter-spacing:2px;color:#475569;">
+      <span style="color:#22c55e;">✓ DESIGNED</span>
+      <span style="color:#22c55e;">✓ TESTING</span>
+      <span style="color:#475569;">— SHIPPING</span>
+    </div>
+  </div>
+</div>
+
+<footer>
+  DARES4DOSH &mdash; Part of <a href="https://www.shortfactory.shop/">ShortFactory</a> &mdash; Built by <a href="https://stinkindigger.info/">@diggerstinkin</a>
+</footer>
+
+</body>
+</html>

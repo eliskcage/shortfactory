@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DARES4DOSH — V3.0 VOICE CONTRACT</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;background:#050505;font-family:'Share Tech Mono',monospace;color:#e2e8f0;}
+
+/* ── DESKTOP WRAPPER ── */
+.desktop-wrap{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:100vh;padding:32px 20px;position:relative;overflow:hidden;
+}
+.desktop-wrap::before{
+  content:'';position:fixed;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(255,140,0,0.03) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(255,140,0,0.03) 1px,transparent 1px);
+  background-size:40px 40px;
+}
+.dw-badge{font-family:'Orbitron',monospace;font-size:9px;letter-spacing:5px;color:rgba(255,140,0,0.6);margin-bottom:8px;position:relative;z-index:2;}
+.dw-badge a{color:rgba(255,140,0,0.6);text-decoration:none;border-bottom:1px solid rgba(255,140,0,0.3);}
+.dw-title{font-family:'Orbitron',monospace;font-size:clamp(16px,2.5vw,28px);font-weight:900;color:#fff;letter-spacing:4px;margin-bottom:3px;position:relative;z-index:2;}
+.dw-title span{color:#ff8c00;}
+.dw-sub{font-size:10px;color:#475569;letter-spacing:2px;margin-bottom:20px;position:relative;z-index:2;}
+
+/* ── PHONE ── */
+.phone-wrap{position:relative;z-index:2;}
+.phone-glow{position:absolute;inset:-20px;border-radius:64px;pointer-events:none;background:radial-gradient(ellipse,rgba(255,140,0,0.08),transparent 70%);}
+.phone{width:320px;height:640px;background:#0a0a0a;border-radius:44px;border:2px solid rgba(255,140,0,0.35);position:relative;overflow:hidden;box-shadow:0 0 0 1px rgba(0,0,0,0.8),0 30px 80px rgba(0,0,0,0.8),0 0 60px rgba(255,140,0,0.1),inset 0 0 0 1px rgba(255,255,255,0.04);}
+.phone-notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:100px;height:26px;background:#0a0a0a;border-radius:0 0 18px 18px;z-index:10;border:2px solid rgba(255,140,0,0.15);border-top:none;}
+.phone::before{content:'';position:absolute;right:-3px;top:120px;width:3px;height:60px;background:rgba(255,140,0,0.2);border-radius:0 2px 2px 0;box-shadow:0 80px 0 rgba(255,140,0,0.2);}
+.phone::after{content:'';position:absolute;left:-3px;top:100px;width:3px;height:40px;background:rgba(255,140,0,0.15);border-radius:2px 0 0 2px;box-shadow:0 56px 0 rgba(255,140,0,0.15);}
+.phone-bar{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);width:100px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;z-index:10;}
+
+/* ── APP (inside phone) ── */
+#app{
+  position:absolute;inset:0;
+  background:#050505;
+  overflow:hidden;
+}
+#app::before{
+  content:'';position:absolute;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(255,140,0,0.04) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(255,140,0,0.04) 1px,transparent 1px);
+  background-size:28px 28px;
+}
+
+/* ── SCREENS ── */
+.screen{
+  position:absolute;inset:0;
+  display:none;
+  flex-direction:column;align-items:center;justify-content:center;
+  padding:26px 18px 20px;gap:14px;
+  z-index:1;
+  overflow-y:auto;
+}
+.screen.active{display:flex;}
+
+/* ── SCREEN 1: ROLE ── */
+.s1-logo{font-family:'Orbitron',monospace;font-size:8px;letter-spacing:5px;color:rgba(255,140,0,0.45);}
+.s1-title{font-family:'Orbitron',monospace;font-size:20px;font-weight:900;color:#fff;letter-spacing:3px;text-align:center;line-height:1.1;}
+.s1-title span{color:#ff8c00;}
+.s1-sub{font-size:9px;color:#475569;letter-spacing:2px;text-align:center;}
+.role-cards{display:flex;gap:10px;width:100%;}
+.role-card{
+  flex:1;padding:16px 10px;
+  border:1px solid rgba(255,255,255,0.08);border-radius:10px;
+  background:rgba(255,255,255,0.02);
+  display:flex;flex-direction:column;align-items:center;gap:7px;
+  cursor:pointer;transition:all 0.2s;-webkit-tap-highlight-color:transparent;
+}
+.role-card.watcher.sel{border-color:#ff4444;background:rgba(255,68,68,0.07);box-shadow:0 0 16px rgba(255,68,68,0.12);}
+.role-card.doer.sel{border-color:#ff8c00;background:rgba(255,140,0,0.07);box-shadow:0 0 16px rgba(255,140,0,0.12);}
+.rc-emoji{font-size:32px;line-height:1;}
+.rc-name{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;letter-spacing:2px;color:#fff;}
+.rc-desc{font-size:8px;color:#64748b;text-align:center;line-height:1.6;letter-spacing:0.5px;}
+.begin-btn{
+  font-family:'Orbitron',monospace;font-size:10px;font-weight:700;letter-spacing:3px;
+  padding:12px 0;width:100%;
+  border:1px solid rgba(255,140,0,0.3);background:none;color:rgba(255,140,0,0.4);
+  border-radius:6px;cursor:pointer;transition:all 0.2s;
+}
+.begin-btn.on{color:#ff8c00;border-color:#ff8c00;}
+.begin-btn.on:active{background:#ff8c00;color:#000;}
+
+/* ── SCREEN 2: CONTRACT ── */
+.role-badge{
+  font-family:'Orbitron',monospace;font-size:8px;letter-spacing:4px;
+  padding:3px 12px;border-radius:20px;border:1px solid;
+}
+.role-badge.watcher{color:#ff4444;border-color:rgba(255,68,68,0.4);}
+.role-badge.doer{color:#ff8c00;border-color:rgba(255,140,0,0.4);}
+.canvas-wrap{position:relative;display:flex;align-items:center;justify-content:center;}
+#sigil{display:block;}
+.timer-num{
+  position:absolute;font-family:'Orbitron',monospace;font-size:28px;font-weight:900;
+  color:#ff8c00;pointer-events:none;display:none;
+  text-shadow:0 0 20px rgba(255,140,0,0.8);
+}
+.transcript{
+  width:100%;padding:7px 10px;
+  background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:6px;
+  font-size:9px;color:#ff8c00;letter-spacing:1px;min-height:26px;text-align:center;line-height:1.5;
+}
+.mic-row{display:flex;gap:10px;align-items:center;width:100%;}
+.mic-btn{
+  width:56px;height:56px;border-radius:50%;border:2px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.03);font-size:22px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:all 0.2s;-webkit-tap-highlight-color:transparent;
+  user-select:none;
+}
+.mic-btn.on{border-color:#ff4444;animation:mpulse 1s infinite;}
+@keyframes mpulse{0%{box-shadow:0 0 0 0 rgba(255,68,68,0.5);}70%{box-shadow:0 0 0 14px rgba(255,68,68,0);}100%{box-shadow:0 0 0 0 rgba(255,68,68,0);}}
+.mic-hint{font-size:8px;color:#475569;letter-spacing:1px;line-height:1.7;}
+.mic-hint b{color:#e2e8f0;display:block;font-size:9px;}
+.nodes-bar{font-size:8px;letter-spacing:2px;color:#64748b;}
+.nodes-bar span{color:#ff8c00;font-family:'Orbitron',monospace;}
+.seal-btn{
+  font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:3px;
+  padding:12px 0;width:100%;border:1px solid rgba(255,140,0,0.3);
+  background:none;color:rgba(255,140,0,0.3);border-radius:6px;cursor:pointer;transition:all 0.2s;
+}
+.seal-btn.on{border-color:#ff8c00;color:#ff8c00;animation:sappear 0.3s ease;}
+.seal-btn.on:active{background:#ff8c00;color:#000;}
+@keyframes sappear{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:none;}}
+
+/* ── SCREEN 3: SEALED ── */
+.sealed-title{font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:#ff8c00;letter-spacing:4px;text-align:center;text-shadow:0 0 24px rgba(255,140,0,0.5);}
+#sigil-sealed{display:block;}
+.hash-box{width:100%;padding:8px 10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:6px;text-align:center;}
+.hash-box b{display:block;font-family:'Orbitron',monospace;font-size:8px;letter-spacing:3px;color:rgba(255,140,0,0.6);margin-bottom:3px;}
+.hash-box span{font-size:9px;color:#64748b;letter-spacing:1px;}
+.dl-btn{
+  font-family:'Orbitron',monospace;font-size:10px;font-weight:700;letter-spacing:3px;
+  padding:12px 0;width:100%;
+  background:linear-gradient(135deg,#ff8c00,#daa520);color:#000;
+  border:none;border-radius:6px;cursor:pointer;transition:transform 0.15s;
+}
+.dl-btn:active{transform:scale(0.98);}
+.reset-btn{font-size:8px;color:#334155;letter-spacing:2px;background:none;border:none;cursor:pointer;padding:4px;}
+.reset-btn:hover{color:#64748b;}
+
+/* ── MOBILE: phone becomes fullscreen ── */
+@media(max-width:600px){
+  .desktop-wrap{padding:0;}
+  .dw-badge,.dw-title,.dw-sub{display:none;}
+  .phone-wrap{margin:0;}
+  .phone-glow{display:none;}
+  .phone{width:100vw;height:100vh;border-radius:0;border:none;box-shadow:none;}
+  .phone-notch,.phone-bar{display:none;}
+  .phone::before,.phone::after{display:none;}
+}
+</style>
+</head>
+<body>
+
+<div class="desktop-wrap">
+  <div class="dw-badge">V3.0 VOICE CONTRACT · <a href="/dares4dosh/v2.html">← V2.0</a></div>
+  <div class="dw-title">DARES<span>4</span>DOSH <span style="font-size:.45em;letter-spacing:2px;">V3.0</span></div>
+  <p class="dw-sub">WATCHER SETS THE DARE · DOER TAKES THE PAIN</p>
+
+  <div class="phone-wrap">
+    <div class="phone-glow"></div>
+    <div class="phone">
+      <div class="phone-notch"></div>
+
+      <!-- ═══ APP ═══ -->
+      <div id="app">
+
+        <!-- SCREEN 1: ROLE SELECT -->
+        <div class="screen active" id="s1">
+          <div class="s1-logo">DARES4DOSH · V3</div>
+          <div class="s1-title">VOICE<br><span>CONTRACT</span></div>
+          <div class="s1-sub">WHO ARE YOU IN THIS DARE?</div>
+          <div class="role-cards">
+            <div class="role-card watcher" id="card-w">
+              <div class="rc-emoji">😈</div>
+              <div class="rc-name">WATCHER</div>
+              <div class="rc-desc">SET THE DARE<br>HOLD THE DOSH<br>JUDGE THE PROOF</div>
+            </div>
+            <div class="role-card doer" id="card-d">
+              <div class="rc-emoji">🩸</div>
+              <div class="rc-name">DOER</div>
+              <div class="rc-desc">ACCEPT THE PAIN<br>FILM THE PROOF<br>EARN THE DOSH</div>
+            </div>
+          </div>
+          <button class="begin-btn" id="begin-btn">SELECT A ROLE TO BEGIN</button>
+        </div>
+
+        <!-- SCREEN 2: CONTRACT -->
+        <div class="screen" id="s2">
+          <div class="role-badge" id="role-badge">WATCHER</div>
+          <div class="canvas-wrap">
+            <canvas id="sigil" width="224" height="224"></canvas>
+            <div class="timer-num" id="timer-num">30</div>
+          </div>
+          <div class="transcript" id="transcript">HOLD MIC · SPEAK THE TERMS OF THE DARE</div>
+          <div class="mic-row">
+            <button class="mic-btn" id="mic-btn">🎙</button>
+            <div class="mic-hint">
+              <b id="mic-status">READY</b>
+              Speak dare terms. Words<br>light up soul nodes.
+            </div>
+          </div>
+          <div class="nodes-bar">NODES: <span id="nodes-lit">0</span>/9 · NEED 3 TO SEAL</div>
+          <button class="seal-btn" id="seal-btn">⚡ SEAL THE DEAL</button>
+        </div>
+
+        <!-- SCREEN 3: SEALED -->
+        <div class="screen" id="s3">
+          <div class="sealed-title">CONTRACT<br>SEALED ⚡</div>
+          <canvas id="sigil-sealed" width="190" height="190"></canvas>
+          <div class="hash-box">
+            <b>CONTRACT HASH</b>
+            <span id="hash-val">0x...</span>
+          </div>
+          <button class="dl-btn" id="dl-btn">↓ DOWNLOAD CONTRACT SVG</button>
+          <button class="reset-btn" id="reset-btn">NEW CONTRACT</button>
+        </div>
+
+      </div>
+      <!-- ═══ /APP ═══ -->
+
+      <div class="phone-bar"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA ─────────────────────────────────────────────────
+const INNER = [
+  {key:'entropy',     emoji:'💀',triad:'shadow',label:'ENTROPY',   angle:0  },
+  {key:'manipulation',emoji:'🕷',triad:'shadow',label:'MANIP',     angle:40 },
+  {key:'persona',     emoji:'🎭',triad:'shadow',label:'PERSONA',   angle:80 },
+  {key:'courage',     emoji:'⚔', triad:'light', label:'COURAGE',  angle:130},
+  {key:'empathy',     emoji:'💜',triad:'light', label:'EMPATHY',   angle:170},
+  {key:'devotion',    emoji:'🕊',triad:'light', label:'DEVOTION',  angle:210},
+  {key:'focus',       emoji:'🎯',triad:'mind',  label:'FOCUS',     angle:255},
+  {key:'logic',       emoji:'⚡', triad:'mind',  label:'LOGIC',     angle:295},
+  {key:'will',        emoji:'🔥',triad:'mind',  label:'WILL',      angle:335},
+];
+const OUTER = [
+  {key:'sadist',    emoji:'😈',label:'SADIST',    angle:270},
+  {key:'masochist', emoji:'🩸',label:'MASOCHIST', angle:90 },
+];
+const TCOL = {shadow:'#ff4444',light:'#ff8c00',mind:'#7c9cbf'};
+const WORDS = {
+  pain:'entropy',hurt:'entropy',dark:'entropy',suffer:'entropy',kill:'entropy',
+  control:'manipulation',trick:'manipulation',manipulate:'manipulation',
+  fake:'persona',mask:'persona',act:'persona',play:'persona',
+  dare:'courage',risk:'courage',brave:'courage',face:'courage',fear:'courage',
+  trust:'empathy',feel:'empathy',care:'empathy',heart:'empathy',
+  promise:'devotion',swear:'devotion',honour:'devotion',oath:'devotion',vow:'devotion',
+  watch:'focus',see:'focus',observe:'focus',record:'focus',film:'focus',
+  prove:'logic',think:'logic',reason:'logic',judge:'logic',
+  will:'will',must:'will',force:'will',power:'will',dosh:'will',pay:'will',money:'will',
+};
+
+// ── STATE ────────────────────────────────────────────────
+let role=null, litNodes=new Set(), outerLit=new Set();
+let contractTerms='', contractHash='', svgContent='';
+let timer=null, rec=null, isListening=false;
+
+// ── HELPERS ──────────────────────────────────────────────
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function npos(deg,r,cx,cy){
+  const a=(deg-90)*Math.PI/180;
+  return{x:cx+r*Math.cos(a),y:cy+r*Math.sin(a)};
+}
+
+// ── DRAW SIGIL ───────────────────────────────────────────
+function drawSigil(canvas,sealed){
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width,H=canvas.height,cx=W/2,cy=H/2;
+  const ri=W*.29,ro=W*.41,nr=W*.052;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#050505';ctx.fillRect(0,0,W,H);
+
+  // rings
+  [[ro,'rgba(255,140,0,0.07)'],[ri,'rgba(255,255,255,0.05)']].forEach(([r,c])=>{
+    ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
+    ctx.strokeStyle=c;ctx.lineWidth=0.5;ctx.stroke();
+  });
+
+  // web lines between lit inner nodes
+  const litArr=INNER.filter(n=>litNodes.has(n.key));
+  for(let i=0;i<litArr.length;i++)for(let j=i+1;j<litArr.length;j++){
+    const a=npos(litArr[i].angle,ri,cx,cy),b=npos(litArr[j].angle,ri,cx,cy);
+    ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);
+    ctx.strokeStyle='rgba(255,140,0,0.22)';ctx.lineWidth=0.7;
+    ctx.shadowColor='#ff8c00';ctx.shadowBlur=4;ctx.stroke();ctx.shadowBlur=0;
+  }
+
+  // outer→inner lines
+  OUTER.filter(n=>outerLit.has(n.key)).forEach(on=>{
+    const op=npos(on.angle,ro,cx,cy);
+    const col=on.key==='sadist'?'rgba(255,68,68,0.18)':'rgba(255,140,0,0.18)';
+    litArr.forEach(inn=>{
+      const ip=npos(inn.angle,ri,cx,cy);
+      ctx.beginPath();ctx.moveTo(op.x,op.y);ctx.lineTo(ip.x,ip.y);
+      ctx.strokeStyle=col;ctx.lineWidth=0.5;ctx.stroke();
+    });
+  });
+
+  // inner nodes
+  INNER.forEach(n=>{
+    const p=npos(n.angle,ri,cx,cy),lit=litNodes.has(n.key),col=TCOL[n.triad];
+    if(lit){
+      const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,nr*2);
+      g.addColorStop(0,col+'44');g.addColorStop(1,'transparent');
+      ctx.beginPath();ctx.arc(p.x,p.y,nr*2,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+    }
+    ctx.beginPath();ctx.arc(p.x,p.y,nr,0,Math.PI*2);
+    ctx.fillStyle=lit?col:'rgba(255,255,255,0.04)';ctx.fill();
+    ctx.strokeStyle=lit?col:'rgba(255,255,255,0.09)';ctx.lineWidth=lit?1.2:.4;ctx.stroke();
+    ctx.font=`${nr*1.15}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.globalAlpha=lit?1:.2;ctx.fillText(n.emoji,p.x,p.y);ctx.globalAlpha=1;
+    const lp=npos(n.angle,ri*1.3,cx,cy);
+    ctx.font=`${W*.026}px 'Share Tech Mono',monospace`;
+    ctx.fillStyle=lit?col:'rgba(255,255,255,0.12)';ctx.fillText(n.label,lp.x,lp.y);
+  });
+
+  // outer nodes
+  OUTER.forEach(n=>{
+    const p=npos(n.angle,ro,cx,cy),lit=outerLit.has(n.key);
+    const col=n.key==='sadist'?'#ff4444':'#ff8c00';
+    if(lit){
+      const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,nr*2.5);
+      g.addColorStop(0,n.key==='sadist'?'rgba(255,68,68,0.3)':'rgba(255,140,0,0.25)');
+      g.addColorStop(1,'transparent');
+      ctx.beginPath();ctx.arc(p.x,p.y,nr*2.5,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+    }
+    ctx.beginPath();ctx.arc(p.x,p.y,nr*1.3,0,Math.PI*2);
+    ctx.fillStyle=lit?col:'rgba(255,255,255,0.03)';ctx.fill();
+    ctx.strokeStyle=lit?col:'rgba(255,255,255,0.07)';ctx.lineWidth=lit?1.4:.4;ctx.stroke();
+    ctx.font=`${nr*1.3}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.globalAlpha=lit?1:.15;ctx.fillText(n.emoji,p.x,p.y);ctx.globalAlpha=1;
+    const lp=npos(n.angle,ro*1.22,cx,cy);
+    ctx.font=`${W*.028}px 'Share Tech Mono',monospace`;
+    ctx.fillStyle=lit?col:'rgba(255,255,255,0.08)';ctx.fillText(n.label,lp.x,lp.y);
+  });
+
+  // center
+  if(sealed){
+    ctx.beginPath();ctx.arc(cx,cy,ro*1.06,0,Math.PI*2);
+    ctx.strokeStyle='#ff8c00';ctx.lineWidth=1.2;
+    ctx.shadowColor='#ff8c00';ctx.shadowBlur=10;ctx.stroke();ctx.shadowBlur=0;
+    ctx.font=`${W*.1}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('⚡',cx,cy);
+  } else {
+    ctx.beginPath();ctx.arc(cx,cy,3,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,140,0,0.5)';ctx.fill();
+  }
+}
+
+// ── ROLE SELECT ──────────────────────────────────────────
+document.getElementById('card-w').addEventListener('click',()=>selectRole('watcher'));
+document.getElementById('card-d').addEventListener('click',()=>selectRole('doer'));
+
+function selectRole(r){
+  role=r;
+  document.querySelectorAll('.role-card').forEach(c=>c.classList.remove('sel'));
+  document.getElementById(r==='watcher'?'card-w':'card-d').classList.add('sel');
+  const btn=document.getElementById('begin-btn');
+  btn.textContent='ENTER CONTRACT →';btn.classList.add('on');
+}
+
+document.getElementById('begin-btn').addEventListener('click',()=>{
+  if(!role)return;
+  outerLit=new Set([role==='watcher'?'sadist':'masochist']);
+  litNodes=new Set();
+  document.getElementById('role-badge').textContent=role==='watcher'?'😈 WATCHER':'🩸 DOER';
+  document.getElementById('role-badge').className='role-badge '+role;
+  document.getElementById('nodes-lit').textContent='0';
+  document.getElementById('seal-btn').classList.remove('on');
+  document.getElementById('transcript').textContent='HOLD MIC · SPEAK THE TERMS OF THE DARE';
+  document.getElementById('timer-num').style.display='none';
+  show('s2');
+  drawSigil(document.getElementById('sigil'),false);
+});
+
+// ── MIC ──────────────────────────────────────────────────
+const micBtn=document.getElementById('mic-btn');
+micBtn.addEventListener('mousedown',startMic);
+micBtn.addEventListener('touchstart',e=>{e.preventDefault();startMic();},{passive:false});
+micBtn.addEventListener('mouseup',stopMic);
+micBtn.addEventListener('mouseleave',stopMic);
+micBtn.addEventListener('touchend',stopMic);
+
+function startMic(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){document.getElementById('transcript').textContent='SPEECH NOT SUPPORTED IN THIS BROWSER';return;}
+  if(isListening)return;
+  isListening=true;
+  rec=new SR();rec.continuous=true;rec.interimResults=true;rec.lang='en-GB';
+  rec.onresult=e=>{
+    let final='',interim='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      const t=e.results[i][0].transcript.toLowerCase();
+      if(e.results[i].isFinal){final+=t;processWords(t);}else interim+=t;
+    }
+    document.getElementById('transcript').textContent=(final||interim).slice(-70)||'LISTENING...';
+    if(final)contractTerms+=' '+final;
+  };
+  rec.onerror=()=>{isListening=false;micBtn.classList.remove('on');document.getElementById('mic-status').textContent='READY';};
+  rec.start();
+  micBtn.classList.add('on');
+  document.getElementById('mic-status').textContent='LISTENING...';
+}
+
+function stopMic(){
+  isListening=false;
+  if(rec){try{rec.stop();}catch(e){}rec=null;}
+  micBtn.classList.remove('on');
+  document.getElementById('mic-status').textContent='READY';
+}
+
+function processWords(text){
+  let changed=false;
+  text.split(/\s+/).forEach(w=>{
+    const node=WORDS[w.replace(/[^a-z]/g,'')];
+    if(node&&!litNodes.has(node)){litNodes.add(node);changed=true;}
+  });
+  if(changed){
+    drawSigil(document.getElementById('sigil'),false);
+    const c=litNodes.size;
+    document.getElementById('nodes-lit').textContent=c;
+    if(c>=3)document.getElementById('seal-btn').classList.add('on');
+  }
+}
+
+// ── SEAL ─────────────────────────────────────────────────
+document.getElementById('seal-btn').addEventListener('click',()=>{
+  if(!document.getElementById('seal-btn').classList.contains('on'))return;
+  stopMic();
+  document.getElementById('seal-btn').style.display='none';
+  micBtn.style.pointerEvents='none';micBtn.style.opacity='0.3';
+  contractHash='0x'+Array.from({length:8},()=>Math.floor(Math.random()*256).toString(16).padStart(2,'0')).join('').toUpperCase();
+  let secs=30;
+  const overlay=document.getElementById('timer-num');
+  overlay.style.display='block';overlay.textContent=secs;
+  const canvas=document.getElementById('sigil');
+  timer=setInterval(()=>{
+    secs--;overlay.textContent=secs;
+    drawSigil(canvas,false);
+    // progress arc
+    const ctx=canvas.getContext('2d');
+    const W=canvas.width,cx=W/2,cy=W/2,r=W*.44;
+    ctx.beginPath();ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+(1-secs/30)*Math.PI*2);
+    ctx.strokeStyle='#ff8c00';ctx.lineWidth=2;
+    ctx.shadowColor='#ff8c00';ctx.shadowBlur=6;ctx.stroke();ctx.shadowBlur=0;
+    if(secs<=0){
+      clearInterval(timer);overlay.style.display='none';
+      svgContent=buildSVG();
+      document.getElementById('hash-val').textContent=contractHash+' · BASE MAINNET';
+      drawSigil(document.getElementById('sigil-sealed'),true);
+      show('s3');
+    }
+  },1000);
+});
+
+// ── SVG BUILD ────────────────────────────────────────────
+function buildSVG(){
+  const W=400,cx=200,cy=200,ri=90,ro=140,ts=new Date().toISOString();
+  const litArr=INNER.filter(n=>litNodes.has(n.key));
+  let web='';
+  for(let i=0;i<litArr.length;i++)for(let j=i+1;j<litArr.length;j++){
+    const ai=(litArr[i].angle-90)*Math.PI/180,aj=(litArr[j].angle-90)*Math.PI/180;
+    web+=`<line x1="${(cx+ri*Math.cos(ai)).toFixed(1)}" y1="${(cy+ri*Math.sin(ai)).toFixed(1)}" x2="${(cx+ri*Math.cos(aj)).toFixed(1)}" y2="${(cy+ri*Math.sin(aj)).toFixed(1)}" stroke="rgba(255,140,0,0.3)" stroke-width="0.8"/>`;
+  }
+  const inner=litArr.map(n=>{
+    const a=(n.angle-90)*Math.PI/180,x=cx+ri*Math.cos(a),y=cy+ri*Math.sin(a),col=TCOL[n.triad];
+    return`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="8" fill="${col}"/><text x="${x.toFixed(1)}" y="${(y+18).toFixed(1)}" font-family="monospace" font-size="8" fill="${col}" text-anchor="middle">${n.label}</text>`;
+  }).join('');
+  const outer=OUTER.filter(n=>outerLit.has(n.key)).map(n=>{
+    const a=(n.angle-90)*Math.PI/180,x=cx+ro*Math.cos(a),y=cy+ro*Math.sin(a),col=n.key==='sadist'?'#ff4444':'#ff8c00';
+    return`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="11" fill="${col}"/><text x="${x.toFixed(1)}" y="${(y+20).toFixed(1)}" font-family="monospace" font-size="9" fill="${col}" text-anchor="middle">${n.label}</text>`;
+  }).join('');
+  return`<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${W}" viewBox="0 0 ${W} ${W}"><rect width="${W}" height="${W}" fill="#050505"/><circle cx="${cx}" cy="${cy}" r="${ro*1.06}" fill="none" stroke="#ff8c00" stroke-width="1" opacity="0.7"/><circle cx="${cx}" cy="${cy}" r="${ri}" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="0.5"/>${web}${inner}${outer}<circle cx="${cx}" cy="${cy}" r="4" fill="#ff8c00"/><text x="${cx}" y="${W-36}" font-family="monospace" font-size="9" fill="#ff8c00" text-anchor="middle">DARES4DOSH CONTRACT · ${contractHash}</text><text x="${cx}" y="${W-22}" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">${ts}</text><text x="${cx}" y="${W-8}" font-family="monospace" font-size="7" fill="#334155" text-anchor="middle">"${contractTerms.trim().slice(0,70)}"</text></svg>`;
+}
+
+// ── DOWNLOAD ─────────────────────────────────────────────
+document.getElementById('dl-btn').addEventListener('click',()=>{
+  const blob=new Blob([svgContent],{type:'image/svg+xml'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=`d4d_contract_${contractHash}.svg`;
+  a.click();URL.revokeObjectURL(url);
+});
+
+// ── RESET ────────────────────────────────────────────────
+document.getElementById('reset-btn').addEventListener('click',()=>{
+  clearInterval(timer);
+  role=null;litNodes=new Set();outerLit=new Set();
+  contractTerms='';contractHash='';svgContent='';isListening=false;
+  document.querySelectorAll('.role-card').forEach(c=>c.classList.remove('sel'));
+  document.getElementById('begin-btn').textContent='SELECT A ROLE TO BEGIN';
+  document.getElementById('begin-btn').classList.remove('on');
+  document.getElementById('seal-btn').style.display='';
+  document.getElementById('seal-btn').classList.remove('on');
+  micBtn.style.pointerEvents='';micBtn.style.opacity='';
+  show('s1');
+});
+</script>
+</body>
+</html>

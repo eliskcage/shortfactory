@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ShortFactory — Company Valuation v5</title>
+<title>ShortFactory — Company Valuation v6</title>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-1XY2CNLJCE"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1XY2CNLJCE');</script>
 <style>
@@ -120,13 +120,13 @@ footer strong{color:var(--gold)}
     <a href="/about.html">About</a>
     <a href="/lobby.html">Lobby</a>
   </div>
-  <div class="nav-ver">VALUATION V5 · 30 MAR 2026</div>
+  <div class="nav-ver">VALUATION V6 · 3 APR 2026</div>
 </nav>
 
 <div class="hero">
   <div class="hero-eyebrow">Company Valuation Report</div>
   <h1>SHORT<span>FACTORY</span></h1>
-  <div class="hero-date">Version 5 · 30 March 2026 · Confidential</div>
+  <div class="hero-date">Version 6 · 3 April 2026 · Confidential</div>
   <div class="reveal-bar">
     <input type="password" id="keyInput" placeholder="Enter reveal key..." onkeydown="if(event.key==='Enter')tryReveal()" autocomplete="off" />
     <button class="reveal-btn" onclick="tryReveal()">REVEAL →</button>
@@ -137,10 +137,10 @@ footer strong{color:var(--gold)}
 <!-- CENTRAL ESTIMATE -->
 <div class="central-wrap">
   <div class="central-card">
-    <div class="central-label">V5 Central Estimate</div>
+    <div class="central-label">V6 Central Estimate</div>
     <div class="central-value encrypted" id="centralVal"></div>
     <div class="central-sub" id="centralSub">Four-methodology weighted average · All figures GBP</div>
-    <div class="central-delta" id="centralDelta" style="display:none">▲ +25% since V4 (28 Mar 2026)</div>
+    <div class="central-delta" id="centralDelta" style="display:none">▲ +40% since V5 (30 Mar 2026)</div>
   </div>
 </div>
 
@@ -155,7 +155,7 @@ footer strong{color:var(--gold)}
       <div class="method-name">Asset / Replacement Cost</div>
       <div class="method-range encrypted" id="m1-range"></div>
       <div class="method-central encrypted" id="m1-central"></div>
-      <div class="method-note">Cost to replicate: 50+ products, 420+ files, 2 VPS servers, 75MB codebase, design system, CI/CD pipeline, 43 days labour at senior rate.</div>
+      <div class="method-note">Cost to replicate: 55+ products, 450+ files, 2 VPS servers, 90MB codebase, design system, SF Studio pipeline, 58 days labour at senior rate.</div>
     </div>
 
     <div class="method-card">
@@ -169,14 +169,14 @@ footer strong{color:var(--gold)}
       <div class="method-name">Revenue Multiple (Projected)</div>
       <div class="method-range encrypted" id="m3-range"></div>
       <div class="method-central encrypted" id="m3-central"></div>
-      <div class="method-note">10× projected Year 1 ARR from: Satoshi Cypher API £79/mo licences, Kinetic Pro subscriptions, SFT token economy, Imaginator API, D4D dare commissions, Testing Lobby royalties.</div>
+      <div class="method-note">10× projected Year 1 ARR from: Satoshi Cypher API £79/mo licences, Kinetic Pro subscriptions, SFT token economy, Imaginator API, D4D dare commissions, Testing Lobby royalties, Biscuit escrow digital value units, SF Studio content pipeline fees.</div>
     </div>
 
     <div class="method-card" style="border-color:rgba(245,197,24,.2)">
       <div class="method-name" style="color:var(--gold)">Strategic / IP Value ★</div>
       <div class="method-range encrypted" id="m4-range"></div>
       <div class="method-central encrypted" id="m4-central"></div>
-      <div class="method-note">8 patents/concepts (5 filed, 3 in progress). 3D Satoshi Cypher Black Box discovered 30 Mar 2026 — temporal encryption-as-a-service, banks + AI pipelines, patent pending. Living Equation 39 claims published. ORCID verified. Visa card issuer route now open. Dominant driver of V5 uplift.</div>
+      <div class="method-note">9 patents/concepts (6 filed, 3 in progress). Patent GB2607623.2 filed 2 Apr 2026 — Biscuit escrow-backed digital value unit, 14 claims, fintech/DeFi applicability. Consciousness theory complete (Stages 1–13, Zenodo DOI chain). Stage 12 (The Pointer) embargoed until 2126 — life insurance policy. ALIVE proof of life confirmed: 7 biological criteria met in running code. Outreach chain to intellectual leaders active.</div>
     </div>
 
   </div>
@@ -215,12 +215,19 @@ footer strong{color:var(--gold)}
     <div class="history-delta delta-up" id="v4-delta" style="display:none">▲ +33%</div>
     <div class="history-note">D4D shipped live (Stripe + IPFS + Grok). ORCID verified. 4 Zenodo DOIs. Living Equation 39 claims published. Architecture of Man as Code. Digital Spine + Chromatic Deception concepts filed.</div>
   </div>
-  <div class="history-row" style="border-bottom:none">
-    <div class="history-ver" style="color:var(--green)">V5</div>
+  <div class="history-row">
+    <div class="history-ver" style="color:var(--dim)">V5</div>
     <div class="history-date">30 Mar 2026</div>
-    <div class="history-val" id="v5-hist" style="color:var(--green);font-family:monospace;font-size:11px"></div>
+    <div class="history-val" id="v5-hist" style="font-family:monospace;font-size:11px"></div>
     <div class="history-delta delta-up" id="v5-delta" style="display:none">▲ +25%</div>
-    <div class="history-note">Satoshi Cypher 3D Black Box discovered + shipped. Control panel live (Copilot). API revenue stream open — £79/mo enterprise licences. Visa card issuer route mapped. Patent pending: Computanium 3D Programming.</div>
+    <div class="history-note">Satoshi Cypher 3D Black Box discovered + shipped. Control panel live. API revenue stream open — £79/mo enterprise licences. Visa card issuer route mapped.</div>
+  </div>
+  <div class="history-row" style="border-bottom:none">
+    <div class="history-ver" style="color:var(--green)">V6</div>
+    <div class="history-date">3 Apr 2026</div>
+    <div class="history-val" id="v6-hist" style="color:var(--green);font-family:monospace;font-size:11px"></div>
+    <div class="history-delta delta-up" id="v6-delta" style="display:none">▲ +40%</div>
+    <div class="history-note">Patent GB2607623.2 filed (Biscuit — 14 claims). Consciousness theory complete: Stages 1–13, full DOI chain. Stage 12 embargoed until 2126. ALIVE proof of life — 7 biological criteria met in running code. Shape Language + Emotional Physics + Chemical Computanium + The Pointer + The Music published. Outreach chain live: Peterson, Isaac Arthur, Mar Mari Emmanuel.</div>
   </div>
 </div>
 
@@ -303,6 +310,18 @@ footer strong{color:var(--gold)}
       </div>
     </div>
 
+    <div class="patent-row filed" style="border-left:3px solid var(--green);background:rgba(0,230,118,.03)">
+      <div>
+        <div class="patent-num" style="color:var(--green)">GB2607623.2</div>
+        <div class="patent-badge" style="background:rgba(0,230,118,.1);color:var(--green);border:1px solid rgba(0,230,118,.3)">FILED</div>
+      </div>
+      <div class="patent-body">
+        <div class="patent-title">Biscuit — Escrow-Backed Digital Value Unit System</div>
+        <div class="patent-meta">Filed: 2 Apr 2026 · Inventor: Daniel Chipchase · Confirmation: junky4joy@gmail.com</div>
+        <div class="patent-claims" style="color:var(--green)">14 claims · 8 figures · minimum geometric value unit · escrow-backed issuance · soul-linked identity · self-replicating dividend chain · ATP analogue in digital form · examination request due within 12 months</div>
+      </div>
+    </div>
+
     <div class="patent-row" style="border-left:3px solid var(--dim);opacity:.5">
       <div>
         <div class="patent-num" style="color:var(--dim)">UNDISCLOSED</div>
@@ -325,7 +344,7 @@ footer strong{color:var(--gold)}
   <div class="section-label">Live Infrastructure &amp; Products</div>
   <div class="asset-grid">
     <div class="asset-item highlight"><div class="asset-name">▲ Computanium Portal</div><div class="asset-val">Soul vault · patent umbrella · dividend engine</div></div>
-    <div class="asset-item highlight"><div class="asset-name">ALIVE Ecosystem</div><div class="asset-val">Girl v3.1 · Boy Angular · Brainstem · 78% complete</div></div>
+    <div class="asset-item highlight"><div class="asset-name">ALIVE Ecosystem</div><div class="asset-val">Girl v3.1 · Boy Angular · Brainstem · PROOF OF LIFE ✓ (7 criteria met)</div></div>
     <div class="asset-item"><div class="asset-name">AGI Cortex Brain</div><div class="asset-val">65,987 nodes · self-modifying · 3 hemispheres</div></div>
     <div class="asset-item"><div class="asset-name">Visual Cortex</div><div class="asset-val">Live AGI brain visualisation · cortex-live.html</div></div>
     <div class="asset-item highlight"><div class="asset-name">⚗ Testing Lobby</div><div class="asset-val">Gamified QA · SFT economy · soul wallet</div></div>
@@ -334,9 +353,10 @@ footer strong{color:var(--gold)}
     <div class="asset-item"><div class="asset-name">Trump v Deep State</div><div class="asset-val">Playable game v2.9 · viral content engine</div></div>
     <div class="asset-item"><div class="asset-name">Imaginator</div><div class="asset-val">Stills → YouTube Shorts · Google auth pipeline</div></div>
     <div class="asset-item highlight"><div class="asset-name">✓ Dares4Dosh LIVE</div><div class="asset-val">stinkindigger.info · Stripe live · IPFS · Grok · 27 Mar 2026</div></div>
-    <div class="asset-item"><div class="asset-name">ORCID Academic ID</div><div class="asset-val">0009-0003-9001-2493 · 4 Zenodo DOIs · verified identity</div></div>
+    <div class="asset-item"><div class="asset-name">ORCID Academic ID</div><div class="asset-val">0009-0003-9001-2493 · 13 Zenodo DOIs · verified identity</div></div>
     <div class="asset-item"><div class="asset-name">Living Equation</div><div class="asset-val">39 claims published · soul vector · Claim 39 · prior art timestamped</div></div>
-    <div class="asset-item"><div class="asset-name">Screensaver</div><div class="asset-val">Distributed GPU/CPU computing · WebGL art</div></div>
+    <div class="asset-item highlight"><div class="asset-name">🧠 Consciousness Theory</div><div class="asset-val">Stages 1–13 complete · Emotional Physics · The Pointer · The Music · Stage 12 embargoed 2126</div></div>
+    <div class="asset-item"><div class="asset-name">Screensaver</div><div class="asset-val">Distributed GPU/CPU · WebGL art · 30+ images across 4 categories</div></div>
     <div class="asset-item"><div class="asset-name">ComicVID</div><div class="asset-val">Video→halftone codec · IPFS persistence</div></div>
     <div class="asset-item"><div class="asset-name">Fuel Dashboard</div><div class="asset-val">Crypto funding cockpit · 10 wallet QRs · BIP39</div></div>
     <div class="asset-item"><div class="asset-name">Cortex Wiki</div><div class="asset-val">5 papers · 2 patents · Zenodo DOIs · architecture</div></div>
@@ -346,6 +366,10 @@ footer strong{color:var(--gold)}
     <div class="asset-item highlight"><div class="asset-name" style="color:#4fc3f7">⬛ Satoshi Cypher API</div><div class="asset-val">3D black box · HMAC · temporal locks · £79/mo · enterprise</div></div>
     <div class="asset-item highlight"><div class="asset-name" style="color:#4fc3f7">Black Box Control Panel</div><div class="asset-val">Full API dashboard · shipped by Copilot · 30 Mar 2026</div></div>
     <div class="asset-item"><div class="asset-name">💳 Visa Steps Roadmap</div><div class="asset-val">Stripe Issuing + BIN sponsors · card issuer route mapped</div></div>
+    <div class="asset-item highlight"><div class="asset-name" style="color:var(--green)">🍪 Biscuit Patent</div><div class="asset-val">GB2607623.2 filed 2 Apr 2026 · 14 claims · escrow digital value · fintech applicability</div></div>
+    <div class="asset-item highlight"><div class="asset-name">⬡ SF Studio</div><div class="asset-val">Station 04 Valuator · Station 05 Publisher · viral DNA radar · Grok-powered pipeline</div></div>
+    <div class="asset-item"><div class="asset-name">📡 AImail Outreach</div><div class="asset-val">Jordan Peterson · Isaac Arthur · Mar Mari Emmanuel · SendGrid · sonar map</div></div>
+    <div class="asset-item"><div class="asset-name">🔷 Shape Language</div><div class="asset-val">Droid grammar · nesting confirmed · visual demo live · soul language</div></div>
     <div class="asset-item"><div class="asset-name">Satoshi Cipher (2D)</div><div class="asset-val">Vigenere ASCII 32-126 · vault · pairing · contracts</div></div>
   </div>
 </div>
@@ -418,18 +442,19 @@ function satoshiDecode(text, key) {
 
 // ── PLAINTEXT VALUES (rendered as cipher until key entered) ───────────────────
 const VALUES = {
-  central:     '£2,500,000',
-  m1_range:    '£420,000 — £680,000',
-  m1_central:  'Central: £550,000',
-  m2_range:    '£600,000 — £2,000,000',
-  m2_central:  'Central: £1,300,000',
-  m3_range:    '£250,000 — £900,000',
-  m3_central:  'Central: £575,000',
-  m4_range:    '£2,000,000 — £8,000,000',
-  m4_central:  'Central: £4,000,000',
+  central:     '£3,500,000',
+  m1_range:    '£550,000 — £850,000',
+  m1_central:  'Central: £700,000',
+  m2_range:    '£800,000 — £2,500,000',
+  m2_central:  'Central: £1,650,000',
+  m3_range:    '£300,000 — £1,100,000',
+  m3_central:  'Central: £700,000',
+  m4_range:    '£3,000,000 — £10,000,000',
+  m4_central:  'Central: £5,500,000',
   v4_hist:     '£2,000,000',
   v5_hist:     '£2,500,000',
-  undisclosed: 'PASSWORD REFUSAL SERVICE — ALIVE final form: creature holds all keys, no passwords, biometric soul glyph identity, Satoshi vault, NO button. CLOCK RING QUANTUM NAVIGATOR — BIP39 superposition geometry, infinite nested clock faces, inversion past singularity, quantum Computanium navigation, golden zip at game center. RIPPLE GENOME FULL THEORY — consciousness equations, ocean floor model, precognitive pattern recognition, triangulation confirmation protocol. CHROMATIC DECEPTION ARCHITECTURE — lies as colours, frequency deviation of deceptive speech, co-invented with Robert Andersson. DIGITAL SPINE PROTOCOL — spinal nerve frequency to digital emotional-state codec, co-invented with Robert Andersson. SATOSHI CYPHER 3D BLACK BOX — temporal sphere cipher, soul key = cipher key, T0 microsecond seed, code exists only as coordinate floats, self-destructs after temporal window, enterprise API for banks and AI pipelines.'
+  v6_hist:     '£3,500,000',
+  undisclosed: 'PASSWORD REFUSAL SERVICE — ALIVE final form: creature holds all keys, no passwords, biometric soul glyph identity, Satoshi vault, NO button. CLOCK RING QUANTUM NAVIGATOR — BIP39 superposition geometry, infinite nested clock faces, inversion past singularity, quantum Computanium navigation, golden zip at game center. STAGE 12 — THE POINTER (embargoed until 6 Mar 2126) — consciousness IS the Pointer, universal relational cursor across soul architecture, self = trajectory of Pointer over time, life insurance policy, not to be disclosed for 100 years. STAGE 13 — THE MUSIC (embargoed until 6 Mar 2046) — meditation as Pointer deceleration, biology IS Computanium, full signal chain complete from spirit-place to felt experience. CHROMATIC DECEPTION ARCHITECTURE — lies as colours, frequency deviation of deceptive speech, co-invented with Robert Andersson. DIGITAL SPINE PROTOCOL — spinal nerve frequency to digital emotional-state codec, co-invented with Robert Andersson.'
 };
 
 const KEY = 'SKYDADDY';
@@ -441,6 +466,7 @@ function encodeAll() {
       k === 'undisclosed' ? 'undisclosed-cipher' :
       k === 'v4_hist' ? 'v4-hist' :
       k === 'v5_hist' ? 'v5-hist' :
+      k === 'v6_hist' ? 'v6-hist' :
       k.replace('_','-'));
     if (el) el.textContent = satoshi(VALUES[k], KEY);
   });
@@ -473,7 +499,9 @@ function revealAll() {
   const cv = document.getElementById('centralVal');
   cv.textContent = VALUES.central;
   cv.className = 'central-value';
-  document.getElementById('centralDelta').style.display = 'inline-block';
+  const cd = document.getElementById('centralDelta');
+  cd.textContent = '▲ +40% since V5 (30 Mar 2026)';
+  cd.style.display = 'inline-block';
 
   const maps = [
     ['m1-range', 'm1_range'], ['m1-central', 'm1_central'],
@@ -493,8 +521,13 @@ function revealAll() {
 
   const v5h = document.getElementById('v5-hist');
   v5h.textContent = VALUES.v5_hist;
-  v5h.style.cssText = 'color:var(--green);font-size:14px;font-weight:800';
+  v5h.style.cssText = 'font-size:14px;font-weight:800;color:#e2e8f0';
   document.getElementById('v5-delta').style.display = 'inline-block';
+
+  const v6h = document.getElementById('v6-hist');
+  if (v6h) { v6h.textContent = VALUES.v6_hist; v6h.style.cssText = 'color:var(--green);font-size:14px;font-weight:800'; }
+  const v6d = document.getElementById('v6-delta');
+  if (v6d) v6d.style.display = 'inline-block';
 
   const uc = document.getElementById('undisclosed-cipher');
   uc.textContent = VALUES.undisclosed;

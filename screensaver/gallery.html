@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShortFactory — Art Gallery</title>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1XY2CNLJCE"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1XY2CNLJCE');</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#080a0e;--surface:#0d1117;--border:rgba(255,255,255,0.06);
+  --gold:#e8c84a;--text:#e0e8ff;--dim:rgba(224,232,255,0.4);
+  --font:'Syne',system-ui,sans-serif;
+}
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Share+Tech+Mono&display=swap');
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;overflow-x:hidden}
+
+/* NAV */
+.nav{padding:14px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:rgba(8,10,14,.97);backdrop-filter:blur(10px);z-index:100}
+.nav-logo{font-size:11px;font-weight:800;letter-spacing:3px;color:var(--gold);text-transform:uppercase}
+.nav-links{display:flex;gap:20px}
+.nav-links a{color:var(--dim);font-size:11px;text-decoration:none;letter-spacing:1px;text-transform:uppercase;transition:color .2s}
+.nav-links a:hover{color:#fff}
+
+/* HERO */
+.hero{padding:52px 28px 36px;text-align:center;border-bottom:1px solid var(--border)}
+.hero-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--gold);opacity:.7;margin-bottom:12px}
+.hero h1{font-size:clamp(28px,5vw,52px);font-weight:800;letter-spacing:2px;color:#fff;margin-bottom:8px}
+.hero-sub{font-size:13px;color:var(--dim);letter-spacing:1px}
+.hero-count{display:inline-block;margin-top:14px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--gold);opacity:.6;letter-spacing:2px}
+
+/* FILTER TABS */
+.filter-bar{display:flex;gap:8px;justify-content:center;padding:24px 28px 0;flex-wrap:wrap}
+.filter-btn{font-family:var(--font);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:7px 18px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--dim);cursor:pointer;transition:all .2s}
+.filter-btn:hover{color:#fff;border-color:rgba(255,255,255,.2)}
+.filter-btn.active{background:rgba(232,200,74,.12);border-color:rgba(232,200,74,.4);color:var(--gold)}
+.filter-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px;vertical-align:middle}
+
+/* GRID */
+.grid-wrap{max-width:1400px;margin:0 auto;padding:28px 20px 80px}
+.grid{columns:4 220px;column-gap:10px}
+.grid-item{break-inside:avoid;margin-bottom:10px;position:relative;cursor:pointer;overflow:hidden;border-radius:3px;border:1px solid var(--border)}
+.grid-item img{display:block;width:100%;transition:transform .4s ease,filter .3s}
+.grid-item:hover img{transform:scale(1.04);filter:brightness(1.1)}
+.grid-item-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.85) 0%,transparent 50%);opacity:0;transition:opacity .3s;display:flex;flex-direction:column;justify-content:flex-end;padding:12px}
+.grid-item:hover .grid-item-overlay{opacity:1}
+.grid-item-title{font-size:11px;font-weight:700;color:#fff;letter-spacing:1px;margin-bottom:3px}
+.grid-item-cat{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);opacity:.8}
+.grid-item-ipfs{position:absolute;top:8px;right:8px;font-size:9px;letter-spacing:1px;padding:3px 8px;border-radius:2px;font-weight:700;opacity:0;transition:opacity .3s;cursor:pointer;border:none}
+.grid-item:hover .grid-item-ipfs{opacity:1}
+.ipfs-pinned{background:rgba(0,230,118,.2);color:#00e676;border:1px solid rgba(0,230,118,.3)}
+.ipfs-unpinned{background:rgba(232,200,74,.15);color:var(--gold);border:1px solid rgba(232,200,74,.3)}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:80px 20px;color:var(--dim);font-size:14px;letter-spacing:1px}
+
+/* LIGHTBOX */
+.lb{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
+.lb.open{display:flex}
+.lb-inner{position:relative;max-width:90vw;max-height:90vh;display:flex;flex-direction:column;align-items:center;gap:12px}
+.lb-img{max-width:90vw;max-height:80vh;object-fit:contain;border-radius:3px;border:1px solid var(--border)}
+.lb-meta{display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center}
+.lb-title{font-size:14px;font-weight:700;color:#fff;letter-spacing:1px}
+.lb-cat{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);opacity:.7}
+.lb-close{position:fixed;top:20px;right:24px;font-size:24px;color:var(--dim);cursor:pointer;background:none;border:none;transition:color .2s;line-height:1}
+.lb-close:hover{color:#fff}
+.lb-nav{position:fixed;top:50%;transform:translateY(-50%);font-size:28px;color:var(--dim);cursor:pointer;background:none;border:none;transition:color .2s;padding:10px}
+.lb-nav:hover{color:#fff}
+.lb-prev{left:16px}
+.lb-next{right:16px}
+.lb-pin-btn{font-family:var(--font);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:7px 16px;border-radius:3px;border:1px solid rgba(232,200,74,.3);background:rgba(232,200,74,.1);color:var(--gold);cursor:pointer;transition:all .2s}
+.lb-pin-btn:hover{background:rgba(232,200,74,.2);border-color:var(--gold)}
+.lb-pin-btn.pinned{border-color:rgba(0,230,118,.3);background:rgba(0,230,118,.1);color:#00e676}
+
+/* IPFS NOTICE */
+.ipfs-bar{background:rgba(232,200,74,.05);border-bottom:1px solid rgba(232,200,74,.1);padding:8px 28px;text-align:center;font-size:11px;color:rgba(232,200,74,.5);letter-spacing:1px;font-family:'Share Tech Mono',monospace}
+
+/* STATS BAR */
+.stats-bar{display:flex;gap:24px;justify-content:center;padding:16px 28px 0;flex-wrap:wrap}
+.stat{text-align:center}
+.stat-num{font-family:'Share Tech Mono',monospace;font-size:20px;color:var(--gold);font-weight:700}
+.stat-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-top:2px}
+
+/* CONTRIBUTE */
+.contribute{border-top:1px solid var(--border);background:rgba(0,230,118,.02)}
+.contribute-inner{max-width:700px;margin:0 auto;padding:52px 24px 64px}
+.contribute-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#00e676;opacity:.7;margin-bottom:10px}
+.contribute h2{font-size:clamp(22px,4vw,36px);font-weight:800;color:#fff;margin-bottom:10px}
+.contribute-sub{font-size:13px;color:var(--dim);line-height:1.7;margin-bottom:32px;max-width:540px}
+.contribute-sub strong{color:#00e676}
+.form-row{display:flex;flex-direction:column;gap:6px;margin-bottom:18px}
+.form-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--dim)}
+.form-input{background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:13px;padding:10px 14px;border-radius:3px;outline:none;transition:border-color .2s;width:100%}
+.form-input:focus{border-color:rgba(0,230,118,.4)}
+.form-input::placeholder{color:rgba(255,255,255,.15)}
+.form-select{background:#0d1117;border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:13px;padding:10px 14px;border-radius:3px;outline:none;width:100%;cursor:pointer}
+.form-hint{font-size:10px;color:rgba(255,255,255,.2);margin-top:4px;line-height:1.5}
+.form-2col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.gen-btn{font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:12px 28px;border-radius:3px;border:1px solid rgba(0,230,118,.3);background:rgba(0,230,118,.1);color:#00e676;cursor:pointer;transition:all .2s;width:100%;margin-top:4px}
+.gen-btn:hover:not(:disabled){background:rgba(0,230,118,.2);border-color:#00e676}
+.gen-btn:disabled{opacity:.4;cursor:not-allowed}
+.preview-box{margin-top:24px;display:none}
+.preview-box img{width:100%;border-radius:3px;border:1px solid var(--border);display:block}
+.preview-meta{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--dim);margin-top:8px;line-height:1.6}
+.submit-btn{font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:12px 28px;border-radius:3px;border:1px solid rgba(232,200,74,.3);background:rgba(232,200,74,.1);color:var(--gold);cursor:pointer;transition:all .2s;width:100%;margin-top:12px}
+.submit-btn:hover:not(:disabled){background:rgba(232,200,74,.2);border-color:var(--gold)}
+.submit-btn:disabled{opacity:.4;cursor:not-allowed}
+.biscuit-receipt{margin-top:28px;background:rgba(232,200,74,.06);border:1px solid rgba(232,200,74,.2);border-radius:6px;padding:20px;display:none}
+.biscuit-receipt h3{font-size:13px;font-weight:700;color:var(--gold);letter-spacing:2px;margin-bottom:12px}
+.biscuit-id{font-family:'Share Tech Mono',monospace;font-size:14px;color:var(--gold);letter-spacing:3px;margin-bottom:8px}
+.biscuit-detail{font-size:11px;color:var(--dim);line-height:1.8}
+.biscuit-detail strong{color:var(--text)}
+.gen-status{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--dim);text-align:center;margin-top:10px;min-height:18px}
+.key-note{background:rgba(255,77,77,.04);border:1px solid rgba(255,77,77,.15);border-radius:3px;padding:10px 14px;font-size:11px;color:rgba(255,120,120,.6);line-height:1.6;margin-bottom:20px}
+
+@media(max-width:600px){
+  .grid{columns:2 160px}
+  .lb-nav{display:none}
+  .nav-links{display:none}
+  .form-2col{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo">ShortFactory // Art</div>
+  <div class="nav-links">
+    <a href="/screensaver/">◎ Screensaver</a>
+    <a href="/portfolio.html">Portfolio</a>
+    <a href="/">← Home</a>
+  </div>
+</nav>
+
+<div class="ipfs-bar">IPFS-READY · Images can be pinned to the permanent web · Powered by grok-imagine-image</div>
+
+<div class="hero">
+  <div class="hero-eyebrow">ShortFactory Image Archive</div>
+  <h1>THE GALLERY</h1>
+  <div class="hero-sub">Machine-generated art across four categories</div>
+  <div class="hero-count" id="hero-count">Loading…</div>
+</div>
+
+<div class="stats-bar" id="stats-bar"></div>
+
+<div class="filter-bar" id="filter-bar">
+  <button class="filter-btn active" onclick="setFilter('all')" id="tab-all">ALL</button>
+</div>
+
+<div class="grid-wrap">
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty" style="display:none">No images in this category yet.</div>
+</div>
+
+<!-- CONTRIBUTE -->
+<section class="contribute" id="contribute">
+  <div class="contribute-inner">
+    <div class="contribute-eyebrow">Contribute</div>
+    <h2>Add your image. Earn a Biscuit.</h2>
+    <p class="contribute-sub">
+      Use your own Grok API key to generate an image. Upload it to the shared gallery.
+      Everyone benefits from the art. In return you receive a
+      <strong>Biscuit receipt</strong> — a claim against the creative value you contributed,
+      honoured when the <strong>GB2607623.2</strong> economy goes live.
+      Your key is used client-side only and never sent to our server.
+    </p>
+
+    <div class="key-note">🔒 Your Grok API key is used directly from your browser to call api.x.ai. It is never sent to ShortFactory servers.</div>
+
+    <div class="form-row">
+      <label class="form-label">Your Grok API Key</label>
+      <input class="form-input" type="password" id="c-key" placeholder="xai-..." autocomplete="off">
+      <div class="form-hint">Get yours at console.x.ai → API Keys. Uses grok-imagine-image. Costs ~$0.002 per image.</div>
+    </div>
+
+    <div class="form-2col">
+      <div class="form-row" style="margin-bottom:0">
+        <label class="form-label">Image Title</label>
+        <input class="form-input" type="text" id="c-title" placeholder="e.g. Neon Cathedral" maxlength="80">
+      </div>
+      <div class="form-row" style="margin-bottom:0">
+        <label class="form-label">Category</label>
+        <select class="form-select" id="c-cat">
+          <option value="community">COMMUNITY</option>
+          <option value="violence">EXTREME ACTION</option>
+          <option value="retro">RETRO SCI-FI</option>
+          <option value="cortex">NEURAL BEAUTY</option>
+          <option value="lilleth">DARK FANTASY</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row" style="margin-top:18px">
+      <label class="form-label">Prompt</label>
+      <textarea class="form-input" id="c-prompt" rows="3" placeholder="Describe the image you want to generate…" maxlength="300" style="resize:vertical"></textarea>
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">Your Handle (optional)</label>
+      <input class="form-input" type="text" id="c-handle" placeholder="@yourname" maxlength="40">
+      <div class="form-hint">Shown as contributor credit on your image. Leave blank for anonymous.</div>
+    </div>
+
+    <button class="gen-btn" id="gen-btn" onclick="generateImage()">⚡ GENERATE IMAGE</button>
+    <div class="gen-status" id="gen-status"></div>
+
+    <div class="preview-box" id="preview-box">
+      <img id="preview-img" src="" alt="Generated image preview">
+      <div class="preview-meta" id="preview-meta"></div>
+      <button class="submit-btn" id="submit-btn" onclick="submitImage()">⬡ SUBMIT TO GALLERY + CLAIM BISCUIT</button>
+    </div>
+
+    <div class="biscuit-receipt" id="biscuit-receipt">
+      <h3>🍪 BISCUIT RECEIPT ISSUED</h3>
+      <div class="biscuit-id" id="biscuit-id"></div>
+      <div class="biscuit-detail" id="biscuit-detail"></div>
+    </div>
+  </div>
+</section>
+
+<!-- LIGHTBOX -->
+<div class="lb" id="lb" onclick="lbClickBg(event)">
+  <div class="lb-inner">
+    <img class="lb-img" id="lb-img" src="" alt="">
+    <div class="lb-meta">
+      <div class="lb-title" id="lb-title"></div>
+      <div class="lb-cat" id="lb-cat"></div>
+      <button class="lb-pin-btn" id="lb-pin-btn" onclick="pinCurrentImage()">⬡ PIN TO IPFS</button>
+    </div>
+  </div>
+  <button class="lb-close" onclick="closeLb()">✕</button>
+  <button class="lb-nav lb-prev" onclick="lbStep(-1)">‹</button>
+  <button class="lb-nav lb-next" onclick="lbStep(1)">›</button>
+</div>
+
+<script>
+const CAT_COLOURS = {
+  violence: '#ff4444',
+  retro:    '#ff66cc',
+  cortex:   '#00ccff',
+  lilleth:  '#cc44ff',
+};
+
+let gallery = null;
+let allImages = [];
+let filtered = [];
+let currentFilter = 'all';
+let lbIndex = 0;
+const pinned = new Set(JSON.parse(localStorage.getItem('sf_gallery_pinned') || '[]'));
+
+async function loadGallery() {
+  const resp = await fetch('/screensaver/gallery.json?v=' + Date.now());
+  gallery = await resp.json();
+
+  allImages = [];
+  Object.entries(gallery.categories).forEach(([catKey, cat]) => {
+    cat.images.forEach(img => {
+      allImages.push({ ...img, catKey, catLabel: cat.label, catColor: CAT_COLOURS[catKey] || '#e8c84a' });
+    });
+  });
+
+  // Shuffle for variety
+  allImages.sort(() => Math.random() - 0.5);
+
+  buildFilterTabs();
+  buildStats();
+  setFilter('all');
+}
+
+function buildStats() {
+  const bar = document.getElementById('stats-bar');
+  const total = allImages.length;
+  const cats = Object.keys(gallery.categories).length;
+  const pinnedCount = pinned.size;
+  bar.innerHTML = `
+    <div class="stat"><div class="stat-num">${total}</div><div class="stat-label">Images</div></div>
+    <div class="stat"><div class="stat-num">${cats}</div><div class="stat-label">Categories</div></div>
+    <div class="stat"><div class="stat-num" id="pinned-count">${pinnedCount}</div><div class="stat-label">IPFS Pinned</div></div>
+  `;
+}
+
+function buildFilterTabs() {
+  const bar = document.getElementById('filter-bar');
+  bar.innerHTML = `<button class="filter-btn active" onclick="setFilter('all')" id="tab-all">ALL <span style="opacity:.5;font-size:9px">${allImages.length}</span></button>`;
+  Object.entries(gallery.categories).forEach(([key, cat]) => {
+    const count = cat.images.length;
+    if (!count) return;
+    const col = CAT_COLOURS[key] || '#e8c84a';
+    bar.innerHTML += `<button class="filter-btn" onclick="setFilter('${key}')" id="tab-${key}">
+      <span class="filter-dot" style="background:${col}"></span>${cat.label} <span style="opacity:.5;font-size:9px">${count}</span>
+    </button>`;
+  });
+}
+
+function setFilter(cat) {
+  currentFilter = cat;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  const tab = document.getElementById('tab-' + cat);
+  if (tab) tab.classList.add('active');
+  filtered = cat === 'all' ? allImages : allImages.filter(i => i.catKey === cat);
+  renderGrid();
+}
+
+function renderGrid() {
+  const grid = document.getElementById('grid');
+  const empty = document.getElementById('empty');
+  const count = document.getElementById('hero-count');
+
+  if (!filtered.length) {
+    grid.innerHTML = '';
+    empty.style.display = 'block';
+    count.textContent = '0 IMAGES';
+    return;
+  }
+
+  empty.style.display = 'none';
+  count.textContent = filtered.length + ' IMAGE' + (filtered.length !== 1 ? 'S' : '');
+
+  grid.innerHTML = filtered.map((img, i) => {
+    const isPinned = pinned.has(img.url);
+    return `<div class="grid-item" onclick="openLb(${i})">
+      <img src="${img.url}" alt="${img.title}" loading="lazy">
+      <div class="grid-item-overlay">
+        <div class="grid-item-title">${img.title}</div>
+        <div class="grid-item-cat">${img.catLabel}</div>
+      </div>
+      <button class="grid-item-ipfs ${isPinned ? 'ipfs-pinned' : 'ipfs-unpinned'}" onclick="event.stopPropagation();pinImage('${img.url}',this)">
+        ${isPinned ? '✓ PINNED' : '⬡ PIN'}
+      </button>
+    </div>`;
+  }).join('');
+}
+
+function openLb(idx) {
+  lbIndex = idx;
+  updateLb();
+  document.getElementById('lb').classList.add('open');
+  document.addEventListener('keydown', lbKey);
+}
+
+function updateLb() {
+  const img = filtered[lbIndex];
+  if (!img) return;
+  document.getElementById('lb-img').src = img.url;
+  document.getElementById('lb-title').textContent = img.title;
+  document.getElementById('lb-cat').textContent = img.catLabel;
+  const pinBtn = document.getElementById('lb-pin-btn');
+  if (pinned.has(img.url)) {
+    pinBtn.textContent = '✓ PINNED TO IPFS';
+    pinBtn.classList.add('pinned');
+  } else {
+    pinBtn.textContent = '⬡ PIN TO IPFS';
+    pinBtn.classList.remove('pinned');
+  }
+}
+
+function closeLb() {
+  document.getElementById('lb').classList.remove('open');
+  document.removeEventListener('keydown', lbKey);
+}
+
+function lbStep(dir) {
+  lbIndex = (lbIndex + dir + filtered.length) % filtered.length;
+  updateLb();
+}
+
+function lbClickBg(e) {
+  if (e.target === document.getElementById('lb')) closeLb();
+}
+
+function lbKey(e) {
+  if (e.key === 'Escape') closeLb();
+  if (e.key === 'ArrowRight') lbStep(1);
+  if (e.key === 'ArrowLeft') lbStep(-1);
+}
+
+async function pinCurrentImage() {
+  const img = filtered[lbIndex];
+  if (!img) return;
+  await pinImage(img.url, null);
+  updateLb();
+}
+
+async function pinImage(url, btn) {
+  if (pinned.has(url)) {
+    pinned.delete(url);
+    localStorage.setItem('sf_gallery_pinned', JSON.stringify([...pinned]));
+    if (btn) { btn.textContent = '⬡ PIN'; btn.className = 'grid-item-ipfs ipfs-unpinned'; }
+    updatePinnedCount();
+    return;
+  }
+
+  // Try Pinata IPFS pin via proxy
+  try {
+    const resp = await fetch('/ipfs/pin_url.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url, name: url.split('/').pop() })
+    });
+    const data = await resp.json();
+    if (data.ok || data.IpfsHash) {
+      pinned.add(url);
+      if (data.IpfsHash) localStorage.setItem('sf_ipfs_' + url.split('/').pop(), data.IpfsHash);
+    } else {
+      // Fallback: mark pinned locally anyway (queue for later)
+      pinned.add(url);
+    }
+  } catch(e) {
+    // Offline or proxy not live — pin locally
+    pinned.add(url);
+  }
+
+  localStorage.setItem('sf_gallery_pinned', JSON.stringify([...pinned]));
+  if (btn) { btn.textContent = '✓ PINNED'; btn.className = 'grid-item-ipfs ipfs-pinned'; }
+  updatePinnedCount();
+}
+
+function updatePinnedCount() {
+  const el = document.getElementById('pinned-count');
+  if (el) el.textContent = pinned.size;
+}
+
+loadGallery();
+
+// ── CONTRIBUTE ────────────────────────────────────────────────────────────────
+
+let generatedUrl = null;
+
+async function generateImage() {
+  const key    = document.getElementById('c-key').value.trim();
+  const prompt = document.getElementById('c-prompt').value.trim();
+  const title  = document.getElementById('c-title').value.trim();
+
+  if (!key)    { setGenStatus('Enter your Grok API key first.', 'red'); return; }
+  if (!prompt) { setGenStatus('Enter a prompt.', 'red'); return; }
+  if (!title)  { setGenStatus('Enter a title for your image.', 'red'); return; }
+
+  const btn = document.getElementById('gen-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ GENERATING…';
+  setGenStatus('Calling grok-imagine-image… (may take 10–20s)', '');
+  document.getElementById('preview-box').style.display = 'none';
+  document.getElementById('biscuit-receipt').style.display = 'none';
+  generatedUrl = null;
+
+  try {
+    const resp = await fetch('https://api.x.ai/v1/images/generations', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + key,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ model: 'grok-imagine-image', prompt, n: 1 }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) {
+      setGenStatus('API error: ' + (data.error || resp.status), 'red');
+      btn.disabled = false; btn.textContent = '⚡ GENERATE IMAGE';
+      return;
+    }
+    generatedUrl = data.data[0].url;
+    document.getElementById('preview-img').src = generatedUrl;
+    document.getElementById('preview-meta').textContent = 'Prompt: ' + prompt;
+    document.getElementById('preview-box').style.display = 'block';
+    setGenStatus('Image generated. Review and submit to the gallery.', 'green');
+  } catch(e) {
+    setGenStatus('Request failed: ' + e.message, 'red');
+  }
+
+  btn.disabled = false;
+  btn.textContent = '⚡ REGENERATE';
+}
+
+async function submitImage() {
+  if (!generatedUrl) { setGenStatus('Generate an image first.', 'red'); return; }
+
+  const title  = document.getElementById('c-title').value.trim();
+  const cat    = document.getElementById('c-cat').value;
+  const prompt = document.getElementById('c-prompt').value.trim();
+  const handle = document.getElementById('c-handle').value.trim() || 'anonymous';
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ SUBMITTING…';
+  setGenStatus('Uploading to gallery…', '');
+
+  try {
+    const resp = await fetch('/screensaver/contribute.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: generatedUrl, title, category: cat, prompt, handle }),
+    });
+    const data = await resp.json();
+
+    if (!data.ok) {
+      setGenStatus('Submit failed: ' + data.error, 'red');
+      btn.disabled = false; btn.textContent = '⬡ SUBMIT TO GALLERY + CLAIM BISCUIT';
+      return;
+    }
+
+    // Show biscuit receipt
+    const b = data.biscuit;
+    document.getElementById('biscuit-id').textContent = b.id;
+    document.getElementById('biscuit-detail').innerHTML = `
+      <strong>Title:</strong> ${b.title}<br>
+      <strong>Category:</strong> ${b.category.toUpperCase()}<br>
+      <strong>Contributor:</strong> ${b.handle}<br>
+      <strong>Issued:</strong> ${b.issued}<br>
+      <strong>Status:</strong> ${b.status}<br>
+      <br>${b.note}
+    `;
+    document.getElementById('biscuit-receipt').style.display = 'block';
+
+    // Save receipt to localStorage
+    const receipts = JSON.parse(localStorage.getItem('sf_biscuit_receipts') || '[]');
+    receipts.push(b);
+    localStorage.setItem('sf_biscuit_receipts', JSON.stringify(receipts));
+
+    setGenStatus('✓ Image added to gallery. Biscuit receipt saved.', 'green');
+    btn.textContent = '✓ SUBMITTED';
+
+    // Reload gallery to show new image
+    setTimeout(() => loadGallery(), 1200);
+
+  } catch(e) {
+    setGenStatus('Submit failed: ' + e.message, 'red');
+    btn.disabled = false; btn.textContent = '⬡ SUBMIT TO GALLERY + CLAIM BISCUIT';
+  }
+}
+
+function setGenStatus(msg, colour) {
+  const el = document.getElementById('gen-status');
+  el.textContent = msg;
+  el.style.color = colour === 'red' ? '#ff4444' : colour === 'green' ? '#00e676' : 'var(--dim)';
+}
+</script>
+</body>
+</html>

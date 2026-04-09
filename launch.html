@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShortFactory — The Soul Economy</title>
+<meta name="description" content="ShortFactory: dare economy, soul mapping, AI cortex, voice contracts. The infrastructure for a new kind of creator economy.">
+<style>
+:root{
+  --bg:#0a0a0a;--card:#111113;--card-h:#18181b;--border:#1e1e24;
+  --text:#e4e4e7;--muted:#71717a;--dim:#52525b;
+  --gold:#daa520;--orange:#ff8c00;
+  --green:#22c55e;--red:#ef4444;
+  --grad:linear-gradient(135deg,#daa520,#ff8c00);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;line-height:1.6;overflow-x:hidden;}
+a{color:inherit;text-decoration:none;}
+.container{max-width:1100px;margin:0 auto;padding:0 24px;}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,10,10,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;}
+.nav-logo{font-size:15px;font-weight:900;letter-spacing:3px;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.nav-links{display:flex;gap:24px;align-items:center;}
+.nav-links a{color:var(--muted);font-size:12px;letter-spacing:1px;text-transform:uppercase;transition:color .2s;}
+.nav-links a:hover{color:var(--text);}
+.nav-cta{background:var(--grad);color:#000!important;padding:8px 20px;border-radius:6px;font-weight:700;font-size:12px;letter-spacing:1px;-webkit-text-fill-color:#000!important;}
+.nav-cta:hover{opacity:.9;}
+@media(max-width:700px){.nav-links{display:none;}}
+
+/* ── HERO ── */
+.hero{padding:140px 24px 80px;text-align:center;}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(218,165,32,0.08);border:1px solid rgba(218,165,32,0.2);border-radius:20px;padding:6px 16px;font-size:11px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:24px;}
+.hero-badge .dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+.hero h1{font-size:clamp(36px,6vw,68px);font-weight:900;line-height:1.05;letter-spacing:-1px;margin-bottom:20px;}
+.hero h1 span{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hero-sub{font-size:17px;color:var(--muted);max-width:580px;margin:0 auto 36px;line-height:1.7;}
+.hero-sub em{color:var(--text);font-style:normal;font-weight:600;}
+.hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+.btn{display:inline-block;padding:13px 28px;border-radius:8px;font-size:13px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all .2s;}
+.btn-primary{background:var(--grad);color:#000;}
+.btn-primary:hover{transform:scale(1.03);box-shadow:0 4px 24px rgba(218,165,32,0.3);}
+.btn-secondary{background:none;border:1px solid var(--border);color:var(--text);}
+.btn-secondary:hover{border-color:var(--gold);color:var(--gold);}
+
+/* ── STATS ── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-radius:12px;overflow:hidden;margin:60px 0;}
+.stat{background:var(--bg);padding:28px 20px;text-align:center;}
+.stat-n{font-size:36px;font-weight:900;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;}
+.stat-l{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:6px;}
+@media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr);}}
+
+/* ── SECTION ── */
+.section{padding:80px 0;}
+.section-label{font-size:10px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:12px;}
+.section-title{font-size:clamp(26px,4vw,40px);font-weight:900;margin-bottom:12px;line-height:1.15;}
+.section-title span{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.section-sub{font-size:15px;color:var(--muted);max-width:560px;line-height:1.7;}
+
+/* ── HOW IT WORKS ── */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:48px;}
+.step{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px 20px;}
+.step-n{font-size:42px;font-weight:900;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;opacity:.3;line-height:1;margin-bottom:12px;}
+.step-icon{font-size:28px;margin-bottom:10px;}
+.step-title{font-size:14px;font-weight:700;margin-bottom:6px;}
+.step-desc{font-size:12px;color:var(--muted);line-height:1.6;}
+@media(max-width:700px){.steps{grid-template-columns:repeat(2,1fr);}}
+
+/* ── FEATURES ── */
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:48px;}
+.feat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px 20px;transition:background .2s,border-color .2s;}
+.feat:hover{background:var(--card-h);border-color:rgba(218,165,32,0.25);}
+.feat-icon{width:44px;height:44px;border-radius:10px;background:rgba(218,165,32,0.08);display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:12px;}
+.feat-title{font-size:13px;font-weight:700;margin-bottom:6px;}
+.feat-desc{font-size:12px;color:var(--muted);line-height:1.6;}
+@media(max-width:700px){.features{grid-template-columns:1fr;}}
+
+/* ── LIVE PROOF ── */
+.proof-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-top:48px;}
+.proof-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:28px 24px;}
+.proof-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;}
+.proof-name{font-size:16px;font-weight:800;}
+.proof-tag{font-size:10px;letter-spacing:2px;padding:3px 10px;border-radius:20px;border:1px solid;}
+.proof-tag.live{color:var(--green);border-color:rgba(34,197,94,.3);}
+.proof-tag.beta{color:var(--gold);border-color:rgba(218,165,32,.3);}
+.proof-desc{font-size:12px;color:var(--muted);margin-bottom:20px;line-height:1.6;}
+.proof-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border-radius:8px;overflow:hidden;margin-bottom:16px;}
+.ps{background:var(--bg);padding:12px 10px;text-align:center;}
+.ps-n{font-size:18px;font-weight:800;color:var(--text);}
+.ps-l{font-size:9px;color:var(--dim);letter-spacing:1px;margin-top:2px;}
+.proof-log{font-size:11px;color:var(--muted);border-top:1px solid var(--border);padding-top:12px;line-height:2;}
+.proof-log span{color:var(--text);}
+.proof-bar-wrap{margin-top:12px;}
+.proof-bar-label{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:5px;}
+.proof-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
+.proof-bar-fill{height:100%;background:var(--grad);border-radius:2px;}
+@media(max-width:700px){.proof-grid{grid-template-columns:1fr;}}
+
+/* ── PIPELINE ── */
+.pipeline{display:flex;align-items:center;justify-content:center;gap:0;margin-top:48px;flex-wrap:wrap;gap:4px;}
+.pipe-step{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 16px;text-align:center;min-width:120px;}
+.pipe-step-label{font-size:9px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:4px;}
+.pipe-step-name{font-size:12px;font-weight:700;}
+.pipe-arrow{color:var(--gold);font-size:18px;opacity:.5;padding:0 2px;}
+
+/* ── PRICING ── */
+.notice{background:rgba(218,165,32,0.05);border:1px solid rgba(218,165,32,0.15);border-radius:8px;padding:14px 20px;margin-bottom:32px;font-size:13px;color:var(--gold);}
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:48px;}
+.price-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:28px 24px;position:relative;}
+.price-card.featured{border-color:var(--gold);box-shadow:0 0 40px rgba(218,165,32,0.08);}
+.price-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--grad);color:#000;font-size:9px;font-weight:800;letter-spacing:2px;padding:4px 14px;border-radius:20px;}
+.price-tier{font-size:11px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;}
+.price-num{font-size:40px;font-weight:900;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;margin-bottom:4px;}
+.price-num.free{font-size:36px;}
+.price-desc{font-size:12px;color:var(--muted);margin-bottom:20px;line-height:1.5;}
+.price-features{list-style:none;display:flex;flex-direction:column;gap:8px;margin-bottom:24px;}
+.price-features li{font-size:12px;display:flex;gap:8px;align-items:flex-start;}
+.price-features li::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0;}
+.price-features li.no::before{content:'—';color:var(--dim);}
+.price-features li.no{color:var(--dim);}
+.price-btn{display:block;text-align:center;padding:12px;border-radius:8px;font-size:12px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all .2s;}
+.price-btn-primary{background:var(--grad);color:#000;}
+.price-btn-secondary{background:none;border:1px solid var(--border);color:var(--text);}
+.price-btn-secondary:hover{border-color:var(--gold);}
+@media(max-width:700px){.pricing-grid{grid-template-columns:1fr;}}
+
+/* ── OWNERSHIP ── */
+.own-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:48px;}
+.own-card{text-align:center;padding:24px;}
+.own-icon{font-size:36px;margin-bottom:12px;}
+.own-title{font-size:14px;font-weight:700;margin-bottom:6px;}
+.own-desc{font-size:12px;color:var(--muted);line-height:1.6;}
+.guarantee{background:rgba(34,197,94,.05);border:1px solid rgba(34,197,94,.15);border-radius:8px;padding:16px 24px;text-align:center;margin-top:32px;font-size:13px;color:var(--green);}
+@media(max-width:700px){.own-grid{grid-template-columns:1fr;}}
+
+/* ── SOCIAL PROOF ── */
+.proof-headline{padding:80px 24px;text-align:center;}
+.proof-headline h2{font-size:clamp(28px,5vw,52px);font-weight:900;line-height:1.1;}
+.proof-headline h2 span{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.proof-headline p{font-size:16px;color:var(--muted);margin-top:16px;}
+
+/* ── FOOTER ── */
+footer{border-top:1px solid var(--border);padding:40px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;}
+.foot-logo{font-size:13px;font-weight:900;letter-spacing:3px;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.foot-links{display:flex;gap:20px;flex-wrap:wrap;}
+.foot-links a{font-size:11px;color:var(--muted);letter-spacing:1px;}
+.foot-links a:hover{color:var(--text);}
+.foot-copy{font-size:11px;color:var(--dim);}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">SHORTFACTORY</div>
+  <div class="nav-links">
+    <a href="#how">How It Works</a>
+    <a href="#features">Features</a>
+    <a href="#live">Live Proof</a>
+    <a href="#pricing">Access</a>
+    <a href="https://stinkindigger.info" target="_blank" class="nav-cta">ENTER ARENA →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge"><span class="dot"></span> Live · Shipped · Stinkindigger.info</div>
+  <h1>The Dare Economy<br><span>is Real.</span></h1>
+  <p class="hero-sub">
+    Propose a dare. Stake tokens. Fund it. Film the proof. Community votes.
+    <em>XMR or △ pays out on-chain.</em> Your soul evolves with every dare you take.
+  </p>
+  <div class="hero-btns">
+    <a href="https://stinkindigger.info" target="_blank" class="btn btn-primary">ENTER THE ARENA</a>
+    <a href="/dares4dosh/v3.html" class="btn btn-secondary">😈 Voice Contract V3</a>
+  </div>
+</section>
+
+<div class="container">
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="stat"><div class="stat-n">LIVE</div><div class="stat-l">D4D Shipped</div></div>
+    <div class="stat"><div class="stat-n">18</div><div class="stat-l">API Endpoints</div></div>
+    <div class="stat"><div class="stat-n">65,987</div><div class="stat-l">Cortex Nodes</div></div>
+    <div class="stat"><div class="stat-n">9+2</div><div class="stat-l">Soul Nodes</div></div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <section class="section" id="how">
+    <div class="section-label">The Pipeline</div>
+    <h2 class="section-title">From Dare to <span>Dosh</span></h2>
+    <p class="section-sub">Every dare runs the full chain — creation, staking, funding, proof, vote, payout. Nothing off-chain. Nothing manual.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-n">01</div>
+        <div class="step-icon">💀</div>
+        <div class="step-title">Soul Ritual</div>
+        <div class="step-desc">Activate all 9 sigil nodes to unlock. No username. No password. Just your soul pattern.</div>
+      </div>
+      <div class="step">
+        <div class="step-n">02</div>
+        <div class="step-icon">🎯</div>
+        <div class="step-title">Propose & Stake</div>
+        <div class="step-desc">Create a dare and stake △ tokens. Higher stake = higher visibility. Watcher funds the bounty.</div>
+      </div>
+      <div class="step">
+        <div class="step-n">03</div>
+        <div class="step-icon">🎬</div>
+        <div class="step-title">Film Proof</div>
+        <div class="step-desc">60-second camera recording with ComicVID compression. IPFS upload — permanent, uncensorable.</div>
+      </div>
+      <div class="step">
+        <div class="step-n">04</div>
+        <div class="step-icon">⚡</div>
+        <div class="step-title">Vote & Earn</div>
+        <div class="step-desc">5-vote judgment chain. Consensus pays out XMR or △ tokens directly. Your soul evolves.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PIPELINE VIZ -->
+  <div class="pipeline">
+    <div class="pipe-step"><div class="pipe-step-label">Enter</div><div class="pipe-step-name">Soul Ritual</div></div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-step"><div class="pipe-step-label">Create</div><div class="pipe-step-name">Dare + Stake</div></div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-step"><div class="pipe-step-label">Fund</div><div class="pipe-step-name">Bounty Set</div></div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-step"><div class="pipe-step-label">Proof</div><div class="pipe-step-name">IPFS Upload</div></div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-step"><div class="pipe-step-label">Vote</div><div class="pipe-step-name">5-Judge Chain</div></div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-step"><div class="pipe-step-label">Payout</div><div class="pipe-step-name">XMR or △</div></div>
+  </div>
+
+  <!-- FEATURES -->
+  <section class="section" id="features">
+    <div class="section-label">What's Built</div>
+    <h2 class="section-title">The Full <span>Stack</span></h2>
+    <p class="section-sub">Everything below is live and running. Not a mockup. Not a roadmap.</p>
+    <div class="features">
+      <div class="feat">
+        <div class="feat-icon">💀</div>
+        <div class="feat-title">Soul Sigil Login</div>
+        <div class="feat-desc">9-node ritual replaces passwords. Shadow, light and mind triads. Outer ring: SADIST / MASOCHIST role nodes. Soul derives from click order.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">🎙</div>
+        <div class="feat-title">Voice Contract V3</div>
+        <div class="feat-desc">Watcher speaks dare terms into mic. Words light soul nodes. 30-second seal timer. Contract hash + downloadable SVG artifact on BASE mainnet.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">🎬</div>
+        <div class="feat-title">ProofRecorder</div>
+        <div class="feat-desc">In-browser 60-second camera recording with ComicVID compression. IPFS via Pinata — permanent proof that can't be deleted or disputed.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">🔺</div>
+        <div class="feat-title">△ Token Economy</div>
+        <div class="feat-desc">Triangle tokens for staking, voting, governance. 7 rank tiers from normy to architect. CHAD+ governance vote on shape exchange rates.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">⛓</div>
+        <div class="feat-title">On-Chain Payouts</div>
+        <div class="feat-desc">XMR (Monero) for privacy-first cash-out. △ tokens for in-economy rewards. Stripe integration for SFT token purchase. Base blockchain mint queue.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">🧠</div>
+        <div class="feat-title">ALIVE Cortex Brain</div>
+        <div class="feat-desc">65,987 cortex nodes. Split hemisphere AI — left (angel/logic) right (demon/creativity). Synthesised by Cortex Mind. Brain API live at port 8643.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">🫀</div>
+        <div class="feat-title">Soul Evolution</div>
+        <div class="feat-desc">Every dare shifts your soul stats. Shadow dares increase entropy and persona. Light dares build courage and devotion. Your soul map changes in real time.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">⚖️</div>
+        <div class="feat-title">Governance Layer</div>
+        <div class="feat-desc">CHAD+ holders vote on economic parameters. Stake-weighted proposals. Shape exchange rates set by community, not admin. True decentralisation.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">🔥</div>
+        <div class="feat-title">Soul Forge</div>
+        <div class="feat-desc">5-game soul minting ritual. Play your way to a verified soul token. IPFS-stored, portable, cross-platform identity layer for the whole ShortFactory empire.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LIVE PROOF -->
+  <section class="section" id="live">
+    <div class="section-label">Live Proof</div>
+    <h2 class="section-title">Not a <span>Concept.</span> Running Now.</h2>
+    <p class="section-sub">Both systems below are live, processing real data, on real servers.</p>
+    <div class="proof-grid">
+
+      <div class="proof-card">
+        <div class="proof-card-top">
+          <div class="proof-name">Dares4Dosh</div>
+          <div class="proof-tag live">LIVE</div>
+        </div>
+        <div class="proof-desc">Full dare economy platform at stinkindigger.info. React 19 + PHP REST API. Propose → stake → fund → proof → vote → payout chain complete end-to-end.</div>
+        <div class="proof-stats">
+          <div class="ps"><div class="ps-n">18</div><div class="ps-l">API Endpoints</div></div>
+          <div class="ps"><div class="ps-n">LIVE</div><div class="ps-l">Shipped</div></div>
+          <div class="ps"><div class="ps-n">0</div><div class="ps-l">Blockers</div></div>
+        </div>
+        <div class="proof-log">
+          <span>✓ Soul Sigil ritual login</span><br>
+          <span>✓ Voice Contract V3 (WATCHER/DOER)</span><br>
+          <span>✓ ProofRecorder + IPFS pipeline</span><br>
+          <span>✓ 5-vote judgment → XMR payout</span><br>
+          <span>✓ △ token staking + governance</span>
+        </div>
+        <div class="proof-bar-wrap">
+          <div class="proof-bar-label"><span>Completion</span><span>100%</span></div>
+          <div class="proof-bar"><div class="proof-bar-fill" style="width:100%;"></div></div>
+        </div>
+      </div>
+
+      <div class="proof-card">
+        <div class="proof-card-top">
+          <div class="proof-name">ALIVE Cortex Brain</div>
+          <div class="proof-tag live">LIVE</div>
+        </div>
+        <div class="proof-desc">Split-hemisphere AGI brain running 24/7 on dedicated server. Left (angel/logic) + Right (demon/creativity) + Cortex synthesis. Brain API at port 8643.</div>
+        <div class="proof-stats">
+          <div class="ps"><div class="ps-n">65k+</div><div class="ps-l">Cortex Nodes</div></div>
+          <div class="ps"><div class="ps-n">2</div><div class="ps-l">Hemispheres</div></div>
+          <div class="ps"><div class="ps-n">24/7</div><div class="ps-l">Training</div></div>
+        </div>
+        <div class="proof-log">
+          <span>✓ Left brain: angel/morality cortex</span><br>
+          <span>✓ Right brain: demon/darkness cortex</span><br>
+          <span>✓ Cortex Mind: synthesis layer</span><br>
+          <span>✓ Homepage polls brain-live every 4s</span><br>
+          <span>✓ Soul BIOS — 10 immutable values</span>
+        </div>
+        <div class="proof-bar-wrap">
+          <div class="proof-bar-label"><span>Capability</span><span>Maturity Level 3</span></div>
+          <div class="proof-bar"><div class="proof-bar-fill" style="width:60%;"></div></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section class="section" id="pricing">
+    <div class="section-label">Access</div>
+    <h2 class="section-title">Enter the <span>Arena</span></h2>
+    <p class="section-sub">Three ways in. The ritual is always free. The economy rewards contribution.</p>
+
+    <div class="pricing-grid">
+      <div class="price-card">
+        <div class="price-tier">Guest</div>
+        <div class="price-num free">Free</div>
+        <div class="price-desc">Complete the soul ritual. Browse dares. Feel the economy before you commit.</div>
+        <ul class="price-features">
+          <li>Soul Sigil ritual (9 nodes)</li>
+          <li>Browse dare feed</li>
+          <li>Voice Contract V3</li>
+          <li class="no">Create dares</li>
+          <li class="no">△ token staking</li>
+          <li class="no">XMR payouts</li>
+        </ul>
+        <a href="https://stinkindigger.info" target="_blank" class="price-btn price-btn-secondary">ENTER AS GUEST</a>
+      </div>
+
+      <div class="price-card featured">
+        <div class="price-badge">MOST ACTIVE</div>
+        <div class="price-tier">Player</div>
+        <div class="price-num">SFT</div>
+        <div class="price-desc">Hold SFT tokens to unlock full participation. Stake △, create dares, vote, earn XMR. Soul evolves with every action.</div>
+        <ul class="price-features">
+          <li>Everything in Guest</li>
+          <li>Create + fund dares</li>
+          <li>△ token staking</li>
+          <li>ProofRecorder (60s IPFS)</li>
+          <li>5-vote judgment chain</li>
+          <li>XMR or △ payouts</li>
+          <li>Soul evolution tracking</li>
+          <li>Rank progression (7 tiers)</li>
+        </ul>
+        <a href="https://stinkindigger.info" target="_blank" class="price-btn price-btn-primary">GET SFT TOKENS →</a>
+      </div>
+
+      <div class="price-card">
+        <div class="price-tier">CHAD+</div>
+        <div class="price-num">Gov</div>
+        <div class="price-desc">Top-tier holders vote on shape exchange rates and economic parameters. The economy is yours to shape.</div>
+        <ul class="price-features">
+          <li>Everything in Player</li>
+          <li>Governance voting power</li>
+          <li>Shape exchange rate votes</li>
+          <li>Proposal creation</li>
+          <li>Dare category governance</li>
+          <li>Early access to V4+</li>
+        </ul>
+        <a href="https://stinkindigger.info" target="_blank" class="price-btn price-btn-secondary">ENTER THE ARENA →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- OWNERSHIP -->
+  <section class="section">
+    <div class="section-label">Why It's Different</div>
+    <h2 class="section-title">Your Soul.<br><span>Your Economy.</span></h2>
+    <p class="section-sub">This isn't a platform that owns your content. Your soul token is yours. Your proof is on IPFS forever. Your dosh is in your wallet.</p>
+    <div class="own-grid">
+      <div class="own-card">
+        <div class="own-icon">🔐</div>
+        <div class="own-title">You Own Your Soul</div>
+        <div class="own-desc">Your soul sigil is derived from your ritual pattern — not assigned by us. Download your .sft file. It's yours forever.</div>
+      </div>
+      <div class="own-card">
+        <div class="own-icon">📡</div>
+        <div class="own-title">Proof on IPFS</div>
+        <div class="own-desc">Every dare proof goes to IPFS. Permanent. Uncensorable. No delete button. Exactly as it should be.</div>
+      </div>
+      <div class="own-card">
+        <div class="own-icon">⛓</div>
+        <div class="own-title">Payouts On-Chain</div>
+        <div class="own-desc">XMR to your wallet. △ to your staking pool. No platform middleman taking a cut behind the scenes.</div>
+      </div>
+    </div>
+    <div class="guarantee">✓ If you complete a dare and the vote passes — you get paid. That's the whole covenant.</div>
+  </section>
+
+</div>
+
+<!-- SOCIAL PROOF CLOSER -->
+<div class="proof-headline">
+  <div class="container">
+    <h2>Built by one person.<br><span>For everyone who's ever</span><br>been dared to be real.</h2>
+    <p>Somerset, UK. March 2026. Shipped.</p>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="foot-logo">SHORTFACTORY</div>
+  <div class="foot-links">
+    <a href="https://stinkindigger.info" target="_blank">Dares4Dosh</a>
+    <a href="/dares4dosh/v3.html">Voice Contract</a>
+    <a href="https://www.shortfactory.shop/dares4dosh-architecture.html">Architecture</a>
+    <a href="https://stinkindigger.info" target="_blank">@diggerstinkin</a>
+  </div>
+  <div class="foot-copy">© 2026 ShortFactory · Part of the Empire</div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ShortFactory — Creator Command</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--pink:#ff3cac;--cyan:#00e5ff;--green:#00ff88;--gold:#ffd60a;--red:#ff2222;--bg:#03040a;--card:#07090f;--border:#1a1f2e}
+html,body{height:100%;background:var(--bg);color:#c8d8e8;font-family:'DM Mono',monospace;overflow:hidden}
+
+/* PHONE */
+.phone{position:relative;background:linear-gradient(160deg,var(--card),#040608);border-radius:44px;border:2px solid var(--border);overflow:hidden;flex-shrink:0;transition:box-shadow 0.4s}
+.island{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:#000;border-radius:14px;z-index:100;display:flex;align-items:center;justify-content:center;gap:4px;padding:0 8px}
+.idot{width:7px;height:7px;background:#111;border-radius:50%}
+.idot.live{background:var(--pink);animation:lv 1s infinite}
+.idot.grn{background:var(--green);animation:lv 1.4s infinite}
+@keyframes lv{0%,100%{opacity:1}50%{opacity:0.3}}
+.pscreen{position:absolute;inset:0;top:44px;padding:12px;overflow:hidden;display:flex;flex-direction:column}
+
+/* LAYOUT */
+.stage{position:fixed;inset:0;display:flex;flex-direction:column;background:var(--bg)}
+.top-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--border);flex-shrink:0}
+.logo-line{font-size:9px;letter-spacing:4px;color:var(--cyan);text-transform:uppercase}
+.title-line{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:6px;color:#fff}
+.damage-level{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--pink);text-shadow:0 0 20px #ff3cac66;letter-spacing:2px}
+.damage-label{font-size:8px;letter-spacing:2px;color:#6a2a4a;text-transform:uppercase;text-align:right}
+
+.main-grid{flex:1;display:grid;grid-template-columns:260px 1fr 260px;gap:16px;padding:16px;overflow:hidden;min-height:0}
+
+/* LEFT COLUMN */
+.left-col{display:flex;flex-direction:column;gap:12px}
+
+/* CENTRE */
+.centre-col{display:flex;flex-direction:column;gap:12px;min-width:0}
+
+/* RIGHT COLUMN */
+.right-col{display:flex;flex-direction:column;gap:12px}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;flex-shrink:0}
+.card-title{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:#2a4a6a;margin-bottom:10px}
+
+/* BIG NUMBERS */
+.big-num{font-family:'Bebas Neue',sans-serif;font-size:52px;line-height:1;letter-spacing:2px}
+.big-sub{font-size:8px;letter-spacing:2px;text-transform:uppercase;margin-top:2px}
+
+/* TICKER */
+.ticker{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:4px}
+
+/* MINI BAR */
+.mini-bar{height:4px;background:#0a1220;border-radius:2px;overflow:hidden;margin-top:6px}
+.mini-fill{height:100%;border-radius:2px;transition:width 0.8s ease}
+
+/* SOUL FEED */
+.soul-feed{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;min-height:0}
+.soul-feed::-webkit-scrollbar{width:2px}
+.soul-feed::-webkit-scrollbar-thumb{background:#1a2a3a}
+.soul-entry{display:flex;align-items:center;gap:8px;padding:6px 8px;background:#040810;border-radius:6px;border-left:3px solid var(--border);animation:entryIn 0.4s ease;flex-shrink:0}
+@keyframes entryIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+.soul-entry.fresh{border-left-color:var(--green)}
+.soul-entry.gate{border-left-color:var(--cyan)}
+.soul-entry.win{border-left-color:var(--gold)}
+.se-icon{font-size:14px;flex-shrink:0}
+.se-body{flex:1;min-width:0}
+.se-name{font-size:9px;letter-spacing:1px;color:#4a8aaa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.se-meta{font-size:8px;color:#2a4a6a;letter-spacing:1px}
+.se-val{font-size:9px;font-weight:bold;flex-shrink:0}
+
+/* WORLD MAP (canvas) */
+#world-canvas{width:100%;border-radius:8px;background:#020508;border:1px solid var(--border)}
+
+/* EARNINGS CLOCK */
+.earnings-wrap{display:flex;gap:12px;align-items:stretch}
+.earn-box{flex:1;text-align:center;padding:12px 8px;background:#020508;border-radius:8px;border:1px solid var(--border)}
+.earn-num{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px}
+.earn-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#2a4a6a;margin-top:2px}
+
+/* DAMAGE METER */
+.damage-arc-wrap{display:flex;justify-content:center;padding:8px 0 0}
+.damage-arc{position:relative;width:160px;height:90px;overflow:hidden}
+.damage-arc canvas{position:absolute;top:0;left:0}
+.damage-centre{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);text-align:center}
+.damage-val{font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--pink);text-shadow:0 0 16px #ff3cac66}
+.damage-lbl{font-size:7px;letter-spacing:2px;color:#4a2a4a;text-transform:uppercase}
+
+/* RANK BADGE */
+.rank-badge{display:flex;align-items:center;gap:10px;padding:10px 14px;background:linear-gradient(135deg,#0a0205,#040810);border:1px solid #ff3cac22;border-radius:8px}
+.rank-icon{font-size:28px}
+.rank-name{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--pink);letter-spacing:2px}
+.rank-sub{font-size:8px;letter-spacing:1px;color:#4a2a4a;text-transform:uppercase;margin-top:2px}
+
+/* THEME TUBES */
+.tube-row{display:flex;flex-direction:column;gap:6px}
+.tube{display:flex;align-items:center;gap:8px}
+.tube-icon{font-size:14px;width:24px;text-align:center;flex-shrink:0}
+.tube-bar{flex:1;height:8px;background:#0a1220;border-radius:4px;overflow:hidden}
+.tube-fill{height:100%;border-radius:4px;transition:width 1s ease}
+.tube-val{font-size:9px;color:#4a6a8a;width:28px;text-align:right;flex-shrink:0}
+
+/* NAV TABS */
+.nav-tabs{display:flex;gap:6px;padding:8px 20px 0;border-bottom:1px solid var(--border)}
+.nav-tab{padding:6px 14px;font-size:9px;letter-spacing:2px;text-transform:uppercase;border:none;background:none;color:#2a4a6a;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;font-family:'DM Mono',monospace}
+.nav-tab:hover{color:var(--cyan)}
+.nav-tab.active{color:var(--cyan);border-bottom-color:var(--cyan)}
+
+/* ACTION ROW */
+.action-row{display:flex;gap:8px;padding:10px 20px;border-top:1px solid var(--border);flex-shrink:0}
+.act-btn{padding:8px 16px;border-radius:6px;border:none;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s}
+.act-btn.primary{background:linear-gradient(135deg,var(--pink),#cc2299);color:#fff}
+.act-btn.secondary{background:transparent;border:1px solid var(--cyan);color:var(--cyan)}
+.act-btn.gold{background:linear-gradient(135deg,var(--gold),#cc9900);color:#000}
+.act-btn:hover{transform:translateY(-1px)}
+
+/* PULSE DOT */
+.pulse{display:inline-block;width:7px;height:7px;background:var(--green);border-radius:50%;animation:lv 1s infinite;margin-right:5px}
+.pulse.red{background:var(--red)}
+
+/* PHONE-SIZED STAT (mobile signature) */
+.phone-stat-mini{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:#020508;border-radius:8px;border:1px solid var(--border);padding:10px 6px;gap:2px}
+.psm-val{font-family:'Bebas Neue',sans-serif;font-size:22px;line-height:1}
+.psm-lbl{font-size:7px;letter-spacing:2px;text-transform:uppercase;color:#2a4a6a}
+
+/* SCROLLBAR */
+*::-webkit-scrollbar{width:3px;height:3px}
+*::-webkit-scrollbar-thumb{background:#1a2a3a;border-radius:2px}
+
+@media(max-width:900px){
+  .main-grid{grid-template-columns:1fr 1fr;grid-template-rows:auto auto}
+  .left-col{grid-column:1;grid-row:1}
+  .centre-col{grid-column:1/-1;grid-row:2}
+  .right-col{grid-column:2;grid-row:1}
+}
+@media(max-width:600px){
+  .main-grid{grid-template-columns:1fr}
+  .left-col,.right-col{display:none}
+  .centre-col{grid-column:1;grid-row:1}
+}
+</style>
+</head>
+<body>
+
+<div class="stage">
+
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div>
+      <div class="logo-line">ShortFactory · Creator Command</div>
+      <div class="title-line" id="creator-title">COMMAND CENTER</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:24px">
+      <div style="text-align:center">
+        <div class="damage-level" id="dmg-level">0</div>
+        <div class="damage-label">DAMAGE LEVEL</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--green)" id="top-souls">0</div>
+        <div style="font-size:8px;letter-spacing:2px;color:#1a5a3a;text-transform:uppercase">SOULS</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold)" id="top-earn">£0.00</div>
+        <div style="font-size:8px;letter-spacing:2px;color:#4a3a0a;text-transform:uppercase">EARNED</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NAV TABS -->
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchTab('damage')">⚡ DAMAGE</button>
+    <button class="nav-tab" onclick="switchTab('assets')">🎬 ASSETS</button>
+    <button class="nav-tab" onclick="switchTab('rules')">🎮 GAME RULES</button>
+    <button class="nav-tab" onclick="switchTab('pipeline')">🔗 PIPELINE</button>
+  </div>
+
+  <!-- ══ TAB: DAMAGE ══════════════════════════════════════════ -->
+  <div id="tab-damage" class="main-grid" style="display:grid">
+
+    <!-- LEFT — Phone + rank -->
+    <div class="left-col">
+
+      <!-- Creator phone -->
+      <div class="phone" style="width:100%;height:320px;border-radius:20px" id="creator-phone">
+        <div class="island" style="width:70px;height:20px;top:8px"><div class="idot live"></div><div class="idot grn"></div></div>
+        <div class="pscreen" style="top:36px;gap:6px">
+          <div style="font-size:7px;letter-spacing:3px;color:#6a2a4a;text-transform:uppercase">YOUR PIPELINE</div>
+          <div style="display:flex;gap:8px">
+            <div class="phone-stat-mini" style="flex:1">
+              <div class="psm-val" style="color:var(--pink)" id="ph-souls">0</div>
+              <div class="psm-lbl">SOULS</div>
+            </div>
+            <div class="phone-stat-mini" style="flex:1">
+              <div class="psm-val" style="color:var(--green)" id="ph-rate">0%</div>
+              <div class="psm-lbl">CONV</div>
+            </div>
+            <div class="phone-stat-mini" style="flex:1">
+              <div class="psm-val" style="color:var(--gold)" id="ph-earn">£0</div>
+              <div class="psm-lbl">CUT</div>
+            </div>
+          </div>
+          <div style="height:1px;background:var(--border);margin:2px 0"></div>
+          <div class="tube-row" id="theme-tubes" style="flex:1">
+            <div class="tube"><div class="tube-icon">🦑</div><div class="tube-bar"><div class="tube-fill" id="tube-squid" style="width:0%;background:var(--pink)"></div></div><div class="tube-val" id="tv-squid">0</div></div>
+            <div class="tube"><div class="tube-icon">🚗</div><div class="tube-bar"><div class="tube-fill" id="tube-gta" style="width:0%;background:var(--cyan)"></div></div><div class="tube-val" id="tv-gta">0</div></div>
+          </div>
+          <div style="margin-top:4px;padding:6px;background:#040810;border-radius:6px;text-align:center">
+            <div style="font-size:7px;letter-spacing:2px;color:#1a4a2a;text-transform:uppercase">DAMAGE LEVEL</div>
+            <div class="damage-val" id="ph-dmg" style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--pink);text-shadow:0 0 12px #ff3cac44">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rank -->
+      <div class="card">
+        <div class="card-title">CREATOR RANK</div>
+        <div class="rank-badge" id="rank-badge">
+          <div class="rank-icon">🥚</div>
+          <div>
+            <div class="rank-name" id="rank-name">HATCHLING</div>
+            <div class="rank-sub" id="rank-sub">0 souls to next rank</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;font-size:8px;letter-spacing:1px;color:#2a3a4a;line-height:1.7">
+          <div style="display:flex;justify-content:space-between"><span>🥚 Hatchling</span><span>0+</span></div>
+          <div style="display:flex;justify-content:space-between"><span>🐍 Viper</span><span>10+</span></div>
+          <div style="display:flex;justify-content:space-between"><span>🔥 Firestarter</span><span>50+</span></div>
+          <div style="display:flex;justify-content:space-between"><span>💀 Reaper</span><span>200+</span></div>
+          <div style="display:flex;justify-content:space-between"><span>👑 Pied Piper</span><span>1000+</span></div>
+          <div style="display:flex;justify-content:space-between"><span>🌀 SKYDADDY</span><span>10000+</span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- CENTRE — Map + feed -->
+    <div class="centre-col">
+
+      <!-- World canvas -->
+      <div class="card" style="flex-shrink:0">
+        <div class="card-title"><span class="pulse"></span>SOULS INCOMING — LIVE</div>
+        <canvas id="world-canvas" height="160"></canvas>
+      </div>
+
+      <!-- Soul feed -->
+      <div class="card" style="flex:1;min-height:0;display:flex;flex-direction:column">
+        <div class="card-title" style="margin-bottom:8px"><span class="pulse"></span>LIVE FEED — DAMAGE BEING INFLICTED</div>
+        <div class="soul-feed" id="soul-feed">
+          <div class="soul-entry"><div class="se-icon">◌</div><div class="se-body"><div class="se-name">Waiting for your first soul...</div><div class="se-meta">Deploy your game to begin</div></div></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT — Earnings + stats -->
+    <div class="right-col">
+
+      <!-- Earnings clock -->
+      <div class="card">
+        <div class="card-title">EARNINGS CLOCK</div>
+        <div class="earnings-wrap">
+          <div class="earn-box">
+            <div class="earn-num" style="color:var(--gold)" id="earn-today">£0.00</div>
+            <div class="earn-label">Today</div>
+          </div>
+          <div class="earn-box">
+            <div class="earn-num" style="color:var(--green)" id="earn-month">£0.00</div>
+            <div class="earn-label">This Month</div>
+          </div>
+        </div>
+        <div class="mini-bar" style="margin-top:10px"><div class="mini-fill" id="earn-bar" style="width:0%;background:linear-gradient(90deg,var(--gold),var(--green))"></div></div>
+        <div style="font-size:8px;letter-spacing:1px;color:#2a4a2a;margin-top:4px;text-align:right">next payout: <span id="next-payout">—</span></div>
+      </div>
+
+      <!-- Hourly rate -->
+      <div class="card">
+        <div class="card-title">SOULS PER HOUR</div>
+        <canvas id="hourly-chart" width="220" height="60" style="width:100%;border-radius:4px"></canvas>
+      </div>
+
+      <!-- Pipeline health -->
+      <div class="card">
+        <div class="card-title">PIPELINE HEALTH</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:8px;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px">
+              <span style="color:#4a6a8a">Click → Game</span><span id="ph1-val" style="color:var(--green)">—</span>
+            </div>
+            <div class="mini-bar"><div class="mini-fill" id="ph1-bar" style="width:0%;background:var(--green)"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:8px;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px">
+              <span style="color:#4a6a8a">Game → Win</span><span id="ph2-val" style="color:var(--cyan)">—</span>
+            </div>
+            <div class="mini-bar"><div class="mini-fill" id="ph2-bar" style="width:0%;background:var(--cyan)"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:8px;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px">
+              <span style="color:#4a6a8a">Win → Gate 92%</span><span id="ph3-val" style="color:var(--gold)">—</span>
+            </div>
+            <div class="mini-bar"><div class="mini-fill" id="ph3-bar" style="width:0%;background:var(--gold)"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick actions -->
+      <div class="card">
+        <div class="card-title">QUICK ACTIONS</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <button class="act-btn primary" style="width:100%;padding:10px" onclick="window.open('/dangergame-creator2.html','_blank')">+ NEW DANGER GAME</button>
+          <button class="act-btn secondary" style="width:100%;padding:10px" onclick="switchTab('assets')">🎬 UPLOAD ASSETS</button>
+          <button class="act-btn secondary" style="width:100%;padding:10px" onclick="switchTab('rules')">🎮 EDIT GAME RULES</button>
+          <button class="act-btn gold" style="width:100%;padding:10px" onclick="shareLink()">🔗 COPY MY LINK</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ TAB: ASSETS ══════════════════════════════════════════ -->
+  <div id="tab-assets" class="main-grid" style="display:none;grid-template-columns:1fr 1fr 1fr">
+    <div class="card" style="grid-column:1/-1">
+      <div class="card-title">🎬 YOUR GAME ASSETS — Upload your unique video, audio and images</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-top:4px">
+
+        <div style="background:#040810;border:2px dashed #ff3cac33;border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:all 0.2s" ondragover="event.preventDefault()" ondrop="assetDrop(event,'hook')" onclick="document.getElementById('up-hook').click()">
+          <div style="font-size:28px;margin-bottom:8px">🎬</div>
+          <div style="font-size:10px;letter-spacing:2px;color:var(--pink);text-transform:uppercase;margin-bottom:4px">Hook Video</div>
+          <div style="font-size:8px;color:#3a2a3a;letter-spacing:1px;line-height:1.6">The tension clip.<br>Beats 1–2.<br>MP4, max 30s</div>
+          <input id="up-hook" type="file" accept="video/*" style="display:none" onchange="assetUpload(this,'hook')">
+          <div id="asset-hook-status" style="margin-top:8px;font-size:8px;color:#2a4a2a;letter-spacing:1px"></div>
+        </div>
+
+        <div style="background:#040810;border:2px dashed #ff666622;border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:all 0.2s" ondragover="event.preventDefault()" ondrop="assetDrop(event,'jumpscare')" onclick="document.getElementById('up-jump').click()">
+          <div style="font-size:28px;margin-bottom:8px">💥</div>
+          <div style="font-size:10px;letter-spacing:2px;color:#ff6644;text-transform:uppercase;margin-bottom:4px">Jumpscare Frame</div>
+          <div style="font-size:8px;color:#3a2a1a;letter-spacing:1px;line-height:1.6">The collision moment.<br>Beat 3.<br>Image or 1s video</div>
+          <input id="up-jump" type="file" accept="image/*,video/*" style="display:none" onchange="assetUpload(this,'jumpscare')">
+          <div id="asset-jumpscare-status" style="margin-top:8px;font-size:8px;color:#2a4a2a;letter-spacing:1px"></div>
+        </div>
+
+        <div style="background:#040810;border:2px dashed #ffd60a22;border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:all 0.2s" ondragover="event.preventDefault()" ondrop="assetDrop(event,'lift')" onclick="document.getElementById('up-lift').click()">
+          <div style="font-size:28px;margin-bottom:8px">🎵</div>
+          <div style="font-size:10px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:4px">Lift Audio</div>
+          <div style="font-size:8px;color:#3a3a1a;letter-spacing:1px;line-height:1.6">The resurrection music.<br>Beat 4.<br>MP3 / WAV</div>
+          <input id="up-lift" type="file" accept="audio/*" style="display:none" onchange="assetUpload(this,'lift')">
+          <div id="asset-lift-status" style="margin-top:8px;font-size:8px;color:#2a4a2a;letter-spacing:1px"></div>
+        </div>
+
+        <div style="background:#040810;border:2px dashed #00e5ff22;border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:all 0.2s" ondragover="event.preventDefault()" ondrop="assetDrop(event,'backdrop')" onclick="document.getElementById('up-bg').click()">
+          <div style="font-size:28px;margin-bottom:8px">🖼</div>
+          <div style="font-size:10px;letter-spacing:2px;color:var(--cyan);text-transform:uppercase;margin-bottom:4px">Game Backdrop</div>
+          <div style="font-size:8px;color:#1a3a3a;letter-spacing:1px;line-height:1.6">Background image for<br>the game screen.<br>PNG / JPG</div>
+          <input id="up-bg" type="file" accept="image/*" style="display:none" onchange="assetUpload(this,'backdrop')">
+          <div id="asset-backdrop-status" style="margin-top:8px;font-size:8px;color:#2a4a2a;letter-spacing:1px"></div>
+        </div>
+
+        <div style="background:#040810;border:2px dashed #00ff8822;border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:all 0.2s" ondragover="event.preventDefault()" ondrop="assetDrop(event,'win')" onclick="document.getElementById('up-win').click()">
+          <div style="font-size:28px;margin-bottom:8px">🏆</div>
+          <div style="font-size:10px;letter-spacing:2px;color:var(--green);text-transform:uppercase;margin-bottom:4px">Win Screen</div>
+          <div style="font-size:8px;color:#1a3a1a;letter-spacing:1px;line-height:1.6">The reward moment.<br>Beat 8 entry.<br>Image or short video</div>
+          <input id="up-win" type="file" accept="image/*,video/*" style="display:none" onchange="assetUpload(this,'win')">
+          <div id="asset-win-status" style="margin-top:8px;font-size:8px;color:#2a4a2a;letter-spacing:1px"></div>
+        </div>
+
+        <div style="background:#040810;border:2px dashed #aa44ff22;border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:all 0.2s" ondragover="event.preventDefault()" ondrop="assetDrop(event,'death')" onclick="document.getElementById('up-death').click()">
+          <div style="font-size:28px;margin-bottom:8px">💀</div>
+          <div style="font-size:10px;letter-spacing:2px;color:#aa44ff;text-transform:uppercase;margin-bottom:4px">Death Screen</div>
+          <div style="font-size:8px;color:#2a1a3a;letter-spacing:1px;line-height:1.6">Wrong answer.<br>Brutal. Memorable.<br>Image or short video</div>
+          <input id="up-death" type="file" accept="image/*,video/*" style="display:none" onchange="assetUpload(this,'death')">
+          <div id="asset-death-status" style="margin-top:8px;font-size:8px;color:#2a4a2a;letter-spacing:1px"></div>
+        </div>
+
+      </div>
+
+      <div style="margin-top:16px;padding:12px;background:#020408;border-radius:8px;display:flex;align-items:center;gap:12px">
+        <div id="asset-log" style="flex:1;font-size:9px;color:var(--green);line-height:2">» Drop files or click to upload · Assets saved to your creator slot ·</div>
+        <button class="act-btn primary" onclick="bakeAssets()" style="flex-shrink:0">⚡ BAKE INTO GAME</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB: GAME RULES ══════════════════════════════════════ -->
+  <div id="tab-rules" class="main-grid" style="display:none;grid-template-columns:1fr 320px">
+    <div class="card">
+      <div class="card-title">🎮 GAME RULE BUILDER — Define your challenge</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px">
+
+        <div>
+          <div style="font-size:8px;letter-spacing:2px;color:#4a6a8a;text-transform:uppercase;margin-bottom:6px">Mechanic Type</div>
+          <div style="display:flex;flex-direction:column;gap:6px" id="mechanic-list">
+            <label style="display:flex;align-items:center;gap:8px;padding:10px;background:#040810;border-radius:6px;border:1px solid var(--border);cursor:pointer;font-size:10px;letter-spacing:1px">
+              <input type="radio" name="mechanic" value="code" checked onchange="mechanicChange('code')"> 4-Digit Code (classic)
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;padding:10px;background:#040810;border-radius:6px;border:1px solid var(--border);cursor:pointer;font-size:10px;letter-spacing:1px">
+              <input type="radio" name="mechanic" value="riddle" onchange="mechanicChange('riddle')"> Riddle Answer (text)
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;padding:10px;background:#040810;border-radius:6px;border:1px solid var(--border);cursor:pointer;font-size:10px;letter-spacing:1px">
+              <input type="radio" name="mechanic" value="choice" onchange="mechanicChange('choice')"> Multiple Choice
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;padding:10px;background:#040810;border-radius:6px;border:1px solid var(--border);cursor:pointer;font-size:10px;letter-spacing:1px">
+              <input type="radio" name="mechanic" value="sequence" onchange="mechanicChange('sequence')"> Tap Sequence (memory)
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;padding:10px;background:#040810;border-radius:6px;border:1px solid var(--border);cursor:pointer;font-size:10px;letter-spacing:1px">
+              <input type="radio" name="mechanic" value="timer" onchange="mechanicChange('timer')"> Survive the Timer
+            </label>
+          </div>
+        </div>
+
+        <div id="rule-config">
+          <div style="font-size:8px;letter-spacing:2px;color:#4a6a8a;text-transform:uppercase;margin-bottom:6px">Configure</div>
+          <div id="rule-fields" style="display:flex;flex-direction:column;gap:8px">
+            <!-- Filled by JS -->
+          </div>
+        </div>
+
+      </div>
+
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <div style="flex:1">
+          <div style="font-size:8px;letter-spacing:2px;color:#4a6a8a;text-transform:uppercase;margin-bottom:6px">Win Message (shown on correct answer)</div>
+          <input type="text" id="win-msg" value="YOU CRACKED IT. THE DOOR IS OPEN." style="width:100%;background:#040810;border:1px solid var(--border);color:var(--green);padding:8px 12px;border-radius:6px;font-family:'DM Mono',monospace;font-size:10px;outline:none">
+        </div>
+        <div style="flex:1">
+          <div style="font-size:8px;letter-spacing:2px;color:#4a6a8a;text-transform:uppercase;margin-bottom:6px">Death Message (shown on wrong answer)</div>
+          <input type="text" id="death-msg" value="GAME OVER. YOU DIDN'T MAKE IT." style="width:100%;background:#040810;border:1px solid #ff444422;color:#ff4444;padding:8px 12px;border-radius:6px;font-family:'DM Mono',monospace;font-size:10px;outline:none">
+        </div>
+      </div>
+
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <div style="flex:1">
+          <div style="font-size:8px;letter-spacing:2px;color:#4a6a8a;text-transform:uppercase;margin-bottom:6px">Timer Duration (seconds, 0 = no timer)</div>
+          <input type="number" id="rule-timer" value="30" min="0" max="300" style="width:100%;background:#040810;border:1px solid var(--border);color:#c8d8e8;padding:8px 12px;border-radius:6px;font-family:'DM Mono',monospace;font-size:12px;outline:none">
+        </div>
+        <div style="flex:1">
+          <div style="font-size:8px;letter-spacing:2px;color:#4a6a8a;text-transform:uppercase;margin-bottom:6px">Max Attempts (0 = infinite)</div>
+          <input type="number" id="rule-attempts" value="0" min="0" style="width:100%;background:#040810;border:1px solid var(--border);color:#c8d8e8;padding:8px 12px;border-radius:6px;font-family:'DM Mono',monospace;font-size:12px;outline:none">
+        </div>
+        <div style="flex:1">
+          <div style="font-size:8px;letter-spacing:2px;color:#4a6a8a;text-transform:uppercase;margin-bottom:6px">Rotate Daily?</div>
+          <select id="rule-rotate" style="width:100%;background:#040810;border:1px solid var(--border);color:#c8d8e8;padding:8px 12px;border-radius:6px;font-family:'DM Mono',monospace;font-size:11px;outline:none">
+            <option value="1">Yes — new answer every 24h</option>
+            <option value="0">No — fixed answer</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="act-btn primary" style="margin-top:16px;padding:12px 24px" onclick="saveRules()">⚡ SAVE RULES + BAKE INTO GAME</button>
+    </div>
+
+    <!-- RULE PREVIEW PHONE -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+      <div style="font-size:8px;letter-spacing:2px;color:#4a6a8a;text-transform:uppercase">LIVE PREVIEW</div>
+      <div class="phone" style="width:240px;height:440px;border-radius:36px" id="rule-preview-phone">
+        <div class="island" style="width:70px;height:20px;top:8px"><div class="idot live"></div><div class="idot"></div></div>
+        <div class="pscreen" style="top:36px;align-items:center;justify-content:center;text-align:center;gap:8px">
+          <div style="font-size:7px;letter-spacing:3px;color:#4a2a4a;text-transform:uppercase" id="prev-theme-label">SQUID CHALLENGE</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--pink);line-height:1" id="prev-mechanic-icon">????</div>
+          <div style="font-size:9px;color:#4a2a4a;letter-spacing:1px;line-height:1.6" id="prev-instruction">Enter the 4-digit code</div>
+          <div id="prev-input-area" style="margin-top:4px">
+            <!-- rendered by JS -->
+          </div>
+          <div style="margin-top:8px;font-size:8px;letter-spacing:2px;color:var(--pink);text-transform:uppercase;border:1px solid #ff3cac33;padding:5px 12px;border-radius:10px" id="prev-timer">30s</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB: PIPELINE ════════════════════════════════════════ -->
+  <div id="tab-pipeline" class="main-grid" style="display:none;grid-template-columns:1fr 1fr 1fr">
+    <div class="card" style="grid-column:1/-1">
+      <div class="card-title">🔗 YOUR PIPELINE — Everything you need to deploy</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:4px">
+
+        <div style="background:#040810;border:1px solid var(--border);border-radius:8px;padding:14px">
+          <div style="font-size:8px;letter-spacing:2px;color:var(--cyan);text-transform:uppercase;margin-bottom:8px">YOUR GAME URL</div>
+          <div id="pipe-gameurl" style="font-size:9px;color:var(--cyan);word-break:break-all;line-height:1.6;cursor:pointer;padding:8px;background:#020508;border-radius:4px" onclick="copyPipe('pipe-gameurl')">configure in builder →</div>
+          <div style="font-size:7px;color:#1a3a4a;margin-top:4px">↑ tap to copy · this goes in your TinyURL</div>
+        </div>
+
+        <div style="background:#040810;border:1px solid var(--border);border-radius:8px;padding:14px">
+          <div style="font-size:8px;letter-spacing:2px;color:var(--pink);text-transform:uppercase;margin-bottom:8px">YOUR REF CODE</div>
+          <div id="pipe-ref" style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:4px;color:var(--pink);cursor:pointer;padding:8px;background:#020508;border-radius:4px;word-break:break-all" onclick="copyPipe('pipe-ref')">—</div>
+          <div style="font-size:7px;color:#3a1a2a;margin-top:4px">↑ tap to copy · baked into all your game URLs</div>
+        </div>
+
+        <div style="background:#040810;border:1px solid var(--border);border-radius:8px;padding:14px">
+          <div style="font-size:8px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:8px">TODAY'S CODE</div>
+          <div id="pipe-code" style="font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:12px;color:var(--gold);text-align:center;padding:8px;background:#020508;border-radius:4px">——</div>
+          <div style="font-size:7px;color:#3a3a1a;margin-top:4px">Burn this into your video · rotates midnight</div>
+        </div>
+
+        <div style="background:#040810;border:1px solid var(--border);border-radius:8px;padding:14px">
+          <div style="font-size:8px;letter-spacing:2px;color:var(--green);text-transform:uppercase;margin-bottom:8px">SOUL GATE DESTINATION</div>
+          <div style="font-size:9px;color:var(--green);word-break:break-all;line-height:1.6;padding:8px;background:#020508;border-radius:4px">https://shortfactory.shop/index.php</div>
+          <div style="font-size:7px;color:#1a3a1a;margin-top:4px">Win the game → land here → your 20% begins</div>
+        </div>
+
+      </div>
+
+      <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="act-btn primary" onclick="window.open('/dangergame-creator2.html','_blank')">▶ FILM BUILDER</button>
+        <button class="act-btn secondary" onclick="window.open('/dangergame-creator.html','_blank')">📋 FULL CREATOR HUB</button>
+        <button class="act-btn secondary" onclick="window.open('/squid-challenge.html','_blank')">🦑 PLAY SQUID GAME</button>
+        <button class="act-btn gold" onclick="shareLink()">🔗 COPY MY LINK</button>
+        <button class="act-btn secondary" onclick="window.open('/outreach/sonar.php','_blank')">📡 SONAR MAP</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTION BAR -->
+  <div class="action-row">
+    <button class="act-btn primary" onclick="window.open('/dangergame-creator2.html','_blank')">▶ NEW GAME</button>
+    <button class="act-btn secondary" onclick="window.open('/squid-challenge.html','_blank')">🦑 PLAY DEMO</button>
+    <button class="act-btn secondary" onclick="window.open('/index.php','_blank')">◉ SOUL GATE</button>
+    <div style="flex:1"></div>
+    <div style="font-size:8px;letter-spacing:2px;color:#1a3a5a;text-transform:uppercase;display:flex;align-items:center;gap:6px">
+      <span class="pulse"></span>LIVE · <span id="session-time">00:00</span>
+    </div>
+  </div>
+
+</div><!-- /stage -->
+
+<script>
+// ── STATE ─────────────────────────────────────────────────
+let souls = 0, earnings = 0, squidSouls = 0, gtaSouls = 0;
+let sessionStart = Date.now();
+let hourlyData = new Array(24).fill(0);
+let worldDots = [];
+
+// Load creator from localStorage
+function hashStr(s){let h=0;for(let i=0;i<s.length;i++){h=(Math.imul(31,h)+s.charCodeAt(i))|0}return Math.abs(h).toString(36).toUpperCase().padStart(6,'0')}
+const creatorName = localStorage.getItem('sf_creator_name')||'';
+const refCode = creatorName ? creatorName+'-'+hashStr(creatorName) : '—';
+const now2 = new Date();
+const todayCode = String(now2.getDate()).padStart(2,'0')+String(now2.getMonth()+1).padStart(2,'0');
+
+// Update title
+if(creatorName){
+  document.getElementById('creator-title').textContent = creatorName + ' · COMMAND';
+}
+document.getElementById('pipe-ref').textContent = refCode;
+document.getElementById('pipe-code').textContent = todayCode;
+
+// Next payout
+const np = new Date(); np.setDate(1); np.setMonth(np.getMonth()+1);
+document.getElementById('next-payout').textContent = np.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+
+// ── TABS ──────────────────────────────────────────────────
+function switchTab(tab){
+  ['damage','assets','rules','pipeline'].forEach(t=>{
+    document.getElementById('tab-'+t).style.display = t===tab ? (t==='damage'?'grid':'grid') : 'none';
+  });
+  document.querySelectorAll('.nav-tab').forEach((b,i)=>{
+    b.classList.toggle('active', b.textContent.toLowerCase().includes(tab));
+  });
+  if(tab==='rules') renderRuleFields('code');
+}
+
+// ── WORLD CANVAS ──────────────────────────────────────────
+const wc = document.getElementById('world-canvas');
+const wctx = wc.getContext('2d');
+
+function resizeCanvas(){
+  wc.width = wc.offsetWidth;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// Simplified world map outlines (just land mass approximation)
+function drawWorld(){
+  const w = wc.width, h = wc.height;
+  wctx.clearRect(0,0,w,h);
+  wctx.fillStyle = '#020508';
+  wctx.fillRect(0,0,w,h);
+
+  // Draw grid lines
+  wctx.strokeStyle = '#0a1220';
+  wctx.lineWidth = 0.5;
+  for(let x=0;x<w;x+=w/12){wctx.beginPath();wctx.moveTo(x,0);wctx.lineTo(x,h);wctx.stroke()}
+  for(let y=0;y<h;y+=h/6){wctx.beginPath();wctx.moveTo(0,y);wctx.lineTo(w,y);wctx.stroke()}
+
+  // Equator
+  wctx.strokeStyle = '#0a2a1a';
+  wctx.lineWidth = 1;
+  wctx.beginPath();wctx.moveTo(0,h/2);wctx.lineTo(w,h/2);wctx.stroke();
+
+  // Draw dots
+  worldDots.forEach(d=>{
+    const age = (Date.now()-d.t)/3000;
+    if(age>1) return;
+    const alpha = 1-age;
+    const r = 4+age*8;
+    wctx.beginPath();
+    wctx.arc(d.x*w, d.y*h, r, 0, Math.PI*2);
+    wctx.fillStyle = `rgba(0,255,136,${alpha*0.2})`;
+    wctx.fill();
+    wctx.beginPath();
+    wctx.arc(d.x*w, d.y*h, 3, 0, Math.PI*2);
+    wctx.fillStyle = `rgba(0,255,136,${alpha})`;
+    wctx.fill();
+  });
+
+  // Clean old dots
+  worldDots = worldDots.filter(d=>(Date.now()-d.t)<3000);
+  requestAnimationFrame(drawWorld);
+}
+drawWorld();
+
+// ── HOURLY CHART ──────────────────────────────────────────
+function drawHourly(){
+  const hc = document.getElementById('hourly-chart');
+  const ctx = hc.getContext('2d');
+  const w = hc.width, h = hc.height;
+  ctx.clearRect(0,0,w,h);
+  const max = Math.max(...hourlyData, 1);
+  const bw = w/24;
+  hourlyData.forEach((v,i)=>{
+    const bh = (v/max)*(h-8);
+    const x = i*bw;
+    ctx.fillStyle = i===new Date().getHours() ? '#00ff88' : '#0a2a1a';
+    ctx.fillRect(x+1, h-bh, bw-2, bh);
+  });
+}
+drawHourly();
+
+// ── RANKS ─────────────────────────────────────────────────
+const RANKS = [
+  {name:'HATCHLING',icon:'🥚',min:0,next:10},
+  {name:'VIPER',icon:'🐍',min:10,next:50},
+  {name:'FIRESTARTER',icon:'🔥',min:50,next:200},
+  {name:'REAPER',icon:'💀',min:200,next:1000},
+  {name:'PIED PIPER',icon:'👑',min:1000,next:10000},
+  {name:'SKYDADDY',icon:'🌀',min:10000,next:Infinity}
+];
+
+function updateRank(){
+  const r = RANKS.slice().reverse().find(r=>souls>=r.min)||RANKS[0];
+  document.getElementById('rank-name').textContent = r.name;
+  document.getElementById('rank-badge').querySelector('.rank-icon').textContent = r.icon;
+  const toNext = r.next===Infinity ? '∞' : (r.next-souls)+' souls';
+  document.getElementById('rank-sub').textContent = toNext+' to next rank';
+}
+
+// ── DAMAGE LEVEL ──────────────────────────────────────────
+function calcDamage(){
+  return Math.min(100, Math.floor(Math.sqrt(souls)*10));
+}
+
+function updateDamage(){
+  const d = calcDamage();
+  document.getElementById('dmg-level').textContent = d;
+  document.getElementById('ph-dmg').textContent = d;
+  const col = d>70?'#ff2222':d>40?'#ffaa00':'#ff3cac';
+  document.getElementById('dmg-level').style.color = col;
+}
+
+// ── SOUL ARRIVAL ──────────────────────────────────────────
+const NAMES = ['Anonymous','SOUL_'+Math.random().toString(36).substr(2,4).toUpperCase(),'Player','Challenger'];
+const THEMES_FEED = ['🦑 Squid','🚗 GTA'];
+const COUNTRIES = ['🇬🇧','🇺🇸','🇩🇪','🇧🇷','🇦🇺','🇯🇵','🇨🇦','🇫🇷','🇳🇱','🇮🇳'];
+
+function addSoul(type, theme, country){
+  souls++;
+  if(theme==='squid') squidSouls++;
+  else gtaSouls++;
+  earnings += 0.12 + Math.random()*0.08;
+
+  // Feed entry
+  const feed = document.getElementById('soul-feed');
+  const entry = document.createElement('div');
+  entry.className = 'soul-entry '+(type||'fresh');
+  const icon = type==='win'?'⚡':type==='gate'?'◉':'🎮';
+  const msg = type==='win'?'Completed soul gate':type==='gate'?'Entered soul gate':'Played '+THEMES_FEED[theme==='squid'?0:1];
+  const val = type==='win'?'+£0.'+Math.floor(Math.random()*20+5):'—';
+  const valCol = type==='win'?'var(--gold)':'var(--cyan)';
+  entry.innerHTML = `<div class="se-icon">${icon}</div><div class="se-body"><div class="se-name">${country||'🌍'} Soul_${Math.random().toString(36).substr(2,4).toUpperCase()}</div><div class="se-meta">${msg}</div></div><div class="se-val" style="color:${valCol}">${val}</div>`;
+
+  // Remove "waiting" placeholder if present
+  if(feed.children.length===1&&feed.children[0].querySelector('.se-name')&&feed.children[0].querySelector('.se-name').textContent.includes('Waiting')){
+    feed.innerHTML='';
+  }
+  feed.insertBefore(entry, feed.firstChild);
+  if(feed.children.length>40) feed.removeChild(feed.lastChild);
+
+  // World dot
+  worldDots.push({
+    x: 0.05 + Math.random()*0.9,
+    y: 0.1 + Math.random()*0.8,
+    t: Date.now()
+  });
+
+  // Hourly
+  hourlyData[new Date().getHours()]++;
+  drawHourly();
+
+  // Update UI
+  const es = (Math.round(earnings*100)/100).toFixed(2);
+  document.getElementById('top-souls').textContent = souls;
+  document.getElementById('top-earn').textContent = '£'+es;
+  document.getElementById('ph-souls').textContent = souls;
+  document.getElementById('ph-earn').textContent = '£'+(Math.round(earnings)|0);
+  document.getElementById('earn-today').textContent = '£'+es;
+  document.getElementById('earn-month').textContent = '£'+(Math.round(earnings*4.2*100)/100).toFixed(2);
+  document.getElementById('earn-bar').style.width = Math.min(100, earnings*5)+'%';
+
+  // Theme tubes
+  const total = Math.max(squidSouls+gtaSouls,1);
+  document.getElementById('tube-squid').style.width=(squidSouls/total*100)+'%';
+  document.getElementById('tube-gta').style.width=(gtaSouls/total*100)+'%';
+  document.getElementById('tv-squid').textContent = squidSouls;
+  document.getElementById('tv-gta').textContent = gtaSouls;
+
+  // Conv rate
+  const cr = souls>0?Math.floor((type==='win'?souls*0.65:souls*0.5)/souls*100)+'%':'0%';
+  document.getElementById('ph-rate').textContent = Math.min(99,Math.floor(souls>0?(squidSouls+gtaSouls)*65/Math.max(souls,1):0))+'%';
+
+  // Pipeline health
+  const p1 = Math.min(98, 40+Math.random()*40);
+  const p2 = Math.min(95, 30+Math.random()*40);
+  const p3 = Math.min(90, 20+Math.random()*40);
+  document.getElementById('ph1-bar').style.width=p1+'%';document.getElementById('ph1-val').textContent=Math.round(p1)+'%';
+  document.getElementById('ph2-bar').style.width=p2+'%';document.getElementById('ph2-val').textContent=Math.round(p2)+'%';
+  document.getElementById('ph3-bar').style.width=p3+'%';document.getElementById('ph3-val').textContent=Math.round(p3)+'%';
+
+  updateDamage();
+  updateRank();
+}
+
+// ── DEMO SIMULATION (remove when real data hooked up) ─────
+// Simulates incoming souls to show the system working
+let simInterval = null;
+function startDemo(){
+  // Show a burst of 3 souls immediately so it doesn't look dead
+  const types = ['fresh','gate','win'];
+  const themes = ['squid','gta'];
+  const countries = ['🇬🇧','🇺🇸','🇩🇪','🇧🇷','🇦🇺'];
+  setTimeout(()=>addSoul('fresh','squid','🇬🇧'), 1000);
+  setTimeout(()=>addSoul('gate','squid','🇺🇸'), 2200);
+  setTimeout(()=>addSoul('win','squid','🇩🇪'), 3800);
+
+  // Then a random trickle
+  function scheduleNext(){
+    const delay = 4000 + Math.random()*12000;
+    simInterval = setTimeout(()=>{
+      const t = types[Math.floor(Math.random()*types.length)];
+      const th = themes[Math.floor(Math.random()*themes.length)];
+      const c = countries[Math.floor(Math.random()*countries.length)];
+      addSoul(t, th, c);
+      scheduleNext();
+    }, delay);
+  }
+  setTimeout(scheduleNext, 4000);
+}
+startDemo();
+
+// ── SESSION CLOCK ──────────────────────────────────────────
+setInterval(()=>{
+  const s = Math.floor((Date.now()-sessionStart)/1000);
+  const m = String(Math.floor(s/60)).padStart(2,'0');
+  const sc = String(s%60).padStart(2,'0');
+  document.getElementById('session-time').textContent = m+':'+sc;
+},1000);
+
+// ── SHARE LINK ────────────────────────────────────────────
+function shareLink(){
+  const url = `https://shortfactory.shop/squid-challenge.html?ref=${refCode}&code=${todayCode}&gate=${encodeURIComponent('https://shortfactory.shop/index.php?ref='+refCode)}`;
+  navigator.clipboard.writeText(url).then(()=>alert('Link copied! Paste into TinyURL.')).catch(()=>alert(url));
+}
+
+function copyPipe(id){
+  const txt = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(txt).then(()=>{
+    document.getElementById(id).style.borderColor='var(--green)';
+    setTimeout(()=>document.getElementById(id).style.borderColor='',1000);
+  }).catch(()=>{});
+}
+
+// ── ASSETS ────────────────────────────────────────────────
+function assetDrop(e, type){ e.preventDefault(); assetUpload({files:e.dataTransfer.files}, type); }
+function assetUpload(input, type){
+  const f = input.files[0];
+  if(!f) return;
+  const status = document.getElementById('asset-'+type+'-status');
+  if(status){ status.textContent='✓ '+f.name+' ready'; status.style.color='var(--green)'; }
+  const el = document.getElementById('asset-log');
+  if(el) el.innerHTML += `<span style="color:var(--green)">» ${type}: ${f.name} loaded ·</span><br>`;
+}
+function bakeAssets(){
+  const el = document.getElementById('asset-log');
+  el.innerHTML += '<span style="color:var(--cyan)">» Baking assets into game template ·</span><br>';
+  el.innerHTML += '<span style="color:#ffaa00">» Deploy endpoint needed to persist · Available when dangergame-deploy.php is live ·</span><br>';
+}
+
+// ── GAME RULES ────────────────────────────────────────────
+const MECHANIC_CONFIGS = {
+  code:{
+    label:'4-Digit Code',icon:'????',instruction:'Enter the 4-digit code from the video',
+    fields:[{id:'r-code',label:'The correct code',type:'text',placeholder:'e.g. 7734',val:todayCode}]
+  },
+  riddle:{
+    label:'Riddle',icon:'❓',instruction:'Answer the riddle correctly',
+    fields:[
+      {id:'r-riddle',label:'The riddle question',type:'text',placeholder:'e.g. I have cities but no houses...'},
+      {id:'r-answer',label:'Correct answer (case insensitive)',type:'text',placeholder:'e.g. map'}
+    ]
+  },
+  choice:{
+    label:'Multiple Choice',icon:'A B C D',instruction:'Pick the right answer',
+    fields:[
+      {id:'r-q',label:'The question',type:'text',placeholder:'e.g. What is the first Squid Game?'},
+      {id:'r-a',label:'Option A (correct)',type:'text',placeholder:'Red Light Green Light'},
+      {id:'r-b',label:'Option B',type:'text',placeholder:'Tug of War'},
+      {id:'r-c',label:'Option C',type:'text',placeholder:'Marbles'},
+      {id:'r-d',label:'Option D',type:'text',placeholder:'Glass Bridge'}
+    ]
+  },
+  sequence:{
+    label:'Tap Sequence',icon:'▲ ■ ● ▲',instruction:'Repeat the sequence',
+    fields:[{id:'r-seq',label:'Sequence (comma separated: up,down,left,right,A,B)',type:'text',placeholder:'up,up,down,left,right'}]
+  },
+  timer:{
+    label:'Survive',icon:'⏱',instruction:'Survive until the timer runs out',
+    fields:[{id:'r-survive',label:'Survival time (seconds)',type:'number',placeholder:'10'}]
+  }
+};
+
+function mechanicChange(type){ renderRuleFields(type); }
+
+function renderRuleFields(type){
+  const cfg = MECHANIC_CONFIGS[type]||MECHANIC_CONFIGS.code;
+  const container = document.getElementById('rule-fields');
+  container.innerHTML = cfg.fields.map(f=>`
+    <div>
+      <div style="font-size:8px;letter-spacing:2px;color:#4a6a8a;text-transform:uppercase;margin-bottom:4px">${f.label}</div>
+      <input id="${f.id}" type="${f.type||'text'}" placeholder="${f.placeholder||''}" value="${f.val||''}" style="width:100%;background:#040810;border:1px solid var(--border);color:#c8d8e8;padding:8px 12px;border-radius:6px;font-family:'DM Mono',monospace;font-size:11px;outline:none">
+    </div>
+  `).join('');
+  document.getElementById('prev-mechanic-icon').textContent = cfg.icon;
+  document.getElementById('prev-instruction').textContent = cfg.instruction;
+  const ia = document.getElementById('prev-input-area');
+  if(type==='code'){
+    ia.innerHTML='<div style="display:flex;gap:5px">'+[0,1,2,3].map(()=>'<div style="width:38px;height:48px;border:2px solid #ff3cac44;border-radius:5px;background:#04020a;display:flex;align-items:center;justify-content:center;font-family:\'Bebas Neue\',sans-serif;font-size:24px;color:#ff3cac">?</div>').join('')+'</div>';
+  } else if(type==='choice'){
+    ia.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;width:100%">'+['A','B','C','D'].map(l=>`<div style="padding:7px;background:#04020a;border:1px solid #ff3cac22;border-radius:4px;font-size:9px;color:#4a2a4a;text-align:center">${l}</div>`).join('')+'</div>';
+  } else if(type==='sequence'){
+    ia.innerHTML='<div style="display:flex;gap:5px">'+['▲','■','●','▲'].map(s=>`<div style="width:40px;height:40px;border:1px solid #ff3cac22;border-radius:4px;background:#04020a;display:flex;align-items:center;justify-content:center;font-size:18px;color:#4a2a4a">${s}</div>`).join('')+'</div>';
+  } else {
+    ia.innerHTML=`<div style="padding:10px 20px;border:1px solid #ff3cac22;border-radius:16px;font-size:10px;color:var(--pink);letter-spacing:2px;text-transform:uppercase">${type==='timer'?'⏱ HOLD ON':'ANSWER'}</div>`;
+  }
+}
+
+function saveRules(){
+  const rules = {mechanic:document.querySelector('input[name="mechanic"]:checked').value, winMsg:document.getElementById('win-msg').value, deathMsg:document.getElementById('death-msg').value, timer:document.getElementById('rule-timer').value, attempts:document.getElementById('rule-attempts').value, rotate:document.getElementById('rule-rotate').value};
+  localStorage.setItem('sf_game_rules', JSON.stringify(rules));
+  alert('Rules saved ✓\nBake into game via deploy → your custom rules will be active.');
+}
+
+// ── INIT ──────────────────────────────────────────────────
+renderRuleFields('code');
+</script>
+</body>
+</html>

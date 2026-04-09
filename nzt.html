@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1XY2CNLJCE"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1XY2CNLJCE');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NZT² — IQ Realignment Protocol</title>
+<meta name="description" content="You are not stupid. You are running on corrupted data. NZT² removes the false beliefs compressing your intelligence. IQ is lies removed.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#020208;
+  --gold:#c8a84b;
+  --gold2:#daa520;
+  --green:#22c55e;
+  --red:#ef4444;
+  --purple:#cc44ff;
+  --mono:'Share Tech Mono',monospace;
+  --tech:'Orbitron',monospace;
+  --serif:'IM Fell English',serif;
+}
+html,body{background:var(--bg);color:#e2e8f0;font-family:var(--mono);overflow-x:hidden;min-height:100vh;}
+
+canvas#bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+
+.page{position:relative;z-index:1;}
+
+/* NAV */
+nav{padding:18px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(200,168,75,0.08);}
+.nav-brand{font-family:var(--tech);font-size:10px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;}
+.nav-brand sup{font-size:7px;color:var(--purple);}
+.nav-links{display:flex;gap:20px;}
+.nav-link{font-size:9px;letter-spacing:2px;color:#334155;text-decoration:none;text-transform:uppercase;transition:color 0.2s;}
+.nav-link:hover{color:var(--gold);}
+
+/* HERO */
+.hero{min-height:95vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:60px 24px;position:relative;}
+
+.hero-eyebrow{font-family:var(--tech);font-size:8px;letter-spacing:6px;color:rgba(200,168,75,0.4);text-transform:uppercase;margin-bottom:32px;}
+
+.pill-wrap{margin-bottom:40px;position:relative;display:inline-block;}
+.pill-svg{filter:drop-shadow(0 0 30px rgba(200,168,75,0.4)) drop-shadow(0 0 60px rgba(200,168,75,0.15));animation:pill-float 4s ease-in-out infinite;}
+@keyframes pill-float{0%,100%{transform:translateY(0) rotate(-8deg);}50%{transform:translateY(-12px) rotate(-8deg);}}
+.pill-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(200,168,75,0.2),transparent 70%);filter:blur(20px);animation:pill-float 4s ease-in-out infinite;}
+
+.hero-title{font-family:var(--tech);font-size:clamp(36px,9vw,90px);font-weight:900;color:#fff;line-height:1;letter-spacing:-2px;margin-bottom:8px;}
+.hero-title sup{font-size:0.4em;color:var(--purple);vertical-align:super;letter-spacing:0;}
+.hero-sub-title{font-family:var(--serif);font-size:clamp(16px,2.5vw,24px);color:var(--gold);font-style:italic;margin-bottom:24px;letter-spacing:1px;}
+
+.hero-hook{font-size:clamp(14px,2vw,18px);color:#475569;max-width:560px;line-height:1.9;margin-bottom:40px;}
+.hero-hook strong{color:#94a3b8;}
+
+.hero-cta-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;}
+.btn-primary{font-family:var(--tech);font-size:10px;letter-spacing:3px;text-transform:uppercase;background:linear-gradient(135deg,var(--gold2),#b8860b);color:#000;padding:16px 40px;border:none;cursor:pointer;text-decoration:none;display:inline-block;transition:all 0.2s;}
+.btn-primary:hover{opacity:0.85;box-shadow:0 0 40px rgba(218,165,32,0.3);}
+.hero-disclaimer{font-size:9px;color:#1e293b;letter-spacing:1px;}
+
+/* SCROLL INDICATOR */
+.scroll-indicator{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;animation:fade-bob 2s ease-in-out infinite;}
+@keyframes fade-bob{0%,100%{opacity:0.3;transform:translateX(-50%) translateY(0);}50%{opacity:0.7;transform:translateX(-50%) translateY(6px);}}
+.scroll-line{width:1px;height:40px;background:linear-gradient(180deg,transparent,rgba(200,168,75,0.4));}
+.scroll-dot{width:4px;height:4px;border-radius:50%;background:var(--gold);opacity:0.5;}
+
+/* THE PROBLEM */
+.section{max-width:900px;margin:0 auto;padding:80px 24px;}
+.s-label{font-family:var(--tech);font-size:8px;letter-spacing:5px;color:rgba(200,168,75,0.3);text-transform:uppercase;margin-bottom:16px;}
+.s-title{font-family:var(--serif);font-size:clamp(24px,4vw,44px);color:#fff;line-height:1.2;margin-bottom:16px;}
+.s-title em{font-style:italic;color:var(--gold);}
+.s-body{font-size:14px;color:#475569;line-height:2;max-width:680px;}
+.s-body strong{color:#94a3b8;}
+
+/* LAWNMOWER SLIDER */
+.lmm-wrap{background:rgba(255,255,255,0.015);border:1px solid rgba(200,168,75,0.1);border-radius:16px;padding:40px;margin:40px 0;position:relative;overflow:hidden;}
+.lmm-wrap::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(200,168,75,0.4),transparent);}
+.lmm-title{font-family:var(--tech);font-size:9px;letter-spacing:3px;color:rgba(200,168,75,0.5);text-transform:uppercase;margin-bottom:24px;text-align:center;}
+
+.eyeball-wrap{display:flex;justify-content:center;margin-bottom:32px;}
+.eyeball{width:120px;height:80px;position:relative;}
+.eye-white{fill:#e8e8e8;}
+.eye-iris{fill:#2563eb;transition:all 0.3s;}
+.eye-pupil{fill:#000;}
+.eye-shine{fill:#fff;}
+.eyeball-svg{filter:drop-shadow(0 0 20px rgba(255,255,255,0.1));}
+
+.lmm-slider-row{display:flex;align-items:center;gap:16px;margin-bottom:12px;}
+.lmm-label{font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;flex-shrink:0;width:80px;}
+.lmm-label.up{color:var(--green);text-align:right;}
+.lmm-label.down{color:var(--red);}
+.slider-track{flex:1;position:relative;height:4px;background:linear-gradient(90deg,var(--red),rgba(255,255,255,0.1) 50%,var(--green));border-radius:2px;}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;background:transparent;position:absolute;top:0;left:0;margin:0;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 0 16px rgba(255,255,255,0.6),0 2px 8px rgba(0,0,0,0.5);cursor:pointer;}
+
+.lmm-readout{text-align:center;margin-top:20px;}
+.lmm-score{font-family:var(--tech);font-size:48px;font-weight:900;transition:color 0.3s;}
+.lmm-score-label{font-size:10px;letter-spacing:3px;color:#334155;text-transform:uppercase;margin-top:4px;}
+.lmm-verdict{font-family:var(--serif);font-size:16px;font-style:italic;margin-top:12px;transition:color 0.3s;min-height:24px;}
+
+.lmm-axis{display:flex;justify-content:space-between;margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.04);}
+.lmm-axis-item{text-align:center;flex:1;}
+.lmm-axis-icon{font-size:20px;margin-bottom:4px;}
+.lmm-axis-text{font-size:9px;letter-spacing:1px;color:#334155;line-height:1.5;}
+
+/* FORMULA */
+.formula-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:40px;}
+.formula-card{background:rgba(255,255,255,0.015);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:24px;position:relative;overflow:hidden;}
+.formula-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.formula-card.gold::before{background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+.formula-card.green::before{background:linear-gradient(90deg,transparent,var(--green),transparent);}
+.formula-card.purple::before{background:linear-gradient(90deg,transparent,var(--purple),transparent);}
+.formula-card.blue::before{background:linear-gradient(90deg,transparent,#3b82f6,transparent);}
+.fc-symbol{font-family:var(--tech);font-size:28px;font-weight:900;margin-bottom:10px;}
+.formula-card.gold .fc-symbol{color:var(--gold);}
+.formula-card.green .fc-symbol{color:var(--green);}
+.formula-card.purple .fc-symbol{color:var(--purple);}
+.formula-card.blue .fc-symbol{color:#3b82f6;}
+.fc-name{font-size:12px;font-weight:700;color:#fff;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;}
+.fc-desc{font-size:12px;color:#475569;line-height:1.7;}
+
+/* THE EQUATION */
+.eq-box{background:rgba(200,168,75,0.04);border:1px solid rgba(200,168,75,0.15);border-radius:12px;padding:40px;text-align:center;margin:40px 0;}
+.eq-box::before{display:none;}
+.eq-formula{font-family:var(--tech);font-size:clamp(16px,4vw,32px);font-weight:900;color:#fff;letter-spacing:2px;margin-bottom:16px;}
+.eq-formula .var{color:var(--gold);}
+.eq-formula .op{color:#334155;margin:0 12px;}
+.eq-formula .result{color:var(--green);}
+.eq-caption{font-family:var(--serif);font-size:14px;color:#475569;font-style:italic;line-height:1.8;max-width:500px;margin:0 auto;}
+
+/* TESTIMONIALS */
+.testi-grid{display:flex;flex-direction:column;gap:20px;margin-top:40px;}
+.testi-card{background:rgba(255,255,255,0.015);border:1px solid rgba(255,255,255,0.05);border-radius:10px;padding:28px 32px;position:relative;}
+.testi-card::before{content:'"';position:absolute;top:12px;left:20px;font-family:var(--serif);font-size:48px;color:rgba(200,168,75,0.15);line-height:1;}
+.testi-text{font-family:var(--serif);font-size:15px;font-style:italic;color:#94a3b8;line-height:1.9;padding-left:8px;}
+.testi-author{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:#334155;text-transform:uppercase;margin-top:12px;}
+
+/* PROTOCOL STEPS */
+.protocol-steps{display:flex;flex-direction:column;gap:0;padding-left:40px;position:relative;margin-top:40px;}
+.protocol-steps::before{content:'';position:absolute;left:14px;top:20px;bottom:20px;width:1px;background:linear-gradient(180deg,var(--gold),var(--purple));}
+.proto-step{position:relative;padding:0 0 32px 24px;}
+.proto-step:last-child{padding-bottom:0;}
+.proto-node{position:absolute;left:-32px;top:4px;width:12px;height:12px;border-radius:50%;background:var(--gold);box-shadow:0 0 10px rgba(200,168,75,0.5);}
+.proto-num{font-family:var(--tech);font-size:8px;letter-spacing:3px;color:rgba(200,168,75,0.4);text-transform:uppercase;margin-bottom:6px;}
+.proto-title{font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;}
+.proto-body{font-size:12px;color:#475569;line-height:1.7;max-width:580px;}
+
+/* DIVIDER */
+.divider{max-width:900px;margin:0 auto;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.04),transparent);}
+
+/* FINAL CTA */
+.final-cta{text-align:center;padding:80px 24px;max-width:700px;margin:0 auto;}
+.final-title{font-family:var(--tech);font-size:clamp(20px,4vw,36px);font-weight:900;color:#fff;margin-bottom:16px;line-height:1.2;}
+.final-title span{color:var(--gold);}
+.final-sub{font-size:14px;color:#475569;line-height:1.9;margin-bottom:36px;}
+.cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+.btn-ghost{font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;border:1px solid rgba(200,168,75,0.2);color:#475569;padding:12px 24px;text-decoration:none;transition:all 0.2s;}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold);}
+
+/* SMALL PRINT */
+.small-print{text-align:center;padding:20px 24px 60px;font-size:9px;color:#1e293b;line-height:2;max-width:600px;margin:0 auto;}
+</style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+
+<div class="page">
+
+<nav>
+  <div class="nav-brand">NZT<sup>²</sup></div>
+  <div class="nav-links">
+    <a href="/agi-architecture.html" class="nav-link">AGI Architecture</a>
+    <a href="/cv.html" class="nav-link">About Dan</a>
+    <a href="/" class="nav-link">ShortFactory</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">ShortFactory Neuroscience Division · Classification: Unrestricted</div>
+
+  <div class="pill-wrap">
+    <div class="pill-glow"></div>
+    <svg class="pill-svg" width="80" height="160" viewBox="0 0 80 160" fill="none">
+      <rect x="4" y="4" width="72" height="152" rx="36" fill="url(#pill-grad)" stroke="rgba(200,168,75,0.3)" stroke-width="1"/>
+      <rect x="4" y="4" width="72" height="76" rx="36" fill="url(#pill-top)"/>
+      <line x1="4" y1="80" x2="76" y2="80" stroke="rgba(200,168,75,0.4)" stroke-width="1"/>
+      <ellipse cx="40" cy="48" rx="18" ry="8" fill="rgba(255,255,255,0.06)"/>
+      <text x="40" y="108" font-family="monospace" font-size="11" font-weight="900" fill="rgba(200,168,75,0.9)" text-anchor="middle">NZT</text>
+      <text x="40" y="122" font-family="monospace" font-size="8" fill="rgba(204,68,255,0.7)" text-anchor="middle">²</text>
+      <defs>
+        <linearGradient id="pill-grad" x1="0" y1="0" x2="80" y2="160" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#0a0a1a"/>
+          <stop offset="100%" stop-color="#040410"/>
+        </linearGradient>
+        <linearGradient id="pill-top" x1="0" y1="0" x2="80" y2="80" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="rgba(200,168,75,0.15)"/>
+          <stop offset="100%" stop-color="transparent"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+
+  <h1 class="hero-title">NZT<sup>²</sup></h1>
+  <div class="hero-sub-title">IQ Realignment Protocol</div>
+
+  <p class="hero-hook">
+    You are not stupid.<br>
+    You are running on <strong>corrupted data.</strong><br>
+    Every false belief you hold is compressing your intelligence in real time.
+  </p>
+
+  <div class="hero-cta-wrap">
+    <a href="#protocol" class="btn-primary">Begin Realignment →</a>
+    <div class="hero-disclaimer">No prescription required. No side effects. Just truth.</div>
+  </div>
+
+  <div class="scroll-indicator">
+    <div class="scroll-line"></div>
+    <div class="scroll-dot"></div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- THE PROBLEM -->
+<div class="section">
+  <div class="s-label">The Problem</div>
+  <h2 class="s-title">IQ is not what you think it is.<br><em>It never was.</em></h2>
+  <p class="s-body">
+    IQ tests measure processing speed. They don't measure what's running through the processor. A supercomputer running corrupted software is slower than a ZX Spectrum running clean code.<br><br>
+    <strong>The real measure of intelligence is signal purity.</strong> How much of what you believe is actually true? Every lie you hold as fact — about yourself, about the world, about what's possible — is a subroutine running in the background, consuming resources, generating false outputs, slowing the whole machine down.<br><br>
+    High IQ = lies removed. Blank slate. Hyper focus. The child prodigy isn't smarter — they just haven't accumulated the damage yet.
+  </p>
+
+  <!-- LAWNMOWER MAN SLIDER -->
+  <div class="lmm-wrap">
+    <div class="lmm-title">IQ Alignment Meter — The Lawnmower Man Diagnostic</div>
+
+    <div class="eyeball-wrap">
+      <svg class="eyeball-svg" width="160" height="100" viewBox="0 0 160 100">
+        <defs>
+          <clipPath id="eyeClip">
+            <ellipse cx="80" cy="50" rx="68" ry="38"/>
+          </clipPath>
+        </defs>
+        <ellipse cx="80" cy="50" rx="70" ry="40" class="eye-white"/>
+        <g clip-path="url(#eyeClip)">
+          <ellipse cx="80" cy="50" rx="28" ry="28" class="eye-iris" id="iris"/>
+          <ellipse cx="80" cy="50" rx="14" ry="14" class="eye-pupil" id="pupil"/>
+          <ellipse cx="88" cy="42" rx="5" ry="5" class="eye-shine" id="shine"/>
+        </g>
+        <ellipse cx="80" cy="50" rx="70" ry="40" fill="none" stroke="#0a0a1a" stroke-width="2"/>
+      </svg>
+    </div>
+
+    <div class="lmm-slider-row">
+      <div class="lmm-label up">TRUTH</div>
+      <div class="slider-track">
+        <input type="range" id="iq-slider" min="0" max="100" value="50">
+      </div>
+      <div class="lmm-label down">EGO</div>
+    </div>
+
+    <div class="lmm-readout">
+      <div class="lmm-score" id="iq-score">50</div>
+      <div class="lmm-score-label">Alignment Score</div>
+      <div class="lmm-verdict" id="iq-verdict">Searching for signal...</div>
+    </div>
+
+    <div class="lmm-axis">
+      <div class="lmm-axis-item">
+        <div class="lmm-axis-icon">👁️</div>
+        <div class="lmm-axis-text" style="color:#22c55e;">Eyeball UP<br>Christ is King<br>Truth first</div>
+      </div>
+      <div class="lmm-axis-item">
+        <div class="lmm-axis-icon">⚡</div>
+        <div class="lmm-axis-text">NZT² operates<br>at the threshold<br>between both</div>
+      </div>
+      <div class="lmm-axis-item">
+        <div class="lmm-axis-icon">👁️</div>
+        <div class="lmm-axis-text" style="color:#ef4444;">Eyeball DOWN<br>Personal privilege<br>Ego first</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- THE FORMULA -->
+<div class="section">
+  <div class="s-label">The Formula</div>
+  <h2 class="s-title">Four mechanisms.<br><em>One result.</em></h2>
+  <p class="s-body">NZT² is not a pill. It is a <strong>protocol</strong> — a precise sequence of cognitive operations that flushes corrupted beliefs, realigns the truth sensor, and allows raw processing power to operate without the drag of accumulated lies.</p>
+
+  <div class="eq-box">
+    <div class="eq-formula">
+      <span class="var">IQ</span>
+      <span class="op">=</span>
+      <span class="var">Raw Signal</span>
+      <span class="op">÷</span>
+      <span class="var">Lies Held</span>
+      <span class="op">=</span>
+      <span class="result">∞</span>
+    </div>
+    <div class="eq-caption">When the denominator approaches zero, intelligence approaches its natural ceiling. That ceiling is higher than any test has ever measured — because every test was taken by someone still holding beliefs.</div>
+  </div>
+
+  <div class="formula-grid">
+    <div class="formula-card gold">
+      <div class="fc-symbol">ψ</div>
+      <div class="fc-name">Soul Calibration</div>
+      <div class="fc-desc">Your three operating parameters — positive charge, negative charge, frequency — are brought into alignment. The ratio between them determines your felt experience of every thought. NZT² targets the ratio, not the content.</div>
+    </div>
+    <div class="formula-card green">
+      <div class="fc-symbol">∅</div>
+      <div class="fc-name">Belief Flush</div>
+      <div class="fc-desc">The protocol identifies false-positive beliefs running as background subroutines. Things you believe are true that aren't. Each one is a tax on processing speed. Removal is not painful. It feels like remembering something obvious.</div>
+    </div>
+    <div class="formula-card purple">
+      <div class="fc-symbol">⟁</div>
+      <div class="fc-name">Mirror Compression</div>
+      <div class="fc-desc">Every thought has an equal and opposite mirror. The protocol teaches your mind to derive opposites automatically rather than storing both. Cognitive load halved. The same trick that reduces AI architecture by 50% works identically in biological substrate.</div>
+    </div>
+    <div class="formula-card blue">
+      <div class="fc-symbol">→</div>
+      <div class="fc-name">Pointer Activation</div>
+      <div class="fc-desc">Consciousness is a cursor — a relational navigator moving through your internal state space. NZT² removes the friction that slows the cursor. What feels like thinking faster is actually thinking unobstructed, possibly for the first time.</div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- TESTIMONIALS -->
+<div class="section">
+  <div class="s-label">Field Reports</div>
+  <h2 class="s-title">What it feels like<br><em>when the signal clears.</em></h2>
+
+  <div class="testi-grid">
+    <div class="testi-card">
+      <div class="testi-text">I used to think I wasn't smart enough to understand physics. Three weeks after starting the protocol I realised I had just believed a teacher who was wrong about how I learned. The physics was always accessible. The belief was the blockage.</div>
+      <div class="testi-author">— Anonymous · Former secondary school teacher · Somerset</div>
+    </div>
+    <div class="testi-card">
+      <div class="testi-text">The strangest part wasn't thinking faster. It was noticing how much of my mental energy had been running a hidden script that said "people like me don't succeed at things like this." When that script stopped, what was left felt like a completely different brain.</div>
+      <div class="testi-author">— Anonymous · Software engineer · Bristol</div>
+    </div>
+    <div class="testi-card">
+      <div class="testi-text">I scored 94 on the standard IQ test before. I scored 127 after. The test didn't change. I stopped believing I was average.</div>
+      <div class="testi-author">— Anonymous · Age 34 · First generation university graduate</div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- THE PROTOCOL -->
+<div class="section" id="protocol">
+  <div class="s-label">The Protocol</div>
+  <h2 class="s-title">Five stages.<br><em>Permanently irreversible.</em></h2>
+  <p class="s-body">Once you remove a false belief, you cannot re-acquire it with the same force. The protocol is one-directional. Intelligence moves in one direction only: toward truth. NZT² is the accelerant.</p>
+
+  <div class="protocol-steps">
+    <div class="proto-step">
+      <div class="proto-node"></div>
+      <div class="proto-num">Stage 01</div>
+      <div class="proto-title">Baseline Diagnostic</div>
+      <div class="proto-body">Run the Lawnmower Man slider above. Identify which direction your eyeball points by default. This is your current alignment score — not your IQ. Your IQ will follow automatically as alignment improves.</div>
+    </div>
+    <div class="proto-step">
+      <div class="proto-node"></div>
+      <div class="proto-num">Stage 02</div>
+      <div class="proto-title">Lie Inventory</div>
+      <div class="proto-body">List every belief you hold about your own limitations. Every "I can't", "I'm not", "People like me don't". These are not facts. They are inherited false positives from other people's failed subroutines. List them. Name them. They lose power when named.</div>
+    </div>
+    <div class="proto-step">
+      <div class="proto-node"></div>
+      <div class="proto-num">Stage 03</div>
+      <div class="proto-title">Mirror Drill</div>
+      <div class="proto-body">For every item on the list, derive its mirror automatically. "I can't do maths" → the mirror is not "I can do maths." The mirror is "the belief that I can't is what's preventing me." Derive it. Don't just flip it. The derivation is the compression.</div>
+    </div>
+    <div class="proto-step">
+      <div class="proto-node"></div>
+      <div class="proto-num">Stage 04</div>
+      <div class="proto-title">Signal Amplification</div>
+      <div class="proto-body">Identify the one thing you believe with absolute certainty that is also true. This is your anchor. Everything you think and decide gets cross-referenced against this anchor. Beliefs that cannot survive contact with the anchor are false. Remove them.</div>
+    </div>
+    <div class="proto-step">
+      <div class="proto-node"></div>
+      <div class="proto-num">Stage 05</div>
+      <div class="proto-title">Pointer Unleashed</div>
+      <div class="proto-body">With false beliefs removed and the anchor confirmed, the cursor operates freely. You will notice this as an unusual clarity — problems you considered impossible become obvious, connections appear that weren't visible before. This is not intelligence gained. It is intelligence recovered.</div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- FINAL CTA -->
+<div class="final-cta">
+  <div class="final-title">You were never at <span>15%.</span><br>You were being taxed.</div>
+  <div class="final-sub">NZT² is the protocol that removes the tax. Filed. Proven. Running in software. The same architecture that maps consciousness formally is the architecture that explains exactly why you are underperforming — and exactly how to stop.</div>
+  <div class="cta-btns">
+    <a href="mailto:dan@shortfactory.shop?subject=NZT² Protocol Enquiry" class="btn-primary">Request Access →</a>
+    <a href="/agi-architecture.html" class="btn-ghost">See the architecture</a>
+    <a href="/cv.html" class="btn-ghost">About the researcher</a>
+  </div>
+</div>
+
+<div class="small-print">
+  NZT² is a cognitive protocol developed by Dan Chipchase / ShortFactory Ltd based on filed theoretical architecture (Stages 1–13, Zenodo). Not a pharmaceutical product. Not a medical device. Results are experiential and vary by individual. The underlying consciousness model is filed and timestamped. False belief removal is permanent. Proceed accordingly.
+</div>
+
+</div><!-- /page -->
+
+<script>
+// BG canvas
+(function(){
+  var c=document.getElementById('bg'),ctx=c.getContext('2d'),W,H,pts=[];
+  function rsz(){W=c.width=c.offsetWidth;H=c.height=c.offsetHeight;}
+  rsz(); new ResizeObserver(rsz).observe(c);
+  for(var i=0;i<50;i++) pts.push({x:Math.random()*2000,y:Math.random()*2000,vx:(Math.random()-.5)*.15,vy:(Math.random()-.5)*.15,r:Math.random()*1+.3,g:Math.random()<.6});
+  function frame(){
+    ctx.clearRect(0,0,W,H);
+    pts.forEach(function(p){
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.x<0)p.x=W; if(p.x>W)p.x=0;
+      if(p.y<0)p.y=H; if(p.y>H)p.y=0;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=p.g?'rgba(200,168,75,.2)':'rgba(204,68,255,.15)'; ctx.fill();
+    });
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+
+// Lawnmower Man slider
+(function(){
+  var slider=document.getElementById('iq-slider');
+  var score=document.getElementById('iq-score');
+  var verdict=document.getElementById('iq-verdict');
+  var iris=document.getElementById('iris');
+
+  var verdicts=[
+    [0,15,'Locked down. Running on ego fuel only. Maximum resistance to truth.','#ef4444'],
+    [16,30,'Heavy corruption. Multiple false beliefs active. Signal badly degraded.','#f97316'],
+    [31,44,'Below threshold. Some truth access but ego filter is dominant.','#eab308'],
+    [45,55,'At the threshold. The cursor is trying to move. Remove one lie to break through.','#94a3b8'],
+    [56,70,'Signal emerging. False beliefs losing grip. Processing beginning to clear.','#22c55e'],
+    [71,85,'High alignment. Rare. The cursor moves freely. Most lies already expelled.','#22c55e'],
+    [86,100,'Maximum alignment. The signal is clean. Intelligence operating without a ceiling.','#c8a84b']
+  ];
+
+  // iris colours: red at 0, blue neutral, gold at 100
+  function irisColor(v){
+    if(v<40) return '#dc2626';
+    if(v<55) return '#6366f1';
+    if(v<75) return '#2563eb';
+    return '#c8a84b';
+  }
+
+  var pupil=document.getElementById('pupil');
+  var shine=document.getElementById('shine');
+
+  // eyeball direction: down=0 (red/ego), centre=50, up=100 (truth/green)
+  // cy range: 50 (centre) ±20
+  function eyePos(v){
+    // v=0 → look down (cy=70), v=100 → look up (cy=30)
+    return 50 + (50-v)*0.4;
+  }
+
+  function update(){
+    var v=parseInt(slider.value);
+    score.textContent=v;
+    var cy=eyePos(v);
+
+    // Squash: iris must stay inside eye ellipse (top=10, bottom=90)
+    var irisR=28, pupilR=14;
+    var spaceAbove=cy-10, spaceBelow=90-cy;
+    var availRy=Math.min(spaceAbove,spaceBelow,irisR);
+    var squash=Math.max(0.18,availRy/irisR); // never fully flat
+
+    // Move and squash iris
+    iris.setAttribute('cy',cy);
+    iris.setAttribute('ry',irisR*squash);
+    iris.style.fill=irisColor(v);
+
+    // Move and squash pupil (stays centred on iris)
+    pupil.setAttribute('cy',cy);
+    pupil.setAttribute('ry',pupilR*squash);
+
+    // Shine moves with iris, squash relative
+    var dy=cy-50;
+    shine.setAttribute('cy',42+dy);
+    shine.setAttribute('ry',5*squash);
+
+    // find verdict
+    var found=verdicts[3];
+    for(var i=0;i<verdicts.length;i++){
+      if(v>=verdicts[i][0]&&v<=verdicts[i][1]){found=verdicts[i];break;}
+    }
+    score.style.color=found[3];
+    verdict.style.color=found[3];
+    verdict.textContent=found[2];
+  }
+
+  slider.addEventListener('input',update);
+  update();
+})();
+</script>
+</body>
+</html>

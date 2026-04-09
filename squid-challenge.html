@@ -1163,7 +1163,20 @@
                 💰 Earn credits for uploads
             </p>
 
+            <!-- CODE GATE — shows when ?code= is in URL -->
+            <div id="code-gate" style="display:none;margin-bottom:16px">
+              <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:3px;color:#ff3cac;text-align:center;margin-bottom:10px;text-transform:uppercase">Enter The Code From The Video</div>
+              <div style="display:flex;gap:8px;justify-content:center;margin-bottom:10px">
+                <input id="c0" maxlength="1" style="width:52px;height:64px;text-align:center;font-family:'Bebas Neue',sans-serif;font-size:36px;background:#03040a;border:2px solid #ff3cac44;border-radius:4px;color:#fff;outline:none" oninput="codeInput(this,0)" onkeydown="codeBack(event,0)">
+                <input id="c1" maxlength="1" style="width:52px;height:64px;text-align:center;font-family:'Bebas Neue',sans-serif;font-size:36px;background:#03040a;border:2px solid #ff3cac44;border-radius:4px;color:#fff;outline:none" oninput="codeInput(this,1)" onkeydown="codeBack(event,1)">
+                <input id="c2" maxlength="1" style="width:52px;height:64px;text-align:center;font-family:'Bebas Neue',sans-serif;font-size:36px;background:#03040a;border:2px solid #ff3cac44;border-radius:4px;color:#fff;outline:none" oninput="codeInput(this,2)" onkeydown="codeBack(event,2)">
+                <input id="c3" maxlength="1" style="width:52px;height:64px;text-align:center;font-family:'Bebas Neue',sans-serif;font-size:36px;background:#03040a;border:2px solid #ff3cac44;border-radius:4px;color:#fff;outline:none" oninput="codeInput(this,3)" onkeydown="codeBack(event,3)">
+              </div>
+              <div id="code-err" style="font-family:'DM Mono',monospace;font-size:10px;color:#ff3c3c;text-align:center;height:16px;letter-spacing:2px"></div>
+            </div>
+
             <button class="start-btn" id="startBtn">ENTER THE GAME</button>
+            <a href="/dangergame-creator.html" style="display:block;text-align:center;margin-top:14px;font-family:'DM Mono',monospace;font-size:10px;color:#2a4a6a;letter-spacing:2px;text-decoration:none">BUILD YOUR OWN DANGER GAME →</a>
         </div>
 
         <!-- Game Screen -->
@@ -1672,6 +1685,104 @@
         }
         createWaveform();
 
+        // ── URL PARAMS — ref tracking + code gate + soul gate ──────
+        const _p = new URLSearchParams(window.location.search);
+        const _ref  = _p.get('ref')  || '';
+        const _code = _p.get('code') || '';
+        const _gate = _p.get('gate') || 'https://shortfactory.shop/index.php';
+
+        // Log ref to cortex silently
+        if(_ref){
+          fetch('/alive/studio/cortex-receiver.php',{method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({type:'danger_game_enter',ref:_ref,theme:'squidgames',ts:Date.now()})}).catch(()=>{});
+        }
+
+        // Show code gate if code is set
+        if(_code){
+          document.getElementById('code-gate').style.display = 'block';
+        }
+
+        // Code input helpers
+        function codeInput(el, idx){
+          el.value = el.value.replace(/\D/g,'');
+          if(el.value.length===1 && idx<3) document.getElementById('c'+(idx+1)).focus();
+          const entered = [0,1,2,3].map(i=>document.getElementById('c'+i).value).join('');
+          if(entered.length===4) validateCode(entered);
+        }
+        function codeBack(e, idx){
+          if(e.key==='Backspace' && !e.target.value && idx>0) document.getElementById('c'+(idx-1)).focus();
+        }
+        window.codeInput = codeInput;
+        window.codeBack  = codeBack;
+
+        function validateCode(entered){
+          if(entered === String(_code)){
+            // Flash green
+            [0,1,2,3].forEach(i=>{
+              const el = document.getElementById('c'+i);
+              el.style.borderColor='#00ff88';el.style.color='#00ff88';
+            });
+            document.getElementById('code-err').textContent='✓ ACCESS GRANTED';
+            document.getElementById('code-err').style.color='#00ff88';
+            document.getElementById('startBtn').style.background='#00ff88';
+            document.getElementById('startBtn').style.color='#000';
+            setTimeout(()=>document.getElementById('startBtn').click(),600);
+          } else {
+            // Flash red
+            [0,1,2,3].forEach(i=>{
+              const el = document.getElementById('c'+i);
+              el.style.borderColor='#ff2222';el.value='';
+            });
+            sqPlay('death', false); // Beat: wrong code = dead_end
+          document.getElementById('code-err').textContent='✗ WRONG CODE — TRY AGAIN';
+            document.getElementById('c0').focus();
+          }
+        }
+
+        // ── SQUID AUDIO ENGINE ─────────────────────────────────────
+        const SQ = '/sounds/squid/';
+        const TRACKS = {
+          countdown:  new Audio(SQ+'hostagecrisis_crap.mp3'), // Beat 1-2: tension
+          collision:  new Audio(SQ+'murder.mp3'),              // Beat 3: jumpscare hit
+          lift:       new Audio(SQ+'dawn.mp3'),                // Beat 4: resurrection
+          game:       new Audio(SQ+'needles_dalgona.mp3'),     // Beat 5-7: game loop
+          death:      new Audio(SQ+'dead_end.mp3'),            // Wrong answer
+          win:        new Audio(SQ+'delivery.mp3'),            // Win / premiere
+          ambient1:   new Audio(SQ+'4billion.mp3'),            // Optional ambient
+          ambient2:   new Audio(SQ+'fat_and_rats.mp3'),        // Optional ambient
+          sad:        new Audio(SQ+'lets_go_out_tonight_sad.mp3'), // Alternate lift
+          identity:   new Audio(SQ+'i_remember_my_name.mp3'),  // Soul gate moment
+          tension:    new Audio(SQ+'owe.mp3'),                 // Rising dread
+          pain:       new Audio(SQ+'hurt_so_bad.mp3'),         // Alternate death
+        };
+        // Preload, set loops
+        TRACKS.game.loop = true;
+        TRACKS.ambient1.loop = true;
+        let _activeTrack = null;
+
+        function sqPlay(key, fadeIn){
+          if(_activeTrack){ _activeTrack.pause(); _activeTrack.currentTime=0; }
+          const t = TRACKS[key];
+          if(!t) return;
+          t.volume = fadeIn ? 0 : 0.7;
+          t.currentTime = 0;
+          t.play().catch(()=>{});
+          _activeTrack = t;
+          if(fadeIn){
+            let v=0;
+            const fi = setInterval(()=>{ v=Math.min(0.7,v+0.05); t.volume=v; if(v>=0.7)clearInterval(fi); },100);
+          }
+        }
+        function sqStop(fadeOut){
+          if(!_activeTrack) return;
+          const t = _activeTrack;
+          if(fadeOut){
+            let v=t.volume;
+            const fo = setInterval(()=>{ v=Math.max(0,v-0.05); t.volume=v; if(v<=0){t.pause();clearInterval(fo);} },80);
+          } else { t.pause(); t.currentTime=0; }
+          _activeTrack = null;
+        }
+
         // Screen transitions
         function showScreen(screen) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -1687,6 +1798,7 @@
         // Start game
         startBtn.addEventListener('click', async () => {
             showScreen(gameScreen);
+            sqPlay('game', true); // Beat 5-7: dalgona needle loop starts
             startTimer();
             await initCamera();
             loadScene(0);
@@ -1753,6 +1865,7 @@
             timerOverlay.classList.remove('warning', 'danger');
             if (timeLeft <= 30) {
                 timerOverlay.classList.add('danger');
+                if(timeLeft===30) sqPlay('countdown', false); // Beat 1-2: hostagecrisis kicks in at 30s
             } else if (timeLeft <= 60) {
                 timerOverlay.classList.add('warning');
             }
@@ -1960,6 +2073,24 @@
         // Premiere
         function showPremiere() {
             showScreen(premiereScreen);
+            sqStop(true);
+            setTimeout(()=>sqPlay('win', true), 500); // Beat 8: delivery plays on win
+
+            // ── SOUL GATE REDIRECT ────────────────────────────────
+            if(_gate){
+              const gateUrl = _gate + (_gate.includes('?')?'&':'?') + 'ref='+encodeURIComponent(_ref)+'&from=dangergame';
+              const banner = document.createElement('div');
+              banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:linear-gradient(135deg,#ff3cac,#00e5ff);color:#000;font-family:\'Bebas Neue\',sans-serif;font-size:18px;letter-spacing:4px;text-align:center;padding:16px;z-index:9999;cursor:pointer;text-shadow:none';
+              let secs = 5;
+              banner.textContent = 'SOUL GATE OPENS IN '+secs+'s — TAP TO ENTER NOW';
+              banner.onclick = ()=>{ window.location.href = gateUrl; };
+              document.body.appendChild(banner);
+              const gateTimer = setInterval(()=>{
+                secs--;
+                if(secs<=0){ clearInterval(gateTimer); window.location.href = gateUrl; }
+                else banner.textContent = 'SOUL GATE OPENS IN '+secs+'s — TAP TO ENTER NOW';
+              },1000);
+            }
 
             // Create a combined video playlist simulation
             let playIndex = 0;

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="DARES4DOSH V2 CORTEX — Dare economy. Prove yourself. Earn XMR.">
+<title>DARES4DOSH — V2.0 CORTEX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;background:#050505;}
+
+/* ── MOBILE (≤600px): full-bleed iframe ── */
+.mobile-shell{display:none;position:fixed;inset:0;width:100vw;height:100vh;}
+.mobile-shell iframe{width:100%;height:100%;border:none;display:block;}
+
+/* ── DESKTOP: centred phone mockup ── */
+.desktop-shell{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:100vh;padding:40px 20px;position:relative;
+  font-family:'Share Tech Mono',monospace;color:#e2e8f0;overflow-x:hidden;
+}
+.desktop-shell::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(255,140,0,0.03) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(255,140,0,0.03) 1px,transparent 1px);
+  background-size:40px 40px;
+}
+
+.badge{
+  font-family:'Orbitron',monospace;font-size:10px;letter-spacing:5px;
+  color:#ff8c00;text-transform:uppercase;margin-bottom:12px;opacity:0.7;
+  position:relative;z-index:2;
+}
+.badge a{color:#ff8c00;text-decoration:none;border-bottom:1px solid rgba(255,140,0,0.4);}
+
+.page-title{
+  font-family:'Orbitron',monospace;font-size:clamp(20px,3.5vw,36px);font-weight:900;
+  color:#fff;letter-spacing:4px;text-align:center;margin-bottom:4px;
+  text-shadow:0 0 40px rgba(255,140,0,0.3);position:relative;z-index:2;
+}
+.page-title span{color:#ff8c00;}
+.page-sub{font-size:11px;color:#475569;letter-spacing:3px;margin-bottom:28px;position:relative;z-index:2;}
+
+/* Phone */
+.phone-wrap{position:relative;z-index:2;}
+.phone-glow{
+  position:absolute;inset:-20px;border-radius:64px;pointer-events:none;
+  background:radial-gradient(ellipse at center,rgba(255,140,0,0.07) 0%,transparent 70%);
+}
+.phone{
+  width:320px;height:640px;background:#0a0a0a;border-radius:44px;
+  border:2px solid rgba(255,140,0,0.3);position:relative;overflow:hidden;
+  box-shadow:0 0 0 1px rgba(0,0,0,0.8),0 30px 80px rgba(0,0,0,0.8),
+             0 0 60px rgba(255,140,0,0.08),inset 0 0 0 1px rgba(255,255,255,0.04);
+}
+.phone-notch{
+  position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:100px;height:26px;background:#0a0a0a;border-radius:0 0 18px 18px;
+  z-index:10;border:2px solid rgba(255,140,0,0.15);border-top:none;
+}
+.phone::before{
+  content:'';position:absolute;right:-3px;top:120px;width:3px;height:60px;
+  background:rgba(255,140,0,0.2);border-radius:0 2px 2px 0;
+  box-shadow:0 80px 0 rgba(255,140,0,0.2);
+}
+.phone::after{
+  content:'';position:absolute;left:-3px;top:100px;width:3px;height:40px;
+  background:rgba(255,140,0,0.15);border-radius:2px 0 0 2px;
+  box-shadow:0 56px 0 rgba(255,140,0,0.15);
+}
+.phone-screen{position:absolute;inset:0;border-radius:42px;overflow:hidden;}
+.phone-screen iframe{width:375px;height:100%;border:none;transform-origin:top left;transform:scale(0.853);}
+.phone-bar{
+  position:absolute;bottom:10px;left:50%;transform:translateX(-50%);
+  width:100px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;z-index:10;
+}
+
+/* ── MOBILE breakpoint ── */
+@media(max-width:600px){
+  html,body{overflow:hidden;}
+  .desktop-shell{display:none;}
+  .mobile-shell{display:block;}
+}
+</style>
+</head>
+<body>
+
+<!-- MOBILE: pure fullscreen, no chrome -->
+<div class="mobile-shell">
+  <iframe
+    src="https://stinkindigger.info/"
+    title="DARES4DOSH V2 CORTEX"
+    allow="camera; microphone; autoplay"
+  ></iframe>
+</div>
+
+<!-- DESKTOP: phone mockup -->
+<div class="desktop-shell">
+  <div class="badge">V2.0 CORTEX · <a href="/dares4dosh/">← V1.0</a></div>
+  <h1 class="page-title">DARES<span>4</span>DOSH <span style="font-size:0.4em;color:#ff8c00;letter-spacing:2px;">V2.0</span></h1>
+  <p class="page-sub">STINKINDIGGER.INFO · CORTEX BUILD</p>
+
+  <div class="phone-wrap">
+    <div class="phone-glow"></div>
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <iframe
+          src="https://stinkindigger.info/"
+          title="DARES4DOSH V2 CORTEX"
+          allow="camera; microphone; autoplay"
+          loading="lazy"
+        ></iframe>
+      </div>
+      <div class="phone-bar"></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

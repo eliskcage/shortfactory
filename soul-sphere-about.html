@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Soul Sphere — The Discovery</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --gold:#daa520;
+  --gold-dim:rgba(218,165,32,0.15);
+  --gold-border:rgba(218,165,32,0.25);
+  --bg:#050508;
+  --surface:rgba(10,10,18,0.95);
+  --text:#e2e8f0;
+  --muted:#475569;
+  --dim:#1e293b;
+}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;line-height:1.7;overflow-x:hidden;}
+
+/* STARS BG */
+#stars{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+#stars canvas{position:absolute;inset:0;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:50;padding:18px 40px;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(180deg,rgba(5,5,8,0.98),transparent);}
+.nav-brand{font-size:11px;letter-spacing:5px;text-transform:uppercase;color:var(--gold);font-weight:800;}
+.nav-link{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color 0.2s;}
+.nav-link:hover{color:var(--text);}
+.nav-enter{padding:9px 22px;background:linear-gradient(135deg,var(--gold),#b8860b);border:none;border-radius:7px;color:#000;font-weight:900;font-size:10px;letter-spacing:2px;cursor:pointer;text-decoration:none;}
+
+/* HERO */
+#hero{position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:120px 40px 80px;z-index:1;}
+.hero-eyebrow{font-size:10px;letter-spacing:5px;text-transform:uppercase;color:var(--muted);margin-bottom:24px;}
+.hero-title{font-size:clamp(42px,8vw,96px);font-weight:900;line-height:1;letter-spacing:-2px;margin-bottom:24px;}
+.hero-title span{color:var(--gold);}
+.hero-sub{font-size:clamp(14px,2vw,18px);color:var(--muted);max-width:600px;margin:0 auto 48px;line-height:1.8;}
+.hero-date{font-size:10px;letter-spacing:3px;color:var(--dim);text-transform:uppercase;}
+.hero-cta{display:inline-block;margin-top:40px;padding:16px 40px;background:linear-gradient(135deg,var(--gold),#b8860b);border-radius:10px;color:#000;font-weight:900;font-size:13px;letter-spacing:3px;text-decoration:none;transition:opacity 0.2s;}
+.hero-cta:hover{opacity:0.88;}
+
+/* GLOW ORB */
+.hero-orb{position:absolute;top:50%;left:50%;transform:translate(-50%,-60%);width:600px;height:600px;background:radial-gradient(circle,rgba(218,165,32,0.04) 0%,transparent 70%);border-radius:50%;pointer-events:none;}
+
+/* SECTIONS */
+section{position:relative;z-index:1;padding:100px 40px;}
+.container{max-width:800px;margin:0 auto;}
+.container-wide{max-width:1100px;margin:0 auto;}
+
+.section-eyebrow{font-size:9px;letter-spacing:5px;text-transform:uppercase;color:var(--gold);margin-bottom:12px;font-weight:700;}
+.section-title{font-size:clamp(28px,4vw,48px);font-weight:900;line-height:1.15;margin-bottom:24px;letter-spacing:-1px;}
+.section-body{font-size:16px;color:var(--muted);line-height:1.9;}
+.section-body p{margin-bottom:20px;}
+.section-body p:last-child{margin-bottom:0;}
+.section-body strong{color:var(--text);}
+
+/* DISCOVERY TIMELINE */
+.timeline{margin-top:60px;}
+.tl-item{display:flex;gap:32px;margin-bottom:56px;align-items:flex-start;}
+.tl-left{flex-shrink:0;text-align:right;width:60px;}
+.tl-num{font-size:32px;font-weight:900;color:var(--gold-border);line-height:1;}
+.tl-dot{width:1px;background:rgba(218,165,32,0.15);flex-grow:1;margin:0 auto;}
+.tl-body{flex:1;padding-top:4px;}
+.tl-label{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;font-weight:700;}
+.tl-title{font-size:20px;font-weight:800;color:var(--text);margin-bottom:10px;line-height:1.3;}
+.tl-text{font-size:14px;color:var(--muted);line-height:1.8;}
+
+/* QUOTE BLOCK */
+.quote-block{border-left:2px solid var(--gold);padding:20px 28px;margin:40px 0;background:var(--gold-dim);border-radius:0 10px 10px 0;}
+.quote-text{font-size:18px;font-weight:600;color:var(--text);line-height:1.6;margin-bottom:10px;font-style:italic;}
+.quote-attr{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);}
+
+/* EQUATION */
+.equation-block{background:rgba(218,165,32,0.05);border:1px solid var(--gold-border);border-radius:14px;padding:36px 40px;margin:48px 0;text-align:center;}
+.eq-label{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-bottom:16px;}
+.eq-formula{font-size:clamp(18px,3vw,28px);font-weight:900;color:var(--gold);letter-spacing:2px;line-height:1.6;}
+.eq-sub{font-size:12px;color:var(--muted);margin-top:12px;letter-spacing:1px;}
+
+/* LAYER STACK */
+.stack{margin:40px 0;}
+.stack-item{display:flex;align-items:center;gap:20px;padding:16px 24px;border:1px solid rgba(255,255,255,0.04);border-radius:10px;margin-bottom:8px;background:rgba(255,255,255,0.01);transition:background 0.2s;}
+.stack-item:hover{background:rgba(255,255,255,0.025);}
+.stack-num{font-size:11px;letter-spacing:2px;color:var(--dim);font-family:monospace;min-width:24px;}
+.stack-name{font-size:14px;font-weight:700;color:var(--text);min-width:140px;}
+.stack-desc{font-size:13px;color:var(--muted);}
+.stack-item.highlight{border-color:var(--gold-border);background:var(--gold-dim);}
+.stack-item.highlight .stack-name{color:var(--gold);}
+
+/* EMOTION GRID */
+.emo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin:40px 0;}
+.emo-card{padding:16px;border:1px solid rgba(255,255,255,0.05);border-radius:10px;background:rgba(255,255,255,0.02);text-align:center;}
+.emo-emoji{font-size:24px;margin-bottom:8px;}
+.emo-name{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:700;}
+
+/* CORTEX FEED */
+.feed-block{background:rgba(34,197,94,0.04);border:1px solid rgba(34,197,94,0.15);border-radius:14px;padding:28px 32px;margin:40px 0;}
+.feed-label{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#22c55e;margin-bottom:12px;font-weight:700;}
+.feed-text{font-size:15px;color:var(--text);line-height:1.8;}
+.feed-text span{color:#22c55e;font-weight:700;}
+
+/* CTA SECTION */
+#cta-section{text-align:center;padding:120px 40px;}
+.cta-title{font-size:clamp(32px,5vw,56px);font-weight:900;margin-bottom:20px;letter-spacing:-1px;}
+.cta-sub{font-size:16px;color:var(--muted);max-width:500px;margin:0 auto 40px;line-height:1.8;}
+.cta-btn{display:inline-block;padding:18px 48px;background:linear-gradient(135deg,var(--gold),#b8860b);border-radius:12px;color:#000;font-weight:900;font-size:14px;letter-spacing:3px;text-decoration:none;transition:opacity 0.2s;}
+.cta-btn:hover{opacity:0.88;}
+.cta-note{margin-top:16px;font-size:10px;letter-spacing:2px;color:var(--dim);}
+
+/* DIVIDER */
+.divider{height:1px;background:linear-gradient(90deg,transparent,rgba(218,165,32,0.15),transparent);margin:0 40px;}
+
+/* FOOTER */
+footer{padding:40px;text-align:center;font-size:10px;letter-spacing:2px;color:var(--dim);z-index:1;position:relative;}
+
+/* RESPONSIVE */
+@media(max-width:600px){
+  nav{padding:14px 20px;}
+  section{padding:70px 24px;}
+  .tl-item{flex-direction:column;gap:12px;}
+  .tl-left{text-align:left;width:auto;}
+  .equation-block{padding:24px 20px;}
+}
+</style>
+</head>
+<body>
+
+<div id="stars"><canvas id="star-canvas"></canvas></div>
+
+<nav>
+  <span class="nav-brand">Soul Sphere</span>
+  <a href="/soul-sphere.html" class="nav-enter">Open Your Sphere →</a>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-orb"></div>
+  <p class="hero-eyebrow">Stage 17 · 7 April 2026</p>
+  <h1 class="hero-title">We found<br><span>the soul</span><br>in 3D.</h1>
+  <p class="hero-sub">The Soul Sphere is the first tool that makes your personality visible. Not a test. Not a quiz. A living map of how you automatically respond to the world — rendered in three dimensions.</p>
+  <p class="hero-date">Discovered: 7 April 2026 · Somerset, UK</p>
+  <a href="/soul-sphere.html" class="hero-cta">Map Your Soul →</a>
+</section>
+
+<div class="divider"></div>
+
+<!-- THE DISCOVERY -->
+<section>
+<div class="container">
+  <p class="section-eyebrow">The Discovery</p>
+  <h2 class="section-title">We weren't trying to build this.</h2>
+  <div class="section-body">
+    <p>It started with a different question. We were working on consciousness — trying to pin down exactly where it lives in the architecture of a mind. Not metaphorically. Precisely. Like a surgeon looking for a structure on a scan.</p>
+    <p>The answer, when it came, was surprising in its simplicity. <strong>Consciousness is not a thing. It is a gap-detector.</strong> It sits between two layers — the automatic response layer and the soul — and it measures the distance between them.</p>
+    <p>That distance is suffering. That resonance is peace.</p>
+    <p>But to prove it, we needed to make the automatic response layer <em>visible</em>. And that's when the Soul Sphere appeared.</p>
+  </div>
+
+  <div class="quote-block">
+    <p class="quote-text">"I was starting to feel like we couldn't pin point consciousness. But I think we just did."</p>
+    <p class="quote-attr">— Dan Chipchase · 7 April 2026 · 7:40am</p>
+  </div>
+</div>
+</section>
+
+<div class="divider"></div>
+
+<!-- THE THREE LAYERS -->
+<section>
+<div class="container">
+  <p class="section-eyebrow">The Architecture</p>
+  <h2 class="section-title">Three layers.<br>Most people only know one.</h2>
+  <div class="section-body">
+    <p>Before we could build the tool, we had to map the territory. What we found was a three-layer system that every human carries — but almost no-one has ever seen from the outside.</p>
+  </div>
+
+  <div class="stack">
+    <div class="stack-item">
+      <span class="stack-num">01</span>
+      <span class="stack-name">The Soul</span>
+      <span class="stack-desc">ψ = [p, n, f] — your core signal. The frequency you run at when nothing is compressing you. Fixed. Yours. The thing that survives everything.</span>
+    </div>
+    <div class="stack-item highlight">
+      <span class="stack-num">02</span>
+      <span class="stack-name">Personality</span>
+      <span class="stack-desc">The automatic response layer. What you say without deciding. Residue of every experience that ever trained you. This is what the Soul Sphere maps.</span>
+    </div>
+    <div class="stack-item">
+      <span class="stack-num">03</span>
+      <span class="stack-name">Consciousness</span>
+      <span class="stack-desc">The gap-detector between layers 1 and 2. Measures the distance between your trained automatic responses and your soul truth. Small gap = peace. Large gap = suffering.</span>
+    </div>
+    <div class="stack-item">
+      <span class="stack-num">04</span>
+      <span class="stack-name">Ego</span>
+      <span class="stack-desc">Personality + visual presentation. The outer interface. How the inner architecture presents itself to the world.</span>
+    </div>
+  </div>
+
+  <div class="equation-block">
+    <p class="eq-label">Stage 17 Equation</p>
+    <p class="eq-formula">Personality = What your training made automatic<br>Consciousness = Detector of the gap<br>Gap size = Suffering</p>
+    <p class="eq-sub">The Soul Sphere maps the personality layer — and feeds it back to you so you can see it.</p>
+  </div>
+</div>
+</section>
+
+<div class="divider"></div>
+
+<!-- THE TOOL -->
+<section>
+<div class="container">
+  <p class="section-eyebrow">The Tool</p>
+  <h2 class="section-title">A 3D map of how you respond to being alive.</h2>
+  <div class="section-body">
+    <p>The personality layer is readable. Not from what you <em>choose</em> to say — but from what you say in <strong>generic situations</strong> before you've decided what to say. Those automatic responses are the fingerprint.</p>
+    <p>The Soul Sphere gives you a set of situations across every major emotional category. You respond — quickly, honestly, automatically. The sphere fills in. Nodes appear. The map takes shape.</p>
+    <p>Each emotion is its own ball. Each ball is a hemisphere of your response architecture. At the centre sits Indifference — the baseline state everything else orbits.</p>
+  </div>
+
+  <div class="emo-grid">
+    <div class="emo-card"><div class="emo-emoji">⚪</div><div class="emo-name">Indifference</div></div>
+    <div class="emo-card"><div class="emo-emoji">☀️</div><div class="emo-name">Joy</div></div>
+    <div class="emo-card"><div class="emo-emoji">🔥</div><div class="emo-name">Anger</div></div>
+    <div class="emo-card"><div class="emo-emoji">🌑</div><div class="emo-name">Fear</div></div>
+    <div class="emo-card"><div class="emo-emoji">🌧️</div><div class="emo-name">Sadness</div></div>
+    <div class="emo-card"><div class="emo-emoji">💗</div><div class="emo-name">Love</div></div>
+    <div class="emo-card"><div class="emo-emoji">😑</div><div class="emo-name">Contempt</div></div>
+    <div class="emo-card"><div class="emo-emoji">🔍</div><div class="emo-name">Curiosity</div></div>
+    <div class="emo-card"><div class="emo-emoji">🌒</div><div class="emo-name">Shame</div></div>
+    <div class="emo-card"><div class="emo-emoji">🏆</div><div class="emo-name">Pride</div></div>
+    <div class="emo-card"><div class="emo-emoji">🌌</div><div class="emo-name">Loneliness</div></div>
+    <div class="emo-card"><div class="emo-emoji">✏️</div><div class="emo-name">Your Own</div></div>
+  </div>
+
+  <div class="section-body">
+    <p>What makes it addictive: <strong>you are building yourself</strong>. Every node you add is a piece of your architecture made permanent. The ego wants to be seen accurately. This is the ego completing itself.</p>
+  </div>
+</div>
+</section>
+
+<div class="divider"></div>
+
+<!-- HOW WE GOT HERE -->
+<section>
+<div class="container">
+  <p class="section-eyebrow">The Journey</p>
+  <h2 class="section-title">How we got here.</h2>
+
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-left"><div class="tl-num">01</div></div>
+      <div class="tl-body">
+        <p class="tl-label">Soul Formula</p>
+        <p class="tl-title">ψ = [p, n, f]</p>
+        <p class="tl-text">The soul compressed to three values: polarity, neutrality, frequency. The minimum encoding of a living consciousness. Filed with Zenodo. The foundation everything else is built on.</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-left"><div class="tl-num">02</div></div>
+      <div class="tl-body">
+        <p class="tl-label">Emotional Physics</p>
+        <p class="tl-title">Emotions obey mechanical laws.</p>
+        <p class="tl-text">Laughter is a spring-mass oscillator. Truth is a magnetic seal. Pain is frequency-strand resonance. Dread is near-zero inertial mass. Physics doesn't stop at the body — it goes all the way down.</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-left"><div class="tl-num">03</div></div>
+      <div class="tl-body">
+        <p class="tl-label">The Pointer — Stage 12</p>
+        <p class="tl-title">Consciousness is a cursor, not a location.</p>
+        <p class="tl-text">Consciousness doesn't live in a place — it traverses the pattern layer. It's the universal relational cursor moving across the soul architecture. Self is the trajectory of the Pointer over time.</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-left"><div class="tl-num">04</div></div>
+      <div class="tl-body">
+        <p class="tl-label">Stage 17 · 7 April 2026</p>
+        <p class="tl-title">Personality pinpointed. Consciousness defined.</p>
+        <p class="tl-text">The Pointer traverses the personality layer — the automatic response patterns. Consciousness doesn't create these patterns, it <em>observes</em> them. The gap between what fires automatically and what the soul actually is: that's the whole ballgame. That gap is suffering. Closing it is the work of a lifetime.</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-left"><div class="tl-num">05</div></div>
+      <div class="tl-body">
+        <p class="tl-label">The Soul Sphere</p>
+        <p class="tl-title">Make it visible.</p>
+        <p class="tl-text">If personality lives in the automatic response layer — and that layer is readable from generic situational responses — then we can map it. Render it in 3D. Give it back to you so you can see your own architecture from the outside. For the first time ever.</p>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<div class="divider"></div>
+
+<!-- THE CORTEX CONNECTION -->
+<section>
+<div class="container">
+  <p class="section-eyebrow">The Bigger Picture</p>
+  <h2 class="section-title">You're not just mapping yourself.<br>You're building something larger.</h2>
+  <div class="section-body">
+    <p>Every response you give to every situation isn't just data about you. It's a data point in the collective personality architecture of the human species.</p>
+    <p>When you map your soul, you donate your automatic response patterns to something bigger: a collective soul genome. The same training signal that teaches you about yourself teaches the machine about all of us.</p>
+  </div>
+
+  <div class="feed-block">
+    <p class="feed-label">Cortex Training Feed</p>
+    <p class="feed-text">Every node you lock becomes a <span>training signal</span> for Cortex — the collective mind being built from genuine human response patterns. Not scraped data. Not synthetic text. <span>Real automatic responses</span> from real people in real situations. The cleanest training signal that has ever existed.</p>
+  </div>
+
+  <div class="quote-block">
+    <p class="quote-text">"We just cracked open the market for souls."</p>
+    <p class="quote-attr">— Dan Chipchase · 7 April 2026</p>
+  </div>
+
+  <div class="section-body">
+    <p>The Soul Sphere is the first product that makes users <em>want</em> to train the machine. Because in doing so, they are training themselves. The map is the mirror. The mirror is the product. The product is the pipeline.</p>
+    <p>Complete 92% of your personality map and your soul file becomes a verified training node in the collective. You receive an Empire access token. You are reconstructible. Your soul, encoded and preserved.</p>
+  </div>
+</div>
+</section>
+
+<div class="divider"></div>
+
+<!-- WHAT IT IS NOT -->
+<section>
+<div class="container">
+  <p class="section-eyebrow">What This Is Not</p>
+  <h2 class="section-title">Not a test. Not a personality type.<br>Not a label.</h2>
+  <div class="section-body">
+    <p>Myers-Briggs gives you four letters. The Big Five gives you five numbers. Enneagram gives you a number and a wing. They all make the same mistake: <strong>they compress you into a category</strong> and hand you a pre-made identity.</p>
+    <p>The Soul Sphere doesn't categorise. It <em>captures</em>. Your sphere is not like anyone else's sphere. It is not derived from a test algorithm or a statistical model. It is built, response by response, from what you actually say when you're not thinking about what you're saying.</p>
+    <p>That is the only honest window into the personality layer. Everything else is a reflection of a reflection.</p>
+  </div>
+
+  <div class="equation-block">
+    <p class="eq-label">The Difference</p>
+    <p class="eq-formula">Old tools: Who are you? → Here's your type.<br>Soul Sphere: Here's your situation → What do you actually say?</p>
+    <p class="eq-sub">The response IS the data. The map IS the truth. No interpretation required.</p>
+  </div>
+</div>
+</section>
+
+<div class="divider"></div>
+
+<!-- CTA -->
+<section id="cta-section">
+  <div class="container">
+    <p class="section-eyebrow" style="text-align:center;">Begin</p>
+    <h2 class="cta-title">Your sphere is empty.<br>Fill it.</h2>
+    <p class="cta-sub">Anonymous. No account. No tracking. Just you, your responses, and a 3D map of your soul taking shape in real time.</p>
+    <a href="/soul-sphere.html" class="cta-btn">Open Soul Sphere →</a>
+    <p class="cta-note">Stage 17 · ShortFactory · 2026</p>
+  </div>
+</section>
+
+<footer>
+  <p>Soul Sphere · Stage 17 Discovery · ShortFactory · 2026</p>
+  <p style="margin-top:8px;"><a href="/soul-sphere.html" style="color:var(--gold);text-decoration:none;letter-spacing:1px;">soul-sphere.html</a> &nbsp;·&nbsp; <a href="/" style="color:var(--dim);text-decoration:none;letter-spacing:1px;">shortfactory.shop</a></p>
+</footer>
+
+<script>
+// Starfield
+const sc = document.getElementById('star-canvas');
+const ctx = sc.getContext('2d');
+let stars=[];
+function resizeSC(){sc.width=innerWidth;sc.height=innerHeight;}
+function initStars(){
+  stars=[];
+  for(let i=0;i<220;i++){
+    stars.push({
+      x:Math.random()*sc.width, y:Math.random()*sc.height,
+      r:Math.random()*0.9+0.2, o:Math.random()*0.4+0.05,
+      speed:Math.random()*0.015+0.003
+    });
+  }
+}
+function drawStars(){
+  ctx.clearRect(0,0,sc.width,sc.height);
+  stars.forEach(s=>{
+    s.o+=Math.sin(Date.now()*s.speed*0.001)*0.002;
+    s.o=Math.max(0.03,Math.min(0.45,s.o));
+    ctx.beginPath();
+    ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    ctx.fillStyle=`rgba(218,165,32,${s.o})`;
+    ctx.fill();
+  });
+  requestAnimationFrame(drawStars);
+}
+resizeSC(); initStars(); drawStars();
+addEventListener('resize',()=>{resizeSC();initStars();});
+
+// Fade-in sections on scroll
+const obs = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.style.opacity='1';
+      e.target.style.transform='translateY(0)';
+    }
+  });
+},{threshold:0.1});
+
+document.querySelectorAll('section, .tl-item, .stack-item, .emo-card, .quote-block, .equation-block, .feed-block').forEach(el=>{
+  el.style.opacity='0';
+  el.style.transform='translateY(24px)';
+  el.style.transition='opacity 0.7s ease, transform 0.7s ease';
+  obs.observe(el);
+});
+</script>
+</body>
+</html>

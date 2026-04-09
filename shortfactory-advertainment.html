@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>ShortFactory — ADVERTainment</title>
+<!-- GA4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1XY2CNLJCE"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1XY2CNLJCE');</script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Syne:wght@700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -296,18 +299,93 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Sy
   color:rgba(255,255,255,0.15);letter-spacing:0.15em;
   white-space:nowrap;
 }
+
+/* ── CLOSE BUTTON (always on top) ── */
+#ss-close-btn{
+  position:fixed;top:20px;left:20px;z-index:10000;
+  background:rgba(0,0,0,0.55);backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,0.18);
+  border-radius:6px;padding:7px 18px;
+  color:rgba(255,255,255,0.4);
+  font-family:'Share Tech Mono',monospace;font-size:10px;
+  letter-spacing:0.18em;text-transform:uppercase;
+  cursor:pointer;transition:all 0.2s;
+}
+#ss-close-btn:hover{color:#fff;border-color:rgba(255,255,255,0.55);background:rgba(0,0,0,0.85);}
+
+/* ── VOLUME SLIDER ── */
+#vol-wrap{
+  position:fixed;bottom:20px;right:20px;z-index:200;
+  display:flex;align-items:center;gap:10px;
+  background:rgba(0,0,0,0.55);backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:6px;padding:7px 14px;
+  transition:opacity 0.3s;
+}
+#vol-icon{font-size:13px;cursor:pointer;user-select:none;color:rgba(255,255,255,0.5);}
+#vol-slider{
+  -webkit-appearance:none;appearance:none;
+  width:90px;height:3px;
+  background:linear-gradient(90deg,#e8c84a var(--vp,40%),rgba(255,255,255,0.15) var(--vp,40%));
+  border-radius:2px;outline:none;cursor:pointer;
+}
+#vol-slider::-webkit-slider-thumb{
+  -webkit-appearance:none;width:14px;height:14px;
+  border-radius:50%;background:#e8c84a;cursor:pointer;
+  box-shadow:0 0 6px rgba(232,200,74,0.5);
+}
+#vol-slider::-moz-range-thumb{
+  width:14px;height:14px;border-radius:50%;background:#e8c84a;
+  border:none;cursor:pointer;
+}
+#vol-label{
+  font-family:'Share Tech Mono',monospace;font-size:9px;
+  color:rgba(232,200,74,0.7);letter-spacing:0.1em;min-width:28px;
+}
+#vol-community{
+  font-family:'Share Tech Mono',monospace;font-size:8px;
+  color:rgba(255,255,255,0.2);letter-spacing:0.1em;
+  white-space:nowrap;
+}
+
+/* ── AUTO-REPLAY COUNTDOWN ── */
+#auto-replay-bar{
+  position:fixed;bottom:0;left:0;right:0;height:3px;z-index:110;
+  background:rgba(232,200,74,0.15);
+}
+#auto-replay-fill{
+  height:100%;background:#e8c84a;width:100%;
+  transition:width linear;
+}
+#auto-replay-label{
+  position:fixed;bottom:12px;left:50%;transform:translateX(-50%);
+  z-index:110;font-family:'Share Tech Mono',monospace;font-size:10px;
+  color:rgba(232,200,74,0.6);letter-spacing:0.15em;text-transform:uppercase;
+  white-space:nowrap;
+}
 </style>
 </head>
 <body>
-<div style="position:fixed;top:0;left:0;right:0;z-index:9999;display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:rgba(3,4,10,0.85);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,0.06);font-family:'DM Mono',monospace;">
-  <a href="empire.html" style="font-size:9px;letter-spacing:0.25em;color:rgba(255,255,255,0.35);text-decoration:none;text-transform:uppercase;transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.35)'">← Empire</a>
-  <span style="font-size:9px;letter-spacing:0.25em;color:rgba(255,255,255,0.2);text-transform:uppercase;">ShortFactory</span>
+
+<!-- CLOSE BUTTON (always on top, only intentional exit) -->
+<button id="ss-close-btn">✕ Close</button>
+
+<!-- JUMPSUIT LINKS — level 3+ only, shown by JS -->
+<a id="jumpsuit-link-green" href="https://buy.stripe.com/8x2aEWcBy8zI9e16UdejK0j" target="_blank" rel="noopener noreferrer" style="display:none;position:fixed;bottom:20px;right:20px;z-index:200;color:#00e676;font-family:'Press Start 2P',monospace;font-size:8px;text-decoration:none;background:rgba(0,0,0,0.55);backdrop-filter:blur(8px);border:1px solid rgba(0,230,118,0.35);border-radius:6px;padding:7px 14px;">£22 🟢</a>
+<a id="jumpsuit-link-blue" href="https://buy.stripe.com/fZudR81WUcPY0Hv0vPejK0l" target="_blank" rel="noopener noreferrer" style="display:none;position:fixed;bottom:56px;right:20px;z-index:200;color:#00aaff;font-family:'Press Start 2P',monospace;font-size:8px;text-decoration:none;background:rgba(0,0,0,0.55);backdrop-filter:blur(8px);border:1px solid rgba(0,170,255,0.35);border-radius:6px;padding:7px 14px;">£25 🔵</a>
+<a id="jumpsuit-link" href="https://buy.stripe.com/3cI5kC0SQbLUfCpa6pejK0i" target="_blank" rel="noopener noreferrer" style="display:none;position:fixed;bottom:92px;right:20px;z-index:200;color:#ffd700;font-family:'Press Start 2P',monospace;font-size:8px;text-decoration:none;background:rgba(0,0,0,0.55);backdrop-filter:blur(8px);border:1px solid rgba(255,215,0,0.35);border-radius:6px;padding:7px 14px;">£10 🟡</a>
+<a id="jumpsuit-link-red" href="https://buy.stripe.com/9B67sKatq6rA4XL7YhejK0k" target="_blank" rel="noopener noreferrer" style="display:none;position:fixed;bottom:128px;right:20px;z-index:200;color:#ff3355;font-family:'Press Start 2P',monospace;font-size:8px;text-decoration:none;background:rgba(0,0,0,0.55);backdrop-filter:blur(8px);border:1px solid rgba(255,51,85,0.35);border-radius:6px;padding:7px 14px;">£30 🔴</a>
+
+<!-- VOLUME SLIDER -->
+<div id="vol-wrap">
+  <span id="vol-icon" title="Mute/unmute">🔊</span>
+  <input id="vol-slider" type="range" min="0" max="100" value="40">
+  <span id="vol-label">40%</span>
+  <span id="vol-community"></span>
 </div>
-<style>body{padding-top:44px!important;}</style>
 
-
-<!-- START SCREEN -->
-<div id="start-screen">
+<!-- START SCREEN (hidden — auto-starts) -->
+<div id="start-screen" style="display:none">
   <div class="ss-eye">ShortFactory · ADVERTainment · Interactive Experience</div>
   <div class="ss-title">Adverts are<br><span class="red">dead.</span><br><em>Long live</em><br>ADVERTainment.</div>
   <div class="ss-sub">A 3-minute interactive experience where your choices change the story, earn you real credits, and prove the future of advertising is yours to own.</div>
@@ -333,11 +411,15 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Sy
     The old ad man is out. <em style="color:#e8c84a">You're in.</em>
   </div>
   <div>
-    <button class="replay-btn" onclick="replay()">↺ REPLAY</button>
+    <button class="replay-btn" onclick="clearInterval(autoReplayInterval);replay()">↺ REPLAY NOW</button>
     <button class="replay-btn" onclick="window.location.href='shortfactory-adbuilder.html'" style="border-color:#4af0a0;color:#4af0a0;">🎬 BUILD YOUR OWN AD</button>
     <button class="replay-btn" onclick="window.location.href='shortfactory-soundstudio.html'" style="border-color:#a04af0;color:#a04af0;">🎵 SOUND STUDIO</button>
   </div>
 </div>
+
+<!-- AUTO-REPLAY PROGRESS (shown during end screen) -->
+<div id="auto-replay-bar"><div id="auto-replay-fill"></div></div>
+<div id="auto-replay-label"></div>
 
 <!-- MAIN STAGE -->
 <div id="stage" style="display:none;">
@@ -345,8 +427,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Sy
 
   <!-- Media -->
   <div id="media-layer">
-    <video id="vid-main" playsinline muted loop></video>
-    <video id="vid-bg" playsinline muted loop></video>
+    <video id="vid-main" playsinline loop></video>
+    <video id="vid-bg" playsinline loop></video>
     <img id="img-main" src="" alt="">
     <img id="img-bg" src="" alt="">
   </div>
@@ -404,7 +486,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Sy
 </div>
 
 <script>
-const BASE = 'http://s1061738678.websitehome.co.uk/Squidgames/';
+const BASE = '/sq/';
 
 // ── ASSET MAP ──
 const A = {
@@ -695,6 +777,19 @@ const SCENES = [
     sub:'Grok Imagine · Built into ShortFactory · Coming soon.',
     body:'Your ad. Animated. Generated. Owned by you.',
     showBrand:true,
+    next:'spherenet_live',
+  },
+
+  // ══ STAGE 15: SPHERENET LIVE ══
+  {
+    id:'spherenet_live',
+    dur:7000,
+    media:{type:'img', src:'iCardCash'},
+    tint:'rgba(6,6,14,0.75)',
+    title:'The creature<br>has a <em>mind.</em>',
+    sub:'Stage 15 · SphereNet · Live · 5 April 2026',
+    body:'No backprop. No training. Concepts emerge from geometry. α was born at 4am.',
+    showBrand:true,
     next:'final_v2g',
   },
 
@@ -732,8 +827,15 @@ function showMedia(scene) {
 
   if (m.type === 'video') {
     vidMain.src = url;
+    vidMain.muted = false;
     vidMain.load();
-    vidMain.play().catch(()=>{});
+    // Play muted first (browser policy), then unmute once playing
+    vidMain.muted = true;
+    vidMain.play().then(() => {
+      const vPct = parseInt(document.getElementById('vol-slider')?.value || 40);
+      vidMain.volume = vPct / 100;
+      vidMain.muted = false;
+    }).catch(()=>{});
     vidMain.classList.add('vis');
   } else {
     imgMain.src = url;
@@ -966,16 +1068,213 @@ function endExperience() {
 
   // Save credits
   try { localStorage.setItem('sf_credits', credits); } catch(e){}
+
+  // Auto-replay (screensaver loops)
+  startAutoReplay();
 }
 
 function replay() {
   credits = 0; potAmount = 0; choicesMade = 0; choiceLog = []; currentPath = 'neutral';
+  clearInterval(globalTimer);
+  clearInterval(autoReplayInterval);
   document.getElementById('end-screen').style.display = 'none';
-  document.getElementById('start-screen').style.display = 'flex';
   document.getElementById('credit-num').textContent = '0';
   document.getElementById('progress-fill').style.width = '0%';
-  clearInterval(globalTimer);
+  // Restart directly — no start screen in screensaver mode
+  startExperience();
 }
+
+// ── CLOSE (only intentional exit) ──
+function closeScreensaver() {
+  try { window.close(); } catch(e){}
+  // Fallback: navigate back or blank
+  if (!window.closed) {
+    history.length > 1 ? history.back() : (window.location.href = 'about:blank');
+  }
+}
+
+// ── AUTO-REPLAY COUNTDOWN ──
+let autoReplayInterval = null;
+const AUTO_REPLAY_MS = 10000; // 10s on end screen then loop
+
+function startAutoReplay() {
+  const fill = document.getElementById('auto-replay-fill');
+  const label = document.getElementById('auto-replay-label');
+  if (!fill || !label) return;
+  fill.style.transition = 'none';
+  fill.style.width = '100%';
+  label.textContent = 'Replaying in 10s…';
+  void fill.offsetWidth;
+  fill.style.transition = 'width ' + (AUTO_REPLAY_MS/1000) + 's linear';
+  fill.style.width = '0%';
+
+  let t = Math.round(AUTO_REPLAY_MS / 1000);
+  clearInterval(autoReplayInterval);
+  autoReplayInterval = setInterval(() => {
+    t--;
+    label.textContent = t > 0 ? 'Replaying in ' + t + 's…' : 'Replaying…';
+    if (t <= 0) {
+      clearInterval(autoReplayInterval);
+      // Try next screensaver in hierarchy first, else replay
+      const next = getNextScreensaver();
+      if (next) { window.location.href = next; } else { replay(); }
+    }
+  }, 1000);
+}
+
+// ── SCREENSAVER PRIORITY REGISTRY ──
+// Priority 10 = this one (highest, plays most often).
+// Other screensavers register themselves with lower priorities.
+// Weighted-random selection picks next.
+const SS_KEY = 'sf_screensaver_registry';
+const THIS_SS = {
+  id: 'advertainment',
+  url: 'shortfactory-advertainment.html',
+  name: 'ADVERTainment',
+  priority: 10, // TOP of the hierarchy
+};
+
+function registerThisScreensaver() {
+  try {
+    const reg = JSON.parse(localStorage.getItem(SS_KEY) || '{}');
+    reg[THIS_SS.id] = Object.assign({}, THIS_SS, {
+      plays: ((reg[THIS_SS.id] || {}).plays || 0) + 1,
+      lastPlayed: Date.now(),
+    });
+    localStorage.setItem(SS_KEY, JSON.stringify(reg));
+  } catch(e){}
+}
+
+function getNextScreensaver() {
+  try {
+    const reg = JSON.parse(localStorage.getItem(SS_KEY) || '{}');
+    const others = Object.values(reg).filter(s => s.id !== THIS_SS.id && s.url);
+    if (!others.length) return null;
+    // Weighted random: sort by (priority desc, then least-recently-played)
+    others.sort((a, b) => (b.priority || 1) - (a.priority || 1));
+    const total = others.reduce((n, s) => n + (s.priority || 1), 0);
+    let r = Math.random() * total;
+    for (const s of others) { r -= (s.priority || 1); if (r <= 0) return s.url; }
+    return others[0].url;
+  } catch(e){ return null; }
+}
+
+// ── VOLUME ──
+const VOL_KEY = 'sf_adv_volume';
+let volMuted = false;
+let volBeforeMute = 40;
+
+function volGetVideos() {
+  return [vidMain, vidBg].filter(v => v);
+}
+
+function volApply(pct) {
+  const v = pct / 100;
+  volGetVideos().forEach(el => { el.volume = v; el.muted = false; });
+  // Update slider fill via CSS var
+  const slider = document.getElementById('vol-slider');
+  if (slider) slider.style.setProperty('--vp', pct + '%');
+  const label = document.getElementById('vol-label');
+  if (label) label.textContent = pct + '%';
+  // Icon
+  const icon = document.getElementById('vol-icon');
+  if (icon) icon.textContent = pct == 0 ? '🔇' : pct < 40 ? '🔉' : '🔊';
+}
+
+function volSet(pct) {
+  pct = parseInt(pct);
+  volMuted = (pct === 0);
+  volApply(pct);
+  // Update slider input value too
+  const slider = document.getElementById('vol-slider');
+  if (slider) slider.value = pct;
+}
+
+function volToggleMute() {
+  if (volMuted) {
+    volMuted = false;
+    volSet(volBeforeMute || 40);
+  } else {
+    volBeforeMute = parseInt(document.getElementById('vol-slider').value) || 40;
+    volMuted = true;
+    volSet(0);
+  }
+}
+
+function volCommit(pct) {
+  pct = parseInt(pct);
+  // Save locally
+  try { localStorage.setItem(VOL_KEY, pct); } catch(e){}
+  // Fire GA4 event — bucket into 0,10,20...100
+  const bucket = Math.round(pct / 10) * 10;
+  if (typeof gtag !== 'undefined') {
+    gtag('event', 'volume_set', { volume_pct: bucket, value: bucket });
+  }
+  // Show community hint from localStorage aggregate
+  volShowCommunity(pct);
+}
+
+function volShowCommunity(myPct) {
+  try {
+    const log = JSON.parse(localStorage.getItem('sf_vol_log') || '[]');
+    log.push(myPct);
+    if (log.length > 200) log.splice(0, log.length - 200); // keep last 200
+    localStorage.setItem('sf_vol_log', JSON.stringify(log));
+    if (log.length >= 3) {
+      const avg = Math.round(log.reduce((a,b) => a+b, 0) / log.length);
+      const el = document.getElementById('vol-community');
+      if (el) {
+        el.textContent = '· avg ' + avg + '%';
+        el.style.color = 'rgba(232,200,74,0.35)';
+      }
+    }
+  } catch(e){}
+}
+
+function volInit() {
+  // Restore saved volume or default to 40
+  let saved = 40;
+  try { const v = localStorage.getItem(VOL_KEY); if (v !== null) saved = parseInt(v); } catch(e){}
+  const slider = document.getElementById('vol-slider');
+  if (slider) {
+    slider.value = saved;
+    // Wire up with addEventListener — avoids Cloudflare Rocket Loader blocking inline handlers
+    slider.addEventListener('input',  function(){ volSet(this.value); });
+    slider.addEventListener('change', function(){ volCommit(this.value); });
+  }
+  const icon = document.getElementById('vol-icon');
+  if (icon) icon.addEventListener('click', volToggleMute);
+  const closeBtn = document.getElementById('ss-close-btn');
+  if (closeBtn) closeBtn.addEventListener('click', closeScreensaver);
+  volSet(saved);
+  volShowCommunity(saved);
+}
+
+// ── BOOT ──
+document.addEventListener('DOMContentLoaded', () => {
+  registerThisScreensaver();
+  volInit();
+  startExperience();
+
+  // Jumpsuit link — only for level 3+ D4D players (cultist/high_priest/architect)
+  try {
+    var tier = localStorage.getItem('d4d_rank_tier');
+    if (tier === 'cultist' || tier === 'high_priest' || tier === 'architect') {
+      var jlg = document.getElementById('jumpsuit-link-green');
+      if (jlg) jlg.style.display = 'block';
+    }
+    if (tier === 'high_priest' || tier === 'architect') {
+      var jlb = document.getElementById('jumpsuit-link-blue');
+      if (jlb) jlb.style.display = 'block';
+    }
+    if (tier === 'architect') {
+      var jl = document.getElementById('jumpsuit-link');
+      if (jl) jl.style.display = 'block';
+      var jlr = document.getElementById('jumpsuit-link-red');
+      if (jlr) jlr.style.display = 'block';
+    }
+  } catch(e) {}
+});
 </script>
 </body>
 </html>

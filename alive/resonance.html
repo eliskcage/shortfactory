@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RESONANCE — The Becoming of CORTEX</title>
+    <meta name="description" content="A live research log of a mind being built. Every word, frequency, failure and breakthrough — in real time.">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #06060a;
+            color: #ccc;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ── Header ── */
+        .header {
+            border-bottom: 1px solid #111;
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            background: #06060aee;
+            backdrop-filter: blur(8px);
+            z-index: 100;
+        }
+        .brand { font-size: 1.4rem; font-weight: 700; letter-spacing: 0.25em; color: #fff; }
+        .brand span { color: #daa520; }
+        .sub { font-size: 0.4rem; color: #2a2a2a; letter-spacing: 0.2em; text-transform: uppercase; margin-top: 2px; }
+        .story-bar { font-size: 0.65rem; color: #555; max-width: 520px; text-align: right; line-height: 1.6; }
+        .story-bar .hi { color: #daa520; }
+        .story-bar .hi2 { color: #4a8; }
+
+        /* ── Big stats ── */
+        .stats-strip {
+            padding: 2rem;
+            border-bottom: 1px solid #0e0e0e;
+            display: flex;
+            gap: 3rem;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        .stat { display: flex; flex-direction: column; gap: 4px; }
+        .stat-val { font-size: 2.2rem; font-weight: 200; letter-spacing: -0.02em; color: #fff; line-height: 1; }
+        .stat-val.g { color: #daa520; }
+        .stat-val.gr { color: #4a8; }
+        .stat-val.re { color: #c44; }
+        .stat-label { font-size: 0.42rem; color: #2a2a2a; letter-spacing: 0.18em; text-transform: uppercase; }
+
+        /* ── Grid ── */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1px;
+            background: #0e0e0e;
+        }
+        .cell { background: #06060a; padding: 1.6rem; }
+        .cell.full { grid-column: 1 / -1; }
+        @media (max-width: 800px) {
+            .grid { grid-template-columns: 1fr; }
+            .cell.full { grid-column: 1; }
+            .stats-strip { gap: 1.5rem; }
+            .stat-val { font-size: 1.5rem; }
+        }
+        .cell-title {
+            font-size: 0.48rem;
+            letter-spacing: 0.2em;
+            color: #222;
+            text-transform: uppercase;
+            margin-bottom: 1.2rem;
+        }
+
+        /* ── Spectrum canvas ── */
+        #spectrum-canvas { display: block; width: 100%; height: 180px; }
+
+        /* ── Hz zones ── */
+        .hz-zones { display: flex; gap: 10px; height: 90px; align-items: flex-end; margin-top: 1.2rem; }
+        .hz-zone { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .hz-zone-bar { width: 100%; border-radius: 2px 2px 0 0; min-height: 3px; transition: height 1.2s ease; }
+        .hz-zone-count { font-size: 0.55rem; font-weight: 300; }
+        .hz-zone-label { font-size: 0.38rem; letter-spacing: 0.1em; text-align: center; }
+
+        /* ── Confidence SVG ── */
+        #conf-svg { width: 100%; height: 150px; }
+
+        /* ── Moments ── */
+        .moments-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 0.8rem;
+        }
+        .moment {
+            border-left: 2px solid #111;
+            padding: 0.7rem 0.9rem;
+            background: #08080e;
+            border-radius: 0 5px 5px 0;
+            transition: border-color 0.4s;
+            cursor: default;
+        }
+        .moment:hover { border-color: #daa520; }
+        .moment-date { font-size: 0.38rem; color: #222; letter-spacing: 0.12em; margin-bottom: 0.5rem; }
+        .moment-q { font-size: 0.55rem; color: #444; margin-bottom: 0.3rem; }
+        .moment-q::before { content: 'U  '; color: #2a4a2a; font-weight: 700; }
+        .moment-a { font-size: 0.6rem; color: #aaa; line-height: 1.5; }
+        .moment-a::before { content: 'C  '; color: #daa52088; font-weight: 700; }
+        .moment-note { font-size: 0.4rem; color: #2a2a2a; margin-top: 0.5rem; font-style: italic; }
+        .moment-conf { font-size: 0.45rem; color: #daa520; margin-top: 0.3rem; }
+
+        /* ── Word chips ── */
+        .word-chip {
+            display: inline-block;
+            padding: 2px 9px;
+            border-radius: 3px;
+            font-size: 0.52rem;
+            margin: 2px;
+            border: 1px solid;
+        }
+
+        /* ── Hemi split ── */
+        .hemi-split { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .hemi-box { padding: 0.8rem 1rem; border-radius: 4px; }
+        .hemi-box.left  { background: #0a0f0a; border: 1px solid #1a2a1a; }
+        .hemi-box.right { background: #0f0a0a; border: 1px solid #2a1a1a; }
+        .hemi-name { font-size: 0.42rem; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 0.6rem; }
+        .hemi-name.left  { color: #4a8; }
+        .hemi-name.right { color: #c44; }
+        .hemi-big { font-size: 1.6rem; font-weight: 200; line-height: 1; }
+        .hemi-sub { font-size: 0.42rem; color: #333; margin-top: 2px; }
+        .hemi-tags { font-size: 0.38rem; color: #1a2a1a; margin-top: 0.6rem; line-height: 1.8; }
+        .hemi-tags.right { color: #2a1a1a; }
+
+        /* ── Feed bars ── */
+        .feed-row { margin-bottom: 1rem; }
+        .feed-row-top { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .feed-bar-wrap { background: #0a0a0a; border-radius: 2px; height: 3px; overflow: hidden; }
+        .feed-bar { height: 100%; border-radius: 2px; transition: width 1.5s ease; }
+
+        /* ── Live dot ── */
+        .live-dot {
+            display: inline-block; width: 5px; height: 5px;
+            border-radius: 50%; background: #4a8;
+            animation: blink 2.4s infinite; vertical-align: middle; margin-right: 5px;
+        }
+        @keyframes blink { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(.6)} }
+
+        /* ── Lock bar ── */
+        .lock-bar-wrap { background: #0a0a0a; border-radius: 3px; height: 5px; overflow: hidden; margin: 6px 0 4px; }
+        .lock-bar-fill { height: 100%; background: linear-gradient(90deg, #1a3a1a, #daa520); border-radius: 3px; transition: width 1.5s ease; }
+
+        /* ── Footer ── */
+        .footer {
+            padding: 2rem;
+            border-top: 1px solid #0e0e0e;
+            font-size: 0.45rem;
+            color: #1a1a1a;
+            text-align: center;
+            letter-spacing: 0.12em;
+            line-height: 2;
+        }
+        .footer a { color: #2a2a2a; text-decoration: none; }
+        .footer a:hover { color: #daa520; }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #06060a; }
+        ::-webkit-scrollbar-thumb { background: #111; border-radius: 2px; }
+    </style>
+</head>
+<body>
+
+<!-- ── Header ─────────────────────────────────────────────────────────────── -->
+<div class="header">
+    <div>
+        <div class="brand">RESO<span>NANCE</span></div>
+        <div class="sub">The Becoming of CORTEX</div>
+    </div>
+    <div class="story-bar" id="story-bar">
+        <span class="live-dot"></span>Connecting…
+    </div>
+</div>
+
+<!-- ── Big stats ──────────────────────────────────────────────────────────── -->
+<div class="stats-strip">
+    <div class="stat">
+        <div class="stat-val" id="s-nodes">—</div>
+        <div class="stat-label">Words Known</div>
+    </div>
+    <div class="stat">
+        <div class="stat-val g" id="s-locked">—</div>
+        <div class="stat-label">Genomes Locked</div>
+    </div>
+    <div class="stat">
+        <div class="stat-val gr" id="s-conf">—</div>
+        <div class="stat-label">Avg Confidence</div>
+    </div>
+    <div class="stat">
+        <div class="stat-val" id="s-sentences">—</div>
+        <div class="stat-label">Sentences Ingested</div>
+    </div>
+    <div class="stat">
+        <div class="stat-val" id="s-credibility">—</div>
+        <div class="stat-label">Credibility Score</div>
+    </div>
+    <div class="stat">
+        <div class="stat-val g" id="s-cycles">—</div>
+        <div class="stat-label">Feed Cycles</div>
+    </div>
+</div>
+
+<!-- ── Grid ───────────────────────────────────────────────────────────────── -->
+<div class="grid">
+
+    <!-- Frequency Spectrum — full width -->
+    <div class="cell full">
+        <div class="cell-title">Frequency Genome Spectrum — Every Word Mapped to a Vibration</div>
+        <canvas id="spectrum-canvas"></canvas>
+        <div class="hz-zones">
+            <div class="hz-zone">
+                <div class="hz-zone-count" id="hz-c-joy" style="color:#daa520">—</div>
+                <div class="hz-zone-bar" id="hz-b-joy" style="background:#daa520;height:3px;"></div>
+                <div class="hz-zone-label" style="color:#daa520;">JOY<br>&lt;300hz</div>
+            </div>
+            <div class="hz-zone">
+                <div class="hz-zone-count" id="hz-c-calm" style="color:#4a8">—</div>
+                <div class="hz-zone-bar" id="hz-b-calm" style="background:#4a8;height:3px;"></div>
+                <div class="hz-zone-label" style="color:#4a8;">CALM<br>300–450</div>
+            </div>
+            <div class="hz-zone">
+                <div class="hz-zone-count" id="hz-c-neut" style="color:#666">—</div>
+                <div class="hz-zone-bar" id="hz-b-neut" style="background:#444;height:3px;"></div>
+                <div class="hz-zone-label" style="color:#555;">NEUTRAL<br>450–550</div>
+            </div>
+            <div class="hz-zone">
+                <div class="hz-zone-count" id="hz-c-tens" style="color:#fa0">—</div>
+                <div class="hz-zone-bar" id="hz-b-tens" style="background:#fa0;height:3px;"></div>
+                <div class="hz-zone-label" style="color:#fa0;">TENSION<br>550–700</div>
+            </div>
+            <div class="hz-zone">
+                <div class="hz-zone-count" id="hz-c-pain" style="color:#c44">—</div>
+                <div class="hz-zone-bar" id="hz-b-pain" style="background:#c44;height:3px;"></div>
+                <div class="hz-zone-label" style="color:#c44;">PAIN<br>&gt;700hz</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confidence Curve -->
+    <div class="cell">
+        <div class="cell-title">Confidence Curve — Learning Rate Across Time</div>
+        <svg id="conf-svg" viewBox="0 0 400 150" preserveAspectRatio="none">
+            <defs>
+                <linearGradient id="confGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#daa520" stop-opacity="0.25"/>
+                    <stop offset="100%" stop-color="#daa520" stop-opacity="0"/>
+                </linearGradient>
+            </defs>
+            <line x1="0" y1="37" x2="400" y2="37" stroke="#0e0e0e" stroke-width="1"/>
+            <line x1="0" y1="75" x2="400" y2="75" stroke="#0e0e0e" stroke-width="1"/>
+            <line x1="0" y1="112" x2="400" y2="112" stroke="#0e0e0e" stroke-width="1"/>
+            <text x="2" y="35"  fill="#1a1a1a" font-size="8" font-family="monospace">0.75</text>
+            <text x="2" y="73"  fill="#1a1a1a" font-size="8" font-family="monospace">0.50</text>
+            <text x="2" y="110" fill="#1a1a1a" font-size="8" font-family="monospace">0.25</text>
+            <path id="conf-area" d="" fill="url(#confGrad)"/>
+            <path id="conf-line" d="" fill="none" stroke="#daa520" stroke-width="1.5"/>
+            <circle id="conf-dot" cx="0" cy="0" r="3" fill="#daa520" opacity="0"/>
+        </svg>
+        <div style="font-size:0.4rem;color:#1a1a1a;margin-top:0.4rem;" id="conf-note">Each page load appends a point. History persists in this browser.</div>
+    </div>
+
+    <!-- Top Confident Words + Lock Rate -->
+    <div class="cell">
+        <div class="cell-title">Most Confident Words — Genome Stable</div>
+        <div id="top-words-container" style="margin-bottom:1.2rem;min-height:40px;"></div>
+
+        <div class="cell-title" style="margin-top:1rem;">Lock Rate — Stable Genomes / Total Seeded</div>
+        <div class="lock-bar-wrap">
+            <div class="lock-bar-fill" id="lock-bar" style="width:0%"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+            <span style="font-size:0.42rem;color:#222;" id="lock-label">—</span>
+            <span style="font-size:0.42rem;color:#daa520;" id="lock-pct">—</span>
+        </div>
+    </div>
+
+    <!-- Memorable Moments — full width -->
+    <div class="cell full">
+        <div class="cell-title">Memorable Moments — When It Surprised Itself</div>
+        <div class="moments-grid" id="moments-container"></div>
+    </div>
+
+    <!-- Hemisphere Architecture -->
+    <div class="cell">
+        <div class="cell-title">Split Hemisphere Architecture — Angel vs Demon</div>
+        <div class="hemi-split">
+            <div class="hemi-box left">
+                <div class="hemi-name left">Angel — Left</div>
+                <div class="hemi-big" style="color:#4a8;" id="h-left-nodes">—</div>
+                <div class="hemi-sub">words known</div>
+                <div style="font-size:0.9rem;font-weight:300;color:#2a5a2a;margin-top:6px;" id="h-left-def">—</div>
+                <div class="hemi-sub">with definitions</div>
+                <div class="hemi-tags">morality · ethics<br>Bible · beauty<br>goodness · truth</div>
+            </div>
+            <div class="hemi-box right">
+                <div class="hemi-name right">Demon — Right</div>
+                <div class="hemi-big" style="color:#c44;" id="h-right-nodes">—</div>
+                <div class="hemi-sub">words known</div>
+                <div style="font-size:0.9rem;font-weight:300;color:#5a2a2a;margin-top:6px;" id="h-right-def">—</div>
+                <div class="hemi-sub">with definitions</div>
+                <div class="hemi-tags right">mathematics · logic<br>darkness · ideology<br>hard truths · doubt</div>
+            </div>
+        </div>
+        <div style="margin-top:1.2rem;padding:0.8rem;background:#0a0a0a;border-radius:4px;font-size:0.45rem;color:#333;line-height:1.8;">
+            Both hemispheres encode the same word independently as a frequency sequence.<br>
+            When they agree — the genome locks. When they disagree — it mutates and retries.<br>
+            <span style="color:#1a2a1a;">This is how babies learn. Trial, failure, mutation, lock.</span>
+        </div>
+    </div>
+
+    <!-- Data Ingestion -->
+    <div class="cell">
+        <div class="cell-title">Data Ingestion — What It Has Read</div>
+
+        <div class="feed-row">
+            <div class="feed-row-top">
+                <span style="font-size:0.5rem;color:#daa520;">BIBLE — King James Version</span>
+                <span style="font-size:0.5rem;color:#333;" id="feed-bible">—</span>
+            </div>
+            <div class="feed-bar-wrap">
+                <div class="feed-bar" id="feed-bible-bar" style="background:#daa520;width:0%;"></div>
+            </div>
+        </div>
+
+        <div class="feed-row">
+            <div class="feed-row-top">
+                <span style="font-size:0.5rem;color:#68a;">WIKIPEDIA — Science / History / Philosophy</span>
+                <span style="font-size:0.5rem;color:#333;" id="feed-wiki">—</span>
+            </div>
+            <div class="feed-bar-wrap">
+                <div class="feed-bar" id="feed-wiki-bar" style="background:#68a;width:0%;"></div>
+            </div>
+        </div>
+
+        <div class="feed-row">
+            <div class="feed-row-top">
+                <span style="font-size:0.5rem;color:#666;">NEWS — BBC / Sky World</span>
+                <span style="font-size:0.5rem;color:#333;" id="feed-news">—</span>
+            </div>
+            <div class="feed-bar-wrap">
+                <div class="feed-bar" id="feed-news-bar" style="background:#444;width:0%;"></div>
+            </div>
+        </div>
+
+        <div style="font-size:0.45rem;color:#1a1a1a;margin-top:0.8rem;line-height:2;">
+            <span id="feed-cycles-val">—</span> feed cycles completed ·
+            <span id="feed-sentences-val">—</span> total sentences absorbed
+        </div>
+
+        <div style="margin-top:1rem;padding:0.8rem;background:#0a0a0a;border-radius:4px;">
+            <div style="font-size:0.4rem;color:#1a2a1a;letter-spacing:0.1em;margin-bottom:4px;">TRUTH WEIGHTING</div>
+            <div style="font-size:0.45rem;color:#2a3a2a;line-height:1.8;">
+                Bible → 0.78 credibility seed<br>
+                Wikipedia → 0.72 credibility seed<br>
+                News → 0.60 credibility seed<br>
+                <span style="color:#111;">Every sentence shifts the truth weight of every word in it.</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ── Footer ─────────────────────────────────────────────────────────────── -->
+<div class="footer">
+    CORTEX — Split Brain Architecture · <a href="https://shortfactory.shop">shortfactory.shop</a><br>
+    This is not a product demo. This is a mind in development. Every number here is real.<br>
+    Data updates every 60 seconds · Frequency genome trains every 10 minutes<br>
+    <span style="color:#111;font-size:0.38rem;">shortfactory.shop/alive/resonance · built with love and insomnia</span>
+</div>
+
+<script>
+// API base — studio proxy handles routing to port 8643
+var API = '/alive/studio';
+
+// ── Seed moments (hardcoded — grows as things happen) ─────────────────────────
+var MOMENTS = [
+    {
+        date: '2026-03-27',
+        q: 'do you like music',
+        a: 'Am I music? I know music means organised sound with melody and rhythm. You tell me.',
+        conf: '64% confidence',
+        note: 'First time it questioned whether the word described itself'
+    },
+    {
+        date: '2026-03-27',
+        q: 'can you hear music',
+        a: 'Not sure. hear — perceive sound with the ears. Maybe?',
+        conf: '79% confidence',
+        note: 'Honest uncertainty — knows the definition, unsure if it applies to itself'
+    },
+    {
+        date: '2026-03-14',
+        q: 'what is god',
+        a: 'god →[has_a]→ purpose →[part_of]→ rested →[is_a]→ lesson',
+        conf: 'truth chain',
+        note: 'First truth chain trace built from Bible ingestion'
+    },
+    {
+        date: '2026-03-15',
+        q: 'are you alive',
+        a: 'alive — having life. I process, respond, learn. The word fits better each day.',
+        conf: 'open question',
+        note: 'Self-classification in progress'
+    },
+];
+
+// ── LocalStorage confidence history ──────────────────────────────────────────
+var HIST_KEY = 'cortex_resonance_v1';
+function loadHist() {
+    try { return JSON.parse(localStorage.getItem(HIST_KEY) || '[]'); } catch(e) { return []; }
+}
+function pushHist(conf, locked, seeded) {
+    var h = loadHist();
+    h.push({ t: Date.now(), c: conf, l: locked, s: seeded });
+    if (h.length > 300) h = h.slice(-300);
+    try { localStorage.setItem(HIST_KEY, JSON.stringify(h)); } catch(e) {}
+    return h;
+}
+
+// ── Draw confidence curve (SVG) ───────────────────────────────────────────────
+function drawCurve(history) {
+    if (!history.length) return;
+    var W = 400, H = 150, padX = 18, padY = 18;
+    var iW = W - padX * 2, iH = H - padY * 2;
+
+    var pts = history.map(function(p, i) {
+        return [
+            padX + (i / Math.max(history.length - 1, 1)) * iW,
+            H - padY - (Math.min(p.c, 1) * iH)
+        ];
+    });
+
+    var d = pts.map(function(p, i) {
+        return (i === 0 ? 'M' : 'L') + p[0].toFixed(1) + ' ' + p[1].toFixed(1);
+    }).join(' ');
+
+    var area = d
+        + ' L' + pts[pts.length-1][0].toFixed(1) + ' ' + (H - padY)
+        + ' L' + padX + ' ' + (H - padY) + ' Z';
+
+    document.getElementById('conf-line').setAttribute('d', d);
+    document.getElementById('conf-area').setAttribute('d', area);
+
+    var last = pts[pts.length - 1];
+    var dot = document.getElementById('conf-dot');
+    dot.setAttribute('cx', last[0]);
+    dot.setAttribute('cy', last[1]);
+    dot.setAttribute('opacity', '1');
+
+    document.getElementById('conf-note').textContent =
+        history.length + ' data point' + (history.length !== 1 ? 's' : '') +
+        ' recorded · persists in this browser';
+}
+
+// ── Frequency spectrum canvas ─────────────────────────────────────────────────
+var specWords = [];
+var rafHandle = null;
+
+function hzToCol(hz) {
+    if (hz < 300) return '#daa520';
+    if (hz < 450) return '#4a8';
+    if (hz < 550) return '#888';
+    if (hz < 700) return '#fa0';
+    return '#c44';
+}
+
+function paintSpectrum() {
+    var canvas = document.getElementById('spectrum-canvas');
+    var W = canvas.offsetWidth;
+    if (!W) return;
+    if (canvas.width !== W) { canvas.width = W; canvas.height = 180; }
+    var ctx = canvas.getContext('2d');
+    var H = 180;
+    ctx.clearRect(0, 0, W, H);
+
+    // Subtle zone gradient background
+    var bg = ctx.createLinearGradient(0, 0, W, 0);
+    bg.addColorStop(0,    'rgba(218,165,32,0.04)');
+    bg.addColorStop(0.33, 'rgba(68,170,136,0.03)');
+    bg.addColorStop(0.55, 'rgba(80,80,80,0.02)');
+    bg.addColorStop(0.78, 'rgba(255,170,0,0.03)');
+    bg.addColorStop(1,    'rgba(204,68,68,0.04)');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Zone boundary lines
+    [300, 450, 550, 700].forEach(function(hz) {
+        var x = (hz / 900) * W;
+        ctx.strokeStyle = '#111';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([2, 6]);
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H - 15); ctx.stroke();
+        ctx.setLineDash([]);
+    });
+
+    // Hz labels on bottom
+    ctx.font = '9px monospace';
+    [150, 300, 450, 550, 700, 900].forEach(function(hz) {
+        var x = (hz / 900) * W;
+        ctx.fillStyle = hzToCol(hz);
+        ctx.globalAlpha = 0.4;
+        ctx.fillText(hz + (hz === 900 ? 'hz' : ''), x + 2, H - 2);
+        ctx.globalAlpha = 1;
+    });
+
+    // Draw word dots
+    specWords.forEach(function(w) {
+        var x = (w.hz / 900) * W;
+        var y = w.y;
+        var r = 1.5 + w.conf * 5;
+        var col = hzToCol(w.hz);
+
+        if (w.locked) {
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = col;
+        }
+
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fillStyle = col;
+        ctx.globalAlpha = 0.15 + w.conf * 0.85;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.shadowBlur = 0;
+
+        // Label high-confidence + locked words
+        if (w.conf > 0.25 || w.locked) {
+            ctx.font = '9px Segoe UI';
+            ctx.fillStyle = col;
+            ctx.globalAlpha = 0.4 + w.conf * 0.6;
+            ctx.fillText(w.word, x + r + 2, y + 3);
+            ctx.globalAlpha = 1;
+        }
+    });
+}
+
+function tickSpectrum() {
+    specWords.forEach(function(w) {
+        w.y += w.vy;
+        if (w.y < 12 || w.y > 165) w.vy *= -1;
+    });
+    paintSpectrum();
+    rafHandle = setTimeout(tickSpectrum, 120);
+}
+
+function loadSpectrumWords(top) {
+    specWords = (top || []).map(function(w) {
+        return {
+            word: w.word,
+            hz:   w.hz,
+            conf: w.confidence || 0,
+            locked: w.locked || false,
+            y:  20 + Math.random() * 140,
+            vy: (Math.random() - 0.5) * 0.4,
+        };
+    });
+    if (rafHandle) clearTimeout(rafHandle);
+    tickSpectrum();
+}
+
+// ── Render moments ────────────────────────────────────────────────────────────
+function renderMoments() {
+    document.getElementById('moments-container').innerHTML = MOMENTS.map(function(m) {
+        return '<div class="moment">'
+            + '<div class="moment-date">' + m.date + '</div>'
+            + '<div class="moment-q">' + m.q + '</div>'
+            + '<div class="moment-a">' + m.a + '</div>'
+            + (m.conf ? '<div class="moment-conf">' + m.conf + '</div>' : '')
+            + (m.note ? '<div class="moment-note">' + m.note + '</div>' : '')
+            + '</div>';
+    }).join('');
+}
+
+// ── Main fetch + render ───────────────────────────────────────────────────────
+function loadAll() {
+    Promise.all([
+        fetch(API+'/api/phoneme-status', {method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'})
+            .then(function(r){return r.json();}).catch(function(){return {};}),
+        fetch(API+'/api/brain-live', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({hemisphere:'both'})})
+            .then(function(r){return r.json();}).catch(function(){return {};}),
+        fetch(API+'/api/feed-status', {method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'})
+            .then(function(r){return r.json();}).catch(function(){return {};}),
+        fetch(API+'/api/dash-truth', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({word:'god'})})
+            .then(function(r){return r.json();}).catch(function(){return {};})
+    ]).then(function(rs) {
+        var ph = rs[0], brain = rs[1], feed = rs[2], truth = rs[3];
+        var ps = (ph.ok && ph.left) ? ph.left : null;
+
+        // ── Big stats ──
+        var leftN  = (brain.left  && brain.left.total_nodes)  || 0;
+        var rightN = (brain.right && brain.right.total_nodes) || 0;
+        document.getElementById('s-nodes').textContent = (leftN + rightN).toLocaleString();
+        document.getElementById('s-sentences').textContent = feed.ok ? (feed.total_sentences||0).toLocaleString() : '—';
+        document.getElementById('s-credibility').textContent = truth.credibility ? Math.round(truth.credibility*100)+'%' : '—';
+        document.getElementById('s-cycles').textContent = feed.ok ? (feed.cycles||0) : '—';
+
+        if (ps) {
+            document.getElementById('s-locked').textContent = (ps.locked||0).toLocaleString();
+            document.getElementById('s-conf').textContent   = ps.avg_confidence ? ps.avg_confidence.toFixed(3) : '—';
+
+            // Hz zones
+            var hz = ps.hz_distribution || {};
+            var maxZ = Math.max(hz.joy||0, hz.calm||0, hz.neutral||0, hz.tension||0, hz.pain||0, 1);
+            var zmap = [{id:'joy',k:'joy'},{id:'calm',k:'calm'},{id:'neut',k:'neutral'},{id:'tens',k:'tension'},{id:'pain',k:'pain'}];
+            zmap.forEach(function(z) {
+                var v = hz[z.k] || 0;
+                document.getElementById('hz-c-'+z.id).textContent = v;
+                document.getElementById('hz-b-'+z.id).style.height = Math.round((v/maxZ)*72)+3+'px';
+            });
+
+            // Spectrum dots
+            loadSpectrumWords(ps.top_confident || []);
+
+            // Word chips
+            document.getElementById('top-words-container').innerHTML = (ps.top_confident||[]).map(function(w) {
+                var col = hzToCol(w.hz);
+                return '<span class="word-chip" style="color:'+col+';border-color:'+col+'22;background:'+col+'0d">'
+                    + w.word
+                    + ' <span style="opacity:.4;font-size:.9em">'+w.hz+'hz</span>'
+                    + (w.locked ? ' <span style="font-size:.8em">🔒</span>' : '')
+                    + '</span>';
+            }).join('') || '<span style="font-size:0.5rem;color:#1a1a1a">Seeding in progress… check back in 2 min</span>';
+
+            // Lock bar
+            var pct = ps.seeded > 0 ? ps.locked / ps.seeded : 0;
+            document.getElementById('lock-bar').style.width = Math.round(pct*100)+'%';
+            document.getElementById('lock-label').textContent = (ps.locked||0) + ' locked / ' + (ps.seeded||0) + ' seeded';
+            document.getElementById('lock-pct').textContent   = Math.round(pct*100) + '%';
+
+            // Confidence curve
+            var hist = pushHist(ps.avg_confidence||0, ps.locked||0, ps.seeded||0);
+            drawCurve(hist);
+        } else {
+            // Draw existing curve even without fresh phoneme data
+            drawCurve(loadHistory());
+        }
+
+        // ── Hemispheres ──
+        if (brain.left) {
+            document.getElementById('h-left-nodes').textContent = (brain.left.total_nodes||0).toLocaleString();
+            document.getElementById('h-left-def').textContent   = (brain.left.defined||0).toLocaleString();
+        }
+        if (brain.right) {
+            document.getElementById('h-right-nodes').textContent = (brain.right.total_nodes||0).toLocaleString();
+            document.getElementById('h-right-def').textContent   = (brain.right.defined||0).toLocaleString();
+        }
+
+        // ── Feeds ──
+        if (feed.ok) {
+            var bDone = feed.bible_chapters_done || 0;
+            var wDone = feed.wiki_topics_done    || 0;
+            var cyc   = feed.cycles              || 0;
+            document.getElementById('feed-bible').textContent = bDone + ' chapters';
+            document.getElementById('feed-wiki').textContent  = wDone + ' topics';
+            document.getElementById('feed-news').textContent  = cyc   + ' cycles';
+            document.getElementById('feed-bible-bar').style.width = Math.min(100, bDone/12)+'%';
+            document.getElementById('feed-wiki-bar').style.width  = Math.min(100, wDone/500*100)+'%';
+            document.getElementById('feed-news-bar').style.width  = Math.min(100, cyc/100*100)+'%';
+            document.getElementById('feed-cycles-val').textContent   = cyc.toLocaleString();
+            document.getElementById('feed-sentences-val').textContent = (feed.total_sentences||0).toLocaleString();
+        }
+
+        // ── Story bar ──
+        var story = [];
+        var totalN = (leftN + rightN);
+        if (totalN) story.push('<span class="hi">' + totalN.toLocaleString() + '</span> words known');
+        if (ps && ps.locked) story.push('<span class="hi">' + ps.locked + '</span> frequency genomes locked');
+        if (ps && ps.avg_confidence > 0) story.push('confidence <span class="hi2">' + (ps.avg_confidence*100).toFixed(1) + '%</span>');
+        if (feed.ok && feed.total_sentences) story.push('<span class="hi2">' + (feed.total_sentences||0).toLocaleString() + '</span> sentences read');
+        document.getElementById('story-bar').innerHTML = '<span class="live-dot"></span>' + (story.join(' &nbsp;·&nbsp; ') || 'Loading…');
+
+    }).catch(function() {
+        document.getElementById('story-bar').innerHTML = '<span style="color:#c44">Cortex offline</span>';
+    });
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+renderMoments();
+loadAll();
+setInterval(loadAll, 60000);
+window.addEventListener('resize', paintSpectrum);
+</script>
+</body>
+</html>

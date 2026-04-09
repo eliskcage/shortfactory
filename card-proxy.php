@@ -1,4 +1,6 @@
 <?php
+set_time_limit(0);
+ignore_user_abort(true);
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
@@ -15,7 +17,7 @@ curl_setopt_array($ch, [
     CURLOPT_POSTFIELDS     => $body,
     CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
     CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_TIMEOUT        => 20,
+    CURLOPT_TIMEOUT        => 35,
     CURLOPT_CONNECTTIMEOUT => 5,
 ]);
 $result = curl_exec($ch);

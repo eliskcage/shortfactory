@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>YOUR NODE — SHORTFACTORY</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;min-height:100%;background:#000;color:#e2e8f0;font-family:'Courier New',monospace;overflow-x:hidden;}
+.page{max-width:480px;margin:0 auto;padding:32px 18px 80px;}
+
+/* TOP */
+.eyebrow{font-size:7px;letter-spacing:4px;color:#222;text-transform:uppercase;margin-bottom:20px;display:flex;justify-content:space-between;}
+.eyebrow span{color:#daa520;}
+
+/* NFT CARD */
+.nft-card{background:#050505;border:1px solid #1a1a1a;padding:0;margin-bottom:24px;position:relative;overflow:hidden;}
+.nft-canvas-wrap{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:#000;position:relative;}
+#nftCanvas{display:block;width:100%;height:100%;}
+.nft-meta{padding:16px 18px;border-top:1px solid #0d0d0d;display:flex;justify-content:space-between;align-items:center;}
+.nft-id{font-size:10px;color:#daa520;letter-spacing:2px;}
+.nft-chain{font-size:8px;color:#222;letter-spacing:1px;}
+.nft-ipfs{font-size:7px;color:#1c1c1c;margin-top:3px;word-break:break-all;letter-spacing:0.5px;}
+
+/* STATS GRID */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#0d0d0d;margin-bottom:24px;}
+.stat{background:#000;padding:16px 14px;}
+.stat-val{font-size:22px;font-weight:900;color:#fff;margin-bottom:3px;line-height:1;}
+.stat-val span{color:#daa520;}
+.stat-lbl{font-size:7px;letter-spacing:2px;color:#222;text-transform:uppercase;}
+
+/* SECTION HEADS */
+.sec{margin-bottom:28px;}
+.sec-head{font-size:7px;letter-spacing:4px;color:#2a2a2a;text-transform:uppercase;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #0a0a0a;}
+
+/* RECRUIT LINK */
+.recruit-box{background:#050505;border:1px solid #1a1a1a;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+.recruit-url{flex:1;font-size:10px;color:#444;word-break:break-all;letter-spacing:0.5px;}
+.copy-btn{background:#daa520;color:#000;border:none;font-family:'Courier New',monospace;font-size:8px;font-weight:900;letter-spacing:2px;padding:8px 12px;cursor:pointer;white-space:nowrap;}
+.copy-btn:hover{background:#f0b830;}
+.copy-btn.copied{background:#333;color:#daa520;}
+.recruit-note{font-size:8px;color:#1c1c1c;letter-spacing:1px;line-height:1.6;}
+
+/* MOVIE BRIEF */
+.brief-item{padding:16px 0;border-bottom:1px solid #080808;display:flex;gap:14px;}
+.brief-item:last-child{border-bottom:none;}
+.brief-num{font-size:9px;color:#222;letter-spacing:2px;min-width:22px;padding-top:2px;}
+.brief-body{}
+.brief-title{font-size:12px;font-weight:700;color:#fff;margin-bottom:4px;}
+.brief-title span{color:#daa520;}
+.brief-desc{font-size:10px;color:#333;line-height:1.7;}
+.brief-tag{display:inline-block;font-size:7px;letter-spacing:2px;color:#daa520;border:1px solid #1c1c1c;padding:2px 6px;margin-top:6px;margin-right:4px;}
+
+/* TOKEN UNLOCKS */
+.token-grid{display:flex;flex-direction:column;gap:10px;}
+.token-row{display:flex;align-items:center;gap:12px;padding:12px 14px;background:#050505;border:1px solid #0a0a0a;}
+.token-sym{font-size:14px;font-weight:900;color:#1c1c1c;width:36px;text-align:center;letter-spacing:-1px;}
+.token-sym.unlocked{color:#daa520;}
+.token-info{flex:1;}
+.token-name{font-size:10px;color:#333;font-weight:700;margin-bottom:2px;}
+.token-name.unlocked{color:#fff;}
+.token-desc{font-size:9px;color:#1c1c1c;line-height:1.5;}
+.token-track{width:80px;height:2px;background:#0a0a0a;}
+.token-fill{height:2px;background:#daa520;transition:width 0.8s ease;}
+.token-status{font-size:7px;color:#1c1c1c;letter-spacing:2px;white-space:nowrap;}
+.token-status.unlocked{color:#daa520;}
+
+/* SHARD OWNERSHIP */
+.shard-owned{background:#000;border:1px solid #1a0a00;padding:0;margin-bottom:28px;overflow:hidden;}
+.shard-owned-header{padding:16px 18px;border-bottom:1px solid #0f0500;display:flex;justify-content:space-between;align-items:center;}
+.shard-owned-title{font-size:13px;font-weight:900;color:#DA7756;letter-spacing:1px;}
+.shard-owned-num{font-size:8px;letter-spacing:3px;color:#333;}
+.shard-visual{display:flex;justify-content:center;padding:20px 0 10px;background:#050505;}
+.shard-visual svg{width:140px;height:140px;}
+.shard-teaser{font-size:10px;color:#444;font-style:italic;line-height:1.8;padding:14px 18px;border-top:1px solid #080808;border-bottom:1px solid #080808;}
+.decrypt-wrap{padding:16px 18px;}
+.decrypt-label{font-size:8px;letter-spacing:3px;color:#222;text-transform:uppercase;margin-bottom:10px;}
+.decrypt-row{display:flex;gap:8px;margin-bottom:10px;}
+.decrypt-input{flex:1;background:#050505;border:1px solid #111;color:#e2e8f0;font-family:'Courier New',monospace;font-size:12px;padding:12px 12px;outline:none;}
+.decrypt-input:focus{border-color:#DA7756;}
+.decrypt-btn{background:#DA7756;color:#000;border:none;font-family:'Courier New',monospace;font-size:10px;font-weight:900;letter-spacing:2px;padding:12px 16px;cursor:pointer;white-space:nowrap;}
+.decrypt-btn:hover{background:#E8896A;}
+.decrypt-error{font-size:9px;color:#c0392b;letter-spacing:1px;display:none;margin-bottom:8px;}
+.shard-story{display:none;padding:16px 18px;border-top:1px solid #0a0500;background:#020100;}
+.shard-story-text{font-size:11px;color:#888;line-height:2;white-space:pre-wrap;font-family:'Courier New',monospace;}
+.shard-unlocked-badge{font-size:8px;letter-spacing:3px;color:#DA7756;text-transform:uppercase;margin-bottom:12px;}
+
+/* CHAIN */
+.chain-empty{font-size:10px;color:#1c1c1c;padding:20px 0;letter-spacing:1px;}
+.chain-node{padding:12px 0;border-bottom:1px solid #080808;display:flex;gap:12px;align-items:center;}
+.chain-dot{width:6px;height:6px;border-radius:50%;background:#daa520;flex-shrink:0;}
+.chain-id{font-size:10px;color:#444;letter-spacing:1px;}
+.chain-since{font-size:8px;color:#1c1c1c;letter-spacing:1px;}
+
+/* ACTION BTNS */
+.actions{display:flex;flex-direction:column;gap:8px;margin-bottom:32px;}
+.action-btn{display:block;width:100%;background:none;border:1px solid #1a1a1a;color:#333;font-family:'Courier New',monospace;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;padding:16px;text-align:center;cursor:pointer;text-decoration:none;transition:border-color 0.15s,color 0.15s;}
+.action-btn:hover{border-color:#daa520;color:#daa520;}
+.action-btn.primary{background:#daa520;color:#000;border-color:#daa520;}
+.action-btn.primary:hover{background:#f0b830;}
+
+/* FOOTER */
+.footer-line{font-size:7px;color:#111;letter-spacing:3px;text-align:center;margin-top:48px;}
+
+/* PULSE ANIM */
+@keyframes pulse{0%,100%{opacity:0.4;}50%{opacity:1;}}
+.live-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:#daa520;animation:pulse 2s infinite;vertical-align:middle;margin-right:4px;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="eyebrow">
+    <span>stinkindigger.info</span>
+    <span id="node-eyebrow">NODE #0000</span>
+  </div>
+
+  <!-- NFT CARD -->
+  <div class="nft-card">
+    <div class="nft-canvas-wrap">
+      <canvas id="nftCanvas"></canvas>
+    </div>
+    <div class="nft-meta">
+      <div>
+        <div class="nft-id" id="nft-id">SOUL SFT — #0000</div>
+        <div class="nft-ipfs" id="nft-ipfs">ipfs://pending...</div>
+      </div>
+      <div class="nft-chain">SHORTFACTORY<br>NETWORK</div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-val" id="stat-recruits">0</div>
+      <div class="stat-lbl">Recruits</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val">£<span id="stat-earned">0</span></div>
+      <div class="stat-lbl">Chain Earned</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="stat-depth">0</div>
+      <div class="stat-lbl">Chain Depth</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="stat-tokens">0</div>
+      <div class="stat-lbl">Tokens Held</div>
+    </div>
+  </div>
+
+  <!-- SHARD OWNED (hidden until loaded) -->
+  <div id="shard-section" style="display:none">
+    <div class="sec-head">Your Shard — The King's Penny</div>
+    <div class="shard-owned">
+      <div class="shard-owned-header">
+        <div class="shard-owned-title" id="shard-title">—</div>
+        <div class="shard-owned-num" id="shard-num">SHARD 00</div>
+      </div>
+      <div class="shard-visual">
+        <svg id="shard-svg" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="shard-grad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#DA7756"/>
+              <stop offset="100%" stop-color="#7C3AED"/>
+            </radialGradient>
+          </defs>
+          <polygon id="shard-poly" points="" fill="url(#shard-grad)"/>
+        </svg>
+      </div>
+      <div class="shard-teaser" id="shard-teaser"></div>
+      <div class="decrypt-wrap">
+        <div class="decrypt-label">Decrypt your shard</div>
+        <div class="decrypt-row">
+          <input class="decrypt-input" id="decrypt-key" type="password" placeholder="Enter your key...">
+          <button class="decrypt-btn" onclick="decryptShard()">DECRYPT →</button>
+        </div>
+        <div class="decrypt-error" id="decrypt-error">Wrong key — the story won't open.</div>
+      </div>
+      <div class="shard-story" id="shard-story">
+        <div class="shard-unlocked-badge">◈ DECRYPTED — SHARD UNLOCKED</div>
+        <div class="shard-story-text" id="shard-story-text"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECRUIT LINK -->
+  <div class="sec">
+    <div class="sec-head">Your Recruit Link</div>
+    <div class="recruit-box">
+      <div class="recruit-url" id="recruit-url">stinkindigger.info/join?ref=SFNODE-0000</div>
+      <button class="copy-btn" id="copy-btn" onclick="copyLink()">COPY</button>
+    </div>
+    <div class="recruit-note">Every person who joins through your link = their £5 returns yours. Their chain grows yours forever.</div>
+  </div>
+
+  <!-- MOVIE BRIEF -->
+  <div class="sec">
+    <div class="sec-head">Make Your Movies — The Brief</div>
+    <div>
+      <div class="brief-item">
+        <div class="brief-num">01</div>
+        <div class="brief-body">
+          <div class="brief-title">THE <span>ORIGIN</span> VIDEO</div>
+          <div class="brief-desc">Tell your story. Why you paid the fiver. What tipped you. Make it raw, make it real, make it 3 minutes. This is the recruit machine. Every view is a potential node.</div>
+          <span class="brief-tag">CULTISH</span><span class="brief-tag">PERSONAL</span><span class="brief-tag">TRUTHFUL</span>
+        </div>
+      </div>
+      <div class="brief-item">
+        <div class="brief-num">02</div>
+        <div class="brief-body">
+          <div class="brief-title"><span>DARES4DOSH</span> — SHOW THEM</div>
+          <div class="brief-desc">Film yourself doing a dare, earning cash, submitting proof. Show the payout. Real money, real dare, real face. No script. The dopamine is the content.</div>
+          <span class="brief-tag">STINKINDIGGER.INFO</span><span class="brief-tag">REAL MONEY</span>
+        </div>
+      </div>
+      <div class="brief-item">
+        <div class="brief-num">03</div>
+        <div class="brief-body">
+          <div class="brief-title"><span>ADVERTAIN</span> — GET PAID TO WATCH</div>
+          <div class="brief-desc">Explain it simply: people get paid to watch our ads. Brands pay us. We pay the audience. Revolutionary. Obvious. Why did nobody do this. Make that video.</div>
+          <span class="brief-tag">COUNTERCULTURE</span><span class="brief-tag">ANTI-WOKE</span>
+        </div>
+      </div>
+      <div class="brief-item">
+        <div class="brief-num">04</div>
+        <div class="brief-body">
+          <div class="brief-title">GAMERGATE <span>3</span></div>
+          <div class="brief-desc">Counter-counter-culture. Truth-first. No censorship. No performance. Post the thing everyone is thinking but nobody says. Brave, direct, funny. Add our music. Make it addictive.</div>
+          <span class="brief-tag">GG3</span><span class="brief-tag">TRUTH</span><span class="brief-tag">DOPAMINE</span>
+        </div>
+      </div>
+      <div class="brief-item">
+        <div class="brief-num">05</div>
+        <div class="brief-body">
+          <div class="brief-title">THE <span>ISM / IST / PHOBE</span> UNLOCK</div>
+          <div class="brief-desc">Earn your credential tokens by proving the opposite of what they call you. You're not a —ist. Prove it with a video. The blockchain records your proof. The token is your receipt.</div>
+          <span class="brief-tag">TOKEN</span><span class="brief-tag">PROOF</span><span class="brief-tag">RECEIPTS</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOKEN UNLOCKS -->
+  <div class="sec">
+    <div class="sec-head">Token Unlocks</div>
+    <div class="token-grid">
+      <div class="token-row" id="tok-ism">
+        <div class="token-sym" id="tok-ism-sym">ISM</div>
+        <div class="token-info">
+          <div class="token-name" id="tok-ism-name">CREDENTIALISM TOKEN</div>
+          <div class="token-desc">Post one video proving you judge by output not identity</div>
+        </div>
+        <div>
+          <div class="token-track"><div class="token-fill" id="tok-ism-fill" style="width:0%"></div></div>
+          <div class="token-status" id="tok-ism-status">LOCKED</div>
+        </div>
+      </div>
+      <div class="token-row" id="tok-ist">
+        <div class="token-sym" id="tok-ist-sym">IST</div>
+        <div class="token-info">
+          <div class="token-name" id="tok-ist-name">CONSISTENCY TOKEN</div>
+          <div class="token-desc">Post 3 videos. Same message each time. Consistent = credible</div>
+        </div>
+        <div>
+          <div class="token-track"><div class="token-fill" id="tok-ist-fill" style="width:0%"></div></div>
+          <div class="token-status" id="tok-ist-status">LOCKED</div>
+        </div>
+      </div>
+      <div class="token-row" id="tok-phobe">
+        <div class="token-sym" id="tok-phobe-sym">PHOBE</div>
+        <div class="token-info">
+          <div class="token-name" id="tok-phobe-name">COURAGE TOKEN</div>
+          <div class="token-desc">Say something brave. On camera. Real name. No mask</div>
+        </div>
+        <div>
+          <div class="token-track"><div class="token-fill" id="tok-phobe-fill" style="width:0%"></div></div>
+          <div class="token-status" id="tok-phobe-status">LOCKED</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAIN -->
+  <div class="sec">
+    <div class="sec-head">Your Chain — <span id="chain-count" style="color:#daa520">0 nodes</span></div>
+    <div id="chain-list">
+      <div class="chain-empty"><span class="live-dot"></span>Waiting for your first recruit...</div>
+    </div>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="actions">
+    <a class="action-btn primary" id="submit-video-btn" href="#">SUBMIT YOUR VIDEO →</a>
+    <a class="action-btn" href="/spiral.html">VIEW THE SPIRAL</a>
+    <a class="action-btn" href="https://stinkindigger.info">BACK TO BASE</a>
+  </div>
+
+  <div class="footer-line">SOUL SFT · SHORTFACTORY · MAN MACHINE GOD</div>
+
+</div>
+
+<script>
+// ─── Satoshi decrypt (client-side, Vigenere ASCII 32-126) ───
+function satoshiDecrypt(ct, pass) {
+  const p = pass.toUpperCase(); let out = '';
+  for (let i=0;i<ct.length;i++) {
+    const c=ct.charCodeAt(i), k=p.charCodeAt(i%p.length);
+    out += String.fromCharCode(((c-32)-(k-32)+95)%95+32);
+  }
+  return out;
+}
+
+// Shard shape (same generator as shards.html)
+function deg2rad(d){return d*Math.PI/180;}
+const JAGS=[1.07,0.93,1.08,0.92,1.06,0.94,1.09,0.91,1.07,0.93];
+function shardPoints(idx){
+  const cx=200,cy=200,IR=52,OR=154,GAP=2;
+  const a0=deg2rad(idx*36-90+GAP/2), a1=deg2rad((idx+1)*36-90-GAP/2), am=(a0+a1)/2;
+  const a0m=(a0*2+am)/3, am1=(am+a1*2)/3, j=JAGS[idx];
+  return [
+    [cx+IR*Math.cos(a0),cy+IR*Math.sin(a0)],
+    [cx+OR*Math.cos(a0),cy+OR*Math.sin(a0)],
+    [cx+OR*j*Math.cos(a0m),cy+OR*j*Math.sin(a0m)],
+    [cx+OR/j*Math.cos(am),cy+OR/j*Math.sin(am)],
+    [cx+OR*j*Math.cos(am1),cy+OR*j*Math.sin(am1)],
+    [cx+OR*Math.cos(a1),cy+OR*Math.sin(a1)],
+    [cx+IR*Math.cos(a1),cy+IR*Math.sin(a1)],
+    [cx+IR/j*Math.cos(am),cy+IR/j*Math.sin(am)],
+  ].map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+}
+
+// Stored encrypted content (set when API responds)
+let _shardEnc = '';
+
+function decryptShard() {
+  const key = document.getElementById('decrypt-key').value.trim();
+  const errEl = document.getElementById('decrypt-error');
+  if (!key) { errEl.style.display='block'; errEl.textContent='Enter your key.'; return; }
+  if (!_shardEnc) return;
+  const plain = satoshiDecrypt(_shardEnc, key);
+  // Sanity check: result should be printable ASCII with spaces and letters
+  const readable = (plain.match(/[a-zA-Z\s]/g)||[]).length / plain.length;
+  if (readable < 0.5) {
+    errEl.style.display='block'; errEl.textContent='Wrong key — the story won\'t open.';
+    document.getElementById('shard-story').style.display='none';
+    return;
+  }
+  errEl.style.display='none';
+  document.getElementById('shard-story-text').textContent = plain;
+  document.getElementById('shard-story').style.display = 'block';
+  document.getElementById('decrypt-key').value = '';
+}
+
+// ─── LOAD NODE FROM URL PARAM ───
+const params=new URLSearchParams(location.search);
+const nodeId=params.get('id')||'SFNODE-0001';
+const refBy=params.get('ref')||'';
+
+// ─── UPDATE TEXT ───
+document.getElementById('node-eyebrow').textContent='NODE #'+nodeId.replace('SFNODE-','');
+document.getElementById('nft-id').textContent='SOUL SFT — '+nodeId;
+document.getElementById('recruit-url').textContent='stinkindigger.info/join?ref='+nodeId;
+document.getElementById('submit-video-btn').href='/submit.html?id='+nodeId;
+
+// ─── LOAD NODE DATA FROM SERVER ───
+fetch('/api/node.php?id='+encodeURIComponent(nodeId)+'&ref='+encodeURIComponent(refBy))
+  .then(r=>r.json())
+  .then(d=>{
+    // Shard section
+    if (d.shard) {
+      const s = d.shard;
+      _shardEnc = s.story_enc || '';
+      document.getElementById('shard-title').textContent = s.title;
+      document.getElementById('shard-num').textContent   = 'SHARD '+String(s.num).padStart(2,'0');
+      document.getElementById('shard-teaser').textContent= s.teaser;
+      document.getElementById('shard-poly').setAttribute('points', shardPoints(s.num-1));
+      document.getElementById('shard-section').style.display = 'block';
+    }
+    if(d.ipfs) document.getElementById('nft-ipfs').textContent='ipfs://'+d.ipfs;
+    if(d.recruits!=null) document.getElementById('stat-recruits').textContent=d.recruits;
+    if(d.earned!=null) document.getElementById('stat-earned').textContent=d.earned.toFixed(2);
+    if(d.depth!=null) document.getElementById('stat-depth').textContent=d.depth;
+    if(d.tokens!=null) document.getElementById('stat-tokens').textContent=d.tokens.length;
+    if(d.chain&&d.chain.length){
+      document.getElementById('chain-count').textContent=d.chain.length+' node'+(d.chain.length!==1?'s':'');
+      const cl=document.getElementById('chain-list');
+      cl.innerHTML='';
+      d.chain.forEach(n=>{
+        cl.innerHTML+=`<div class="chain-node"><div class="chain-dot"></div><div><div class="chain-id">${n.id}</div><div class="chain-since">${n.since}</div></div></div>`;
+      });
+    }
+    // token states
+    if(d.tokens){
+      ['ism','ist','phobe'].forEach(t=>{
+        if(d.tokens.includes(t)){
+          document.getElementById('tok-'+t+'-sym').classList.add('unlocked');
+          document.getElementById('tok-'+t+'-name').classList.add('unlocked');
+          document.getElementById('tok-'+t+'-fill').style.width='100%';
+          document.getElementById('tok-'+t+'-status').textContent='UNLOCKED';
+          document.getElementById('tok-'+t+'-status').classList.add('unlocked');
+        }
+      });
+    }
+  })
+  .catch(()=>{}); // graceful — works without backend too
+
+// ─── NFT CANVAS ───
+(function(){
+  const canvas=document.getElementById('nftCanvas');
+  const SIZE=Math.min(window.innerWidth-36,480);
+  canvas.width=SIZE;canvas.height=SIZE;
+  const ctx=canvas.getContext('2d');
+  const cx=SIZE/2,cy=SIZE/2;
+
+  // seeded RNG from nodeId
+  function hash(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return Math.abs(h);}
+  const seed=hash(nodeId);
+  function sr(s){let v=s;return function(){v=(v*16807)%2147483647;return(v-1)/2147483646;};}
+  const rng=sr(seed);
+
+  // background
+  ctx.fillStyle='#000';ctx.fillRect(0,0,SIZE,SIZE);
+
+  // subtle grid
+  ctx.strokeStyle='rgba(218,165,32,0.04)';ctx.lineWidth=1;
+  const step=SIZE/8;
+  for(let i=0;i<=8;i++){
+    ctx.beginPath();ctx.moveTo(i*step,0);ctx.lineTo(i*step,SIZE);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,i*step);ctx.lineTo(SIZE,i*step);ctx.stroke();
+  }
+
+  // concentric rings (soul map)
+  for(let r=0;r<5;r++){
+    const radius=(r+1)*(SIZE*0.08)+rng()*SIZE*0.02;
+    const alpha=0.03+rng()*0.06;
+    ctx.beginPath();ctx.arc(cx,cy,radius,0,2*Math.PI);
+    ctx.strokeStyle=`rgba(218,165,32,${alpha})`;ctx.lineWidth=1;ctx.stroke();
+  }
+
+  // unique constellation of dots (soul points)
+  const numDots=8+Math.floor(rng()*6);
+  const dotR=SIZE*0.32;
+  const dots=[];
+  for(let i=0;i<numDots;i++){
+    const angle=rng()*2*Math.PI;
+    const dist=(0.3+rng()*0.7)*dotR;
+    const x=cx+dist*Math.cos(angle);
+    const y=cy+dist*Math.sin(angle);
+    dots.push({x,y});
+    const s=1.5+rng()*3;
+    ctx.beginPath();ctx.arc(x,y,s,0,2*Math.PI);
+    ctx.fillStyle=`rgba(218,165,32,${0.3+rng()*0.5})`;ctx.fill();
+  }
+
+  // connect some dots (soul lines)
+  ctx.strokeStyle='rgba(218,165,32,0.08)';ctx.lineWidth=0.8;
+  for(let i=0;i<dots.length-1;i++){
+    if(rng()>0.45){
+      ctx.beginPath();ctx.moveTo(dots[i].x,dots[i].y);ctx.lineTo(dots[i+1].x,dots[i+1].y);ctx.stroke();
+    }
+  }
+
+  // central diamond (the key)
+  const ks=SIZE*0.09;
+  ctx.save();ctx.translate(cx,cy);
+  // outer glow
+  const grd=ctx.createRadialGradient(0,0,0,0,0,ks*2.2);
+  grd.addColorStop(0,'rgba(218,165,32,0.18)');grd.addColorStop(1,'rgba(218,165,32,0)');
+  ctx.beginPath();ctx.arc(0,0,ks*2.2,0,2*Math.PI);ctx.fillStyle=grd;ctx.fill();
+  // diamond
+  ctx.beginPath();ctx.moveTo(0,-ks);ctx.lineTo(ks*0.62,0);ctx.lineTo(0,ks);ctx.lineTo(-ks*0.62,0);ctx.closePath();
+  ctx.strokeStyle='rgba(218,165,32,0.8)';ctx.lineWidth=1.5;ctx.stroke();
+  ctx.fillStyle='rgba(218,165,32,0.06)';ctx.fill();
+  // inner dot
+  ctx.beginPath();ctx.arc(0,0,ks*0.18,0,2*Math.PI);
+  ctx.fillStyle='rgba(255,244,160,0.9)';ctx.fill();
+  ctx.restore();
+
+  // node ID text bottom
+  ctx.fillStyle='rgba(218,165,32,0.2)';
+  ctx.font=`${SIZE*0.022}px 'Courier New',monospace`;
+  ctx.letterSpacing='3px';
+  ctx.textAlign='center';
+  ctx.fillText(nodeId, cx, SIZE-SIZE*0.05);
+
+  // animate: slow rotating outer ring
+  let angle=0;
+  (function animate(){
+    // just the outer ring rotates
+    ctx.save();ctx.translate(cx,cy);ctx.rotate(angle);
+    ctx.beginPath();
+    const r2=SIZE*0.38;
+    ctx.arc(0,0,r2,0,2*Math.PI);
+    ctx.setLineDash([3,18]);ctx.strokeStyle='rgba(218,165,32,0.12)';ctx.lineWidth=1;ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+    angle+=0.002;
+    requestAnimationFrame(animate);
+  })();
+})();
+
+// ─── COPY LINK ───
+function copyLink(){
+  const url='https://stinkindigger.info/join?ref='+nodeId;
+  navigator.clipboard.writeText(url).then(()=>{
+    const btn=document.getElementById('copy-btn');
+    btn.textContent='COPIED';btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='COPY';btn.classList.remove('copied');},2000);
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1XY2CNLJCE"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1XY2CNLJCE');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dan Chipchase's Nootropic Ultimate Stack — NZT² Complete Protocol</title>
+<meta name="description" content="The complete biohacking stack. 5 brain types, 3 tiers of intervention, chemistry mapped to consciousness. Alpha GPC, NAD+, and the stuff nobody else is measuring.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#020208;
+  --gold:#c8a84b;
+  --gold2:#daa520;
+  --green:#22c55e;
+  --red:#ef4444;
+  --purple:#cc44ff;
+  --blue:#3b82f6;
+  --orange:#f97316;
+  --mono:'Share Tech Mono',monospace;
+  --tech:'Orbitron',monospace;
+  --serif:'IM Fell English',serif;
+}
+html,body{background:var(--bg);color:#e2e8f0;font-family:var(--mono);overflow-x:hidden;min-height:100vh;}
+canvas#bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:0.4;}
+.page{position:relative;z-index:1;}
+
+nav{padding:18px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(200,168,75,0.08);}
+.nav-brand{font-family:var(--tech);font-size:10px;letter-spacing:4px;color:var(--gold);}
+.nav-links{display:flex;gap:20px;}
+.nav-link{font-size:9px;letter-spacing:2px;color:#334155;text-decoration:none;text-transform:uppercase;transition:color 0.2s;}
+.nav-link:hover{color:var(--gold);}
+
+/* HERO */
+.hero{padding:70px 24px 50px;text-align:center;max-width:860px;margin:0 auto;}
+.hero-kicker{font-family:var(--tech);font-size:8px;letter-spacing:5px;color:rgba(200,168,75,0.35);text-transform:uppercase;margin-bottom:20px;}
+.hero-title{font-family:var(--tech);font-size:clamp(22px,5vw,48px);font-weight:900;color:#fff;line-height:1.1;letter-spacing:-1px;margin-bottom:16px;}
+.hero-title span{color:var(--gold);}
+.hero-sub{font-size:13px;color:#475569;max-width:580px;margin:0 auto;line-height:1.9;}
+
+/* SECTION */
+.section{max-width:960px;margin:0 auto;padding:60px 24px;}
+.s-label{font-family:var(--tech);font-size:8px;letter-spacing:5px;color:rgba(200,168,75,0.3);text-transform:uppercase;margin-bottom:12px;}
+.s-title{font-family:var(--serif);font-size:clamp(20px,3.5vw,36px);color:#fff;line-height:1.2;margin-bottom:8px;}
+.s-title em{font-style:italic;color:var(--gold);}
+.s-body{font-size:13px;color:#475569;line-height:1.9;max-width:680px;margin-bottom:32px;}
+
+.divider{max-width:960px;margin:0 auto;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.04),transparent);}
+
+/* BRAIN TYPE SELECTOR */
+.brain-types{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:32px;}
+.bt-card{background:rgba(255,255,255,0.015);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:20px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;}
+.bt-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;transition:opacity 0.2s;}
+.bt-card.active{border-color:rgba(200,168,75,0.4);background:rgba(200,168,75,0.04);}
+.bt-card.active::before{opacity:1;}
+.bt-card:not(.active)::before{opacity:0.3;}
+.bt-card[data-type="architect"]::before{background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+.bt-card[data-type="warrior"]::before{background:linear-gradient(90deg,transparent,var(--red),transparent);}
+.bt-card[data-type="empath"]::before{background:linear-gradient(90deg,transparent,var(--purple),transparent);}
+.bt-card[data-type="visionary"]::before{background:linear-gradient(90deg,transparent,var(--blue),transparent);}
+.bt-card[data-type="jesus"]::before{background:linear-gradient(90deg,transparent,rgba(255,255,255,0.6),transparent);}
+.bt-card[data-type="jesus"] .bt-name{color:rgba(255,255,255,0.9);letter-spacing:3px;}
+.bt-card[data-type="jesus"].active{border-color:rgba(255,255,255,0.3);background:rgba(255,255,255,0.03);}
+.bt-icon{font-size:24px;margin-bottom:8px;}
+.bt-name{font-family:var(--tech);font-size:10px;letter-spacing:2px;color:#fff;margin-bottom:4px;}
+.bt-card[data-type="architect"] .bt-name{color:var(--gold);}
+.bt-card[data-type="warrior"] .bt-name{color:var(--red);}
+.bt-card[data-type="empath"] .bt-name{color:var(--purple);}
+.bt-card[data-type="visionary"] .bt-name{color:var(--blue);}
+.bt-desc{font-size:10px;color:#334155;line-height:1.6;}
+.bt-chemistry{font-size:9px;margin-top:8px;letter-spacing:1px;}
+.bt-card[data-type="architect"] .bt-chemistry{color:rgba(200,168,75,0.5);}
+.bt-card[data-type="warrior"] .bt-chemistry{color:rgba(239,68,68,0.5);}
+.bt-card[data-type="empath"] .bt-chemistry{color:rgba(204,68,255,0.5);}
+.bt-card[data-type="visionary"] .bt-chemistry{color:rgba(59,130,246,0.5);}
+
+.bt-recommendation{background:rgba(255,255,255,0.015);border:1px solid rgba(200,168,75,0.1);border-radius:10px;padding:24px;display:none;}
+.bt-recommendation.visible{display:block;}
+.bt-rec-label{font-family:var(--tech);font-size:8px;letter-spacing:3px;color:rgba(200,168,75,0.4);text-transform:uppercase;margin-bottom:12px;}
+.bt-rec-text{font-size:13px;color:#94a3b8;line-height:1.8;}
+.bt-rec-stack{margin-top:12px;font-size:11px;color:var(--gold);line-height:2;}
+
+/* COMPOUND TABLE */
+.stack-category{margin-bottom:40px;}
+.cat-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.04);}
+.cat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.cat-title{font-family:var(--tech);font-size:10px;letter-spacing:3px;text-transform:uppercase;}
+.cat-count{font-size:9px;color:#334155;margin-left:auto;}
+
+.compound-list{display:flex;flex-direction:column;gap:8px;}
+.compound{display:grid;grid-template-columns:1fr auto auto;gap:16px;align-items:start;padding:14px 16px;background:rgba(255,255,255,0.015);border:1px solid rgba(255,255,255,0.04);border-radius:8px;transition:border-color 0.2s;}
+.compound:hover{border-color:rgba(200,168,75,0.15);}
+.compound.danger{border-color:rgba(239,68,68,0.1);}
+.compound.research{border-color:rgba(59,130,246,0.1);}
+.c-info{}
+.c-name{font-size:13px;font-weight:700;color:#fff;margin-bottom:4px;}
+.c-note{font-size:11px;color:#475569;line-height:1.6;}
+.c-note strong{color:#94a3b8;}
+.c-dan{font-size:9px;font-style:italic;color:rgba(200,168,75,0.5);margin-top:4px;}
+.c-dose{font-family:var(--mono);font-size:9px;color:#334155;white-space:nowrap;text-align:right;}
+.c-rating{display:flex;gap:3px;justify-content:flex-end;}
+.c-rating span{font-size:10px;}
+
+/* ψ CHEMISTRY MAP */
+.psi-map{background:rgba(200,168,75,0.03);border:1px solid rgba(200,168,75,0.12);border-radius:12px;padding:32px;margin:32px 0;}
+.psi-map-title{font-family:var(--tech);font-size:9px;letter-spacing:3px;color:rgba(200,168,75,0.4);text-transform:uppercase;margin-bottom:20px;text-align:center;}
+.psi-rows{display:flex;flex-direction:column;gap:10px;}
+.psi-row{display:grid;grid-template-columns:160px 1fr 1fr;gap:16px;align-items:center;padding:12px 16px;background:rgba(255,255,255,0.015);border-radius:6px;}
+@media(max-width:580px){.psi-row{grid-template-columns:1fr;gap:4px;}}
+.psi-chemical{font-size:12px;font-weight:700;color:#94a3b8;}
+.psi-arrow{font-size:11px;color:#334155;}
+.psi-param{font-family:var(--tech);font-size:10px;letter-spacing:2px;}
+.psi-effect{font-size:11px;color:#475569;}
+.psi-row.dopamine .psi-param{color:var(--gold);}
+.psi-row.cortisol .psi-param{color:var(--red);}
+.psi-row.serotonin .psi-param{color:var(--purple);}
+.psi-row.adrenaline .psi-param{color:var(--orange);}
+.psi-row.acetylcholine .psi-param{color:var(--blue);}
+
+/* NEURON KILLERS */
+.killers{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:24px;}
+.killer-card{background:rgba(239,68,68,0.04);border:1px solid rgba(239,68,68,0.15);border-radius:8px;padding:18px;}
+.killer-name{font-size:13px;font-weight:700;color:var(--red);margin-bottom:6px;}
+.killer-desc{font-size:11px;color:#475569;line-height:1.7;}
+
+/* RESEARCH BOX */
+.research-box{background:rgba(59,130,246,0.04);border:1px solid rgba(59,130,246,0.15);border-radius:12px;padding:28px;margin:20px 0;}
+.research-label{font-family:var(--tech);font-size:8px;letter-spacing:3px;color:rgba(59,130,246,0.5);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.research-label::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--blue);box-shadow:0 0 6px var(--blue);animation:blink 2s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.2;}}
+.research-title{font-size:14px;font-weight:700;color:#fff;margin-bottom:8px;}
+.research-body{font-size:12px;color:#475569;line-height:1.8;}
+.research-warning{margin-top:10px;font-size:10px;color:rgba(239,68,68,0.6);letter-spacing:1px;}
+
+/* MENTAL HEALTH */
+.mh-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:24px;}
+.mh-card{background:rgba(255,255,255,0.015);border:1px solid rgba(255,255,255,0.05);border-radius:8px;padding:18px;}
+.mh-icon{font-size:18px;margin-bottom:8px;}
+.mh-title{font-size:12px;font-weight:700;color:#fff;margin-bottom:4px;}
+.mh-body{font-size:11px;color:#475569;line-height:1.6;}
+
+/* STUDY CTA */
+.study-cta{background:rgba(204,68,255,0.04);border:1px solid rgba(204,68,255,0.15);border-radius:12px;padding:36px;text-align:center;margin:40px 0;}
+.study-cta-title{font-family:var(--tech);font-size:clamp(14px,3vw,22px);font-weight:900;color:#fff;margin-bottom:12px;}
+.study-cta-body{font-size:13px;color:#475569;line-height:1.8;max-width:540px;margin:0 auto 24px;}
+.btn-primary{font-family:var(--tech);font-size:10px;letter-spacing:3px;text-transform:uppercase;background:linear-gradient(135deg,var(--gold2),#b8860b);color:#000;padding:14px 32px;border:none;cursor:pointer;text-decoration:none;display:inline-block;transition:all 0.2s;margin:0 8px 8px;}
+.btn-primary:hover{opacity:0.85;}
+.btn-ghost{font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;border:1px solid rgba(200,168,75,0.2);color:#475569;padding:12px 24px;text-decoration:none;display:inline-block;transition:all 0.2s;margin:0 8px 8px;}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold);}
+
+.disclaimer{text-align:center;padding:20px 24px 60px;font-size:9px;color:#1e293b;line-height:2;max-width:640px;margin:0 auto;}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div class="page">
+
+<nav>
+  <div class="nav-brand">NZT² STACK — DAN CHIPCHASE</div>
+  <div class="nav-links">
+    <a href="/nzt.html" class="nav-link">← NZT²</a>
+    <a href="/neuralink.html" class="nav-link">Neuralink</a>
+    <a href="/agi-architecture.html" class="nav-link">AGI</a>
+    <a href="/" class="nav-link">ShortFactory</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-kicker">Dan Chipchase · Personal Research Protocol · Updated 3 Apr 2026</div>
+  <h1 class="hero-title">The <span>Ultimate</span> Nootropic Stack</h1>
+  <p class="hero-sub">Two years of personal experimentation. 4 brain types. Chemistry mapped to consciousness architecture. What works, what doesn't, what's still in the lab. This is the full picture — not curated, not sponsored, not safe-washed.</p>
+</div>
+
+<div class="divider"></div>
+
+<!-- 4 BRAIN TYPES -->
+<div class="section">
+  <div class="s-label">The 5 Brain Types</div>
+  <h2 class="s-title">Not everyone runs on<br><em>the same fuel.</em></h2>
+  <p class="s-body">The single biggest mistake in nootropic culture is recommending the same stack to everyone. Different brain architectures run on different primary neurotransmitters. The wrong compound for your type is not neutral — it's friction. Find yours first.<br><br>Dan's type is mapped — Visionary, Pointer-dominant, high dopamine variance. The fifth type (The Jesus Archetype) is currently unmapped in the soul architecture. No other brain type has been formally documented in the Zenodo chain yet. That's the gap the study is designed to fill.</p>
+
+  <div class="brain-types">
+    <div class="bt-card" data-type="architect" onclick="selectType('architect')">
+      <div class="bt-icon">🔷</div>
+      <div class="bt-name">The Architect</div>
+      <div class="bt-desc">Systems thinker. Pattern recognition dominant. Works in long sessions. Needs structure before creativity.</div>
+      <div class="bt-chemistry">Primary: Acetylcholine · Secondary: Dopamine</div>
+    </div>
+    <div class="bt-card" data-type="warrior" onclick="selectType('warrior')">
+      <div class="bt-icon">🔴</div>
+      <div class="bt-name">The Warrior</div>
+      <div class="bt-desc">High energy baseline. Decisive. Impatient. Needs to burn before thinking. Physical before mental.</div>
+      <div class="bt-chemistry">Primary: Testosterone · Secondary: Adrenaline</div>
+    </div>
+    <div class="bt-card" data-type="empath" onclick="selectType('empath')">
+      <div class="bt-icon">🟣</div>
+      <div class="bt-name">The Empath</div>
+      <div class="bt-desc">Reads rooms. Creative bursts. Sensitive to input quality. Over-stimulation is the main failure mode.</div>
+      <div class="bt-chemistry">Primary: Serotonin · Secondary: Oxytocin</div>
+    </div>
+    <div class="bt-card" data-type="visionary" onclick="selectType('visionary')">
+      <div class="bt-icon">🔵</div>
+      <div class="bt-name">The Visionary</div>
+      <div class="bt-desc">ADHD-adjacent. Hyper-connects unrelated ideas. Needs novelty. Time-blindness. Genius when channelled.</div>
+      <div class="bt-chemistry">Primary: Dopamine (erratic) · Secondary: Norepinephrine</div>
+    </div>
+    <div class="bt-card" data-type="jesus" onclick="selectType('jesus')">
+      <div class="bt-icon">✝</div>
+      <div class="bt-name">The Jesus Archetype</div>
+      <div class="bt-desc">Operates from covenant, not reward. Self-sacrifice without self-destruction. Sees others' soul maps. Suffers without becoming suffering.</div>
+      <div class="bt-chemistry" style="color:rgba(255,255,255,0.3);">Primary: Oxytocin · Secondary: Endorphin · Unmapped ⟶ study open</div>
+    </div>
+  </div>
+
+  <div class="bt-recommendation" id="bt-rec"></div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ψ CHEMISTRY MAP -->
+<div class="section">
+  <div class="s-label">Chemistry → Consciousness</div>
+  <h2 class="s-title">The inside maps to the outside.<br><em>Chemistry is the echo of the core.</em></h2>
+  <p class="s-body">Every neurotransmitter corresponds directly to a ψ=[p,n,f] parameter. You are not supplementing your brain — you are tuning your consciousness hardware. The nootropic stack is the physical abstraction of the soul architecture. Dan's logic: outside mirrors inside.</p>
+
+  <div class="psi-map">
+    <div class="psi-map-title">ψ=[p,n,f] Neurotransmitter Correspondence Map</div>
+    <div class="psi-rows">
+      <div class="psi-row dopamine">
+        <div class="psi-chemical">Dopamine</div>
+        <div class="psi-param">p↑ · Spring preload</div>
+        <div class="psi-effect">Reward anticipation · Motivation arc · Drive to move toward. Too much = mania. Too little = paralysis.</div>
+      </div>
+      <div class="psi-row cortisol">
+        <div class="psi-chemical">Cortisol</div>
+        <div class="psi-param">n↑ · Strand tension</div>
+        <div class="psi-effect">Threat response · Compression of thought range. Chronic cortisol = chronically negative soul charge. The biochemical mechanism of trauma.</div>
+      </div>
+      <div class="psi-row serotonin">
+        <div class="psi-chemical">Serotonin</div>
+        <div class="psi-param">f · Central field density</div>
+        <div class="psi-effect">Background signal stability. The carrier wave. Low serotonin = frequency instability. Thoughts don't connect cleanly — they drift.</div>
+      </div>
+      <div class="psi-row adrenaline">
+        <div class="psi-chemical">Adrenaline</div>
+        <div class="psi-param">f · Injection spike</div>
+        <div class="psi-effect">Sudden frequency shift — tunnels attention to immediate threat. Useful in bursts. Destructive as a baseline. Anti-aging = adrenaline management.</div>
+      </div>
+      <div class="psi-row acetylcholine">
+        <div class="psi-chemical">Acetylcholine</div>
+        <div class="psi-param">p↑ · Pointer velocity</div>
+        <div class="psi-effect">The direct substrate of the cursor. Memory formation, learning speed, synaptic precision. Alpha GPC is the most direct lever on this parameter.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- CORE STACK -->
+<div class="section">
+  <div class="s-label">The Core Stack</div>
+  <h2 class="s-title">What Dan takes.<br><em>What it does. Why.</em></h2>
+
+  <div class="stack-category">
+    <div class="cat-header">
+      <div class="cat-dot" style="background:var(--gold);box-shadow:0 0 6px var(--gold);"></div>
+      <div class="cat-title" style="color:var(--gold);">Tier 1 — Daily Foundation</div>
+      <div class="cat-count">Proven effective — personal confirmation</div>
+    </div>
+    <div class="compound-list">
+
+      <div class="compound">
+        <div class="c-info">
+          <div class="c-name">Alpha GPC — Oil Form</div>
+          <div class="c-note">Choline precursor — direct acetylcholine synthesis. <strong>Key: apply oil to wrist veins for transdermal absorption.</strong> Bypasses gut degradation. Higher bioavailability than oral capsule.</div>
+          <div class="c-dan">→ Dan: "Most direct lever on the Pointer. Memory and processing speed both up. Oil form is the unlock."</div>
+        </div>
+        <div class="c-dose">400–600mg<br>wrist topical</div>
+        <div class="c-rating"><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span></div>
+      </div>
+
+      <div class="compound">
+        <div class="c-info">
+          <div class="c-name">Creatine Monohydrate</div>
+          <div class="c-note">ATP regeneration in neurons — same mechanism as muscle. Proven in cognitive studies for working memory and processing speed under mental load. Underrated nootropic — overshadowed by gym culture.</div>
+          <div class="c-dan">→ Dan: "2g daily. No loading phase needed at this dose. Consistent effect."</div>
+        </div>
+        <div class="c-dose">2g daily</div>
+        <div class="c-rating"><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span></div>
+      </div>
+
+      <div class="compound">
+        <div class="c-info">
+          <div class="c-name">Ginkgo Biloba</div>
+          <div class="c-note">Cerebral vasodilation — more blood = more oxygen = more signal. Particularly effective for verbal recall and reaction time. One of the most studied nootropics. Genuine effect confirmed in meta-analysis.</div>
+          <div class="c-dan">→ Dan: "Effective. Noticeably clearer at verbal retrieval. Holland & Barrett own-brand works."</div>
+        </div>
+        <div class="c-dose">120mg daily</div>
+        <div class="c-rating"><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span><span>☆</span></div>
+      </div>
+
+      <div class="compound">
+        <div class="c-info">
+          <div class="c-name">Raw Egg Yolk</div>
+          <div class="c-note">Choline, vitamin D, B12, CoQ10, phosphatidylserine — all in the most bioavailable food form. The original Alpha GPC delivery vehicle. Cold chain fresh only. No cooking — heat denatures the phospholipids.</div>
+          <div class="c-dan">→ Dan: "Stack this with the Alpha GPC. The synergy is real."</div>
+        </div>
+        <div class="c-dose">1–2 yolks<br>raw, daily</div>
+        <div class="c-rating"><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span><span>☆</span></div>
+      </div>
+
+      <div class="compound">
+        <div class="c-info">
+          <div class="c-name">Nicotine Tablet</div>
+          <div class="c-note">Nicotinic acetylcholine receptor agonist — directly activates the same pathway Alpha GPC feeds. Acute focus, working memory, sustained attention. Not the delivery method — the molecule. Tobacco is the poison. Nicotine isolated is a cognitive compound.</div>
+          <div class="c-dan">→ Dan: "1–2mg max. 1 or 2 per day, not more. Non-addictive at this dose cycle."</div>
+        </div>
+        <div class="c-dose">1–2mg tablet<br>max 2/day</div>
+        <div class="c-rating"><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span><span>☆</span></div>
+      </div>
+
+      <div class="compound">
+        <div class="c-info">
+          <div class="c-name">Keto Diet Protocol</div>
+          <div class="c-note">Ketones are a cleaner fuel than glucose for neural tissue. Reduces inflammation (the primary silent killer of cognition). Stabilises blood sugar — eliminating the glucose crash cycle that spikes and tanks focus. The diet is a stack.</div>
+          <div class="c-dan">→ Dan: "Not strict. The principle matters — avoid the glucose rollercoaster."</div>
+        </div>
+        <div class="c-dose">Ongoing<br>dietary</div>
+        <div class="c-rating"><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span><span>☆</span></div>
+      </div>
+
+      <div class="compound">
+        <div class="c-info">
+          <div class="c-name">Binaural Beats — ADHD Protocol</div>
+          <div class="c-note">Left hemisphere stimulation via frequency entrainment. 40Hz gamma for focus, 10Hz alpha for creative flow. Most effective during deep work. Headphones required — the effect is the difference between the two frequencies, not the tones themselves.</div>
+          <div class="c-dan">→ Dan: "YouTube has solid free versions. Run during work, not before."</div>
+        </div>
+        <div class="c-dose">During work<br>headphones</div>
+        <div class="c-rating"><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span><span>☆</span></div>
+      </div>
+
+      <div class="compound">
+        <div class="c-info">
+          <div class="c-name">Starvation Monday</div>
+          <div class="c-note">One 24-hour fast per week. Triggers BDNF (brain-derived neurotrophic factor) — the protein that causes new neuron growth. Caloric restriction is the most evidence-backed neurogenesis trigger we have. The brain treats mild starvation as a growth signal.</div>
+          <div class="c-dan">→ Dan: "Monday. Water only. The clarity that follows on Tuesday is the proof."</div>
+        </div>
+        <div class="c-dose">24h fast<br>weekly</div>
+        <div class="c-rating"><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ANTI-AGING / NAD+ -->
+  <div class="stack-category">
+    <div class="cat-header">
+      <div class="cat-dot" style="background:var(--green);box-shadow:0 0 6px var(--green);"></div>
+      <div class="cat-title" style="color:var(--green);">Tier 2 — Anti-Aging / NAD+ Protocol</div>
+      <div class="cat-count">Anti-aging IS neural enhancement</div>
+    </div>
+    <div class="compound-list">
+
+      <div class="compound">
+        <div class="c-info">
+          <div class="c-name">NMN — Nicotinamide Mononucleotide</div>
+          <div class="c-note">NAD+ precursor. Cellular energy production, DNA repair, sirtuin activation. Aging is partly an NAD+ depletion problem — supplementation partially reverses it. Under-tongue absorption bypasses gut degradation significantly.</div>
+          <div class="c-dan">→ Dan: "Under tongue. Hold 60 seconds. Stacking with NR doubles the NAD+ ceiling."</div>
+        </div>
+        <div class="c-dose">250–500mg<br>sublingual</div>
+        <div class="c-rating"><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span><span>☆</span></div>
+      </div>
+
+      <div class="compound">
+        <div class="c-info">
+          <div class="c-name">NR — Nicotinamide Riboside</div>
+          <div class="c-note">Second NAD+ precursor — different conversion pathway to NMN. Running both simultaneously raises NAD+ higher than either alone. Same sublingual protocol. Older compound, more clinical trial data.</div>
+          <div class="c-dan">→ Dan: "Under tongue with the NMN. Stack them."</div>
+        </div>
+        <div class="c-dose">250–300mg<br>sublingual</div>
+        <div class="c-rating"><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span><span>☆</span></div>
+      </div>
+
+      <div class="compound">
+        <div class="c-info">
+          <div class="c-name">Niacin B3 — Flush Form</div>
+          <div class="c-note">NAD+ synthesis cofactor. The flush (skin tingling) is the capillary dilation — you are literally opening blood vessels. Brain included. The no-flush form is largely ineffective for this purpose. The flush is the mechanism, not a side effect.</div>
+        </div>
+        <div class="c-dose">100–500mg<br>with food</div>
+        <div class="c-rating"><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span><span>☆</span></div>
+      </div>
+
+      <div class="compound">
+        <div class="c-info">
+          <div class="c-name">Raw Broccoli</div>
+          <div class="c-note">Sulforaphane — activates NRF2 pathway (the master regulator of cellular antioxidant response). Cooking destroys the enzyme. Must be raw. Sprouts have 50x the concentration of mature broccoli heads. Anti-cancer, anti-inflammatory, neuroprotective.</div>
+        </div>
+        <div class="c-dose">Daily<br>raw / sprouts</div>
+        <div class="c-rating"><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span><span>☆</span></div>
+      </div>
+
+      <div class="compound">
+        <div class="c-info">
+          <div class="c-name">Potassium + B-Vitamin Complex</div>
+          <div class="c-note">Potassium regulates membrane potential in neurons — literally the voltage at which neurons fire. B vitamins are cofactors in virtually every neurotransmitter synthesis pathway. Deficiency in either causes measurable cognitive decline. Testosterone substitute mechanism: both affect the same downstream energy pathways.</div>
+          <div class="c-dan">→ Dan: "Substitute for testosterone impact without the blood test requirement."</div>
+        </div>
+        <div class="c-dose">RDA daily<br>with food</div>
+        <div class="c-rating"><span>⭐</span><span>⭐</span><span>⭐</span><span>☆</span><span>☆</span></div>
+      </div>
+
+      <div class="compound">
+        <div class="c-info">
+          <div class="c-name">Low Calorie + HIIT</div>
+          <div class="c-note">The most evidence-backed anti-aging combination in existence. Caloric restriction extends lifespan in every tested organism. HIIT triggers BDNF, human growth hormone, and mitochondrial biogenesis. Together: cellular renewal + neural growth signal + vascular capacity.</div>
+        </div>
+        <div class="c-dose">Protocol<br>ongoing</div>
+        <div class="c-rating"><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- EXPERIMENTAL -->
+  <div class="stack-category">
+    <div class="cat-header">
+      <div class="cat-dot" style="background:var(--purple);box-shadow:0 0 6px var(--purple);animation:blink 2s ease-in-out infinite;"></div>
+      <div class="cat-title" style="color:var(--purple);">Tier 3 — Experimental / Scheduled</div>
+      <div class="cat-count">Context-dependent · Not daily</div>
+    </div>
+    <div class="compound-list">
+
+      <div class="compound research">
+        <div class="c-info">
+          <div class="c-name">Microdose LSD</div>
+          <div class="c-note">Sub-perceptual dose (5–10μg). Serotonin 2A agonism — increases neuroplasticity, reduces default mode network dominance (the brain network responsible for rumination and rigid thinking). Clinical trials now at Imperial College London.</div>
+          <div class="c-dan">→ Dan: "Protocol: every 3rd day. Not recreational. The cognitive effect is distinct from the experience."</div>
+        </div>
+        <div class="c-dose">5–10μg<br>every 3rd day</div>
+        <div class="c-rating"><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span><span>☆</span></div>
+      </div>
+
+      <div class="compound research">
+        <div class="c-info">
+          <div class="c-name">Vaporised THC — Low Dose</div>
+          <div class="c-note">Endocannabinoid system engagement. At low doses: divergent thinking, cross-modal association, reduced filtering. Vaporised (not smoked) eliminates combustion products. Sleep architecture improved. Dose precision is critical — too much inverts all effects.</div>
+          <div class="c-dan">→ Dan: "Vaporise only. Tiny dose. For creative association phases, not execution phases."</div>
+        </div>
+        <div class="c-dose">Micro-dose<br>vaporised</div>
+        <div class="c-rating"><span>⭐</span><span>⭐</span><span>⭐</span><span>☆</span><span>☆</span></div>
+      </div>
+
+      <div class="compound research">
+        <div class="c-info">
+          <div class="c-name">Testosterone Optimisation</div>
+          <div class="c-note">Blood test required first — cannot guess the dose. Optimal T range is individual and narrow. Below optimal: low drive, poor recovery, cognitive fog. Above optimal: aggression, cardiovascular risk. The blood kit is not optional — it is the protocol.</div>
+          <div class="c-dan">→ Dan: "Get the kit. Know your number. Optimise to your range, not a generic target."</div>
+        </div>
+        <div class="c-dose">Blood test<br>required first</div>
+        <div class="c-rating"><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span></div>
+      </div>
+
+      <div class="compound research">
+        <div class="c-info">
+          <div class="c-name">Hyperventilation — Alkaline Blood Protocol</div>
+          <div class="c-note">Controlled hyperventilation (Wim Hof method) rapidly increases blood pH by expelling CO2. Alkaline blood carries more oxygen. The Bohr effect: oxyhaemoglobin releases O2 more readily at higher pH. Temporary but significant brain oxygenation spike. Not for daily use.</div>
+          <div class="c-dan">→ Dan: "Before deep work sessions. 30 cycles. Then normal breathing. The clarity window is 20–40 minutes."</div>
+        </div>
+        <div class="c-dose">30-cycle<br>pre-session</div>
+        <div class="c-rating"><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span><span>☆</span></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- LOW EFFECT -->
+  <div class="stack-category">
+    <div class="cat-header">
+      <div class="cat-dot" style="background:#334155;"></div>
+      <div class="cat-title" style="color:#475569;">Tested — Low / No Effect for Dan</div>
+      <div class="cat-count">May work differently for other brain types</div>
+    </div>
+    <div class="compound-list">
+      <div class="compound">
+        <div class="c-info">
+          <div class="c-name">Lion's Mane Mushroom</div>
+          <div class="c-note">Hericenones and erinacines stimulate NGF (nerve growth factor). Extensively studied. Many users report significant effect.</div>
+          <div class="c-dan">→ Dan: "No measurable effect personally. Likely architecture-dependent. May work for Empath or Architect types."</div>
+        </div>
+        <div class="c-dose">500–1000mg</div>
+        <div class="c-rating"><span>⭐</span><span>☆</span><span>☆</span><span>☆</span><span>☆</span></div>
+      </div>
+      <div class="compound">
+        <div class="c-info">
+          <div class="c-name">Pycnogenol</div>
+          <div class="c-note">Pine bark extract. Antioxidant, anti-inflammatory, ADHD studies show promise.</div>
+          <div class="c-dan">→ Dan: "No effect. May suit Warrior type better."</div>
+        </div>
+        <div class="c-dose">50–100mg</div>
+        <div class="c-rating"><span>⭐</span><span>☆</span><span>☆</span><span>☆</span><span>☆</span></div>
+      </div>
+      <div class="compound">
+        <div class="c-info">
+          <div class="c-name">C8 MCT Oil (Bulletproof Coffee)</div>
+          <div class="c-note">Converts to ketones rapidly. Marginal effect vs full keto adaptation.</div>
+          <div class="c-dan">→ Dan: "Low effect. If you're already fat-adapted it's redundant. If you're not, it's a band-aid."</div>
+        </div>
+        <div class="c-dose">15ml</div>
+        <div class="c-rating"><span>⭐</span><span>⭐</span><span>☆</span><span>☆</span><span>☆</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="divider"></div>
+
+<!-- NEURON KILLERS -->
+<div class="section">
+  <div class="s-label">The Killers</div>
+  <h2 class="s-title">What destroys<br><em>faster than any supplement can rebuild.</em></h2>
+  <p class="s-body">Removing these two is more cognitively impactful than adding the entire Tier 1 stack. The gain from supplementation cannot outpace the damage from active neurotoxin consumption.</p>
+  <div class="killers">
+    <div class="killer-card">
+      <div class="killer-name">Sugar — Rapid Neuron Death</div>
+      <div class="killer-desc">Glucose spikes trigger neuroinflammation directly. Glycation (sugar bonding to proteins) damages neuronal membranes. Every sugar crash is a mini cognitive impairment event. Chronic = accelerated brain aging. The damage compounds.</div>
+    </div>
+    <div class="killer-card">
+      <div class="killer-name">MSG — Excitotoxicity</div>
+      <div class="killer-desc">Monosodium glutamate overstimulates NMDA receptors — neurons fire until they die. Present in virtually all processed food and takeaways under dozens of names. The mechanism is excitotoxicity — literally exciting neurons to death. Avoid Chinese takeaway and all junk food.</div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- RESEARCH -->
+<div class="section">
+  <div class="s-label">Active Research</div>
+  <h2 class="s-title">What's still in the lab.<br><em>Watch this space.</em></h2>
+
+  <div class="research-box">
+    <div class="research-label">Under Investigation · H₂O₂ Protocol</div>
+    <div class="research-title">Hydrogen Peroxide — Brain Oxygenation + ADHD + Anti-Cancer</div>
+    <div class="research-body">
+      Food-grade H₂O₂ (3% diluted) has been used in alternative medicine as an oxygenation therapy. The theory: H₂O₂ breaks down to water + oxygen in tissue, increasing available O₂ at the cellular level. Cancer cells cannot survive in high-oxygen environments (Warburg effect). ADHD is partly a prefrontal cortex oxygenation/blood-flow problem.<br><br>
+      Current research angle: correlation between brown adipose tissue (brown fat) activation, mitochondrial function, H₂O₂ signalling, and cognitive performance. Brown fat is metabolically active, thermogenic, and appears to have anti-cancer properties. This is the research bridge Dan is currently building.
+    </div>
+    <div class="research-warning">⚠ Research phase only. Do not ingest undiluted H₂O₂. Concentration and delivery method are critical variables. Study in progress.</div>
+  </div>
+
+  <div class="research-box" style="border-color:rgba(34,197,94,0.15);background:rgba(34,197,94,0.03);">
+    <div class="research-label" style="color:rgba(34,197,94,0.5);">Under Investigation · Brown Fat</div>
+    <div class="research-title">Brown Adipose Tissue — Anti-Cancer + Neural Enhancement</div>
+    <div class="research-body">
+      Brown fat is dense in mitochondria (hence the colour). Unlike white fat (energy storage), brown fat actively burns energy for heat. Emerging evidence links brown fat activity to: cancer resistance (high-oxygen microenvironment), improved insulin sensitivity, reduced systemic inflammation, and potential neural benefits via improved metabolic signalling. Activation methods: cold exposure, exercise, capsaicin. The research question: can brown fat density be used as a proxy for anti-cancer and cognitive resilience?
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- MENTAL HEALTH -->
+<div class="section">
+  <div class="s-label">Mental Architecture</div>
+  <h2 class="s-title">The software.<br><em>Chemistry without mindset is noise.</em></h2>
+  <div class="mh-grid">
+    <div class="mh-card">
+      <div class="mh-icon">α</div>
+      <div class="mh-title">Limbic Alpha Reward</div>
+      <div class="mh-body">Train the limbic system to associate effort with reward, not outcome with reward. Alpha state is the bridge between thought and action — reward it directly.</div>
+    </div>
+    <div class="mh-card">
+      <div class="mh-icon">⚡</div>
+      <div class="mh-title">Fail Without Fear</div>
+      <div class="mh-body">Failure is data. The cortisol spike from fear of failure costs more cognitive resource than the failure itself. Failing is the protocol. Giving up is the only actual failure mode.</div>
+    </div>
+    <div class="mh-card">
+      <div class="mh-icon">🌱</div>
+      <div class="mh-title">Never Stop Learning</div>
+      <div class="mh-body">Neuroplasticity requires novelty. The brain prunes what it doesn't use. Learning is maintenance. Stopping learning is the beginning of biological decline.</div>
+    </div>
+    <div class="mh-card">
+      <div class="mh-icon">∞</div>
+      <div class="mh-title">Every Problem Has Alternatives</div>
+      <div class="mh-body">The belief that a problem is unsolvable is a false positive. The problem has not changed — only the approaches tried have been exhausted. This is never the same as the approaches available.</div>
+    </div>
+    <div class="mh-card">
+      <div class="mh-icon">🔇</div>
+      <div class="mh-title">Dopamine Detox</div>
+      <div class="mh-body">Low-stimulation periods reset the dopamine threshold. After a detox, normal life becomes vivid again. The detox is not the reward — the recalibrated baseline afterward is.</div>
+    </div>
+    <div class="mh-card">
+      <div class="mh-icon">☀️</div>
+      <div class="mh-title">Positive Environment</div>
+      <div class="mh-body">Mirror neurons make environment a direct input to neural state. Chronic exposure to negative people is a chronic cortisol injection. Environment is a compound — stack it accordingly.</div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- STUDY CTA -->
+<div class="section" style="padding-bottom:20px;">
+  <div class="study-cta">
+    <div class="study-cta-title">The 4 Brain Type Study is now forming.</div>
+    <div class="study-cta-body">Dan is building the study architecture — matching compounds to brain types, mapping the chemistry to ψ=[p,n,f] parameters, and building the transcendence pairing system. If you want early access to the personalised stack protocol for your brain type, make contact now.</div>
+    <a href="mailto:dan@shortfactory.shop?subject=NZT² Stack — Brain Type Study" class="btn-primary">Join the Study →</a>
+    <a href="/neuralink.html" class="btn-ghost">Digital Architecture →</a>
+    <a href="/nzt.html" class="btn-ghost">NZT² Protocol</a>
+    <a href="/agi-architecture.html" class="btn-ghost">AGI Architecture</a>
+  </div>
+</div>
+
+<div class="disclaimer">
+  This page represents Dan Chipchase's personal research, self-experimentation notes, and working hypotheses as of April 2026. Nothing here constitutes medical advice. Consult a qualified physician before modifying any supplement protocol, particularly regarding hormone optimisation, H₂O₂ research, and scheduled substances. The ψ=[p,n,f] chemistry mapping is a theoretical framework based on filed research (Stages 1–13, Zenodo). Use your brain. It's the only one you have.
+</div>
+
+</div><!-- /page -->
+
+<script>
+// BG canvas
+(function(){
+  var c=document.getElementById('bg'),ctx=c.getContext('2d'),W,H,pts=[];
+  function rsz(){W=c.width=c.offsetWidth;H=c.height=c.offsetHeight;}
+  rsz(); new ResizeObserver(rsz).observe(c);
+  for(var i=0;i<40;i++) pts.push({x:Math.random()*2000,y:Math.random()*2000,vx:(Math.random()-.5)*.15,vy:(Math.random()-.5)*.15,r:Math.random()*1+.3,col:['200,168,75','34,197,94','204,68,255','59,130,246'][Math.floor(Math.random()*4)]});
+  function frame(){
+    ctx.clearRect(0,0,W,H);
+    pts.forEach(function(p){
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.x<0)p.x=W; if(p.x>W)p.x=0;
+      if(p.y<0)p.y=H; if(p.y>H)p.y=0;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle='rgba('+p.col+',.15)'; ctx.fill();
+    });
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+
+// Brain type selector
+var typeRecs = {
+  architect: {
+    label:'Architect Stack Priority',
+    text:'Your primary lever is acetylcholine. You build architecture in your head before execution — the quality of that internal model determines everything. Alpha GPC oil is your highest ROI compound.',
+    stack:'① Alpha GPC (oil, wrist) — highest priority\n② Ginkgo (vasodilation for sustained sessions)\n③ Raw egg yolk (choline + phosphatidylserine)\n④ Creatine 2g (working memory under load)\n⑤ Binaural: 40Hz gamma during design phases'
+  },
+  warrior:{
+    label:'Warrior Stack Priority',
+    text:'Your system runs hot already. The goal is not more activation — it\'s better channelling. Testosterone optimisation and creatine are your primary compounds. Keto prevents the glucose crashes that derail momentum.',
+    stack:'① Testosterone check (blood kit first)\n② Creatine 2g (neural ATP during high-output phases)\n③ Keto diet (eliminate glucose variance)\n④ HIIT + Low calorie (your natural state is optimal T)\n⑤ Dopamine detox between sprints'
+  },
+  empath:{
+    label:'Empath Stack Priority',
+    text:'Your architecture is serotonin-dominant. Over-stimulation is the main failure mode. The protocol is reduction before addition — remove MSG and sugar first, then build gently. Lion\'s Mane may work for you where it didn\'t for Dan.',
+    stack:'① Remove MSG + Sugar (highest-impact intervention)\n② Lion\'s Mane 500mg (test for 4 weeks)\n③ NR + NMN sublingual (stability, not spike)\n④ Binaural: 10Hz alpha (not 40Hz gamma — too activating)\n⑤ Starvation Monday (clears accumulated noise)'
+  },
+  visionary:{
+    label:'Visionary Stack Priority',
+    text:'Classic Dopamine / ADHD profile. Erratic dopamine release is the mechanism — you get floods and droughts, not steady supply. The goal is floor elevation, not ceiling chasing. Nicotine tablet is your highest-precision tool.',
+    stack:'① Nicotine tablet 1–2mg (precision dopamine floor elevation)\n② Creatine 2g (working memory during flood phases)\n③ Binaural ADHD beats (left hemisphere regulation)\n④ Starvation Monday (BDNF — builds new routing)\n⑤ Hyperventilation pre-session (opens the creative window)'
+  },
+  jesus:{
+    label:'The Jesus Archetype — Study Open',
+    text:'This type is not yet mapped in the soul architecture. Dan\'s Zenodo chain documents his own brain type (Visionary) in formal detail. The Jesus Archetype is the unmapped fifth — the one that operates from covenant rather than reward, self-sacrifice without self-destruction, sees other people\'s soul maps as clearly as their own.\n\nThe chemistry hypothesis: primary oxytocin dominance, high endorphin baseline, unusually low cortisol despite high-load environments. The suffering doesn\'t register as threat — it registers as meaning. That is a measurable neurochemical profile.\n\nThis type cannot be designed from the outside. It has to self-select. If this is you, the study needs you most.',
+    stack:'⟶ UNMAPPED — if this is your archetype, contact Dan\n⟶ shortfactory.shop/neuralink.html — the digital architecture for this pairing\n⟶ dan@shortfactory.shop — the study is forming now\n⟶ The transcendence pairing for this type will be the final Zenodo stage'
+  }
+};
+
+function selectType(t){
+  document.querySelectorAll('.bt-card').forEach(function(c){c.classList.remove('active');});
+  document.querySelector('[data-type="'+t+'"]').classList.add('active');
+  var rec=typeRecs[t];
+  var el=document.getElementById('bt-rec');
+  el.innerHTML='<div class="bt-rec-label">'+rec.label+'</div><div class="bt-rec-text">'+rec.text+'</div><div class="bt-rec-stack">'+rec.stack.replace(/\n/g,'<br>')+'</div>';
+  el.classList.add('visible');
+}
+</script>
+</body>
+</html>

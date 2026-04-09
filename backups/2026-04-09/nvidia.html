@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1XY2CNLJCE"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1XY2CNLJCE');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShortFactory × Nvidia — The 85 GPU Problem</title>
+<meta name="description" content="Human-identical AGI needs 170,000 GPUs. ShortFactory's compression architecture reduces that to 85. We need to talk.">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{background:#010108;color:#e2e8f0;font-family:'Share Tech Mono','Courier New',monospace;overflow-x:hidden;min-height:100vh;}
+
+canvas#bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+.page{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px 100px;}
+
+/* NVIDIA GREEN */
+:root{--nv:#76b900;}
+
+.nv-kicker{font-family:'Orbitron',monospace;font-size:8px;letter-spacing:5px;color:rgba(118,185,0,0.4);text-transform:uppercase;margin-bottom:24px;text-align:center;}
+
+/* LOGO ROW */
+.logo-row{display:flex;align-items:center;justify-content:center;gap:clamp(20px,5vw,60px);margin-bottom:40px;flex-wrap:wrap;}
+.logo-entity{display:flex;flex-direction:column;align-items:center;gap:10px;}
+.logo-sym{width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.logo-sym.sf{background:radial-gradient(circle,rgba(200,168,75,0.12),transparent 70%);border:1px solid rgba(200,168,75,0.25);box-shadow:0 0 30px rgba(200,168,75,0.1);}
+.logo-sym.nv{background:radial-gradient(circle,rgba(118,185,0,0.15),transparent 70%);border:1px solid rgba(118,185,0,0.3);box-shadow:0 0 30px rgba(118,185,0,0.12);}
+.logo-name{font-family:'Orbitron',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;}
+.logo-name.sf{color:#c8a84b;}
+.logo-name.nv{color:var(--nv);}
+.logo-tag{font-size:8px;color:#334155;letter-spacing:1px;text-align:center;max-width:120px;line-height:1.5;}
+
+.logo-join{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.logo-line{width:1px;height:30px;background:linear-gradient(180deg,rgba(200,168,75,0.4),rgba(118,185,0,0.4));}
+.logo-dot{width:10px;height:10px;border-radius:50%;background:var(--nv);box-shadow:0 0 16px rgba(118,185,0,0.8);animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.5);box-shadow:0 0 24px rgba(118,185,0,0.9);}}
+
+.nv-title{font-family:'Orbitron',monospace;font-size:clamp(18px,4vw,36px);font-weight:900;color:#fff;text-align:center;line-height:1.2;margin-bottom:8px;letter-spacing:-0.5px;}
+.nv-title span{color:var(--nv);}
+.nv-sub{font-size:12px;color:#475569;text-align:center;max-width:520px;margin-bottom:36px;line-height:1.8;}
+
+/* GPU TABLE */
+.gpu-table{background:rgba(255,255,255,0.015);border:1px solid rgba(118,185,0,0.12);border-radius:12px;padding:28px;max-width:600px;width:100%;margin-bottom:28px;position:relative;overflow:hidden;}
+.gpu-table::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(118,185,0,0.5),transparent);}
+.gpu-table-label{font-family:'Orbitron',monospace;font-size:8px;letter-spacing:3px;color:rgba(118,185,0,0.4);text-transform:uppercase;margin-bottom:18px;display:flex;align-items:center;gap:8px;}
+.gpu-table-label::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--nv);box-shadow:0 0 6px var(--nv);}
+.gpu-rows{display:flex;flex-direction:column;gap:8px;}
+.gpu-row{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:10px 14px;background:rgba(255,255,255,0.015);border-radius:6px;border:1px solid rgba(255,255,255,0.04);}
+.gpu-row.final{border-color:rgba(118,185,0,0.3);background:rgba(118,185,0,0.04);}
+.gr-label{font-size:11px;color:#94a3b8;}
+.gr-label strong{display:block;font-size:10px;color:#fff;margin-bottom:2px;}
+.gr-num{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;text-align:right;white-space:nowrap;}
+.gpu-row:not(.final) .gr-num{color:rgba(239,68,68,0.7);}
+.gpu-row.final .gr-num{color:var(--nv);}
+.gr-save{font-size:9px;color:#334155;text-align:right;white-space:nowrap;}
+.gpu-row.final .gr-save{color:rgba(118,185,0,0.5);}
+
+/* PROP */
+.nv-prop{font-size:clamp(13px,2.5vw,17px);font-weight:700;color:#fff;text-align:center;border-top:1px solid rgba(255,255,255,0.04);padding-top:24px;margin-bottom:24px;max-width:520px;line-height:1.6;}
+.nv-prop span{color:var(--nv);}
+
+/* CTA */
+.nv-cta{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:16px;}
+.nv-btn{font-family:'Orbitron',monospace;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:12px 22px;border-radius:4px;text-decoration:none;transition:opacity .2s;}
+.nv-btn.primary{background:linear-gradient(135deg,#76b900,#5a8c00);color:#fff;}
+.nv-btn.primary:hover{opacity:.85;}
+.nv-btn.ghost{border:1px solid rgba(200,168,75,0.3);color:#c8a84b;}
+.nv-btn.ghost:hover{border-color:#c8a84b;opacity:.8;}
+.nv-btn.entry{border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.3);}
+.nv-btn.entry:hover{border-color:rgba(255,255,255,0.3);color:rgba(255,255,255,0.6);}
+
+/* TIMER BAR */
+#nv-timer{position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);padding:10px 24px;display:flex;align-items:center;gap:12px;border-top:1px solid rgba(118,185,0,0.1);}
+#nv-bar-wrap{flex:1;height:2px;background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden;}
+#nv-bar{height:100%;width:0%;background:linear-gradient(90deg,rgba(118,185,0,0.4),rgba(118,185,0,0.8));transition:width 0.1s linear;}
+#nv-label{font-family:'Orbitron',monospace;font-size:9px;letter-spacing:2px;color:rgba(118,185,0,0.35);white-space:nowrap;}
+#nv-skip{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:rgba(255,255,255,0.15);cursor:pointer;text-transform:uppercase;background:none;border:none;transition:color 0.2s;padding:0;}
+#nv-skip:hover{color:rgba(255,255,255,0.5);}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+
+<div class="page">
+
+  <div class="nv-kicker">ShortFactory × Nvidia · Partnership Proposal · 3 Apr 2026</div>
+
+  <div class="logo-row">
+    <div class="logo-entity">
+      <div class="logo-sym sf">
+        <svg width="38" height="34" viewBox="0 0 38 34" fill="none">
+          <polygon points="19,3 35,31 3,31" stroke="#c8a84b" stroke-width="1.5" fill="rgba(200,168,75,0.06)"/>
+          <circle cx="19" cy="20" r="3.5" fill="#cc44ff" opacity="0.85"/>
+        </svg>
+      </div>
+      <div class="logo-name sf">ShortFactory</div>
+      <div class="logo-tag">The compression · ψ=[p,n,f]</div>
+    </div>
+    <div class="logo-join">
+      <div class="logo-line"></div>
+      <div class="logo-dot"></div>
+      <div class="logo-line"></div>
+    </div>
+    <div class="logo-entity">
+      <div class="logo-sym nv">
+        <svg width="44" height="32" viewBox="0 0 44 32" fill="none">
+          <path d="M4 28 L4 4 L20 4 C32 4 40 10 40 16 C40 22 32 28 20 28 Z" stroke="#76b900" stroke-width="1.5" fill="rgba(118,185,0,0.06)"/>
+          <path d="M12 22 L12 10 L20 10 C26 10 30 12.5 30 16 C30 19.5 26 22 20 22 Z" fill="rgba(118,185,0,0.15)"/>
+        </svg>
+      </div>
+      <div class="logo-name nv">Nvidia</div>
+      <div class="logo-tag">The GPU · A100 · H100</div>
+    </div>
+  </div>
+
+  <div class="nv-title">We reduced the problem<br>from <span>170,000 GPUs to 85.</span></div>
+  <div class="nv-sub">Human-identical AGI at scale requires a chip manufacturer that understands the compression. Three filed architectural proofs. One conversation needed.</div>
+
+  <div class="gpu-table">
+    <div class="gpu-table-label">A100 80GB Requirement — Human-Identical AGI</div>
+    <div class="gpu-rows">
+      <div class="gpu-row">
+        <div class="gr-label"><strong>Standard transformer — no compression</strong>86T parameters, full precision</div>
+        <div class="gr-num" style="color:rgba(239,68,68,0.7);">~170,000</div>
+        <div class="gr-save">baseline</div>
+      </div>
+      <div class="gpu-row">
+        <div class="gr-label"><strong>+ Genomic inheritance</strong>Alignment without training</div>
+        <div class="gr-num" style="color:#f97316;">~17,000</div>
+        <div class="gr-save">90% ↓</div>
+      </div>
+      <div class="gpu-row">
+        <div class="gr-label"><strong>+ Mirror shape grammar</strong>50% vocabulary reduction, filed</div>
+        <div class="gr-num" style="color:#eab308;">~8,500</div>
+        <div class="gr-save">50% ↓</div>
+      </div>
+      <div class="gpu-row">
+        <div class="gr-label"><strong>+ Lazy Pointer evaluation</strong>Only active thoughts require compute</div>
+        <div class="gr-num" style="color:#a3e635;">~85</div>
+        <div class="gr-save">99% ↓</div>
+      </div>
+      <div class="gpu-row final">
+        <div class="gr-label"><strong>Final runtime requirement</strong>Single rack · Human-identical</div>
+        <div class="gr-num">85 A100s</div>
+        <div class="gr-save">99.95% total ↓</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nv-prop">The architecture is filed. The compression is proven.<br>What it needs is <span>the hardware partner who builds for it.</span></div>
+
+  <div class="nv-cta">
+    <a href="/agi-architecture.html" class="nv-btn primary">Full Architecture →</a>
+    <a href="/neuralink.html" class="nv-btn ghost">Neuralink Partnership</a>
+    <a href="mailto:dan@shortfactory.shop?subject=Nvidia Partnership — ShortFactory AGI" class="nv-btn ghost">Contact Dan</a>
+  </div>
+
+  <div style="font-size:9px;color:#1e293b;text-align:center;letter-spacing:1px;">Estimates based on filed architectural proofs. Stages 1–13, Zenodo. 6 UK patents.</div>
+
+</div>
+
+<div id="nv-timer">
+  <div id="nv-bar-wrap"><div id="nv-bar"></div></div>
+  <div id="nv-label">PARTNERSHIP PROPOSAL</div>
+  <button id="nv-skip" onclick="goSite()">← BACK TO SITE</button>
+</div>
+
+<script>
+// BG — green particles
+(function(){
+  var c=document.getElementById('bg'),ctx=c.getContext('2d'),W,H,pts=[];
+  function rsz(){W=c.width=c.offsetWidth;H=c.height=c.offsetHeight;}
+  rsz(); new ResizeObserver(rsz).observe(c);
+  for(var i=0;i<50;i++) pts.push({x:Math.random()*2000,y:Math.random()*2000,vx:(Math.random()-.5)*.2,vy:(Math.random()-.5)*.2,r:Math.random()*1.2+.3,g:Math.random()<.6});
+  function frame(){
+    ctx.clearRect(0,0,W,H);
+    pts.forEach(function(p){
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.x<0)p.x=W; if(p.x>W)p.x=0;
+      if(p.y<0)p.y=H; if(p.y>H)p.y=0;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=p.g?'rgba(118,185,0,.2)':'rgba(200,168,75,.15)'; ctx.fill();
+    });
+    for(var i=0;i<pts.length;i++) for(var j=i+1;j<pts.length;j++){
+      var dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);
+      if(d<80){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle='rgba(118,185,0,'+(.04*(1-d/80))+')';ctx.lineWidth=.4;ctx.stroke();}
+    }
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+
+function goSite(){ window.location.href='/'; }
+</script>
+</body>
+</html>

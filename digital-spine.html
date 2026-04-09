@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Digital Spine — Frequency Reader</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&display=swap');
+
+  :root {
+    --pain:#ff1744; --pain-mid:#ff6a00; --neutral:#c8c8a0;
+    --ease:#00c896; --dopamine:#ffd700; --philosophical:#b39ddb;
+    --memory:#ffb347; --endorphins:#00e5ff; --arousal:#ff69b4;
+    --devilish:#cc44ff; --joy:#fffde7;
+    --bg:#060606; --panel:#0e0e0e; --border:#1a1a1a; --text:#d0d0c0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    background:var(--bg);color:var(--text);
+    font-family:'Space Mono',monospace;
+    min-height:100vh;display:flex;flex-direction:column;
+    align-items:center;padding:32px 16px 60px;overflow-x:hidden;
+  }
+  body::before{
+    content:'';position:fixed;inset:0;pointer-events:none;z-index:100;
+    background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.07) 2px,rgba(0,0,0,.07) 4px);
+  }
+  h1{
+    font-family:'Bebas Neue',sans-serif;font-size:clamp(32px,6vw,64px);
+    letter-spacing:.12em;
+    background:linear-gradient(135deg,var(--pain) 0%,var(--neutral) 45%,var(--dopamine) 75%,var(--devilish) 100%);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+    text-align:center;margin-bottom:4px;
+  }
+  .subtitle{font-size:10px;letter-spacing:.3em;color:#3a3a2a;text-transform:uppercase;margin-bottom:24px;text-align:center;}
+
+  /* ── CREATURE SECTION ── */
+  .creature-section{
+    width:100%;max-width:900px;
+    background:var(--panel);border:1px solid var(--border);border-radius:6px;
+    padding:16px;margin-bottom:16px;
+    display:flex;flex-direction:column;align-items:center;gap:12px;
+  }
+  .creature-wrap{position:relative;width:100%;display:flex;justify-content:center;}
+  canvas#creature{display:block;border-radius:4px;}
+
+  /* screen-flash overlay */
+  #flashOverlay{
+    position:absolute;inset:0;border-radius:4px;
+    pointer-events:none;opacity:0;transition:opacity .05s;
+  }
+
+  /* HEALTH BAR */
+  .health-row{width:100%;max-width:500px;display:flex;align-items:center;gap:10px;}
+  .health-label{font-size:9px;letter-spacing:.25em;color:#333;text-transform:uppercase;white-space:nowrap;}
+  .health-track{flex:1;height:8px;background:#111;border:1px solid #1e1e1e;border-radius:4px;overflow:hidden;position:relative;}
+  .health-fill{
+    height:100%;border-radius:4px;
+    transition:width .6s ease, background .6s ease;
+    width:100%;background:#00c896;
+  }
+  .health-val{font-family:'Bebas Neue',sans-serif;font-size:18px;min-width:42px;text-align:right;transition:color .5s;}
+
+  /* ── STATS BAR ── */
+  .stats-bar{display:flex;gap:12px;width:100%;max-width:900px;margin-bottom:14px;flex-wrap:wrap;}
+  .stat-card{
+    flex:1;min-width:110px;background:var(--panel);
+    border:1px solid var(--border);border-radius:4px;padding:9px 12px;position:relative;overflow:hidden;
+  }
+  .stat-label{font-size:7px;letter-spacing:.3em;color:#333;text-transform:uppercase;margin-bottom:3px;}
+  .stat-value{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:.05em;transition:color .8s;color:var(--neutral);}
+  .stat-sub{font-size:8px;color:#2a2a1a;margin-top:2px;letter-spacing:.12em;min-height:12px;transition:color .8s;}
+  .iq-bar-track{height:2px;background:#111;border-radius:1px;margin-top:5px;overflow:hidden;}
+  .iq-bar-fill{height:100%;border-radius:1px;transition:width 1s ease,background 1s ease;}
+
+  /* ── MAIN LAYOUT ── */
+  .main-layout{display:flex;gap:16px;width:100%;max-width:900px;align-items:flex-start;}
+
+  /* SPINE */
+  .spine-container{width:38px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;position:sticky;top:40px;}
+  .spine-label{font-size:7px;letter-spacing:.3em;color:#2a2a1a;writing-mode:vertical-rl;transform:rotate(180deg);margin-bottom:8px;text-transform:uppercase;}
+  .spine-nodes{display:flex;flex-direction:column;gap:0;width:100%;align-items:center;}
+  .spine-node{width:9px;height:9px;border-radius:50%;border:1px solid #1a1a1a;background:#0a0a0a;transition:background .4s,box-shadow .4s,transform .2s;flex-shrink:0;}
+  .spine-node.breaking{animation:nodeshake .25s ease;}
+  @keyframes nodeshake{0%{transform:translateX(0)}25%{transform:translateX(-3px) scaleX(1.3)}50%{transform:translateX(3px) scaleX(.7)}75%{transform:translateX(-2px)}100%{transform:translateX(0)}}
+  .spine-strand{width:1px;height:5px;background:#151510;transition:background .4s;flex-shrink:0;}
+  .spine-strand.broken{background:transparent;border-top:1px dashed #ff174422;}
+
+  /* CENTER */
+  .center-panel{flex:1;display:flex;flex-direction:column;gap:14px;}
+  textarea{
+    width:100%;min-height:110px;background:var(--panel);border:1px solid var(--border);
+    border-radius:4px;color:var(--text);font-family:'Space Mono',monospace;
+    font-size:13px;line-height:1.8;padding:12px;resize:vertical;outline:none;transition:border-color .3s;
+  }
+  textarea:focus{border-color:#2a2a2a;}
+  textarea::placeholder{color:#1e1e16;}
+  .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  button{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.15em;padding:8px 22px;border:1px solid currentColor;border-radius:2px;cursor:pointer;transition:all .2s;background:transparent;}
+  .btn-scan{color:var(--ease);}
+  .btn-scan:hover{background:var(--ease);color:#000;}
+  .btn-clear{color:#2a2a1a;border-color:#1e1e1e;font-size:11px;padding:8px 14px;}
+  .btn-clear:hover{color:#555;border-color:#333;}
+  .btn-mic{color:#444;border-color:#222;font-size:13px;padding:8px 18px;transition:all .3s;}
+  .btn-mic.active{color:#aa88ff;border-color:#aa88ff55;box-shadow:0 0 12px #aa88ff33;animation:micpulse 1.4s infinite;}
+  .btn-mic.active:hover{background:#aa88ff11;}
+  @keyframes micpulse{0%,100%{box-shadow:0 0 8px #aa88ff22}50%{box-shadow:0 0 18px #aa88ff55}}
+  .mic-conflict{font-size:8px;color:#ff770066;letter-spacing:.12em;display:none;margin-top:6px;}
+  .status{font-size:9px;color:#2a2a1a;letter-spacing:.2em;margin-left:auto;}
+  .output-panel{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:16px;min-height:90px;line-height:2.2;font-size:13px;}
+  .output-panel.empty{color:#161610;font-style:italic;font-size:11px;}
+  .word-token{display:inline-block;padding:2px 6px;margin:2px 1px;border-radius:3px;cursor:default;transition:transform .15s;position:relative;}
+  .word-token:hover{transform:translateY(-2px);z-index:10;}
+  .word-token .tooltip{display:none;position:absolute;bottom:130%;left:50%;transform:translateX(-50%);background:#0e0e0e;border:1px solid #222;padding:4px 9px;border-radius:3px;font-size:8px;white-space:nowrap;z-index:20;pointer-events:none;letter-spacing:.12em;text-transform:uppercase;}
+  .word-token:hover .tooltip{display:block;}
+  .word-token.firing{animation:wordfire .3s ease;}
+  @keyframes wordfire{0%{transform:scale(1)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
+
+  /* METER (right) */
+  .meter-panel{width:60px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:5px;position:sticky;top:40px;}
+  .meter-label{font-size:7px;letter-spacing:.3em;color:#2a2a1a;text-transform:uppercase;}
+  .meter-bar{width:16px;height:220px;background:#0a0a0a;border:1px solid #1a1a1a;border-radius:8px;position:relative;overflow:hidden;}
+  .meter-fill{position:absolute;bottom:0;left:0;right:0;transition:height 1s ease,background 1s ease;border-radius:0 0 8px 8px;}
+  .meter-hz{font-family:'Bebas Neue',sans-serif;font-size:18px;transition:color 1s;color:var(--neutral);}
+  .meter-hz-lbl{font-size:7px;color:#2a2a1a;letter-spacing:.15em;}
+
+  /* LEGEND */
+  .legend{display:flex;flex-wrap:wrap;gap:8px 14px;font-size:8px;letter-spacing:.1em;color:#2a2a1a;text-transform:uppercase;justify-content:center;margin-top:4px;}
+  .legend-item{display:flex;align-items:center;gap:4px;}
+  .legend-dot{width:6px;height:6px;border-radius:50%;}
+
+  @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+  .scanning{animation:pulse .8s infinite;color:var(--ease);}
+</style>
+</head>
+<body>
+
+<h1>Digital Spine</h1>
+<p class="subtitle">string frequency · resonance · pain / pleasure · cognitive substrate</p>
+
+<!-- CREATURE -->
+<div class="creature-section">
+  <div class="creature-wrap">
+    <canvas id="creature" width="860" height="220"></canvas>
+    <div id="flashOverlay"></div>
+  </div>
+  <div class="health-row">
+    <span class="health-label">Health</span>
+    <div class="health-track"><div class="health-fill" id="healthFill"></div></div>
+    <span class="health-val" id="healthVal" style="color:#00c896;">100</span>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stat-card">
+    <div class="stat-label">Avg Frequency</div>
+    <div class="stat-value" id="statHz">—</div>
+    <div class="stat-sub" id="statHzSub">Hz</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Dominant State</div>
+    <div class="stat-value" id="statState" style="font-size:17px;line-height:1.3;">—</div>
+    <div class="stat-sub" id="statStateSub"></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">IQ Capacity</div>
+    <div class="stat-value" id="statIQ">—</div>
+    <div class="iq-bar-track"><div class="iq-bar-fill" id="iqBarFill" style="width:100%;background:#222;"></div></div>
+    <div class="stat-sub" id="statIQSub">strand integrity</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Words</div>
+    <div class="stat-value" id="statWords">—</div>
+    <div class="stat-sub" id="statWordsSub">tokens</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main-layout">
+  <div class="spine-container">
+    <div class="spine-label">Spine</div>
+    <div class="spine-nodes" id="spineNodes"></div>
+  </div>
+
+  <div class="center-panel">
+    <textarea id="inputText" placeholder="enter text to scan...&#10;&#10;pain = high freq · strands snap · iq collapses&#10;pleasure = low freq · strands thicken · mind expands"></textarea>
+    <div class="controls">
+      <button class="btn-scan" onclick="scanText()">SCAN FREQUENCY</button>
+      <button class="btn-clear" onclick="clearAll()">CLEAR</button>
+      <button class="btn-mic" id="micBtn" onclick="toggleMic()">◉ LIVE MIC</button>
+      <span class="status" id="statusMsg"></span>
+    </div>
+    <div class="mic-conflict" id="micConflict">⚠ Music As Language is active — disable it on the forensics page first</div>
+    <div class="output-panel empty" id="outputPanel">awaiting signal...</div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#ff1744"></div>panic</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ff4500"></div>heartbeat</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#9bc400"></div>nausea</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ff6a00"></div>cortisol</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ffaa00"></div>distraction</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#c8c8a0"></div>neutral</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#00c896"></div>ease</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ffb347"></div>memory</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#b39ddb"></div>philosophical</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ffd700"></div>dopamine</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#00e5ff"></div>endorphins</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ff69b4"></div>arousal</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#cc44ff"></div>devilish</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#fffde7"></div>joy</div>
+    </div>
+  </div>
+
+  <div class="meter-panel">
+    <div class="meter-label">Hz</div>
+    <div class="meter-bar"><div class="meter-fill" id="meterFill" style="height:50%;background:#111;"></div></div>
+    <div class="meter-hz" id="meterValue">—</div>
+    <div class="meter-hz-lbl">avg hz</div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════════
+// LABEL SYSTEM
+// ═══════════════════════════════════════════════════════════════════════════════
+const LABELS = {
+  panic:           { color:'#ff1744', glow:'#ff174455', hzMin:900, hzMax:1000, scoreMin:-1.0,  scoreMax:-0.75, desc:'sympathetic overdrive · strands snapping' },
+  heartbeat_spike: { color:'#ff4500', glow:'#ff450044', hzMin:780, hzMax:900,  scoreMin:-0.75, scoreMax:-0.55, desc:'cardiac pressure · micro-strand tension' },
+  nausea:          { color:'#9bc400', glow:'#9bc40033', hzMin:680, hzMax:780,  scoreMin:-0.65, scoreMax:-0.45, desc:'gut-brain discord · rolling frequency' },
+  cortisol:        { color:'#ff6a00', glow:'#ff6a0033', hzMin:720, hzMax:860,  scoreMin:-0.7,  scoreMax:-0.5,  desc:'cortisol spike · sustained strand wear' },
+  distraction:     { color:'#ffaa00', glow:'#ffaa0022', hzMin:580, hzMax:720,  scoreMin:-0.5,  scoreMax:-0.25, desc:'attention fragmentation · iq drain' },
+  tension:         { color:'#cc6622', glow:'#cc662222', hzMin:520, hzMax:640,  scoreMin:-0.35, scoreMax:-0.1,  desc:'string tension · pre-snap stress' },
+  neutral:         { color:'#c8c8a0', glow:'#c8c8a015', hzMin:400, hzMax:540,  scoreMin:-0.1,  scoreMax:0.1,   desc:'baseline resonance · resting state' },
+  ease:            { color:'#00c896', glow:'#00c89622', hzMin:220, hzMax:380,  scoreMin:0.1,   scoreMax:0.35,  desc:'parasympathetic · strand settling' },
+  memory_glow:     { color:'#ffb347', glow:'#ffb34733', hzMin:140, hzMax:260,  scoreMin:0.3,   scoreMax:0.55,  desc:'autobiographical recall · dopamine trace' },
+  philosophical:   { color:'#b39ddb', glow:'#b39ddb33', hzMin:90,  hzMax:200,  scoreMin:0.35,  scoreMax:0.6,   desc:'deep resonance · mind expanding' },
+  dopamine:        { color:'#ffd700', glow:'#ffd70044', hzMin:60,  hzMax:130,  scoreMin:0.5,   scoreMax:0.75,  desc:'reward pathway · strand reinforcement' },
+  endorphins:      { color:'#00e5ff', glow:'#00e5ff33', hzMin:35,  hzMax:90,   scoreMin:0.6,   scoreMax:0.85,  desc:'endorphin surge · strands thickening' },
+  arousal:         { color:'#ff69b4', glow:'#ff69b444', hzMin:25,  hzMax:75,   scoreMin:0.65,  scoreMax:0.9,   desc:'low-freq resonance · full-body activation' },
+  devilish:        { color:'#cc44ff', glow:'#cc44ff44', hzMin:40,  hzMax:110,  scoreMin:0.7,   scoreMax:0.95,  desc:'dark pleasure · devilish string pattern' },
+  joy:             { color:'#fffde7', glow:'#fffde755', hzMin:20,  hzMax:80,   scoreMin:0.85,  scoreMax:1.0,   desc:'full harmonic · strands singing' },
+};
+
+function labelForScore(score) {
+  let best = 'neutral', bestDist = 999;
+  for (const [name, def] of Object.entries(LABELS)) {
+    const mid = (def.scoreMin + def.scoreMax) / 2;
+    const d = Math.abs(score - mid);
+    if (d < bestDist) { bestDist = d; best = name; }
+  }
+  return best;
+}
+
+function scoreToHz(score, label) {
+  const def = LABELS[label] || LABELS.neutral;
+  const t = 0.3 + Math.random() * 0.4;
+  return Math.round(def.hzMin + t * (def.hzMax - def.hzMin));
+}
+
+function hzToIQ(avgHz) {
+  if (avgHz <= 500) return Math.round(100 + (500 - avgHz) / 500 * 22);
+  const drop = Math.pow((avgHz - 500) / 500, 1.4);
+  return Math.max(12, Math.round(100 - drop * 74));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CREATURE ENGINE
+// ═══════════════════════════════════════════════════════════════════════════════
+const cvs = document.getElementById('creature');
+const ctx = cvs.getContext('2d');
+
+// Responsive canvas
+function resizeCanvas() {
+  const w = cvs.parentElement.offsetWidth - 32;
+  cvs.width  = Math.max(300, Math.min(860, w));
+  cvs.height = Math.round(cvs.width * 0.26);
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// Creature state
+const C = {
+  hz:        500,
+  health:    100,
+  color:     '#c8c8a0',
+  cracks:    [],      // [{pts:[{x,y}], alpha, color}]
+  sparks:    [],      // [{x,y,vx,vy,life,color}]
+  shockLife: 0,       // 0..1, decays
+  healLife:  0,       // 0..1, decays
+  hitColor:  '#c8c8a0',
+  t:         0,
+};
+
+function getCenter() {
+  return { cx: cvs.width / 2, cy: cvs.height / 2, R: cvs.height * 0.32 };
+}
+
+// Generate a crack line from near-center outward
+function addCrack(cx, cy, R, color) {
+  const angle   = Math.random() * Math.PI * 2;
+  const pts     = [{ x: cx + Math.cos(angle)*R*0.15, y: cy + Math.sin(angle)*R*0.15 }];
+  const segs    = 3 + Math.floor(Math.random() * 4);
+  let a = angle, r = R * 0.15;
+  for (let i = 0; i < segs; i++) {
+    a += (Math.random() - 0.5) * 1.0;
+    r += R / segs * (0.7 + Math.random() * 0.6);
+    pts.push({ x: cx + Math.cos(a)*r, y: cy + Math.sin(a)*r });
+  }
+  C.cracks.push({ pts, alpha: 0.7 + Math.random() * 0.3, color });
+  if (C.cracks.length > 18) C.cracks.shift(); // max cracks
+}
+
+// Spawn sparks (electric or pleasure)
+function addSparks(cx, cy, R, color, count, type) {
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = type === 'electric' ? 2 + Math.random()*3 : 0.5 + Math.random()*1.5;
+    C.sparks.push({
+      x: cx + Math.cos(angle)*R*(0.6 + Math.random()*0.4),
+      y: cy + Math.sin(angle)*R*(0.6 + Math.random()*0.4),
+      vx: Math.cos(angle) * speed + (Math.random()-0.5),
+      vy: Math.sin(angle) * speed + (Math.random()-0.5)*0.5,
+      life: 1,
+      decay: type === 'electric' ? 0.06 + Math.random()*0.06 : 0.03 + Math.random()*0.03,
+      color,
+      size: type === 'electric' ? 1.5 + Math.random() : 2 + Math.random()*2,
+    });
+  }
+}
+
+// Flash screen
+function flash(color, alpha) {
+  const el = document.getElementById('flashOverlay');
+  el.style.background = color;
+  el.style.opacity    = alpha;
+  setTimeout(() => { el.style.opacity = 0; }, 80);
+}
+
+// PUBLIC: called when a word impact happens
+function impact(score, label) {
+  const def  = LABELS[label] || LABELS.neutral;
+  const { cx, cy, R } = getCenter();
+  C.color   = def.color;
+  C.hitColor = def.color;
+
+  if (score < -0.3) {
+    // PAIN HIT
+    const intensity = Math.abs(score);
+    C.shockLife = 0.6 + intensity * 0.4;
+    addCrack(cx, cy, R, def.color);
+    addSparks(cx, cy, R, '#00e5ff', Math.round(intensity * 8), 'electric');
+    flash(def.color, 0.06 + intensity * 0.12);
+    // health drain
+    C.health = Math.max(0, C.health + score * 4);
+  } else if (score > 0.3) {
+    // PLEASURE HIT
+    C.healLife = 0.5 + score * 0.5;
+    addSparks(cx, cy, R, def.color, Math.round(score * 10), 'pleasure');
+    // health restore
+    C.health = Math.min(100, C.health + score * 2.5);
+  }
+
+  updateHealthBar();
+}
+
+function updateHealthBar() {
+  const h   = Math.max(0, Math.min(100, C.health));
+  const pct = h.toFixed(0);
+  const col = h > 65 ? '#00c896' : h > 35 ? '#ffd700' : h > 15 ? '#ff6a00' : '#ff1744';
+  document.getElementById('healthFill').style.width      = pct + '%';
+  document.getElementById('healthFill').style.background = col;
+  document.getElementById('healthVal').textContent       = Math.round(h);
+  document.getElementById('healthVal').style.color       = col;
+}
+
+// Electric arc helper
+function drawArc(ctx, sx, sy, ex, ey, color, alpha, steps) {
+  ctx.beginPath();
+  ctx.moveTo(sx, sy);
+  let x = sx, y = sy;
+  for (let i = 1; i <= steps; i++) {
+    const t  = i / steps;
+    const jx = sx + (ex - sx) * t + (Math.random() - 0.5) * 22 * (1 - t);
+    const jy = sy + (ey - sy) * t + (Math.random() - 0.5) * 22 * (1 - t);
+    ctx.lineTo(jx, jy);
+    x = jx; y = jy;
+  }
+  ctx.strokeStyle = color;
+  ctx.globalAlpha = alpha;
+  ctx.lineWidth   = 1;
+  ctx.shadowColor = color;
+  ctx.shadowBlur  = 8;
+  ctx.stroke();
+  ctx.shadowBlur  = 0;
+  ctx.globalAlpha = 1;
+}
+
+// ── DRAW FRAME ────────────────────────────────────────────────────────────────
+function drawFrame(now) {
+  const W = cvs.width, H = cvs.height;
+  const { cx, cy, R } = getCenter();
+  ctx.clearRect(0, 0, W, H);
+
+  const hz        = C.hz;
+  const health    = C.health;
+  const col       = C.color;
+  const t         = C.t;
+  const shockFade = C.shockLife;
+  const healFade  = C.healLife;
+
+  // ── Background glow ──
+  const bgGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 1.8);
+  bgGlow.addColorStop(0, col + '10');
+  bgGlow.addColorStop(1, 'transparent');
+  ctx.fillStyle = bgGlow;
+  ctx.fillRect(0, 0, W, H);
+
+  // ── Creature body ──
+  // Number of segments scales with Hz (more = jaggier at high freq)
+  const segs      = Math.round(12 + (hz / 1000) * 48);
+  const amplitude = R * 0.06 + (hz / 1000) * R * 0.28;
+  const speed     = 0.5 + (hz / 1000) * 6.0; // rad/s equivalent
+  const healthMul = 0.4 + (health / 100) * 0.6; // dim when low health
+
+  ctx.beginPath();
+  for (let i = 0; i <= segs; i++) {
+    const angle = (i / segs) * Math.PI * 2;
+    const n1    = Math.sin(t * speed       + i * 2.1) * amplitude;
+    const n2    = Math.sin(t * speed * 0.6 + i * 3.7) * amplitude * 0.4;
+    const r     = R + n1 + n2;
+    const x     = cx + Math.cos(angle) * r;
+    const y     = cy + Math.sin(angle) * r;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+
+  // Fill
+  const fillGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, R);
+  fillGrad.addColorStop(0, col + Math.round(0x22 * healthMul).toString(16).padStart(2,'0'));
+  fillGrad.addColorStop(1, col + '08');
+  ctx.fillStyle   = fillGrad;
+  ctx.globalAlpha = healthMul;
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // Stroke
+  ctx.strokeStyle = col;
+  ctx.lineWidth   = 1.2;
+  ctx.shadowColor = col;
+  ctx.shadowBlur  = 10 + healFade * 20;
+  ctx.stroke();
+  ctx.shadowBlur  = 0;
+
+  // ── Inner core ──
+  const coreR = R * 0.22 * healthMul;
+  const coreG = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreR);
+  coreG.addColorStop(0, col + 'cc');
+  coreG.addColorStop(0.5, col + '44');
+  coreG.addColorStop(1, 'transparent');
+  ctx.beginPath();
+  ctx.arc(cx, cy, coreR, 0, Math.PI * 2);
+  ctx.fillStyle = coreG;
+  ctx.fill();
+
+  // ── Frequency rings ──
+  const ringCount = Math.round(2 + (hz / 1000) * 4);
+  for (let r = 1; r <= ringCount; r++) {
+    const ringR    = R * (1.1 + r * 0.18);
+    const ringOff  = Math.sin(t * speed * 0.3 + r) * 4;
+    const ringAlpha = 0.04 + (1 - r / ringCount) * 0.06;
+    ctx.beginPath();
+    ctx.arc(cx, cy + ringOff, ringR, 0, Math.PI * 2);
+    ctx.strokeStyle = col;
+    ctx.globalAlpha = ringAlpha * healthMul;
+    ctx.lineWidth   = 0.5;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  // ── Cracks ──
+  C.cracks.forEach(crack => {
+    ctx.beginPath();
+    ctx.moveTo(crack.pts[0].x, crack.pts[0].y);
+    for (let i = 1; i < crack.pts.length; i++) ctx.lineTo(crack.pts[i].x, crack.pts[i].y);
+    ctx.strokeStyle = crack.color;
+    ctx.globalAlpha = crack.alpha * 0.7;
+    ctx.lineWidth   = 0.8;
+    ctx.shadowColor = crack.color;
+    ctx.shadowBlur  = 3;
+    ctx.stroke();
+    ctx.shadowBlur  = 0;
+    ctx.globalAlpha = 1;
+    crack.alpha    *= 0.998; // very slowly fade
+  });
+  C.cracks = C.cracks.filter(c => c.alpha > 0.05);
+
+  // ── Electric shock arcs ──
+  if (shockFade > 0) {
+    const arcCount = Math.round(shockFade * 6);
+    for (let a = 0; a < arcCount; a++) {
+      const angle = (a / arcCount) * Math.PI * 2 + t * 3;
+      const ex    = cx + Math.cos(angle) * R * (1.3 + Math.random() * 0.6);
+      const ey    = cy + Math.sin(angle) * R * (1.3 + Math.random() * 0.6);
+      drawArc(ctx, cx, cy, ex, ey, '#00e5ff', shockFade * 0.7, 7);
+      // secondary red arc
+      if (Math.random() > 0.5) {
+        const ex2 = cx + Math.cos(angle + 0.4) * R * 1.2;
+        const ey2 = cy + Math.sin(angle + 0.4) * R * 1.2;
+        drawArc(ctx, cx + (Math.random()-0.5)*R*0.3, cy + (Math.random()-0.5)*R*0.3, ex2, ey2, C.hitColor, shockFade * 0.5, 5);
+      }
+    }
+    C.shockLife = Math.max(0, shockFade - 0.035);
+  }
+
+  // ── Heal shimmer ──
+  if (healFade > 0) {
+    for (let p = 0; p < 3; p++) {
+      const angle = Math.random() * Math.PI * 2;
+      const rr    = R * (0.2 + Math.random() * 0.9);
+      const px    = cx + Math.cos(angle) * rr;
+      const py    = cy + Math.sin(angle) * rr;
+      ctx.beginPath();
+      ctx.arc(px, py, 2 + Math.random() * 3, 0, Math.PI * 2);
+      ctx.fillStyle   = C.color;
+      ctx.globalAlpha = healFade * Math.random() * 0.8;
+      ctx.shadowColor = C.color;
+      ctx.shadowBlur  = 8;
+      ctx.fill();
+      ctx.shadowBlur  = 0;
+      ctx.globalAlpha = 1;
+    }
+    C.healLife = Math.max(0, healFade - 0.018);
+  }
+
+  // ── Sparks ──
+  C.sparks.forEach(sp => {
+    ctx.beginPath();
+    ctx.arc(sp.x, sp.y, sp.size * sp.life, 0, Math.PI * 2);
+    ctx.fillStyle   = sp.color;
+    ctx.globalAlpha = sp.life * 0.9;
+    ctx.shadowColor = sp.color;
+    ctx.shadowBlur  = 6;
+    ctx.fill();
+    ctx.shadowBlur  = 0;
+    ctx.globalAlpha = 1;
+    sp.x   += sp.vx;
+    sp.y   += sp.vy;
+    sp.vy  += 0.04; // gravity
+    sp.life = Math.max(0, sp.life - sp.decay);
+  });
+  C.sparks = C.sparks.filter(s => s.life > 0);
+
+  // ── Health crack overlay ── red tint when low health
+  if (health < 30) {
+    ctx.fillStyle   = `rgba(255,23,68,${(1 - health/30) * 0.08})`;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  // ── Idle pulse when no scan ──
+  C.t += 0.016;
+}
+
+// RAF loop
+(function loop() { drawFrame(performance.now()); requestAnimationFrame(loop); })();
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// GROK API
+// ═══════════════════════════════════════════════════════════════════════════════
+// ── INPUT SANITISER ───────────────────────────────────────────────────────────
+// Strip anything that could break the JSON Grok returns, then cap length
+function sanitizeInput(text) {
+  return text
+    .replace(/\\/g, '')          // backslashes → gone
+    .replace(/"/g, "'")          // double quotes → single (safe inside prompt string)
+    .replace(/[\r\n\t]+/g, ' ')  // newlines/tabs → space
+    .replace(/[^\x20-\x7e\u00a0-\ufffd]/g, '') // strip control chars, keep printable
+    .replace(/\s{2,}/g, ' ')     // collapse multiple spaces
+    .trim()
+    .substring(0, 600);          // cap at 600 chars so response stays within max_tokens
+}
+
+// ── JSON RECOVERY ─────────────────────────────────────────────────────────────
+// Tries three strategies before giving up
+function recoverJSON(raw) {
+  // 1. Direct parse
+  try { return JSON.parse(raw); } catch {}
+
+  // 2. Chop off the last incomplete object and close the array
+  const lastComma = raw.lastIndexOf('},');
+  if (lastComma > 0) {
+    try { return JSON.parse(raw.substring(0, lastComma + 1) + ']'); } catch {}
+  }
+
+  // 3. Extract every complete {...} block individually
+  const objs = [];
+  for (const m of raw.matchAll(/\{[^{}]+\}/g)) {
+    try {
+      const o = JSON.parse(m[0]);
+      if (o.word !== undefined) objs.push(o);
+    } catch {}
+  }
+  if (objs.length > 0) return objs;
+
+  throw new Error('Unterminated response — try shorter text');
+}
+
+async function callGrok(prompt) {
+  const res = await fetch('https://api.shortfactory.shop/grok/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'grok-4-latest',
+      max_tokens: 1800,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error?.message || `API ${res.status}`);
+  return data.choices?.[0]?.message?.content || '';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SCAN
+// ═══════════════════════════════════════════════════════════════════════════════
+async function scanText() {
+  const text = document.getElementById('inputText').value.trim();
+  if (!text) return;
+
+  const statusMsg   = document.getElementById('statusMsg');
+  const outputPanel = document.getElementById('outputPanel');
+
+  statusMsg.textContent = '● scanning strings...';
+  statusMsg.className   = 'status scanning';
+  outputPanel.className = 'output-panel';
+  outputPanel.innerHTML = '<span style="color:#1a1a14;font-style:italic;">reading frequency...</span>';
+
+  const prompt = `You are a string-frequency analyser mapping the emotional and physiological resonance of each word.
+
+Return ONLY a valid JSON array — no markdown, no explanation.
+
+Each element:
+{
+  "word": "original word (including attached punctuation)",
+  "score": <float -1.0 to 1.0>,
+  "label": "<one of: panic|heartbeat_spike|nausea|cortisol|distraction|tension|neutral|ease|memory_glow|philosophical|dopamine|endorphins|arousal|devilish|joy>"
+}
+
+Labels:
+- panic (-1 to -0.75): terror, emergency, catastrophe
+- heartbeat_spike (-0.75 to -0.55): alarm, danger, shock, threat
+- nausea (-0.65 to -0.45): disgust, revulsion, illness
+- cortisol (-0.7 to -0.5): stress, pressure, overwhelm
+- distraction (-0.5 to -0.25): confusion, noise, scattered
+- tension (-0.35 to -0.1): unease, anticipation, held breath
+- neutral (-0.1 to 0.1): articles, prepositions, flat words
+- ease (0.1 to 0.35): calm, rest, soft comfort
+- memory_glow (0.3 to 0.55): nostalgia, warmth, childhood
+- philosophical (0.35 to 0.6): deep thought, wonder, meaning
+- dopamine (0.5 to 0.75): reward, achievement, craving
+- endorphins (0.6 to 0.85): physical pleasure, laughter, movement
+- arousal (0.65 to 0.9): sensual, magnetic, electric wanting
+- devilish (0.7 to 0.95): dark pleasure, mischief, forbidden delight
+- joy (0.85 to 1.0): pure happiness, elation, love, transcendence
+
+Text: "${sanitizeInput(text)}"`;
+
+  try {
+    const raw   = await callGrok(prompt);
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const words = recoverJSON(clean);
+
+    words.forEach(w => {
+      if (!w.label || !LABELS[w.label]) w.label = labelForScore(w.score || 0);
+      w.hz = scoreToHz(w.score || 0, w.label);
+    });
+
+    renderOutput(words);
+    renderSpine(words);
+    renderStats(words);
+    animateImpacts(words);
+
+    statusMsg.textContent = `${words.length} strings read`;
+    statusMsg.className   = 'status';
+  } catch (err) {
+    console.error(err);
+    statusMsg.textContent = 'signal lost';
+    statusMsg.className   = 'status';
+    outputPanel.innerHTML = `<span style="color:#ff1744;">error: ${err.message}</span>`;
+  }
+}
+
+// ── IMPACT ANIMATION ─────────────────────────────────────────────────────────
+function animateImpacts(words) {
+  const significant = words.filter(w => w.word.trim() && Math.abs(w.score||0) > 0.15);
+  // Set creature Hz to avgHz immediately
+  const nonNeutral = words.filter(w => w.word.trim());
+  if (nonNeutral.length) {
+    C.hz    = Math.round(nonNeutral.reduce((a,b) => a + (b.hz||500), 0) / nonNeutral.length);
+    C.color = (LABELS[significant[0]?.label] || LABELS.neutral).color;
+  }
+
+  significant.forEach((w, i) => {
+    setTimeout(() => {
+      const def = LABELS[w.label] || LABELS.neutral;
+      C.color   = def.color;
+      impact(w.score, w.label);
+
+      // Flash the corresponding word token
+      const tokens = document.querySelectorAll('.word-token');
+      tokens.forEach(el => {
+        if (el.textContent.replace(/\s/g,'') === w.word.replace(/\s/g,'')) {
+          el.classList.add('firing');
+          setTimeout(() => el.classList.remove('firing'), 350);
+        }
+      });
+    }, i * 120 + 200);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════════════════════════════
+function renderOutput(words) {
+  const panel = document.getElementById('outputPanel');
+  panel.className = 'output-panel';
+  panel.innerHTML = '';
+
+  words.forEach(w => {
+    if (!w.word.trim()) { panel.appendChild(document.createTextNode(' ')); return; }
+    const def  = LABELS[w.label] || LABELS.neutral;
+    const span = document.createElement('span');
+    span.className      = 'word-token';
+    span.style.background = def.glow;
+    span.style.color      = def.color;
+    if ((w.score||0) > 0.3) span.style.textShadow = `0 0 8px ${def.color}88`;
+    span.textContent = w.word;
+
+    const tip       = document.createElement('div');
+    tip.className   = 'tooltip';
+    tip.style.color = def.color;
+    tip.textContent = `${w.hz}Hz · ${w.label.replace('_',' ')} · ${(w.score||0) > 0 ? '+' : ''}${(w.score||0).toFixed(2)}`;
+    span.appendChild(tip);
+
+    panel.appendChild(span);
+    panel.appendChild(document.createTextNode(' '));
+  });
+}
+
+function renderSpine(words) {
+  const container = document.getElementById('spineNodes');
+  container.innerHTML = '';
+
+  words.filter(w => w.word.trim()).forEach((w, i) => {
+    if (i > 0) {
+      const strand      = document.createElement('div');
+      strand.className  = 'spine-strand' + ((w.score||0) < -0.5 ? ' broken' : '');
+      const def         = LABELS[w.label] || LABELS.neutral;
+      if ((w.score||0) >= -0.5) strand.style.background = def.color + '33';
+      container.appendChild(strand);
+    }
+    const node      = document.createElement('div');
+    node.className  = 'spine-node';
+    const def       = LABELS[w.label] || LABELS.neutral;
+    const intensity = Math.abs(w.score || 0);
+    setTimeout(() => {
+      node.style.background = def.color;
+      node.style.boxShadow  = `0 0 ${3 + intensity*8}px ${def.color}`;
+      node.style.opacity    = String(0.3 + intensity * 0.7);
+      if ((w.score||0) < -0.6) node.classList.add('breaking');
+    }, i * 20);
+    container.appendChild(node);
+  });
+}
+
+function renderStats(words) {
+  const scored = words.filter(w => w.word.trim());
+  if (!scored.length) return;
+
+  const avgScore = scored.reduce((a,b) => a + (b.score||0), 0) / scored.length;
+  const avgHz    = Math.round(scored.reduce((a,b) => a + (b.hz||500), 0) / scored.length);
+
+  const labelCounts = {};
+  scored.forEach(w => { labelCounts[w.label] = (labelCounts[w.label]||0) + 1; });
+  const domLabel = Object.entries(labelCounts).sort((a,b) => b[1]-a[1])[0][0];
+  const def      = LABELS[domLabel];
+  const iq       = hzToIQ(avgHz);
+  const iqColor  = iq > 85 ? '#00c896' : iq > 60 ? '#ffd700' : iq > 40 ? '#ff6a00' : '#ff1744';
+
+  document.getElementById('statHz').textContent     = avgHz;
+  document.getElementById('statHz').style.color     = def.color;
+  document.getElementById('statHzSub').textContent  = avgHz > 600 ? '↑ strand stress' : avgHz < 300 ? '↓ strand growth' : 'baseline';
+  document.getElementById('statHzSub').style.color  = def.color + '88';
+
+  document.getElementById('statState').textContent    = domLabel.replace('_',' ');
+  document.getElementById('statState').style.color    = def.color;
+  document.getElementById('statStateSub').textContent = def.desc;
+  document.getElementById('statStateSub').style.color = def.color + '77';
+
+  document.getElementById('statIQ').textContent    = iq + '%';
+  document.getElementById('statIQ').style.color    = iqColor;
+  document.getElementById('iqBarFill').style.width    = iq + '%';
+  document.getElementById('iqBarFill').style.background = iqColor;
+  const iqSub = iq > 100 ? 'expanding · reinforced' : iq > 80 ? 'intact' : iq > 55 ? 'micro-breaks forming' : iq > 35 ? 'strands snapping' : 'collapsed';
+  document.getElementById('statIQSub').textContent = iqSub;
+  document.getElementById('statIQSub').style.color = iqColor + '88';
+
+  document.getElementById('statWords').textContent    = scored.length;
+  document.getElementById('statWordsSub').textContent = `${Object.keys(labelCounts).length} states`;
+
+  const fillPct = Math.round(50 + avgScore * 50);
+  document.getElementById('meterFill').style.height     = fillPct + '%';
+  document.getElementById('meterFill').style.background = `linear-gradient(to top,${def.color},${def.color}33)`;
+  document.getElementById('meterValue').textContent     = avgHz;
+  document.getElementById('meterValue').style.color     = def.color;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CLEAR
+// ═══════════════════════════════════════════════════════════════════════════════
+function clearAll() {
+  document.getElementById('inputText').value    = '';
+  const op = document.getElementById('outputPanel');
+  op.className = 'output-panel empty';
+  op.innerHTML = 'awaiting signal...';
+  document.getElementById('statusMsg').textContent = '';
+  document.getElementById('spineNodes').innerHTML  = '';
+  document.getElementById('meterFill').style.height     = '50%';
+  document.getElementById('meterFill').style.background = '#111';
+  document.getElementById('meterValue').textContent = '—';
+  document.getElementById('meterValue').style.color = 'var(--neutral)';
+  ['statHz','statState','statIQ','statWords'].forEach(id => {
+    const el = document.getElementById(id);
+    el.textContent = '—'; el.style.color = 'var(--neutral)';
+  });
+  document.getElementById('statHzSub').textContent    = 'Hz';
+  document.getElementById('statStateSub').textContent = '';
+  document.getElementById('statIQSub').textContent    = 'strand integrity';
+  document.getElementById('statWordsSub').textContent = '';
+  document.getElementById('iqBarFill').style.width    = '100%';
+  document.getElementById('iqBarFill').style.background = '#222';
+  // reset creature
+  C.hz = 500; C.color = '#c8c8a0'; C.cracks = []; C.sparks = [];
+  C.shockLife = 0; C.healLife = 0;
+  C.health = 100; updateHealthBar();
+}
+
+document.getElementById('inputText').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.ctrlKey) scanText();
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// LIVE MIC MODE — real-time audio → creature Hz
+// Uses 5 frequency bands to map sound energy onto the emotional Hz scale.
+// Lock key 'sf_audio_lock' in localStorage prevents conflict with forensics music demo.
+// ═══════════════════════════════════════════════════════════════════════════════
+var MIC_ACTIVE = false;
+var micAC = null, micAnalyser = null, micSource = null, micStream = null, micRAF = null;
+
+// Band → emotional Hz target (same philosophy as forensics music demo)
+// Low energy bands = pleasure/ease, high energy bands = pain/panic
+var MIC_BAND_HZ = [60, 200, 480, 650, 880];
+// Band edges as % of Nyquist (0..1)
+var MIC_BAND_EDGES = [[0,0.02],[0.02,0.07],[0.07,0.45],[0.45,0.75],[0.75,1.0]];
+
+function getMicBandEnergy(data, startPct, endPct) {
+  var len = data.length;
+  var s = Math.floor(startPct * len);
+  var e = Math.ceil(endPct * len);
+  var sum = 0;
+  for (var i = s; i < e; i++) sum += data[i];
+  return sum / Math.max(1, e - s);
+}
+
+function micTick() {
+  if (!MIC_ACTIVE || !micAnalyser) return;
+  var bufLen = micAnalyser.frequencyBinCount;
+  var data = new Uint8Array(bufLen);
+  micAnalyser.getByteFrequencyData(data);
+
+  // Compute energy per band
+  var energies = MIC_BAND_EDGES.map(function(b) {
+    return getMicBandEnergy(data, b[0], b[1]);
+  });
+
+  var total = energies.reduce(function(a,b){ return a+b; }, 0);
+  if (total < 3) { micRAF = requestAnimationFrame(micTick); return; } // silence
+
+  // Dominant band drives Hz
+  var maxE = 0, domBand = 2;
+  energies.forEach(function(e, i) { if (e > maxE) { maxE = e; domBand = i; } });
+
+  // Weighted blend: dominant Hz + slight pull toward each band proportional to energy
+  var blendHz = 0, blendW = 0;
+  energies.forEach(function(e, i) {
+    blendHz += MIC_BAND_HZ[i] * e;
+    blendW  += e;
+  });
+  var targetHz = Math.round(blendHz / Math.max(1, blendW));
+
+  // Smooth transition
+  C.hz = Math.round(C.hz * 0.85 + targetHz * 0.15);
+
+  // Map dominant band to label/color
+  var bandLabels = ['endorphins','dopamine','ease','distraction','cortisol'];
+  var lbl = bandLabels[domBand];
+  C.color = (LABELS[lbl] || LABELS.neutral).color;
+
+  // Light impact ripple (no health damage — just visual)
+  var { cx, cy, R } = getCenter();
+  if (maxE > 80) addSparks(cx, cy, R, C.color, 2, maxE > 160 ? 'pain' : 'pleasure');
+
+  // Update meter live
+  var fillPct = Math.round(50 + (500 - C.hz) / 10);
+  fillPct = Math.max(5, Math.min(95, fillPct));
+  document.getElementById('meterFill').style.height = fillPct + '%';
+  document.getElementById('meterFill').style.background = 'linear-gradient(to top,' + C.color + ',' + C.color + '33)';
+  document.getElementById('meterValue').textContent  = C.hz;
+  document.getElementById('meterValue').style.color  = C.color;
+  document.getElementById('statHz').textContent      = C.hz;
+  document.getElementById('statHz').style.color      = C.color;
+  document.getElementById('statState').textContent   = lbl.replace('_',' ');
+  document.getElementById('statState').style.color   = C.color;
+
+  micRAF = requestAnimationFrame(micTick);
+}
+
+function startMic() {
+  if (localStorage.getItem('sf_audio_lock') === 'music') {
+    document.getElementById('micConflict').style.display = 'block';
+    return;
+  }
+  document.getElementById('micConflict').style.display = 'none';
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    document.getElementById('statusMsg').textContent = 'mic not supported';
+    return;
+  }
+  navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+    .then(function(stream) {
+      MIC_ACTIVE = true;
+      micStream  = stream;
+      micAC      = new (window.AudioContext || window.webkitAudioContext)();
+      micAnalyser = micAC.createAnalyser();
+      micAnalyser.fftSize = 1024;
+      micAnalyser.smoothingTimeConstant = 0.75;
+      micSource  = micAC.createMediaStreamSource(stream);
+      micSource.connect(micAnalyser);
+
+      localStorage.setItem('sf_audio_lock', 'spine');
+      window._audioLocked = 'spine';
+
+      var btn = document.getElementById('micBtn');
+      btn.classList.add('active');
+      btn.textContent = '◉ LISTENING';
+      document.getElementById('statusMsg').textContent = 'live freq active';
+      document.getElementById('statusMsg').style.color = '#aa88ff';
+      document.getElementById('outputPanel').className = 'output-panel';
+      document.getElementById('outputPanel').innerHTML = '<span style="color:#aa88ff33;font-style:italic;letter-spacing:.15em;">live audio → creature · type text to overlay language scan</span>';
+
+      micRAF = requestAnimationFrame(micTick);
+    })
+    .catch(function(e) {
+      document.getElementById('statusMsg').textContent = 'mic denied';
+    });
+}
+
+function stopMic() {
+  MIC_ACTIVE = false;
+  if (micRAF) cancelAnimationFrame(micRAF);
+  if (micStream) micStream.getTracks().forEach(function(t){ t.stop(); });
+  if (micAC) micAC.close();
+  micAC = null; micAnalyser = null; micSource = null; micStream = null; micRAF = null;
+
+  if (localStorage.getItem('sf_audio_lock') === 'spine') localStorage.removeItem('sf_audio_lock');
+  window._audioLocked = null;
+
+  var btn = document.getElementById('micBtn');
+  btn.classList.remove('active');
+  btn.textContent = '◉ LIVE MIC';
+  document.getElementById('statusMsg').textContent = '';
+  document.getElementById('statusMsg').style.color = '';
+  document.getElementById('micConflict').style.display = 'none';
+  document.getElementById('outputPanel').className = 'output-panel empty';
+  document.getElementById('outputPanel').innerHTML = 'awaiting signal...';
+}
+
+function toggleMic() {
+  if (MIC_ACTIVE) stopMic(); else startMic();
+}
+
+// Release lock if page unloads while mic is active
+window.addEventListener('beforeunload', function() {
+  if (MIC_ACTIVE && localStorage.getItem('sf_audio_lock') === 'spine') {
+    localStorage.removeItem('sf_audio_lock');
+  }
+});
+</script>
+</body>
+</html>

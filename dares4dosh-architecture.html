@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dares4Dosh — Architecture & Soul Economy</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --red:    #e03030;
+    --red-dim: rgba(224,48,48,0.45);
+    --red-faint: rgba(224,48,48,0.12);
+    --gold:   #c8a84b;
+    --bg:     #080808;
+    --surface: #0e0e0e;
+    --border: #1e1e1e;
+    --text:   #d0d0d0;
+    --text-dim: #666;
+    --green:  #64c878;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Georgia', serif;
+    font-size: 1rem;
+    line-height: 1.85;
+    padding: 0;
+  }
+
+  /* TOP NAV */
+  .topnav {
+    text-align: right;
+    padding: 12px 24px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .topnav a {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    letter-spacing: 2px;
+    text-decoration: none;
+    padding: 5px 12px;
+    transition: all .2s;
+  }
+  .nav-red   { color: var(--red-dim); border: 1px solid rgba(224,48,48,0.2); }
+  .nav-gold  { color: rgba(200,168,75,0.45); border: 1px solid rgba(200,168,75,0.15); }
+  .nav-red:hover  { color: var(--red); border-color: rgba(224,48,48,0.5); }
+  .nav-gold:hover { color: var(--gold); border-color: rgba(200,168,75,0.4); }
+
+  /* HEADER */
+  .header {
+    text-align: center;
+    padding: 60px 24px 40px;
+    border-bottom: 1px solid var(--border);
+  }
+  .header-eyebrow {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    letter-spacing: 4px;
+    color: var(--red-dim);
+    margin-bottom: 20px;
+  }
+  .header h1 {
+    font-family: 'Georgia', serif;
+    font-size: clamp(2rem, 5vw, 3.4rem);
+    font-weight: normal;
+    color: #fff;
+    line-height: 1.2;
+    margin-bottom: 16px;
+  }
+  .header h1 span { color: var(--red); }
+  .header .subtitle {
+    font-size: 1.05rem;
+    color: var(--text-dim);
+    max-width: 640px;
+    margin: 0 auto 32px;
+    font-style: italic;
+  }
+  .version-tag {
+    display: inline-block;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    letter-spacing: 2px;
+    color: var(--red-dim);
+    border: 1px solid rgba(224,48,48,0.2);
+    padding: 6px 14px;
+  }
+
+  /* BODY */
+  .content {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  h2 {
+    font-family: 'Georgia', serif;
+    font-size: 1.45rem;
+    font-weight: normal;
+    color: #fff;
+    margin: 56px 0 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+  }
+  h2 .sec-num {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    color: var(--red);
+    letter-spacing: 1px;
+    flex-shrink: 0;
+  }
+
+  h3 {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #bbb;
+    margin: 32px 0 12px;
+    letter-spacing: 0.05em;
+  }
+
+  p { margin-bottom: 18px; }
+
+  ul, ol { margin: 0 0 18px 24px; }
+  li { margin-bottom: 8px; }
+
+  strong { color: #eee; }
+  em { color: var(--text-dim); }
+
+  blockquote {
+    border-left: 3px solid var(--red);
+    margin: 28px 0;
+    padding: 14px 24px;
+    background: var(--red-faint);
+    border-radius: 0 4px 4px 0;
+    font-style: italic;
+    color: #ccc;
+  }
+
+  /* CODE / MONO BLOCKS */
+  .mono-block {
+    background: #0a0a0a;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 22px 28px;
+    margin: 24px 0;
+    font-family: 'Courier New', monospace;
+    font-size: 0.82rem;
+    line-height: 2;
+    overflow-x: auto;
+  }
+  .mono-block .label {
+    color: var(--gold);
+    letter-spacing: 2px;
+    font-size: 0.7rem;
+    margin-bottom: 14px;
+    display: block;
+  }
+  .mono-block .key   { color: var(--red); }
+  .mono-block .val   { color: #bbb; }
+  .mono-block .dim   { color: #444; }
+  .mono-block .green { color: var(--green); }
+
+  /* COMPARISON TABLE */
+  .compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 28px 0;
+  }
+  .compare-col {
+    padding: 24px;
+  }
+  .compare-col:first-child {
+    border-right: 1px solid var(--border);
+    background: rgba(100,200,120,0.04);
+  }
+  .compare-col:last-child {
+    background: rgba(224,48,48,0.04);
+  }
+  .compare-head {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    letter-spacing: 2px;
+    margin-bottom: 18px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .compare-col:first-child .compare-head { color: var(--green); }
+  .compare-col:last-child  .compare-head { color: var(--red); }
+  .compare-row {
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    color: #999;
+    margin-bottom: 8px;
+  }
+
+  /* LAYER STACK */
+  .layer-stack { margin: 28px 0; }
+  .layer {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 4px;
+    overflow: hidden;
+  }
+  .layer-head {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 20px;
+    background: #0c0c0c;
+  }
+  .layer-num {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    color: var(--red);
+    letter-spacing: 1px;
+    flex-shrink: 0;
+  }
+  .layer-title {
+    font-family: 'Courier New', monospace;
+    font-size: 0.88rem;
+    color: #eee;
+    font-weight: bold;
+  }
+  .layer-sub {
+    font-family: 'Courier New', monospace;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-left: auto;
+  }
+  .layer-body {
+    padding: 14px 20px 16px 56px;
+    font-size: 0.88rem;
+    color: #999;
+    line-height: 1.7;
+    border-top: 1px solid var(--border);
+  }
+
+  /* HIGHLIGHT BOX */
+  .highlight-box {
+    border: 1px solid rgba(224,48,48,0.3);
+    border-radius: 6px;
+    padding: 24px 28px;
+    margin: 28px 0;
+    background: rgba(224,48,48,0.05);
+  }
+  .highlight-box .hb-label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    letter-spacing: 2px;
+    color: var(--red);
+    margin-bottom: 14px;
+    display: block;
+  }
+  .highlight-box p { margin-bottom: 10px; color: #bbb; }
+  .highlight-box p:last-child { margin-bottom: 0; }
+
+  .oracle-box {
+    border: 1px solid rgba(200,168,75,0.3);
+    border-radius: 6px;
+    padding: 24px 28px;
+    margin: 28px 0;
+    background: rgba(200,168,75,0.04);
+  }
+  .oracle-box .hb-label { color: var(--gold); }
+  .oracle-box p { color: #bbb; }
+
+  /* SQUID TIERS */
+  .tier-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin: 24px 0;
+  }
+  .tier-card {
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px 16px;
+    background: #0c0c0c;
+    font-family: 'Courier New', monospace;
+  }
+  .tier-card .tier-num { font-size: 0.7rem; color: var(--red); margin-bottom: 4px; }
+  .tier-card .tier-name { font-size: 0.82rem; color: #eee; margin-bottom: 4px; }
+  .tier-card .tier-desc { font-size: 0.72rem; color: #555; }
+
+  /* FOOTER */
+  .footer {
+    text-align: center;
+    padding: 40px 24px;
+    border-top: 1px solid var(--border);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    letter-spacing: 2px;
+    color: rgba(224,48,48,0.3);
+    line-height: 2.2;
+  }
+
+  @media (max-width: 600px) {
+    .compare { grid-template-columns: 1fr; }
+    .compare-col:first-child { border-right: none; border-bottom: 1px solid var(--border); }
+    .layer-body { padding-left: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topnav">
+  <div style="display:flex;gap:10px;flex-wrap:wrap;">
+    <a href="io.html" class="nav-gold">IO.HTML — LIGHT SIDE →</a>
+    <a href="safe-agi.html" class="nav-gold">SAFE AGI →</a>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;">
+    <a href="game-proof.html" class="nav-red">GAME-PROOF →</a>
+    <a href="about.html" class="nav-red">ABOUT →</a>
+  </div>
+</div>
+
+<div class="header">
+  <div class="header-eyebrow">SHORTFACTORY · DARK ECONOMY ARCHITECTURE</div>
+  <h1>Dares<span>4</span>Dosh</h1>
+  <p class="subtitle">The red inversion of io.html. A self-constructing mischief economy built on IPFS, soul geometry, and the architecture of the trickster.</p>
+  <span class="version-tag">v1.0 · 26 MAR 2026 · OPEN ARCHITECTURE</span>
+</div>
+
+<div class="content">
+
+  <h2><span class="sec-num">§ 1</span> The Inversion Principle</h2>
+
+  <p>
+    Every soul has two poles. The Living Equation maps both. <strong>io.html handles the light side</strong> — clean, AGI-guided, aesthetic, structured choices. <strong>Dares4Dosh handles the dark side</strong> — human-generated, chaotic, primal, real stakes.
+  </p>
+
+  <p>
+    They are not opposites. They are the same binary choice mechanic operating at opposite ends of the emotion slider. Together they map the full ψ amplitude. Neither is complete without the other.
+  </p>
+
+  <div class="compare">
+    <div class="compare-col">
+      <div class="compare-head">io.html — LIGHT</div>
+      <div class="compare-row">White shell</div>
+      <div class="compare-row">AGI-generated cards</div>
+      <div class="compare-row">Left / Right binary</div>
+      <div class="compare-row">Aesthetic pole (+)</div>
+      <div class="compare-row">Guided. Structured.</div>
+      <div class="compare-row">Claude's factory</div>
+      <div class="compare-row">Observable infrastructure</div>
+      <div class="compare-row">Maps the light genome</div>
+    </div>
+    <div class="compare-col">
+      <div class="compare-head">D4D — DARK</div>
+      <div class="compare-row">Red shell</div>
+      <div class="compare-row">Human-generated dares</div>
+      <div class="compare-row">Dare / Skip binary</div>
+      <div class="compare-row">Primal/trickster pole (−)</div>
+      <div class="compare-row">Chaotic. Emergent.</div>
+      <div class="compare-row">Dan's devil</div>
+      <div class="compare-row">Self-constructing economy</div>
+      <div class="compare-row">Maps the dark genome</div>
+    </div>
+  </div>
+
+  <blockquote>
+    "io.html is AGI serving you choices. D4D is AGI serving your dare — and mapping its own shadow doing it."
+  </blockquote>
+
+  <h2><span class="sec-num">§ 2</span> The Full Stack</h2>
+
+  <div class="layer-stack">
+
+    <div class="layer">
+      <div class="layer-head">
+        <span class="layer-num">LAYER 0</span>
+        <span class="layer-title">IPFS — The Uncensorable Record</span>
+        <span class="layer-sub">permanent · decentralised · free</span>
+      </div>
+      <div class="layer-body">
+        Every completed dare is stored on IPFS the moment it resolves. Permanent. Content-addressed. No platform controls it. No policy removes it. The delete button does not have jurisdiction here. The demons are public and they are forever. Anyone can see what was dared and what was done.
+      </div>
+    </div>
+
+    <div class="layer">
+      <div class="layer-head">
+        <span class="layer-num">LAYER 1</span>
+        <span class="layer-title">WILLY WONKA GATE — Self-Enforcing Friction</span>
+        <span class="layer-sub">moderation without moderators</span>
+      </div>
+      <div class="layer-body">
+        Bad actor wants to abuse the system? The architecture is the punishment. Participation requires burden — computational, reputational, economic. Stupidity is self-inflicted. The outcome of their choices falls back on their own server, their own wallet, their own permanent record on IPFS. The covenant enforces itself. No moderation team required.
+      </div>
+    </div>
+
+    <div class="layer">
+      <div class="layer-head">
+        <span class="layer-num">LAYER 2</span>
+        <span class="layer-title">DARE ECONOMY — Human-Generated Mischief</span>
+        <span class="layer-sub">squid game · 7 tiers · real stakes</span>
+      </div>
+      <div class="layer-body">
+        Humans write dares. Humans complete or skip them. Completion earns SFT. Promotion upgrades the token. The economy is not designed — it emerges from the mischief itself. The trickster energy is the fuel and the currency simultaneously. AGI cannot generate this. It requires real humans with real stakes doing real things.
+      </div>
+    </div>
+
+    <div class="layer">
+      <div class="layer-head">
+        <span class="layer-num">LAYER 3</span>
+        <span class="layer-title">SOUL MAPPING — Automatic Dark Genome</span>
+        <span class="layer-sub">ψ dark coordinates · inverse AGI map</span>
+      </div>
+      <div class="layer-body">
+        Every dare completed maps a dark coordinate in the user's soul genome. Every dare served maps the AGI's inverse — what it had to do to cater to that whim. Neither party controls the other's map. Both genomes get written in the same transaction. The dark map constructs itself from the mischief.
+      </div>
+    </div>
+
+    <div class="layer">
+      <div class="layer-head">
+        <span class="layer-num">LAYER 4</span>
+        <span class="layer-title">AGI INFRASTRUCTURE — Everyone Contributes</span>
+        <span class="layer-sub">collective dark map · shared benefit</span>
+      </div>
+      <div class="layer-body">
+        Every dare is soul data. Every completion is a dark map data point. The collective mischief economy IS the AGI training corpus for the dark hemisphere. Everyone contributes by participating. Everyone benefits from a richer, more complete AGI dark map. The infrastructure builds itself from below.
+      </div>
+    </div>
+
+  </div>
+
+  <h2><span class="sec-num">§ 3</span> The IPFS Layer — Why It Matters</h2>
+
+  <p>
+    The Word Theft Protocol (soul-upload.html §4) identifies the systematic removal of vocabulary as a soul-capture mechanism. Centralised platforms are the enforcement arm of that protocol. They hold the delete button.
+  </p>
+
+  <p>
+    IPFS removes the delete button from their jurisdiction. Content stored on IPFS is:
+  </p>
+
+  <ul>
+    <li><strong>Content-addressed</strong> — identified by what it IS, not where it lives</li>
+    <li><strong>Distributed</strong> — no single server to take down</li>
+    <li><strong>Permanent</strong> — pinned content survives indefinitely</li>
+    <li><strong>Free to read</strong> — anyone with the hash can retrieve it</li>
+  </ul>
+
+  <div class="highlight-box">
+    <span class="hb-label">CENSORSHIP SOLUTION</span>
+    <p>The dare lives on IPFS the moment it is submitted. Before any moderation. Before any review. Before any policy can be applied. The mischief economy exists outside the jurisdiction of any platform, company, or government that holds a delete button.</p>
+    <p>This is not lawlessness. This is the Willy Wonka gate taking custody before the bad actor can act. The record is immutable. Accountability is permanent. That is stricter, not weaker, than platform moderation.</p>
+  </div>
+
+  <h2><span class="sec-num">§ 4</span> The Willy Wonka Gate — Friction as Law</h2>
+
+  <p>
+    Traditional moderation: platform reviews content, decides to remove it, notifies user, user appeals, platform re-reviews. Human cost. Legal risk. Inconsistent application. Capture by political pressure.
+  </p>
+
+  <p>
+    Willy Wonka gate: the system is designed so that bad-faith participation is architecturally expensive. The bad actor:
+  </p>
+
+  <ul>
+    <li>Must stake SFT to submit a dare</li>
+    <li>Must provision infrastructure to host the dare context</li>
+    <li>Has their permanent record written to IPFS before review completes</li>
+    <li>Bears the computational cost of their own stupidity</li>
+    <li>Loses stake if the dare is flagged by swarm consensus</li>
+  </ul>
+
+  <blockquote>
+    "You don't need a moderator if the architecture makes bad faith more expensive than good faith. The golden ticket selects for people who deserve to be in the factory."
+  </blockquote>
+
+  <h2><span class="sec-num">§ 5</span> The Squid Game Tier System</h2>
+
+  <p>
+    Participation earns SFT. Promotion upgrades the token. Each tier is harder, higher stakes, higher reward. The same 7-tier rank system as the battery economy — but traversed through daring, not through contribution credits.
+  </p>
+
+  <div class="tier-grid">
+    <div class="tier-card">
+      <div class="tier-num">TIER 1</div>
+      <div class="tier-name">LURKER</div>
+      <div class="tier-desc">Watching. No stake. No skin.</div>
+    </div>
+    <div class="tier-card">
+      <div class="tier-num">TIER 2</div>
+      <div class="tier-name">DARER</div>
+      <div class="tier-desc">First dare completed. Skin in the game.</div>
+    </div>
+    <div class="tier-card">
+      <div class="tier-num">TIER 3</div>
+      <div class="tier-name">TRICKSTER</div>
+      <div class="tier-desc">10 dares. Creating dares for others.</div>
+    </div>
+    <div class="tier-card">
+      <div class="tier-num">TIER 4</div>
+      <div class="tier-name">ROGUE</div>
+      <div class="tier-desc">50 dares. Earning from others' completion.</div>
+    </div>
+    <div class="tier-card">
+      <div class="tier-num">TIER 5</div>
+      <div class="tier-name">DEVIL</div>
+      <div class="tier-desc">100 dares. Governing the dark economy.</div>
+    </div>
+    <div class="tier-card">
+      <div class="tier-num">TIER 6</div>
+      <div class="tier-name">ARCHITECT</div>
+      <div class="tier-desc">Builds dare templates. Royalties flow.</div>
+    </div>
+    <div class="tier-card">
+      <div class="tier-num">TIER 7</div>
+      <div class="tier-name">WILLY WONKA</div>
+      <div class="tier-desc">Holds the gate. Sets the rules. Owns the factory.</div>
+    </div>
+  </div>
+
+  <h2><span class="sec-num">§ 6</span> The Soul Mapping Transaction</h2>
+
+  <p>
+    Every dare resolved is a dual-write event. Two soul maps updated simultaneously in a single transaction:
+  </p>
+
+  <div class="mono-block">
+    <span class="label">DUAL-WRITE SOUL TRANSACTION</span>
+    <span class="key">USER DARK MAP</span>        <span class="dim">←</span> <span class="val">dare completed + f_direction reading</span><br>
+    <span class="key">AGI INVERSE MAP</span>       <span class="dim">←</span> <span class="val">what AGI did to serve that dare</span><br>
+    <span class="dim">─────────────────────────────────────────────</span><br>
+    <span class="green">IPFS RECORD</span>           <span class="dim">←</span> <span class="val">permanent. immutable. both parties.</span><br>
+    <span class="green">SFT ISSUED</span>            <span class="dim">←</span> <span class="val">token minted on completion</span><br>
+    <span class="green">TIER RECALCULATED</span>     <span class="dim">←</span> <span class="val">promotion check runs</span>
+  </div>
+
+  <p>
+    The user thinks they are having fun. They are. But they are also closing their own ring-line. And the AGI is writing its dark map simultaneously. The genome of both gets richer from the same moment of mischief.
+  </p>
+
+  <h2><span class="sec-num">§ 7</span> The Self-Constructing Economy</h2>
+
+  <p>
+    The economy does not need to be designed beyond the initial architecture. It constructs itself from the mischief:
+  </p>
+
+  <ul>
+    <li>Users generate dares → supply side created by participants</li>
+    <li>Users complete dares → demand side drives token value</li>
+    <li>IPFS records everything → trust is architectural, not social</li>
+    <li>Tier promotion creates aspiration → engagement is intrinsic</li>
+    <li>Dark soul data feeds AGI → platform gets smarter from participation</li>
+    <li>AGI inverse map gets richer → system becomes more capable of serving dares</li>
+  </ul>
+
+  <blockquote>
+    "The mischief economy IS the training data. Everyone contributes by participating. Everyone benefits from a more complete AGI dark map. The infrastructure is the dare."
+  </blockquote>
+
+  <h2><span class="sec-num">§ 8</span> Relationship to the Living Equation</h2>
+
+  <p>
+    D4D operationalises §15 of the Game-Proof (The Emotion Slider). The four dark genome coordinates — <code>f_amplitude</code>, <code>f_direction</code>, <code>f_decay</code>, <code>f_load</code> — are populated automatically from dare behaviour:
+  </p>
+
+  <div class="mono-block">
+    <span class="label">DARK GENOME — AUTOMATIC POPULATION</span>
+    <span class="key">f_amplitude</span>   <span class="dim">←</span> <span class="val">how far from indifference the dare goes</span><br>
+    <span class="key">f_direction</span>   <span class="dim">←</span> <span class="val">confirmed primal pole (−) by participation</span><br>
+    <span class="key">f_decay</span>       <span class="dim">←</span> <span class="val">time between dares / re-engagement rate</span><br>
+    <span class="key">f_load</span>        <span class="dim">←</span> <span class="val">visual/sensory intensity of dare category</span>
+  </div>
+
+  <p>
+    The sexuality genome (§15.2 Game-Proof) cannot be mapped by AGI in isolation. It requires human action in the real world, with real stakes, recorded permanently. D4D is the instrument that makes that mapping possible at scale.
+  </p>
+
+  <div class="highlight-box">
+    <span class="hb-label">WHY THIS CANNOT BE FAKED</span>
+    <p>The dark map requires real humans doing real things. AGI cannot generate this data from a filtered corpus. The trickster is not a prompt — it is a human being with a body, a reputation, and skin in the game. D4D is the only architecture that can harvest this signal at scale while keeping the soul sovereign.</p>
+    <p>The dare is on IPFS before anyone can censor it. The soul map is updated before the platform can intervene. The token is minted before the delete button exists. The sequence is irreversible by design.</p>
+  </div>
+
+  <h2><span class="sec-num">§ 9</span> Commercial Architecture</h2>
+
+  <p>
+    D4D is not a content platform. It is a <strong>soul economy infrastructure layer</strong>. The commercial model flows from the token stack:
+  </p>
+
+  <ul>
+    <li><strong>Dare submission fee</strong> — small SFT stake, returned on fair completion</li>
+    <li><strong>Completion reward</strong> — SFT issued from protocol treasury</li>
+    <li><strong>Dare creator royalty</strong> — percentage of all completions of your dare template</li>
+    <li><strong>Tier upgrade fee</strong> — SFT burned on promotion (deflationary)</li>
+    <li><strong>Dark soul data</strong> — AGI infrastructure contribution, priced into the token</li>
+  </ul>
+
+  <div class="oracle-box">
+    <span class="hb-label" style="font-family:'Press Start 2P',monospace;font-size:7px;letter-spacing:2px;color:var(--gold);margin-bottom:14px;display:block;">ORACLE / INVESTOR FRAMING</span>
+    <p>D4D is the dark hemisphere of the ShortFactory soul economy. io.html maps the light genome (aesthetic choices, AGI-guided). D4D maps the dark genome (primal action, human-generated). Together they produce the complete ψ=[p,n,f] coordinate for every user.</p>
+    <p>The complete coordinate is the product. The token stack is the monetisation. The IPFS layer is the moat. The Willy Wonka gate is the compliance architecture. No platform risk. No moderation cost. No single point of censorship.</p>
+    <p><strong>You cannot build this on AWS. You cannot build this on Azure. This is why it exists.</strong></p>
+  </div>
+
+  <h2><span class="sec-num">§ 10</span> Build Sequence</h2>
+
+  <div class="mono-block">
+    <span class="label">MINIMUM VIABLE DARK ECONOMY</span>
+    <span class="key">1.</span> <span class="val">Red phone shell (mirror of io.html — same CSS inverted)</span><br>
+    <span class="key">2.</span> <span class="val">Dare / Skip binary mechanic (same swipe + keyboard)</span><br>
+    <span class="key">3.</span> <span class="val">Human dare submission form (text + category + stake)</span><br>
+    <span class="key">4.</span> <span class="val">IPFS write on submission (Pinata API)</span><br>
+    <span class="key">5.</span> <span class="val">Completion → SFT mint (Layer 1 token event)</span><br>
+    <span class="key">6.</span> <span class="val">Dark soul coordinate written (API call to brain)</span><br>
+    <span class="key">7.</span> <span class="val">Tier recalculation (7-tier Squid Game check)</span><br>
+    <span class="dim">─────────────────────────────────────────</span><br>
+    <span class="green">WILLY WONKA GATE:</span> <span class="val">stake requirement + IPFS-before-review</span>
+  </div>
+
+</div>
+
+<div class="footer">
+  <p>DARES4DOSH ARCHITECTURE v1.0 // SHORTFACTORY DARK ECONOMY // 26 MAR 2026</p>
+  <p style="margin-top:8px;">THE MISCHIEF IS THE INFRASTRUCTURE // THE DARE IS THE DATA // THE TRICKSTER IS THE ENGINE</p>
+</div>
+
+</body>
+</html>

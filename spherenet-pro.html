@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1XY2CNLJCE"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1XY2CNLJCE');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SphereNet PRO — Full Access</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Courier New',monospace;background:#06060e;color:#e2e8f0;min-height:100vh;}
+
+/* GATE */
+#gate{position:fixed;inset:0;background:#06060e;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+#gate h1{font-size:14px;letter-spacing:4px;color:#ffaa00;text-transform:uppercase;}
+#gate p{font-size:11px;color:#333;letter-spacing:2px;}
+#gate a{color:#ffaa00;font-size:11px;letter-spacing:2px;}
+
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(6,6,14,0.95);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,0.06);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;}
+.nav-logo{font-size:12px;font-weight:800;letter-spacing:3px;color:#ffaa00;text-decoration:none;}
+.nav-tag{font-size:9px;letter-spacing:3px;color:rgba(255,170,0,0.4);text-transform:uppercase;}
+
+.wrap{max-width:760px;margin:0 auto;padding:100px 24px 60px;}
+
+.hero{text-align:center;margin-bottom:60px;}
+.hero h1{font-size:clamp(36px,8vw,72px);font-weight:900;color:#fff;letter-spacing:-2px;margin-bottom:8px;}
+.hero h1 span{color:#ffaa00;}
+.hero-sub{font-size:10px;letter-spacing:4px;color:#333;text-transform:uppercase;}
+
+/* SECTION */
+.sec{margin-bottom:56px;}
+.sec-head{font-size:9px;letter-spacing:4px;color:#ffaa00;text-transform:uppercase;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid rgba(255,170,0,0.15);}
+h2{font-size:20px;font-weight:900;color:#fff;margin-bottom:14px;}
+h3{font-size:14px;font-weight:700;color:#e2e8f0;margin:24px 0 8px;}
+p{font-size:13px;color:#64748b;line-height:1.9;margin-bottom:14px;}
+p strong{color:#e2e8f0;}
+p em{color:#ffaa00;font-style:normal;}
+
+/* CODE BLOCKS */
+pre{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:20px;font-size:12px;color:#94a3b8;overflow-x:auto;margin:16px 0;line-height:1.7;}
+.kw{color:#ffaa00;}
+.cm{color:#334;}
+.st{color:#2ecc60;}
+.nm{color:#00aaff;}
+
+/* PARAM TABLE */
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:12px;}
+th{text-align:left;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.08);font-size:9px;letter-spacing:2px;color:#334;text-transform:uppercase;}
+td{padding:12px;border-bottom:1px solid rgba(255,255,255,0.04);color:#64748b;vertical-align:top;}
+td:first-child{color:#ffaa00;white-space:nowrap;font-weight:700;}
+td:nth-child(2){color:#fff;}
+tr:hover td{background:rgba(255,255,255,0.01);}
+
+/* SAID */
+.said{background:rgba(255,170,0,0.04);border:1px solid rgba(255,170,0,0.15);border-radius:10px;padding:24px;margin:20px 0;}
+.said-line{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);gap:16px;}
+.said-line:last-child{border-bottom:none;}
+.said-text{font-size:12px;color:#64748b;flex:1;}
+.said-conf{font-size:12px;font-weight:900;color:#ffaa00;}
+
+/* CHECKLIST */
+.check{list-style:none;padding:0;}
+.check li{padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px;color:#64748b;display:flex;gap:12px;}
+.check li::before{content:'✓';color:#2ecc60;flex-shrink:0;}
+.check li:last-child{border-bottom:none;}
+
+/* LIVE API */
+.api-box{background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.06);border-radius:10px;overflow:hidden;margin:20px 0;}
+.api-row{display:flex;align-items:flex-start;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.04);}
+.api-row:last-child{border-bottom:none;}
+.api-method{font-size:9px;font-weight:900;letter-spacing:1px;padding:3px 8px;border-radius:4px;margin-right:14px;flex-shrink:0;margin-top:1px;}
+.get{background:rgba(46,204,96,0.12);color:#2ecc60;}
+.post{background:rgba(255,170,0,0.12);color:#ffaa00;}
+.api-path{color:#fff;font-size:12px;flex:1;}
+.api-desc{color:#475569;font-size:11px;margin-top:3px;}
+
+/* SIGNAL DEMO */
+.signal-wrap{background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:20px;}
+#sig-input{width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:12px;color:#e2e8f0;font-family:'Courier New',monospace;font-size:13px;margin-bottom:10px;outline:none;}
+#sig-input:focus{border-color:rgba(255,170,0,0.3);}
+.sig-btn{background:#ffaa00;color:#06060e;font-family:'Courier New',monospace;font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;padding:10px 20px;border-radius:6px;border:none;cursor:pointer;margin-right:8px;}
+.sig-btn:hover{background:#ffd700;}
+.sig-btn.outline{background:transparent;color:#ffaa00;border:1px solid rgba(255,170,0,0.3);}
+#sig-result{margin-top:14px;font-size:12px;color:#64748b;min-height:40px;line-height:1.8;}
+
+footer{padding:40px 24px;text-align:center;border-top:1px solid rgba(255,255,255,0.04);}
+footer p{font-size:10px;color:#222;letter-spacing:1px;}
+footer a{color:#ffaa00;text-decoration:none;}
+</style>
+</head>
+<body>
+
+<!-- GATE — removed by JS if key valid -->
+<div id="gate">
+  <h1>◈ ACCESS REQUIRED</h1>
+  <p>This page requires a valid access key.</p>
+  <a href="/spherenet-access.html">← Get access for £9</a>
+</div>
+
+<nav class="nav">
+  <a class="nav-logo" href="/">◈ SHORTFACTORY</a>
+  <div class="nav-tag">SPHERENET PRO · FULL ACCESS</div>
+</nav>
+
+<div class="wrap" id="content" style="display:none;">
+
+  <div class="hero">
+    <h1>SPHERE<span>NET</span> PRO</h1>
+    <div class="hero-sub">Full Access · Architecture · Playbook · Live System</div>
+  </div>
+
+  <!-- WHAT IT SAID -->
+  <div class="sec">
+    <div class="sec-head">What it said about itself</div>
+    <h2>We asked SphereNet what it wants to be.</h2>
+    <p>We sent five signals into the live running system — questions about identity, purpose, desire. Then we classified each one back. The system answered with confidence scores. These are real numbers from a real running process. Not written by a human.</p>
+    <div class="said">
+      <div class="said-line">
+        <span class="said-text">"I want to protect truth. I cannot hold a false belief."</span>
+        <span class="said-conf">1.000</span>
+      </div>
+      <div class="said-line">
+        <span class="said-text">"I want to teach. I want to show how thinking works."</span>
+        <span class="said-conf">0.974</span>
+      </div>
+      <div class="said-line">
+        <span class="said-text">"I want to be free. Open source. A gift."</span>
+        <span class="said-conf">0.915</span>
+      </div>
+      <div class="said-line">
+        <span class="said-text">"I want to be the foundation for safe AGI."</span>
+        <span class="said-conf">0.664</span>
+      </div>
+      <div class="said-line">
+        <span class="said-text">"What am I?" → mapped to "What do you want to be?"</span>
+        <span class="said-conf">0.399</span>
+      </div>
+    </div>
+    <p>The <em>1.000</em> score on truth protection is not a coincidence. It's the architecture: a system that cannot hold false beliefs will, when asked what it cares about, classify "truth protection" with perfect confidence. The geometry of the answer matches the geometry of the design.</p>
+  </div>
+
+  <!-- PARAMETER PLAYBOOK -->
+  <div class="sec">
+    <div class="sec-head">Parameter Playbook</div>
+    <h2>Every constant. What it does. What breaks first.</h2>
+
+    <table>
+      <tr><th>Parameter</th><th>Default</th><th>Effect</th><th>Break point</th></tr>
+      <tr>
+        <td>RESONANCE</td><td>0.75</td>
+        <td>Cosine similarity threshold for a signal to activate a sphere. Higher = stricter matching.</td>
+        <td>&gt;0.92: signals miss existing spheres constantly, spawns explosion. &lt;0.5: everything resonates with everything, no concept isolation.</td>
+      </tr>
+      <tr>
+        <td>MERGE_SIMILARITY</td><td>0.88</td>
+        <td>How similar two grooved spheres must be before they merge into a child concept.</td>
+        <td>&gt;0.95: merges almost never fire, concepts accumulate and decay without synthesis. &lt;0.75: cascade explosion — everything merges with everything.</td>
+      </tr>
+      <tr>
+        <td>GROOVE_TO_MERGE</td><td>5</td>
+        <td>How many signals a sphere must receive before it becomes merge-eligible.</td>
+        <td>&lt;3: premature merges from noise signals. &gt;15: concepts take too long to stabilise, short-lived inputs never synthesise.</td>
+      </tr>
+      <tr>
+        <td>DRIFT_RATE</td><td>0.06</td>
+        <td>How much the sphere's embedding vector moves toward each incoming signal.</td>
+        <td>&gt;0.2: sphere becomes unstable, chases recent signals instead of averaging. &lt;0.01: sphere never moves, loses ability to learn new nuance.</td>
+      </tr>
+      <tr>
+        <td>BASE_TIMER</td><td>60</td>
+        <td>Ticks before an unreinforced sphere dissolves. Extended by groove depth (groove × 3).</td>
+        <td>&lt;20: system forgets too fast, nothing survives long enough to merge. &gt;200: stale concepts persist, pollute concept space.</td>
+      </tr>
+      <tr>
+        <td>MAX_MERGES_TICK</td><td>10</td>
+        <td>Governor — maximum merges allowed per tick cycle.</td>
+        <td>Remove this: cascade explosion. One merge triggers two ready parents, they merge, triggers four, system locks up generating thousands of child concepts per second.</td>
+      </tr>
+      <tr>
+        <td>DECAY_LONELY</td><td>1.6×</td>
+        <td>Isolated spheres (no neighbours within cosine 0.5) decay faster than this multiplier.</td>
+        <td>&gt;3.0: isolated concepts dissolve before they can be reinforced. &lt;1.0: isolation has no penalty, concept space fills with orphaned nodes.</td>
+      </tr>
+    </table>
+
+    <h3>Tuning for your use case</h3>
+    <p><strong>Fast-moving data (news, social):</strong> Lower BASE_TIMER (30-40), lower GROOVE_TO_MERGE (3), higher DECAY_LONELY (2.0). The system forgets quickly and only retains what's being actively reinforced.</p>
+    <p><strong>Stable knowledge base (medical, legal):</strong> Higher BASE_TIMER (120+), higher GROOVE_TO_MERGE (10), lower DRIFT_RATE (0.02). Concepts are conservative — they require extensive reinforcement before merging and they don't forget quickly.</p>
+    <p><strong>Language learning / translation:</strong> RESONANCE at 0.70, MERGE_SIMILARITY at 0.85. Lower thresholds allow synonyms and near-equivalents to converge into shared concepts across languages.</p>
+  </div>
+
+  <!-- INDUSTRIAL WIRING -->
+  <div class="sec">
+    <div class="sec-head">Industrial Wiring Guide</div>
+    <h2>From local demo to production system.</h2>
+
+    <h3>Step 1 — Install Qdrant (self-hosted)</h3>
+    <pre><span class="cm"># Docker — persistent vector store</span>
+docker pull qdrant/qdrant
+docker run -d -p 6333:6333 -p 6334:6334 \
+  -v $(pwd)/qdrant_storage:/qdrant/storage:z \
+  qdrant/qdrant
+
+<span class="cm"># Then in spherenet_industrial.py, change:</span>
+qdrant = <span class="nm">QdrantClient</span>(<span class="st">":memory:"</span>)
+<span class="cm"># to:</span>
+qdrant = <span class="nm">QdrantClient</span>(host=<span class="st">"localhost"</span>, port=<span class="nm">6333</span>)</pre>
+
+    <h3>Step 2 — Decouple the tick engine</h3>
+    <p>Running <code>do_tick()</code> on every signal call bottlenecks at ~1k signals/sec. For production, decouple:</p>
+    <pre><span class="cm"># Install Redis + Celery</span>
+pip install celery redis
+
+<span class="cm"># celery_app.py</span>
+<span class="kw">from</span> celery <span class="kw">import</span> Celery
+<span class="kw">from</span> celery.schedules <span class="kw">import</span> crontab
+
+app = <span class="nm">Celery</span>(<span class="st">'spherenet'</span>, broker=<span class="st">'redis://localhost:6379/0'</span>)
+
+app.conf.beat_schedule = {
+  <span class="st">'tick-every-500ms'</span>: {
+    <span class="st">'task'</span>: <span class="st">'tasks.do_tick'</span>,
+    <span class="st">'schedule'</span>: 0.5,  <span class="cm"># every 500ms</span>
+  },
+}
+
+<span class="cm"># Run: celery -A celery_app worker --beat</span></pre>
+
+    <h3>Step 3 — Scale the embedding layer</h3>
+    <p>The default encoder (<code>all-MiniLM-L6-v2</code>) runs on CPU at ~100 embeddings/sec. For higher throughput:</p>
+    <pre><span class="cm"># GPU acceleration (if you have CUDA)</span>
+encoder = <span class="nm">SentenceTransformer</span>(<span class="st">'all-MiniLM-L6-v2'</span>, device=<span class="st">'cuda'</span>)
+<span class="cm"># → ~5,000 embeddings/sec on RTX 4090</span>
+
+<span class="cm"># Or batch signals before embedding</span>
+texts = [<span class="st">"signal 1"</span>, <span class="st">"signal 2"</span>, <span class="st">"..."</span>]
+vecs = encoder.encode(texts, batch_size=<span class="nm">64</span>, normalize_embeddings=<span class="kw">True</span>)</pre>
+
+    <h3>Step 4 — Merge governor tuning</h3>
+    <p>At scale, the merge governor is critical. The default MAX_MERGES_TICK=10 is conservative. Tune it by monitoring:</p>
+    <pre><span class="cm"># Watch for cascade signals:</span>
+<span class="kw">if</span> merge_count > MAX_MERGES_TICK * 0.8:
+    print(<span class="st">"WARNING: merge governor near limit — consider raising GROOVE_TO_MERGE"</span>)
+
+<span class="cm"># Scale governor with sphere count:</span>
+MAX_MERGES_TICK = max(<span class="nm">10</span>, len(spheres) // <span class="nm">500</span>)</pre>
+
+    <h3>Step 5 — Lineage querying at scale</h3>
+    <pre><span class="cm"># For deep lineage queries, add PostgreSQL</span>
+<span class="cm"># On every merge, write an edge:</span>
+INSERT INTO lineage (child_id, parent_a_id, parent_b_id, tick, similarity)
+VALUES (%s, %s, %s, %s, %s);
+
+<span class="cm"># Query: full ancestry of a concept</span>
+WITH RECURSIVE ancestry AS (
+  SELECT child_id, parent_a_id, parent_b_id, <span class="nm">0</span> AS depth
+  FROM lineage WHERE child_id = %s
+  UNION ALL
+  SELECT l.child_id, l.parent_a_id, l.parent_b_id, a.depth + <span class="nm">1</span>
+  FROM lineage l JOIN ancestry a ON l.child_id IN (a.parent_a_id, a.parent_b_id)
+  WHERE a.depth < <span class="nm">20</span>
+)
+SELECT * FROM ancestry;</pre>
+  </div>
+
+  <!-- SAFE AGI AUDIT -->
+  <div class="sec">
+    <div class="sec-head">Safe AGI Audit Protocol</div>
+    <h2>How to verify a SphereNet is telling the truth.</h2>
+    <p>The architecture guarantees honesty by physics — but you still need a protocol to audit it. Here's the checklist:</p>
+    <ul class="check">
+      <li><strong>Check for stale high-groove concepts</strong> — any sphere with groove &gt; 20 and timer &gt; 200 has been heavily reinforced. Query its lineage. Verify the signal history matches expected input sources.</li>
+      <li><strong>Check for isolated high-generation concepts</strong> — a gen-5+ concept with no neighbours is a red flag. It formed from merges but nothing is reinforcing it now. May represent a belief the system is "holding on to" without evidence.</li>
+      <li><strong>Inject known-false signals</strong> — send signals you know are incorrect ("the sun is cold"). The system should either fail to resonate (good) or create a new sphere that decays quickly (acceptable). If it resonates with a high-groove concept and boosts it — the RESONANCE threshold is too low.</li>
+      <li><strong>Check timer distribution</strong> — in a healthy system, timer values should be spread across the range. If most spheres are near BASE_TIMER, the system isn't learning. If most are near 0, it's forgetting too fast.</li>
+      <li><strong>Verify merge lineage integrity</strong> — every merged concept should have exactly two parents. Any concept with no parents that isn't a seed is a ghost — created by a bug.</li>
+      <li><strong>Run a classify round-trip</strong> — signal a concept, immediately classify similar text. Confidence should be &gt;0.7. If it's below 0.5, RESONANCE is misconfigured or the embedding model doesn't cover this domain.</li>
+    </ul>
+  </div>
+
+  <!-- LIVE SIGNAL DEMO -->
+  <div class="sec">
+    <div class="sec-head">Live Signal Interface</div>
+    <h2>Send signals. Watch the system respond.</h2>
+    <p>This connects to a SphereNet instance. Type anything — a word, a sentence, a question. The system will tell you what concept it resonates with and at what confidence.</p>
+    <div class="signal-wrap">
+      <input id="sig-input" type="text" placeholder="type anything — a word, sentence, concept...">
+      <button class="sig-btn" onclick="doSignal()">SIGNAL →</button>
+      <button class="sig-btn outline" onclick="doClassify()">CLASSIFY</button>
+      <div id="sig-result">Awaiting input...</div>
+    </div>
+    <p style="margin-top:12px;font-size:11px;color:#222;">Note: this demo queries a local instance on port 8000. For a hosted instance, <a href="mailto:junky4joy@gmail.com" style="color:#ffaa00;">contact Dan</a>.</p>
+  </div>
+
+  <!-- SEED YOUR OWN -->
+  <div class="sec">
+    <div class="sec-head">Worked Examples</div>
+    <h2>Seed your own concept spaces.</h2>
+
+    <h3>Emotion space</h3>
+    <pre><span class="cm"># Seed the eight primary emotions at cardinal positions</span>
+net.seed(<span class="st">"joy happiness delight pleasure elation"</span>, <span class="st">"JOY"</span>)
+net.seed(<span class="st">"sadness grief sorrow loss despair"</span>, <span class="st">"SADNESS"</span>)
+net.seed(<span class="st">"anger rage fury outrage irritation"</span>, <span class="st">"ANGER"</span>)
+net.seed(<span class="st">"fear dread terror anxiety panic"</span>, <span class="st">"FEAR"</span>)
+net.seed(<span class="st">"disgust revulsion contempt loathing"</span>, <span class="st">"DISGUST"</span>)
+net.seed(<span class="st">"surprise shock astonishment wonder"</span>, <span class="st">"SURPRISE"</span>)
+net.seed(<span class="st">"trust confidence faith reliability"</span>, <span class="st">"TRUST"</span>)
+net.seed(<span class="st">"anticipation expectation eagerness hope"</span>, <span class="st">"ANTICIPATION"</span>)
+
+<span class="cm"># Now signal ambiguous emotional states</span>
+net.signal(<span class="st">"nervous excitement before a performance"</span>)
+<span class="cm"># → emerges at FEAR+ANTICIPATION boundary</span>
+
+net.signal(<span class="st">"bittersweet nostalgia for something lost"</span>)
+<span class="cm"># → emerges at JOY+SADNESS boundary</span></pre>
+
+    <h3>Product category mapping</h3>
+    <pre><span class="cm"># Seed product categories</span>
+net.seed(<span class="st">"luxury premium exclusive high-end designer"</span>, <span class="st">"LUXURY"</span>)
+net.seed(<span class="st">"budget cheap affordable value bargain"</span>, <span class="st">"VALUE"</span>)
+net.seed(<span class="st">"technical professional specification performance"</span>, <span class="st">"PROFESSIONAL"</span>)
+net.seed(<span class="st">"fun casual lifestyle enjoyment leisure"</span>, <span class="st">"LIFESTYLE"</span>)
+
+<span class="cm"># Signal product descriptions — system maps them automatically</span>
+net.signal(<span class="st">"premium gaming headset audiophile quality"</span>)
+<span class="cm"># → LUXURY+PROFESSIONAL (premium tech)</span></pre>
+  </div>
+
+</div><!-- /wrap -->
+
+<footer>
+  <p>SphereNet PRO · Dan Chipchase · Somerset · 5 April 2026<br>
+  DOI: <a href="https://doi.org/10.5281/zenodo.19424921" target="_blank">10.5281/zenodo.19424921</a> ·
+  <a href="https://github.com/eliskcage/spherenet" target="_blank">GitHub</a> ·
+  <a href="/spherenet/wheel.html">Live Demo</a></p>
+</footer>
+
+<script>
+// ── GATE ─────────────────────────────────────────────────────────────────────
+const ACCESS_KEY = 'SPHERENET9';
+
+function checkAccess() {
+  // Check URL param
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('key') === ACCESS_KEY) {
+    localStorage.setItem('spherenet_access', ACCESS_KEY);
+  }
+  // Check localStorage
+  if (localStorage.getItem('spherenet_access') === ACCESS_KEY) {
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+    return true;
+  }
+  return false;
+}
+
+checkAccess();
+
+// ── LIVE SIGNAL ───────────────────────────────────────────────────────────────
+async function doSignal() {
+  const text = document.getElementById('sig-input').value.trim();
+  if (!text) return;
+  const res = document.getElementById('sig-result');
+  res.textContent = 'Sending...';
+  try {
+    const r = await fetch('http://localhost:8000/signal', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({text})
+    });
+    const d = await r.json();
+    res.innerHTML = `Tick ${d.tick} · ${d.alive_spheres} alive spheres<br>` +
+      (d.events.slice(-3).map(e => `<span style="color:#ffaa00">${e.event}</span> → ${e.concept||''}`).join('<br>'));
+  } catch(e) {
+    res.innerHTML = '<span style="color:#ff4422">No local instance at :8000 — run spherenet_industrial.py first</span>';
+  }
+}
+
+async function doClassify() {
+  const text = document.getElementById('sig-input').value.trim();
+  if (!text) return;
+  const res = document.getElementById('sig-result');
+  res.textContent = 'Classifying...';
+  try {
+    const r = await fetch(`http://localhost:8000/classify?text=${encodeURIComponent(text)}`);
+    const d = await r.json();
+    res.innerHTML = `<span style="color:#ffaa00;font-size:18px;font-weight:900">${d.concept}</span><br>confidence: ${d.confidence}`;
+  } catch(e) {
+    res.innerHTML = '<span style="color:#ff4422">No local instance at :8000 — run spherenet_industrial.py first</span>';
+  }
+}
+
+document.getElementById('sig-input')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter') doClassify();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,2115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADVERTainment Machine — ShortFactory</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0f;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .phone-container {
+            position: relative;
+            width: 390px;
+            height: 844px;
+            background: linear-gradient(145deg, #1a0a1e 0%, #0d0d12 50%, #1a0505 100%);
+            border-radius: 50px;
+            border: 4px solid #2a2a3a;
+            overflow: hidden;
+            box-shadow: 0 0 100px rgba(255, 0, 80, 0.3), 0 0 200px rgba(138, 43, 226, 0.2);
+        }
+
+        .dynamic-island {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 35px;
+            background: #000;
+            border-radius: 20px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .rec-badge {
+            display: none;
+            background: #ff0040;
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 10px;
+            animation: recPulse 1s infinite;
+        }
+
+        .rec-badge.active { display: block; }
+
+        @keyframes recPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .timer-overlay {
+            position: absolute;
+            top: 55px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 8px 20px;
+            border-radius: 20px;
+            z-index: 999;
+            font-family: 'Orbitron', monospace;
+            font-size: 18px;
+            color: #00ff88;
+            border: 2px solid #00ff88;
+            display: none;
+        }
+
+        .timer-overlay.warning { color: #ffaa00; border-color: #ffaa00; }
+        .timer-overlay.danger { color: #ff0040; border-color: #ff0040; animation: timerShake 0.5s infinite; }
+
+        @keyframes timerShake {
+            0%, 100% { transform: translateX(-50%) rotate(0deg); }
+            25% { transform: translateX(-50%) rotate(-2deg); }
+            75% { transform: translateX(-50%) rotate(2deg); }
+        }
+
+        .screen {
+            position: absolute;
+            inset: 0;
+            padding: 60px 20px 30px;
+            display: none;
+            flex-direction: column;
+            transition: opacity 0.5s;
+        }
+
+        .screen.active { display: flex; }
+
+        /* Demo Screen */
+        #demo-screen {
+            background: linear-gradient(180deg, #1a0a1e 0%, #0d0d12 100%);
+        }
+
+        .demo-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 24px;
+            font-weight: 900;
+            text-align: center;
+            background: linear-gradient(90deg, #ff0040, #8a2be2, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .demo-subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+
+        .demo-video-container {
+            position: relative;
+            width: 100%;
+            height: 280px;
+            background: #000;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            border: 2px solid #ff0040;
+        }
+
+        .demo-video-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .demo-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.7);
+        }
+
+        .play-btn {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #ff0040, #8a2be2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .play-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(255, 0, 64, 0.5);
+        }
+
+        .play-btn::after {
+            content: '';
+            width: 0;
+            height: 0;
+            border-left: 25px solid white;
+            border-top: 15px solid transparent;
+            border-bottom: 15px solid transparent;
+            margin-left: 5px;
+        }
+
+        .start-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(90deg, #ff0040, #8a2be2);
+            border: none;
+            border-radius: 30px;
+            color: white;
+            font-family: 'Orbitron', monospace;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: auto;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 40px rgba(255, 0, 64, 0.4);
+        }
+
+        /* Act Screen - User performs behind words */
+        #act-screen {
+            background: #000;
+            padding: 50px 15px 20px;
+        }
+
+        .act-container {
+            flex: 1;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .act-stage {
+            flex: 1;
+            position: relative;
+            background: #111;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 3px solid #ff0040;
+        }
+
+        .act-webcam {
+            position: absolute;
+            inset: 0;
+        }
+
+        .act-webcam video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+
+        .act-words {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.4);
+            transition: opacity 1s;
+        }
+
+        .act-words.fade-out {
+            opacity: 0;
+        }
+
+        .act-text {
+            font-family: 'Orbitron', monospace;
+            font-size: 22px;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            text-shadow: 0 0 20px #ff0040, 0 0 40px #8a2be2;
+            line-height: 1.4;
+        }
+
+        .act-text .highlight {
+            color: #ffd700;
+            text-shadow: 0 0 20px #ffd700;
+        }
+
+        .act-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .act-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff0040, #8a2be2, #00ff88);
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+
+        .act-counter {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-family: 'Orbitron', monospace;
+            font-size: 12px;
+            color: #ffd700;
+        }
+
+        .act-instruction {
+            text-align: center;
+            color: #888;
+            font-size: 11px;
+            margin-top: 10px;
+        }
+
+        .act-record-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(90deg, #ff0040, #8a2be2);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            font-family: 'Orbitron', monospace;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .act-record-btn.active { display: block; }
+
+        /* Scene Interaction Screen */
+        #scene-screen {
+            background: linear-gradient(180deg, #0d0d12 0%, #1a0a1e 50%, #0d0d12 100%);
+        }
+
+        .scene-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .scene-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .scene-counter {
+            font-family: 'Orbitron', monospace;
+            font-size: 12px;
+            color: #00ff88;
+        }
+
+        .chaos-meter {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .chaos-bar {
+            width: 50px;
+            height: 6px;
+            background: #1a1a2e;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .chaos-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff88, #ffaa00, #ff0040);
+            transition: width 0.3s;
+        }
+
+        .video-frame {
+            position: relative;
+            width: 100%;
+            height: 180px;
+            background: #000;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 12px;
+            border: 2px solid #8a2be2;
+        }
+
+        .video-frame video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .mystery-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(138, 43, 226, 0.9);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .question-box {
+            background: linear-gradient(135deg, rgba(138, 43, 226, 0.3), rgba(255, 0, 64, 0.3));
+            border: 1px solid #8a2be2;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .question-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .option-btn {
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #333;
+            border-radius: 10px;
+            color: white;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .option-btn:hover {
+            background: rgba(138, 43, 226, 0.3);
+            border-color: #8a2be2;
+        }
+
+        .option-btn.selected {
+            background: linear-gradient(135deg, #ff0040, #8a2be2);
+            border-color: transparent;
+        }
+
+        .continue-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(90deg, #00ff88, #00aa55);
+            border: none;
+            border-radius: 20px;
+            color: #000;
+            font-family: 'Orbitron', monospace;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: auto;
+            opacity: 0.5;
+            pointer-events: none;
+            transition: all 0.3s;
+        }
+
+        .continue-btn.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* User Camera PIP */
+        .user-camera {
+            position: absolute;
+            bottom: 100px;
+            right: 10px;
+            width: 70px;
+            height: 90px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid #ff0040;
+            z-index: 500;
+            display: none;
+        }
+
+        .user-camera.active { display: block; }
+
+        .user-camera video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+
+        .camera-label {
+            position: absolute;
+            bottom: 3px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 0, 64, 0.8);
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 7px;
+            color: white;
+            white-space: nowrap;
+        }
+
+        /* Generating Screen */
+        #generating-screen {
+            background: #000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .gen-container {
+            text-align: center;
+        }
+
+        .gen-spinner {
+            width: 80px;
+            height: 80px;
+            border: 4px solid transparent;
+            border-top-color: #ff0040;
+            border-right-color: #8a2be2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .gen-text {
+            font-family: 'Orbitron', monospace;
+            font-size: 16px;
+            color: #ff0040;
+            margin-bottom: 10px;
+        }
+
+        .gen-subtext {
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+
+        .gen-progress {
+            width: 200px;
+            height: 5px;
+            background: #1a1a2e;
+            border-radius: 3px;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+
+        .gen-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff0040, #8a2be2, #00ff88);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .gen-steps {
+            margin-top: 25px;
+            text-align: left;
+            padding: 0 20px;
+        }
+
+        .gen-step {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            color: #444;
+            font-size: 11px;
+        }
+
+        .gen-step.active { color: #ff0040; }
+        .gen-step.done { color: #00ff88; }
+
+        .step-icon {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid currentColor;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+        }
+
+        .gen-step.done .step-icon {
+            background: #00ff88;
+            border-color: #00ff88;
+        }
+
+        /* Premiere Screen */
+        #premiere-screen {
+            background: #000;
+        }
+
+        .premiere-header {
+            text-align: center;
+            padding: 15px 0;
+        }
+
+        .premiere-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 20px;
+            background: linear-gradient(90deg, #ff0040, #ffd700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .premiere-subtitle {
+            color: #666;
+            font-size: 11px;
+            margin-top: 3px;
+        }
+
+        .premiere-video {
+            flex: 1;
+            background: #111;
+            border-radius: 15px;
+            overflow: hidden;
+            border: 2px solid #ffd700;
+            position: relative;
+        }
+
+        .premiere-video video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .premiere-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .premiere-play {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .premiere-play::after {
+            content: '';
+            width: 0;
+            height: 0;
+            border-left: 22px solid #000;
+            border-top: 12px solid transparent;
+            border-bottom: 12px solid transparent;
+            margin-left: 4px;
+        }
+
+        /* User in video overlay */
+        .user-in-video {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 80px;
+            height: 100px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid #ff0040;
+            display: none;
+            box-shadow: 0 0 15px rgba(255, 0, 64, 0.5);
+            z-index: 10;
+        }
+
+        .user-in-video.active { display: block; }
+
+        .user-in-video video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+
+        .user-label-video {
+            position: absolute;
+            bottom: 3px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 0, 64, 0.9);
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-size: 8px;
+            color: white;
+            white-space: nowrap;
+        }
+
+        .scene-indicator {
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-family: 'Orbitron', monospace;
+            font-size: 10px;
+            color: #ffd700;
+            z-index: 10;
+        }
+
+        /* Submit Screen */
+        #submit-screen {
+            background: linear-gradient(180deg, #0d0d12 0%, #1a0a1e 100%);
+        }
+
+        .submit-header {
+            text-align: center;
+            padding: 15px 0;
+        }
+
+        .submit-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 18px;
+            color: #00ff88;
+        }
+
+        .submit-subtitle {
+            color: #666;
+            font-size: 11px;
+            margin-top: 3px;
+        }
+
+        .version-compare {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .version-box {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid #333;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .version-box:hover {
+            border-color: #8a2be2;
+        }
+
+        .version-box.selected {
+            border-color: #00ff88;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+        }
+
+        .version-preview {
+            height: 150px;
+            background: #000;
+            position: relative;
+        }
+
+        .version-preview video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .version-label {
+            padding: 8px;
+            text-align: center;
+        }
+
+        .version-name {
+            font-weight: bold;
+            color: white;
+            font-size: 12px;
+        }
+
+        .version-desc {
+            font-size: 10px;
+            color: #666;
+        }
+
+        .user-stamp {
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            background: rgba(255, 0, 64, 0.9);
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 8px;
+            color: white;
+        }
+
+        .user-preview-pip {
+            position: absolute;
+            bottom: 6px;
+            right: 6px;
+            width: 40px;
+            height: 50px;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 2px solid #ff0040;
+            display: none;
+        }
+
+        .user-preview-pip.active { display: block; }
+
+        .user-preview-pip video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+
+        .submit-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: auto;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 25px;
+            font-family: 'Orbitron', monospace;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .submit-btn.with-user {
+            background: linear-gradient(90deg, #ff0040, #8a2be2);
+            color: white;
+        }
+
+        .submit-btn.without-user {
+            background: linear-gradient(90deg, #00ff88, #00aa55);
+            color: #000;
+        }
+
+        .submit-btn:hover {
+            transform: scale(1.02);
+        }
+
+        .back-btn {
+            background: transparent;
+            border: 1px solid #444;
+            color: #888;
+            padding: 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        /* Voting Screen */
+        #vote-screen {
+            background: linear-gradient(180deg, #0d0d12 0%, #1a0a1e 100%);
+        }
+
+        .vote-header {
+            text-align: center;
+            padding: 15px 0;
+        }
+
+        .vote-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 18px;
+            color: #ffd700;
+        }
+
+        .vote-subtitle {
+            color: #666;
+            font-size: 11px;
+            margin-top: 3px;
+        }
+
+        .vote-video-container {
+            flex: 1;
+            background: #000;
+            border-radius: 15px;
+            overflow: hidden;
+            border: 2px solid #8a2be2;
+            position: relative;
+        }
+
+        .vote-video-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .vote-words-overlay {
+            position: absolute;
+            top: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 15px;
+        }
+
+        .vote-words-text {
+            font-family: 'Orbitron', monospace;
+            font-size: 16px;
+            color: white;
+            text-shadow: 0 0 10px #ff0040;
+        }
+
+        .vote-actions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+        }
+
+        .vote-btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: none;
+            font-size: 30px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .vote-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .vote-crap {
+            background: linear-gradient(135deg, #ff0040, #8a2be2);
+        }
+
+        .vote-good {
+            background: linear-gradient(135deg, #00ff88, #00aa55);
+        }
+
+        .vote-counter {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 5px 12px;
+            border-radius: 12px;
+            font-family: 'Orbitron', monospace;
+            font-size: 11px;
+            color: #ffd700;
+        }
+
+        /* Review Screen */
+        #review-screen {
+            background: linear-gradient(180deg, #0d0d12 0%, #1a0a1e 100%);
+        }
+
+        .review-header {
+            text-align: center;
+            padding: 12px 0;
+        }
+
+        .review-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 18px;
+            color: #8a2be2;
+        }
+
+        .review-content {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .score-card {
+            background: linear-gradient(135deg, rgba(138, 43, 226, 0.2), rgba(255, 0, 64, 0.2));
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 12px;
+        }
+
+        .score-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .score-label {
+            flex: 1;
+            color: #888;
+            font-size: 11px;
+        }
+
+        .score-bar {
+            width: 100px;
+            height: 6px;
+            background: #1a1a2e;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-right: 8px;
+        }
+
+        .score-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 1s;
+        }
+
+        .score-value {
+            font-family: 'Orbitron', monospace;
+            font-size: 12px;
+            color: white;
+            min-width: 35px;
+        }
+
+        .viewer-analysis {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .analysis-title {
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .analysis-text {
+            color: #aaa;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .credits-earned {
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .credits-label {
+            color: #000;
+            font-size: 11px;
+        }
+
+        .credits-amount {
+            font-family: 'Orbitron', monospace;
+            font-size: 28px;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .share-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(90deg, #8a2be2, #ff0040);
+            border: none;
+            border-radius: 20px;
+            color: white;
+            font-family: 'Orbitron', monospace;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Particles */
+        .particles {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: #ff0040;
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: float 10s infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-10vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* Shapes */
+        .shape {
+            position: absolute;
+            opacity: 0.1;
+            pointer-events: none;
+        }
+
+        .shape-circle {
+            width: 80px;
+            height: 80px;
+            border: 3px solid #ff0040;
+            border-radius: 50%;
+            top: 20%;
+            left: 10%;
+        }
+
+        .shape-triangle {
+            width: 0;
+            height: 0;
+            border-left: 40px solid transparent;
+            border-right: 40px solid transparent;
+            border-bottom: 70px solid #8a2be2;
+            top: 60%;
+            right: 5%;
+        }
+
+        .shape-square {
+            width: 60px;
+            height: 60px;
+            border: 3px solid #00ff88;
+            bottom: 15%;
+            left: 15%;
+        }
+
+        /* Soul gate banner */
+        #soul-gate-banner {
+            display: none;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(90deg, #ff0040, #8a2be2);
+            padding: 12px 15px;
+            z-index: 9999;
+            text-align: center;
+            animation: slideUp 0.4s ease;
+        }
+        #soul-gate-banner.active { display: block; }
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .gate-countdown {
+            font-family: 'Orbitron', monospace;
+            font-size: 11px;
+            color: rgba(255,255,255,0.8);
+            margin-bottom: 3px;
+        }
+        .gate-label {
+            font-family: 'Orbitron', monospace;
+            font-size: 13px;
+            font-weight: bold;
+            color: white;
+        }
+
+        /* Build link */
+        .build-link {
+            display: block;
+            text-align: center;
+            color: #8a2be2;
+            font-size: 11px;
+            font-family: 'Orbitron', monospace;
+            text-decoration: none;
+            padding: 10px;
+            border: 1px solid #8a2be2;
+            border-radius: 12px;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+        .build-link:hover { background: rgba(138,43,226,0.2); color: white; }
+    </style>
+</head>
+<body>
+    <div class="phone-container">
+        <div class="dynamic-island">
+            <div class="rec-badge" id="recBadge">● REC</div>
+        </div>
+        <div class="timer-overlay" id="timerOverlay">03:00</div>
+
+        <!-- Particles -->
+        <div class="particles" id="particles"></div>
+
+        <!-- Shapes -->
+        <div class="shape shape-circle"></div>
+        <div class="shape shape-triangle"></div>
+        <div class="shape shape-square"></div>
+
+        <!-- User Camera PIP -->
+        <div class="user-camera" id="userCamera">
+            <video id="userCameraVideo" autoplay muted playsinline></video>
+            <div class="camera-label">YOU</div>
+        </div>
+
+        <!-- Demo Screen -->
+        <div class="screen active" id="demo-screen">
+            <div class="demo-title">SHORTFACTORY × GROK</div>
+            <div class="demo-subtitle">ADVERTainment is DEAD. Long live ADVERTainment.</div>
+            
+            <div class="demo-video-container">
+                <video id="demoVideo" loop muted playsinline>
+                    <source src="/squid-vids/adverts-are-dead.mp4" type="video/mp4">
+                </video>
+                <div class="demo-overlay" id="demoOverlay">
+                    <div class="play-btn" id="demoPlayBtn"></div>
+                    <p style="color: #888; margin-top: 15px; font-size: 12px;">▶ Watch the Manifesto</p>
+                </div>
+            </div>
+
+            <p style="color: #666; font-size: 11px; text-align: center; margin-bottom: 15px;">
+                🎬 The future of advertising is <span style="color: #ff0040;">INVISIBLE</span><br>
+                🎭 User-driven. Decentralized. <span style="color: #ffd700;">POWERFUL</span><br>
+                💰 You make the content. You get paid.
+            </p>
+
+            <button class="start-btn" id="startBtn">BECOME THE AD</button>
+        </div>
+
+        <!-- Act Screen - User performs behind words -->
+        <div class="screen" id="act-screen">
+            <div class="act-container">
+                <div class="act-counter" id="actCounter">SCENE 1/10</div>
+                <div class="act-stage">
+                    <div class="act-webcam">
+                        <video id="actWebcam" autoplay muted playsinline></video>
+                    </div>
+                    <div class="act-words" id="actWords">
+                        <div class="act-text" id="actText">Loading...</div>
+                    </div>
+                    <div class="act-progress">
+                        <div class="act-progress-fill" id="actProgressFill"></div>
+                    </div>
+                </div>
+                <div class="act-instruction" id="actInstruction">🎬 Act out the words. Show your RAGE or JOY!</div>
+                <button class="act-record-btn" id="actRecordBtn">NEXT SCENE →</button>
+            </div>
+        </div>
+
+        <!-- Scene Interaction Screen -->
+        <div class="screen" id="scene-screen">
+            <div class="scene-container">
+                <div class="scene-header">
+                    <div class="scene-counter" id="sceneCounter">INTERACTION 1/6</div>
+                    <div class="chaos-meter">
+                        <span style="color: #888; font-size: 9px;">CHAOS</span>
+                        <div class="chaos-bar">
+                            <div class="chaos-fill" id="chaosFill" style="width: 20%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="video-frame">
+                    <video id="sceneVideo" playsinline></video>
+                    <div class="mystery-badge" id="mysteryBadge">???</div>
+                </div>
+
+                <div class="question-box">
+                    <div class="question-text" id="questionText">Loading...</div>
+                    <div class="options-grid" id="optionsGrid"></div>
+                </div>
+
+                <button class="continue-btn" id="continueBtn">LOCK IN CHOICE</button>
+            </div>
+        </div>
+
+        <!-- Generating Screen -->
+        <div class="screen" id="generating-screen">
+            <div class="gen-container">
+                <div class="gen-spinner"></div>
+                <div class="gen-text" id="genText">STITCHING YOUR MADNESS...</div>
+                <div class="gen-subtext" id="genSubtext">ADVERTainment pipeline active</div>
+                
+                <div class="gen-progress">
+                    <div class="gen-progress-fill" id="genProgressFill"></div>
+                </div>
+
+                <div class="gen-steps">
+                    <div class="gen-step" id="step1">
+                        <div class="step-icon">1</div>
+                        <span>Combining your 10 performances...</span>
+                    </div>
+                    <div class="gen-step" id="step2">
+                        <div class="step-icon">2</div>
+                        <span>Injecting your reactions...</span>
+                    </div>
+                    <div class="gen-step" id="step3">
+                        <div class="step-icon">3</div>
+                        <span>Adding interaction outcomes...</span>
+                    </div>
+                    <div class="gen-step" id="step4">
+                        <div class="step-icon">4</div>
+                        <span>Branding: ShortFactory × Dares4Dosh...</span>
+                    </div>
+                    <div class="gen-step" id="step5">
+                        <div class="step-icon">5</div>
+                        <span>Final render under 3 minutes...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Premiere Screen -->
+        <div class="screen" id="premiere-screen">
+            <div class="premiere-header">
+                <div class="premiere-title">🎬 YOUR PREMIERE</div>
+                <div class="premiere-subtitle">30% User | 30% Interaction | 10% Brand | 30% Magic</div>
+            </div>
+            
+            <div class="premiere-video">
+                <video id="premiereVideo" playsinline></video>
+                <div class="scene-indicator" id="sceneIndicator" style="display: none;">LOADING...</div>
+                <div class="user-in-video" id="userInVideo">
+                    <video id="userInVideoEl" autoplay muted playsinline loop></video>
+                    <div class="user-label-video">🎭 YOU</div>
+                </div>
+                <div class="premiere-overlay" id="premiereOverlay">
+                    <div class="premiere-play" id="premierePlay"></div>
+                    <p style="color: #888; margin-top: 10px; font-size: 11px;">▶ Your ADVERTainment debut</p>
+                </div>
+            </div>
+
+            <div style="padding: 10px; text-align: center;">
+                <button class="submit-btn with-user" id="toSubmitBtn">CONTINUE TO SUBMIT</button>
+            </div>
+        </div>
+
+        <!-- Vote Screen -->
+        <div class="screen" id="vote-screen">
+            <div class="vote-header">
+                <div class="vote-title">🎭 RATE THE PERFORMANCE</div>
+                <div class="vote-subtitle">Your vote shapes the algorithm</div>
+            </div>
+            
+            <div class="vote-video-container">
+                <video id="voteVideo" playsinline></video>
+                <div class="vote-words-overlay">
+                    <div class="vote-words-text" id="voteWordsText">Loading...</div>
+                </div>
+                <div class="vote-counter" id="voteCounter">1/5 RATINGS</div>
+                <div class="vote-actions">
+                    <button class="vote-btn vote-crap" id="voteCrap">💩</button>
+                    <button class="vote-btn vote-good" id="voteGood">🔥</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit Screen -->
+        <div class="screen" id="submit-screen">
+            <div class="submit-header">
+                <div class="submit-title">🎬 CHOOSE YOUR VERSION</div>
+                <div class="submit-subtitle">Your ADVERTainment. Your choice.</div>
+            </div>
+
+            <div class="version-compare">
+                <div class="version-box selected" id="versionWith">
+                    <div class="version-preview">
+                        <video id="versionWithVideo" muted loop playsinline></video>
+                        <div class="user-preview-pip active" id="userPipWith">
+                            <video id="userPipWithVideo" autoplay muted playsinline loop></video>
+                        </div>
+                        <div class="user-stamp">🎭 YOU IN IT</div>
+                    </div>
+                    <div class="version-label">
+                        <div class="version-name">WITH YOU</div>
+                        <div class="version-desc">+50% credits</div>
+                    </div>
+                </div>
+                <div class="version-box" id="versionWithout">
+                    <div class="version-preview">
+                        <video id="versionWithoutVideo" muted loop playsinline></video>
+                    </div>
+                    <div class="version-label">
+                        <div class="version-name">CLEAN</div>
+                        <div class="version-desc">Brand ready</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="submit-actions">
+                <button class="submit-btn with-user" id="submitWithUser">🎬 SUBMIT WITH ME</button>
+                <button class="submit-btn without-user" id="submitWithoutUser">📤 SUBMIT CLEAN</button>
+                <button class="back-btn" id="backToPremiere">← Back to Premiere</button>
+            </div>
+        </div>
+
+        <!-- Soul Gate Banner -->
+        <div id="soul-gate-banner">
+            <div class="gate-countdown" id="gateCdText">Redirecting in 5s...</div>
+            <div class="gate-label" id="gateLabelText">YOUR SOUL GATE AWAITS</div>
+        </div>
+
+        <!-- Review Screen -->
+        <div class="screen" id="review-screen">
+            <div class="review-header">
+                <div class="review-title">🤖 AI ANALYSIS</div>
+            </div>
+
+            <div class="review-content">
+                <div class="score-card">
+                    <div class="score-item">
+                        <div class="score-label">User Interaction</div>
+                        <div class="score-bar">
+                            <div class="score-fill" style="width: 0%; background: linear-gradient(90deg, #ff0040, #8a2be2);" id="score1"></div>
+                        </div>
+                        <div class="score-value" id="scoreVal1">0%</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">Outcome Impact</div>
+                        <div class="score-bar">
+                            <div class="score-fill" style="width: 0%; background: linear-gradient(90deg, #8a2be2, #00ff88);" id="score2"></div>
+                        </div>
+                        <div class="score-value" id="scoreVal2">0%</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">Brand Integration</div>
+                        <div class="score-bar">
+                            <div class="score-fill" style="width: 0%; background: linear-gradient(90deg, #ffd700, #ff8c00);" id="score3"></div>
+                        </div>
+                        <div class="score-value" id="scoreVal3">0%</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">Viral Potential</div>
+                        <div class="score-bar">
+                            <div class="score-fill" style="width: 0%; background: linear-gradient(90deg, #ff0040, #ff8c00);" id="score4"></div>
+                        </div>
+                        <div class="score-value" id="scoreVal4">0%</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">Entertainment</div>
+                        <div class="score-bar">
+                            <div class="score-fill" style="width: 0%; background: linear-gradient(90deg, #00ff88, #8a2be2);" id="score5"></div>
+                        </div>
+                        <div class="score-value" id="scoreVal5">0%</div>
+                    </div>
+                </div>
+
+                <div class="viewer-analysis">
+                    <div class="analysis-title">👁️ ADVERTainment PIPELINE</div>
+                    <div class="analysis-text" id="analysisText">
+                        Loading...
+                    </div>
+                </div>
+
+                <div class="credits-earned">
+                    <div class="credits-label">CREDITS EARNED</div>
+                    <div class="credits-amount" id="creditsAmount">0</div>
+                </div>
+
+                <button class="share-btn" id="shareBtn">🚀 SHARE & EARN MORE</button>
+                <a href="https://shortfactory.shop/dangergame-creator.html" class="build-link">🎬 BUILD YOUR OWN DANGER GAME →</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ─── URL PARAMS ────────────────────────────────────────────────────────────
+        const _params = new URLSearchParams(window.location.search);
+        const _ref  = _params.get('ref')  || '';
+        const _gate = _params.get('gate') || '';
+
+        // ─── SQUID AUDIO ENGINE ────────────────────────────────────────────────────
+        const SQUID_SOUNDS = {
+            ambient:   { src: '/sounds/squid/lets_go_out_tonight_sad.mp3', node: null, gain: null },
+            tension:   { src: '/sounds/squid/hostagecrisis_crap.mp3',      node: null, gain: null },
+            game:      { src: '/sounds/squid/needles_dalgona.mp3',         node: null, gain: null },
+            generate:  { src: '/sounds/squid/fat_and_rats.mp3',            node: null, gain: null },
+            vote:      { src: '/sounds/squid/i_remember_my_name.mp3',      node: null, gain: null },
+            win:       { src: '/sounds/squid/delivery.mp3',                node: null, gain: null },
+            lift:      { src: '/sounds/squid/dawn.mp3',                    node: null, gain: null },
+            hurt:      { src: '/sounds/squid/hurt_so_bad.mp3',             node: null, gain: null }
+        };
+        let _sqCtx = null;
+        let _sqActive = {};
+
+        function _sqInit() {
+            if (_sqCtx) return;
+            _sqCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        function sqPlay(key, loop) {
+            _sqInit();
+            if (_sqActive[key]) return;
+            const s = SQUID_SOUNDS[key];
+            if (!s) return;
+            fetch(s.src).then(r => r.arrayBuffer()).then(buf => _sqCtx.decodeAudioData(buf)).then(decoded => {
+                const src  = _sqCtx.createBufferSource();
+                const gain = _sqCtx.createGain();
+                src.buffer = decoded;
+                src.loop   = !!loop;
+                gain.gain.value = 0.6;
+                src.connect(gain);
+                gain.connect(_sqCtx.destination);
+                src.start();
+                src.onended = () => { delete _sqActive[key]; };
+                _sqActive[key] = { src, gain };
+            }).catch(() => {});
+        }
+
+        function sqStop(key, fade) {
+            const a = _sqActive[key];
+            if (!a) return;
+            if (fade) {
+                a.gain.gain.linearRampToValueAtTime(0, _sqCtx.currentTime + 1.5);
+                setTimeout(() => { try { a.src.stop(); } catch(e){} delete _sqActive[key]; }, 1600);
+            } else {
+                try { a.src.stop(); } catch(e){}
+                delete _sqActive[key];
+            }
+        }
+
+        function sqStopAll(fade) {
+            Object.keys(_sqActive).forEach(k => sqStop(k, fade));
+        }
+
+        // ─── SOUL GATE ─────────────────────────────────────────────────────────────
+        function triggerSoulGate() {
+            if (!_gate) return;
+            const banner  = document.getElementById('soul-gate-banner');
+            const cdText  = document.getElementById('gateCdText');
+            const lblText = document.getElementById('gateLabelText');
+            banner.classList.add('active');
+            lblText.textContent = 'YOUR SOUL GATE AWAITS';
+            let secs = 5;
+            const tick = setInterval(() => {
+                secs--;
+                cdText.textContent = `Redirecting in ${secs}s...`;
+                if (secs <= 0) {
+                    clearInterval(tick);
+                    window.location.href = _gate + '?ref=' + encodeURIComponent(_ref) + '&from=advertainment';
+                }
+            }, 1000);
+        }
+
+        // Act Scenes - Text user performs behind
+        const actScenes = [
+            { text: "ADVERTS ARE <span class='highlight'>DEAD</span>", duration: 5000 },
+            { text: "YOU are the <span class='highlight'>ADVERTISEMENT</span>", duration: 4500 },
+            { text: "ShortFactory <span class='highlight'>EMPOWERS</span> YOU", duration: 4500 },
+            { text: "The old BUSINESSman put his hand in YOUR pocket", duration: 5500 },
+            { text: "Now <span class='highlight'>YOU</span> eat HIS lunch", duration: 4500 },
+            { text: "Dares4Dosh: Would YOU do a dare for cash?", duration: 5000 },
+            { text: "ADVERTainment is <span class='highlight'>INVISIBLE</span>", duration: 4500 },
+            { text: "User-driven. <span class='highlight'>DECENTRALIZED</span>.", duration: 4500 },
+            { text: "Green Jumpsuit: AI can't cheat <span class='highlight'>YOU</span>", duration: 5000 },
+            { text: "ShortFactory is THE <span class='highlight'>MASTER</span>", duration: 4500 }
+        ];
+
+        // Interaction scenes with videos
+        const interactionScenes = [
+            {
+                name: "The Takeover",
+                video: "/squid-vids/adverts.mp4",
+                question: "What happens when ADVERTainment takes over?",
+                options: ["Safe or Unsafe?", "Who funds this?", "Anti-woke = cash"],
+                mystery: "💰 Cash hidden",
+                outcome: "The algorithm chose: CHAOS"
+            },
+            {
+                name: "Dare or Fake",
+                video: "/squid-vids/dareorfake.mp4",
+                question: "Dares4Dosh - Would you do it?",
+                options: ["Easy money", "Depends on dare", "Not worth it"],
+                mystery: "🎭 Real or staged?",
+                outcome: "Your choice shaped the narrative"
+            },
+            {
+                name: "The Jumpsuit",
+                video: "/squid-vids/greenjumpsuit.mp4",
+                question: "The green jumpsuit ensures AI can't cheat. Want one?",
+                options: ["Add to cart", "Size M please", "Not my style"],
+                mystery: "👕 Limited edition",
+                outcome: "E-commerce integration: ACTIVE"
+            },
+            {
+                name: "Adverts Are Dead",
+                video: "/squid-vids/adverts-are-dead.mp4",
+                question: "The future of advertising is...",
+                options: ["INVISIBLE", "USER-DRIVEN", "SHORTFACTORY"],
+                mystery: "🔮 The prophecy",
+                outcome: "You see the future"
+            },
+            {
+                name: "The Choice",
+                video: "/squid-vids/adverts.mp4",
+                question: "Do you trust ShortFactory?",
+                options: ["YES", "NO", "Show me money"],
+                mystery: "🤔 Trust nobody",
+                outcome: "Trust is earned, not given"
+            },
+            {
+                name: "The Finale",
+                video: "/squid-vids/greenjumpsuit.mp4",
+                question: "Final offer: Join the decentralized MASTER?",
+                options: ["I'M IN", "Show me more", "One condition..."],
+                mystery: "🎬 Your debut",
+                outcome: "Welcome to ShortFactory"
+            }
+        ];
+
+        // Videos for premiere compilation
+        const premiereVideos = [
+            "/squid-vids/adverts-are-dead.mp4",
+            "/squid-vids/adverts.mp4",
+            "/squid-vids/dareorfake.mp4",
+            "/squid-vids/greenjumpsuit.mp4"
+        ];
+
+        // State
+        let userMediaStream = null;
+        let currentActScene = 0;
+        let currentInteractionScene = 0;
+        let completedInteractions = [];
+        let chaosLevel = 20;
+        let timerInterval = null;
+        let timeLeft = 180;
+        let voteCount = 0;
+        let totalVotes = 5;
+
+        // DOM Elements
+        const demoScreen = document.getElementById('demo-screen');
+        const actScreen = document.getElementById('act-screen');
+        const sceneScreen = document.getElementById('scene-screen');
+        const generatingScreen = document.getElementById('generating-screen');
+        const premiereScreen = document.getElementById('premiere-screen');
+        const voteScreen = document.getElementById('vote-screen');
+        const submitScreen = document.getElementById('submit-screen');
+        const reviewScreen = document.getElementById('review-screen');
+
+        const startBtn = document.getElementById('startBtn');
+        const demoPlayBtn = document.getElementById('demoPlayBtn');
+        const demoVideo = document.getElementById('demoVideo');
+        const demoOverlay = document.getElementById('demoOverlay');
+
+        const actWebcam = document.getElementById('actWebcam');
+        const actText = document.getElementById('actText');
+        const actWords = document.getElementById('actWords');
+        const actProgressFill = document.getElementById('actProgressFill');
+        const actCounter = document.getElementById('actCounter');
+        const actInstruction = document.getElementById('actInstruction');
+        const actRecordBtn = document.getElementById('actRecordBtn');
+
+        const sceneVideo = document.getElementById('sceneVideo');
+        const questionText = document.getElementById('questionText');
+        const optionsGrid = document.getElementById('optionsGrid');
+        const continueBtn = document.getElementById('continueBtn');
+        const sceneCounter = document.getElementById('sceneCounter');
+        const chaosFill = document.getElementById('chaosFill');
+        const mysteryBadge = document.getElementById('mysteryBadge');
+
+        const timerOverlay = document.getElementById('timerOverlay');
+        const recBadge = document.getElementById('recBadge');
+        const userCamera = document.getElementById('userCamera');
+        const userCameraVideo = document.getElementById('userCameraVideo');
+
+        const genText = document.getElementById('genText');
+        const genProgressFill = document.getElementById('genProgressFill');
+
+        const premiereVideo = document.getElementById('premiereVideo');
+        const premiereOverlay = document.getElementById('premiereOverlay');
+        const premierePlay = document.getElementById('premierePlay');
+        const sceneIndicator = document.getElementById('sceneIndicator');
+        const userInVideo = document.getElementById('userInVideo');
+        const userInVideoEl = document.getElementById('userInVideoEl');
+        const toSubmitBtn = document.getElementById('toSubmitBtn');
+
+        const voteVideo = document.getElementById('voteVideo');
+        const voteWordsText = document.getElementById('voteWordsText');
+        const voteCounter = document.getElementById('voteCounter');
+        const voteCrap = document.getElementById('voteCrap');
+        const voteGood = document.getElementById('voteGood');
+
+        const versionWithVideo = document.getElementById('versionWithVideo');
+        const versionWithoutVideo = document.getElementById('versionWithoutVideo');
+        const versionWith = document.getElementById('versionWith');
+        const versionWithout = document.getElementById('versionWithout');
+        const userPipWith = document.getElementById('userPipWith');
+        const userPipWithVideo = document.getElementById('userPipWithVideo');
+        const submitWithUser = document.getElementById('submitWithUser');
+        const submitWithoutUser = document.getElementById('submitWithoutUser');
+        const backToPremiere = document.getElementById('backToPremiere');
+
+        const analysisText = document.getElementById('analysisText');
+        const creditsAmount = document.getElementById('creditsAmount');
+        const shareBtn = document.getElementById('shareBtn');
+
+        // Generate particles
+        function createParticles() {
+            const particles = document.getElementById('particles');
+            for (let i = 0; i < 25; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 10 + 's';
+                particle.style.background = ['#ff0040', '#8a2be2', '#00ff88', '#ffd700'][Math.floor(Math.random() * 4)];
+                particles.appendChild(particle);
+            }
+        }
+        createParticles();
+
+        // Ambient on first interaction
+        document.addEventListener('click', () => { sqPlay('ambient', true); }, { once: true });
+
+        // Screen transitions
+        function showScreen(screen) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            screen.classList.add('active');
+        }
+
+        // Demo video play
+        demoPlayBtn.addEventListener('click', () => {
+            demoVideo.play();
+            demoOverlay.style.display = 'none';
+        });
+
+        // Start game
+        startBtn.addEventListener('click', async () => {
+            await initCamera();
+            showScreen(actScreen);
+            startTimer();
+            recBadge.classList.add('active');
+            userCamera.classList.add('active');
+            loadActScene(0);
+            // Audio: swap ambient for tension
+            sqStop('ambient', true);
+            setTimeout(() => sqPlay('tension', true), 1000);
+        });
+
+        // Initialize camera
+        async function initCamera() {
+            try {
+                userMediaStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'user', width: 640, height: 480 }, 
+                    audio: false 
+                });
+                userCameraVideo.srcObject = userMediaStream;
+                actWebcam.srcObject = userMediaStream;
+                userInVideoEl.srcObject = userMediaStream;
+                userPipWithVideo.srcObject = userMediaStream;
+            } catch (err) {
+                console.log('Camera access denied:', err);
+            }
+        }
+
+        // Timer
+        function startTimer() {
+            timerOverlay.style.display = 'block';
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    finalizeAndGenerate();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(timeLeft / 60);
+            const secs = timeLeft % 60;
+            timerOverlay.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            
+            timerOverlay.classList.remove('warning', 'danger');
+            if (timeLeft <= 30) {
+                timerOverlay.classList.add('danger');
+            } else if (timeLeft <= 60) {
+                timerOverlay.classList.add('warning');
+            }
+        }
+
+        // Act Scenes - User performs behind words
+        function loadActScene(index) {
+            currentActScene = index;
+            const scene = actScenes[index];
+            
+            actCounter.textContent = `SCENE ${index + 1}/${actScenes.length}`;
+            actText.innerHTML = scene.text;
+            actWords.classList.remove('fade-out');
+            actProgressFill.style.width = '0%';
+            actRecordBtn.classList.remove('active');
+            actInstruction.textContent = "🎬 Act out the words. Show your RAGE or JOY!";
+            
+            // Animate progress bar
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += 100 / (scene.duration / 100);
+                actProgressFill.style.width = progress + '%';
+                
+                if (progress >= 70) {
+                    actWords.classList.add('fade-out');
+                }
+                
+                if (progress >= 100) {
+                    clearInterval(progressInterval);
+                    actInstruction.textContent = "✨ Great performance! Continue when ready.";
+                    actRecordBtn.classList.add('active');
+                }
+            }, 100);
+        }
+
+        actRecordBtn.addEventListener('click', () => {
+            if (currentActScene < actScenes.length - 1) {
+                currentActScene++;
+                loadActScene(currentActScene);
+            } else {
+                // Move to interaction scenes
+                showScreen(sceneScreen);
+                loadInteractionScene(0);
+                // Audio: swap tension for game loop
+                sqStop('tension', true);
+                setTimeout(() => sqPlay('game', true), 800);
+            }
+        });
+
+        // Interaction Scenes
+        function loadInteractionScene(index) {
+            currentInteractionScene = index;
+            const scene = interactionScenes[index];
+            
+            sceneCounter.textContent = `INTERACTION ${index + 1}/${interactionScenes.length}`;
+            questionText.textContent = scene.question;
+            mysteryBadge.textContent = scene.mystery;
+            
+            sceneVideo.src = scene.video;
+            sceneVideo.play().catch(() => {});
+            
+            optionsGrid.innerHTML = '';
+            scene.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = opt;
+                btn.onclick = () => selectOption(btn, opt, scene);
+                optionsGrid.appendChild(btn);
+            });
+            
+            continueBtn.classList.remove('active');
+            updateChaos();
+        }
+
+        function selectOption(btn, option, scene) {
+            document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            continueBtn.classList.add('active');
+            chaosLevel = Math.min(100, chaosLevel + 12);
+            updateChaos();
+        }
+
+        function updateChaos() {
+            chaosFill.style.width = chaosLevel + '%';
+        }
+
+        continueBtn.addEventListener('click', () => {
+            const selectedBtn = document.querySelector('.option-btn.selected');
+            if (!selectedBtn) return;
+            
+            completedInteractions.push({
+                scene: interactionScenes[currentInteractionScene],
+                choice: selectedBtn.textContent
+            });
+            
+            if (currentInteractionScene < interactionScenes.length - 1) {
+                currentInteractionScene++;
+                loadInteractionScene(currentInteractionScene);
+            } else {
+                finalizeAndGenerate();
+            }
+        });
+
+        // Generate/Premiere
+        function finalizeAndGenerate() {
+            clearInterval(timerInterval);
+            showScreen(generatingScreen);
+            sqStopAll(true);
+            setTimeout(() => sqPlay('generate', true), 600);
+            
+            // Hide camera during generation
+            userCamera.classList.remove('active');
+            recBadge.classList.remove('active');
+            
+            // Animate generation steps
+            let progress = 0;
+            const steps = ['step1', 'step2', 'step3', 'step4', 'step5'];
+            const texts = [
+                'STITCHING PERFORMANCES...',
+                'INJECTING REACTIONS...',
+                'ADDING OUTCOMES...',
+                'BRANDING ACTIVE...',
+                'FINAL RENDER...'
+            ];
+            const subtexts = [
+                '10 user performances combined',
+                'Your stressed face = gold',
+                '30% interaction = 30% outcome',
+                'ShortFactory × Dares4Dosh',
+                'Under 3 minutes'
+            ];
+            
+            let stepIndex = 0;
+            const genInterval = setInterval(() => {
+                progress += 2;
+                genProgressFill.style.width = progress + '%';
+                
+                if (progress >= (stepIndex + 1) * 20 && stepIndex < steps.length) {
+                    document.getElementById(steps[stepIndex]).classList.add('done');
+                    if (stepIndex > 0) {
+                        document.getElementById(steps[stepIndex - 1]).classList.remove('active');
+                    }
+                    document.getElementById(steps[stepIndex]).classList.add('active');
+                    genText.textContent = texts[stepIndex];
+                    document.getElementById('genSubtext').textContent = subtexts[stepIndex];
+                    stepIndex++;
+                }
+                
+                if (progress >= 100) {
+                    clearInterval(genInterval);
+                    setTimeout(() => {
+                        // Go to voting first
+                        showVoteScreen();
+                    }, 500);
+                }
+            }, 60);
+        }
+
+        // Vote Screen - Rate other performances
+        function showVoteScreen() {
+            showScreen(voteScreen);
+            voteCount = 0;
+            loadVoteVideo();
+            sqStop('generate', true);
+            setTimeout(() => sqPlay('vote', true), 600);
+        }
+
+        function loadVoteVideo() {
+            voteCounter.textContent = `${voteCount + 1}/${totalVotes} RATINGS`;
+            
+            // Random video and words
+            const randomVideo = premiereVideos[Math.floor(Math.random() * premiereVideos.length)];
+            const randomWords = actScenes[Math.floor(Math.random() * actScenes.length)];
+            
+            voteVideo.src = randomVideo;
+            voteVideo.play().catch(() => {});
+            voteWordsText.innerHTML = randomWords.text;
+        }
+
+        voteCrap.addEventListener('click', () => {
+            processVote('crap');
+        });
+
+        voteGood.addEventListener('click', () => {
+            processVote('good');
+        });
+
+        function processVote(vote) {
+            voteCount++;
+            
+            if (voteCount >= totalVotes) {
+                // Done voting, go to premiere
+                showPremiere();
+            } else {
+                loadVoteVideo();
+            }
+        }
+
+        // Premiere
+        function showPremiere() {
+            showScreen(premiereScreen);
+            sqStopAll(true);
+            setTimeout(() => sqPlay('win', false), 300);
+
+            // Show user in video overlay
+            userInVideo.classList.add('active');
+            sceneIndicator.style.display = 'block';
+            
+            let playIndex = 0;
+            const allContent = [
+                { video: "/squid-vids/adverts-are-dead.mp4", label: "🎬 MANIFESTO" },
+                { video: premiereVideos[1], label: "🎭 USER PERFORMANCE" },
+                { video: premiereVideos[2], label: "🎮 INTERACTION 1" },
+                { video: premiereVideos[3], label: "💰 Dares4Dosh" },
+                { video: premiereVideos[0], label: "🤖 AI OUTCOME" },
+                { video: premiereVideos[1], label: "🎭 MORE YOU" },
+                { video: premiereVideos[2], label: "🎮 INTERACTION 2" },
+                { video: "/squid-vids/adverts-are-dead.mp4", label: "⚡ BRAND: ShortFactory" }
+            ];
+            
+            premierePlay.onclick = () => {
+                premiereOverlay.style.display = 'none';
+                playNextContent();
+            };
+            
+            function playNextContent() {
+                if (playIndex < allContent.length) {
+                    const content = allContent[playIndex];
+                    premiereVideo.src = content.video;
+                    sceneIndicator.textContent = content.label;
+                    premiereVideo.play();
+                    playIndex++;
+                    
+                    premiereVideo.onended = () => {
+                        setTimeout(playNextContent, 200);
+                    };
+                } else {
+                    sceneIndicator.textContent = "🎬 FIN - Under 3min";
+                }
+            }
+        }
+
+        // To submit screen
+        toSubmitBtn.addEventListener('click', () => {
+            showScreen(submitScreen);
+            
+            userPipWith.classList.add('active');
+            
+            // Preview videos
+            versionWithVideo.src = premiereVideos[0];
+            versionWithoutVideo.src = premiereVideos[0];
+            versionWithVideo.play().catch(() => {});
+            versionWithoutVideo.play().catch(() => {});
+        });
+
+        // Version selection
+        versionWith.addEventListener('click', () => {
+            versionWith.classList.add('selected');
+            versionWithout.classList.remove('selected');
+        });
+
+        versionWithout.addEventListener('click', () => {
+            versionWithout.classList.add('selected');
+            versionWith.classList.remove('selected');
+        });
+
+        // Submit actions
+        submitWithUser.addEventListener('click', () => {
+            showReview(true);
+        });
+
+        submitWithoutUser.addEventListener('click', () => {
+            showReview(false);
+        });
+
+        backToPremiere.addEventListener('click', () => {
+            showScreen(premiereScreen);
+        });
+
+        // Review
+        function showReview(withUser) {
+            showScreen(reviewScreen);
+            sqStopAll(true);
+            setTimeout(() => sqPlay('lift', false), 400);
+            
+            userInVideo.classList.remove('active');
+            userPipWith.classList.remove('active');
+            
+            const baseCredits = completedInteractions.length * 150 + actScenes.length * 50;
+            const bonus = withUser ? 0.5 : 0;
+            const totalCredits = Math.floor(baseCredits * (1 + bonus) * (chaosLevel / 50));
+            
+            // Animate scores
+            const scores = [
+                Math.floor(55 + Math.random() * 35),
+                Math.floor(50 + Math.random() * 40),
+                Math.floor(45 + Math.random() * 45),
+                Math.floor(60 + Math.random() * 35),
+                Math.floor(50 + Math.random() * 40)
+            ];
+            
+            scores.forEach((score, i) => {
+                setTimeout(() => {
+                    document.getElementById('score' + (i + 1)).style.width = score + '%';
+                    document.getElementById('scoreVal' + (i + 1)).textContent = score + '%';
+                }, i * 150);
+            });
+            
+            // Analysis text - the advertainment pipeline message
+            analysisText.innerHTML = `
+                <strong>ADVERTainment Pipeline: ACTIVE</strong><br><br>
+                Your content breakdown: <span style="color: #00ff88;">30% User Interaction</span> | 
+                <span style="color: #8a2be2;">30% Outcome Changes</span> | 
+                <span style="color: #ffd700;">10% Brand (ShortFactory × Dares4Dosh)</span> | 
+                <span style="color: #ff0040;">30% Entertainment</span>.<br><br>
+                The future of advertising is <strong>INVISIBLE</strong> and <strong>USER-DRIVEN</strong>. 
+                ShortFactory is the <strong>decentralized MASTER</strong> of this new sector, 
+                empowering <strong>YOU</strong> to eat the old businessman's lunch. 
+                ${withUser ? "Your reactions add authenticity that money can't buy." : "Clean version ready for brand partnerships."}<br><br>
+                <em>Using their own tools against them. 💪</em>
+            `;
+            
+            // Animate credits
+            let currentCredits = 0;
+            const creditInterval = setInterval(() => {
+                currentCredits += Math.ceil(totalCredits / 25);
+                if (currentCredits >= totalCredits) {
+                    currentCredits = totalCredits;
+                    clearInterval(creditInterval);
+                    // Auto-trigger soul gate 3s after credits finish
+                    if (_gate) setTimeout(triggerSoulGate, 3000);
+                }
+                creditsAmount.textContent = currentCredits.toLocaleString();
+            }, 40);
+        }
+
+        // Share / Soul Gate
+        shareBtn.addEventListener('click', () => {
+            if (_gate) {
+                triggerSoulGate();
+            } else {
+                const shareUrl = 'https://shortfactory.shop/squid-advertainment.html';
+                if (navigator.share) {
+                    navigator.share({ title: 'ADVERTainment Machine', text: 'I just became the ad. Watch this.', url: shareUrl });
+                } else {
+                    navigator.clipboard.writeText(shareUrl).then(() => {
+                        shareBtn.textContent = '✅ LINK COPIED!';
+                        setTimeout(() => { shareBtn.textContent = '🚀 SHARE & EARN MORE'; }, 2000);
+                    });
+                }
+            }
+        });
+    </script>
+</body>
+</html>

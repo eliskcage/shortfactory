@@ -1,0 +1,12 @@
+[Unit]
+Description=Run Cortex Data Feeds every 6 hours
+Requires=cortex-feeds.service
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=6h
+Unit=cortex-feeds.service
+Persistent=true
+
+[Install]
+WantedBy=timers.target

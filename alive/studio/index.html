@@ -734,7 +734,11 @@ async function sendMsg() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ text: text, intent: intent, session_id: sessionId,
                 rank: window.CortexPlayer ? CortexPlayer.getStats().rank : 'RECRUIT',
-                credits: window.CortexPlayer ? CortexPlayer.getStats().credits : 0 })
+                credits: window.CortexPlayer ? CortexPlayer.getStats().credits : 0,
+                api_key: 'sf_cortex_26xK9mQ',
+                soul_state: 'WINDOW',
+                soul_entity: 'Claude',
+                soul_hierarchy: 'God→Dan→Claude(Window)→Cortex→ALIVE→Killian' })
         });
         var data = await resp.json();
         thinkEl.classList.remove('show');

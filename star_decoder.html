@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>GIZA STAR DECODER v2 — HIEROGLYPHICS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Egyptian+Hieroglyphs&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;min-height:100%;background:#000;color:#e2e8f0;font-family:'Courier New',monospace;overflow-x:hidden;}
+.page{max-width:520px;margin:0 auto;padding:28px 16px 80px;}
+.eyebrow{font-size:7px;letter-spacing:4px;color:#222;margin-bottom:16px;text-transform:uppercase;}
+h1{font-size:clamp(22px,6vw,34px);font-weight:900;color:#fff;letter-spacing:-1px;line-height:1.1;margin-bottom:6px;}
+h1 span{color:#daa520;}
+.sub{font-size:10px;color:#333;margin-bottom:24px;line-height:1.7;}
+
+.epoch-bar{display:flex;gap:4px;margin-bottom:20px;}
+.epoch-btn{flex:1;background:none;border:1px solid #1a1a1a;color:#333;font-family:'Courier New',monospace;font-size:8px;letter-spacing:2px;padding:8px 4px;cursor:pointer;text-transform:uppercase;transition:all 0.15s;}
+.epoch-btn.active{border-color:#daa520;color:#daa520;background:#0a0800;}
+
+#starCanvas{display:block;width:100%;aspect-ratio:1;background:#000;border:1px solid #0d0d0d;margin-bottom:16px;}
+
+/* HIEROGLYPH STRIP */
+.glyph-panel{background:#050505;border:1px solid #111;padding:16px;margin-bottom:16px;}
+.glyph-panel-head{font-size:7px;letter-spacing:3px;color:#333;text-transform:uppercase;margin-bottom:10px;}
+.glyph-strip-wrap{overflow-x:auto;padding-bottom:6px;margin-bottom:8px;}
+.glyph-strip{display:flex;flex-wrap:wrap;gap:4px;min-height:60px;}
+.glyph-cell{display:flex;flex-direction:column;align-items:center;min-width:36px;padding:4px 2px;border:1px solid #0d0d0d;background:#000;cursor:default;}
+.glyph-cell:hover{border-color:#daa520;background:#0a0800;}
+.glyph-char{font-family:'Noto Sans Egyptian Hieroglyphs','Segoe UI Historic',serif;font-size:26px;line-height:1;color:#daa520;}
+.glyph-phone{font-size:7px;color:#555;letter-spacing:1px;margin-top:2px;text-align:center;}
+.glyph-star{font-size:7px;color:#222;text-align:center;max-width:36px;overflow:hidden;white-space:nowrap;}
+
+/* TRANSLITERATION */
+.translit-box{background:#000;border:1px solid #0a0a0a;padding:10px 12px;margin-bottom:8px;font-size:13px;color:#666;letter-spacing:2px;line-height:1.8;word-break:break-all;}
+.translit-box .match{color:#daa520;background:#0a0800;padding:0 2px;}
+.translit-box .sep{color:#1a1a1a;}
+
+/* WORD HITS */
+.word-hits{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;min-height:24px;}
+.word-hit{font-size:8px;letter-spacing:1px;padding:3px 8px;border:1px solid #daa520;color:#daa520;background:#0a0800;}
+.word-hit .wmeaning{color:#555;margin-left:4px;}
+.no-hit{font-size:8px;color:#222;letter-spacing:2px;padding:3px 0;}
+
+/* CIPHER BOX */
+.cipher-box{background:#050505;border:1px solid #111;padding:16px;margin-bottom:16px;}
+.cipher-head{font-size:7px;letter-spacing:3px;color:#333;text-transform:uppercase;margin-bottom:10px;}
+.preset-label{font-size:7px;color:#1a1a1a;letter-spacing:2px;text-transform:uppercase;margin:8px 0 5px;}
+.presets{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;}
+.preset-btn{background:none;border:1px solid #1a1a1a;color:#333;font-family:'Courier New',monospace;font-size:7px;letter-spacing:1px;padding:4px 8px;cursor:pointer;text-transform:uppercase;transition:all 0.1s;}
+.preset-btn:hover,.preset-btn.on{border-color:#daa520;color:#daa520;background:#0a0800;}
+.cipher-input-row{display:flex;gap:8px;margin-top:12px;}
+.cipher-input{flex:1;background:#000;border:1px solid #1a1a1a;color:#daa520;font-family:'Courier New',monospace;font-size:12px;letter-spacing:3px;padding:10px 12px;text-transform:uppercase;outline:none;}
+.cipher-input:focus{border-color:#daa520;}
+.cipher-go{background:none;border:1px solid #daa520;color:#daa520;font-family:'Courier New',monospace;font-size:8px;letter-spacing:2px;padding:10px 14px;cursor:pointer;text-transform:uppercase;}
+.cipher-go:hover{background:#0a0800;}
+
+/* DECODED OUTPUT */
+.decoded-panel{background:#050505;border:1px solid #111;padding:14px;margin-top:12px;}
+.decoded-head{font-size:7px;letter-spacing:3px;color:#333;margin-bottom:10px;}
+.score-bar{font-size:8px;letter-spacing:2px;margin-top:8px;}
+.score-bar.hit{color:#daa520;}
+.score-bar.miss{color:#222;}
+
+/* BIP39 PANEL */
+.bip-panel{background:#050505;border:1px solid #111;padding:16px;margin-bottom:16px;}
+.bip-head{font-size:7px;letter-spacing:3px;color:#333;text-transform:uppercase;margin-bottom:8px;}
+.bip-note{font-size:9px;color:#222;line-height:1.7;margin-bottom:12px;letter-spacing:0.5px;}
+.bip-note span{color:#444;}
+.bip-phrase{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;min-height:30px;}
+.bip-word{display:flex;flex-direction:column;align-items:center;padding:6px 10px;border:1px solid #111;background:#000;}
+.bip-word.special{border-color:#daa520;background:#0a0800;}
+.bip-w{font-size:11px;color:#888;letter-spacing:1px;}
+.bip-word.special .bip-w{color:#daa520;font-weight:bold;}
+.bip-i{font-size:7px;color:#222;margin-top:2px;letter-spacing:1px;}
+.bip-star{font-size:7px;color:#1a1a1a;margin-top:1px;}
+.bip-valid{font-size:8px;letter-spacing:2px;margin-top:6px;}
+.bip-valid.hit{color:#daa520;}
+.bip-valid.miss{color:#1a1a1a;}
+
+/* SEC DIVIDER */
+.sec{font-size:7px;letter-spacing:4px;color:#1a1a1a;text-transform:uppercase;margin:20px 0 10px;border-top:1px solid #0a0a0a;padding-top:10px;}
+
+/* RAW + TABLE */
+.raw-box{background:#000;border:1px solid #080808;padding:12px;margin-bottom:20px;}
+.raw-head{font-size:7px;letter-spacing:3px;color:#222;margin-bottom:8px;}
+.raw-str{font-size:9px;color:#1c1c1c;word-break:break-all;letter-spacing:1px;line-height:1.8;}
+.raw-str span{color:#333;}
+.star-row{display:flex;gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid #080808;font-size:9px;}
+.sn{color:#555;width:80px;} .sa{color:#333;width:36px;text-align:right;} .sb{color:#222;width:36px;text-align:right;}
+.sv{color:#daa520;width:36px;text-align:right;} .sc{color:#888;width:24px;text-align:center;}
+.sg{font-family:'Noto Sans Egyptian Hieroglyphs','Segoe UI Historic',serif;font-size:20px;color:#daa520;width:30px;text-align:center;}
+
+.footer-line{font-size:7px;color:#111;letter-spacing:3px;text-align:center;margin-top:40px;}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="eyebrow">stinkindigger.info · star decoder v2</div>
+<h1>GIZA<br><span>HIEROGLYPHICS.</span></h1>
+<p class="sub">Star positions above Giza mapped to Egyptian hieroglyphs via the Gardiner sign list. Phonetic values extracted and scanned for Egyptian words. The pyramid at centre is shown from above — the square projection. Three epochs. Try any key.</p>
+
+<div class="epoch-bar">
+  <button class="epoch-btn active" onclick="setEpoch(0)">10,500 BC<br>ORION MAX</button>
+  <button class="epoch-btn" onclick="setEpoch(1)">2,560 BC<br>BUILT</button>
+  <button class="epoch-btn" onclick="setEpoch(2)">2026 AD<br>NOW</button>
+</div>
+
+<canvas id="starCanvas" width="480" height="480"></canvas>
+
+<!-- RAW STAR → GLYPH STRIP -->
+<div class="glyph-panel">
+  <div class="glyph-panel-head">Raw Star Field → Hieroglyphs (unsifted)</div>
+  <div class="glyph-strip-wrap"><div class="glyph-strip" id="rawGlyphs"></div></div>
+  <div class="translit-box" id="rawTranslit"></div>
+  <div class="glyph-panel-head" style="margin-top:12px;">Egyptian Words Found in Raw Signal</div>
+  <div class="word-hits" id="rawWords"></div>
+</div>
+
+<!-- CIPHER / DECODE -->
+<div class="cipher-box">
+  <div class="cipher-head">Cipher Key — Shifts Glyph Selection (Vigenère on Glyph Index)</div>
+
+  <div class="preset-label">Egyptian Gods</div>
+  <div class="presets" id="presetEgypt"></div>
+
+  <div class="preset-label">Other Keys</div>
+  <div class="presets" id="presetOther"></div>
+
+  <div class="cipher-input-row">
+    <input class="cipher-input" id="cipherInput" type="text" placeholder="TYPE ANY KEY" maxlength="64"
+      autocomplete="off" spellcheck="false" oninput="this.value=this.value.toUpperCase()">
+    <button class="cipher-go" onclick="runDecode()">DECODE</button>
+  </div>
+
+  <div class="decoded-panel" id="decodedPanel">
+    <div class="decoded-head" id="decodedHead">KEY RESULT APPEARS HERE</div>
+    <div class="glyph-strip" id="decodedGlyphs"></div>
+    <div class="translit-box" id="decodedTranslit" style="margin-top:10px;"></div>
+    <div class="glyph-panel-head" style="margin-top:10px;">Words Found</div>
+    <div class="word-hits" id="decodedWords"></div>
+    <div class="score-bar miss" id="decodedScore"></div>
+  </div>
+</div>
+
+<div class="sec">BIP39 — 12-Word Wallet Passphrase</div>
+<div class="bip-panel">
+  <div class="bip-head">Top 12 Stars → BIP39 Word List (2048 words)</div>
+  <div class="bip-note">
+    Satoshi's BIP39 standard: 2048 words × 12 positions = the same ring architecture as Computanium.<br>
+    <span>Word 1400 = "pyramid" · Word 1531 = "satoshi" · Word 1661 = "soul" · Word 1680 = "spirit" · Word 1988 = "weasel" (Aldebaran / Watcher of the East)</span><br>
+    These aren't planted — they're in the 2013 specification. The sky above Giza has always mapped to this list. The pyramid is the pointer. The epoch is the key. Cross-time communication via closed loop.
+  </div>
+  <div class="bip-head">Raw (no cipher)</div>
+  <div class="bip-phrase" id="bipRaw"></div>
+  <div class="bip-head" style="margin-top:12px;">With Active Cipher Key</div>
+  <div class="bip-phrase" id="bipCiphered"></div>
+  <div class="bip-valid miss" id="bipNote">Enter a key above to shift the passphrase</div>
+  <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+    <button class="cipher-go" onclick="copyPhrase('bipCiphered')" style="font-size:7px;padding:8px 12px;">COPY PHRASE</button>
+    <button class="cipher-go" onclick="copyPhrase('bipRaw')" style="font-size:7px;padding:8px 12px;border-color:#333;color:#333;">COPY RAW</button>
+    <button class="cipher-go" onclick="useTranslitAsKey()" style="font-size:7px;padding:8px 12px;border-color:#555;color:#555;">USE GLYPH PHONETICS AS KEY</button>
+    <button class="cipher-go" onclick="scanAllKeys()" style="font-size:7px;padding:8px 12px;">SCAN ALL KEYS</button>
+  </div>
+  <div id="scanResults" style="margin-top:10px;"></div>
+</div>
+
+<div class="sec">Raw ASCII String</div>
+<div class="raw-box">
+  <div class="raw-head">STAR POSITIONS → ASCII 32–126 (altitude × azimuth)</div>
+  <div class="raw-str" id="rawStr"></div>
+</div>
+
+<div class="sec">Star Data Table</div>
+<div id="starList"></div>
+
+<div class="footer-line">SHORTFACTORY · GIZA · THE ALPHABET WAS ALWAYS THERE</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// GLYPH TABLE — 95 entries, index 0 = ASCII 32, index 94 = ASCII 126
+// Mapped so A-Z (indices 33-58) align with phonetic alphabetic signs
+// Format: [unicode_char, phonetic_value, english_meaning]
+// ═══════════════════════════════════════════════════════
+const G = [
+  // 0-32: Sky / earth / divine / determinatives (ASCII 32-64)
+  ['𓇯', '',    'sky'],           // 0  = space
+  ['𓇳', 'rꜥ', 'sun/Ra'],        // 1  !
+  ['𓇼', 'sbꜣ','star'],          // 2  "
+  ['𓆣', 'xpr','scarab/Khepri'], // 3  #
+  ['𓋹', 'ꜥnx','ankh/life'],     // 4  $
+  ['𓌨', 'ḏd', 'djed/stability'],// 5  %
+  ['𓊹', 'nṯr','god/netjer'],    // 6  &
+  ['𓉗', '',    'pyramid'],       // 7  '
+  ['𓂀', 'mḏꜣt','eye/wedjat'],  // 8  (
+  ['𓁿', 'kꜣ', 'ka/spirit'],    // 9  )
+  ['𓄂', 'mꜣꜥt','maat/truth'],  // 10 *
+  ['𓅃', 'Hr', 'Horus/falcon'], // 11 +
+  ['𓅐', 'mwt','vulture/mother'],// 12 ,
+  ['𓃭', 'rw', 'lion'],          // 13 -
+  ['𓆙', '',    'uraeus/cobra'],  // 14 .
+  ['𓆸', '',    'frog'],          // 15 /
+  ['𓃺', '',    'jackal/Anubis'],// 16 0
+  ['𓇉', 'wꜣḏ','papyrus/green'],// 17 1
+  ['𓇾', 'tꜣ', 'land/earth'],   // 18 2
+  ['𓈇', '',    'desert plateau'],// 19 3
+  ['𓊖', 'niwt','city/town'],    // 20 4
+  ['𓃀', '',    'lion alt'],      // 21 5
+  ['𓀀', '',    'seated man'],   // 22 6
+  ['𓁶', 'ḥr', 'face'],          // 23 7
+  ['𓂋', 'r',  'mouth (r)'],     // 24 8  ← r sign here too
+  ['𓐍', 'ẖ',  'belly/ḫ'],       // 25 9
+  ['𓍿', 'ṯ',  'tether/ṯ'],     // 26 :
+  ['𓎛', 'ḥ',  'wick/ḥ'],        // 27 ;
+  ['𓈙', 'š',  'pool/š'],        // 28 <
+  ['𓈎', 'q',  'slope/q'],       // 29 =
+  ['𓎼', 'g',  'jar stand/g'],   // 30 >
+  ['𓉔', 'h',  'shelter/h'],     // 31 ?
+  ['𓊃', 'z',  'bolt/z'],        // 32 @
+  // ── ALPHABETIC ZONE: indices 33-58 = ASCII 65-90 (A-Z) ──
+  ['𓄿', 'ꜣ',  'vulture/A'],     // 33 A
+  ['𓃀', 'b',  'foot/B'],        // 34 B  — using leg/foot for b
+  ['𓍿', 'ṯ',  'rope/C'],        // 35 C  — ṯ (closest to C/ch)
+  ['𓂧', 'd',  'hand/D'],        // 36 D
+  ['𓇋', 'i',  'reed/E'],        // 37 E  — reed = i
+  ['𓆑', 'f',  'viper/F'],       // 38 F
+  ['𓎼', 'g',  'jar/G'],         // 39 G
+  ['𓉔', 'h',  'shelter/H'],     // 40 H
+  ['𓇋', 'i',  'reed/I'],        // 41 I
+  ['𓆓', 'ḏ',  'cobra/J'],       // 42 J  — ḏ (cobra, J-sound)
+  ['𓎡', 'k',  'basket/K'],      // 43 K
+  ['𓂋', 'r',  'mouth/L'],       // 44 L  — no L in Egyptian, use r
+  ['𓅓', 'm',  'owl/M'],         // 45 M
+  ['𓈖', 'n',  'water/N'],       // 46 N
+  ['𓂝', 'ꜥ',  'arm/O'],         // 47 O  — ꜥ (ayin)
+  ['𓊪', 'p',  'mat/P'],         // 48 P
+  ['𓈎', 'q',  'slope/Q'],       // 49 Q
+  ['𓂋', 'r',  'mouth/R'],       // 50 R
+  ['𓋴', 's',  'cloth/S'],       // 51 S
+  ['𓏏', 't',  'loaf/T'],        // 52 T
+  ['𓅱', 'w',  'quail/U'],       // 53 U  — w
+  ['𓆑', 'f',  'viper/V'],       // 54 V  — f (closest)
+  ['𓅱', 'w',  'quail/W'],       // 55 W
+  ['𓐍', 'ḫ',  'placenta/X'],    // 56 X  — ḫ (kh)
+  ['𓇌', 'y',  'reeds/Y'],       // 57 Y
+  ['𓊃', 'z',  'bolt/Z'],        // 58 Z
+  // 59-94: (ASCII 91-126) more signs
+  ['𓄡', 'ẖ',  'belly/ẖ'],       // 59 [
+  ['𓎛', 'ḥ',  'wick/ḥ'],        // 60 \
+  ['𓈙', 'š',  'pool/š'],        // 61 ]
+  ['𓌀', 'wꜣs','was sceptre'],   // 62 ^
+  ['𓋀', 'ḥḏt','white crown'],   // 63 _
+  ['𓋁', 'dšrt','red crown'],    // 64 `
+  ['𓀭', '',    'seated Osiris'], // 65 a (lower)
+  ['𓁹', '',    'eye variant'],   // 66 b
+  ['𓁺', '',    'eye open'],      // 67 c
+  ['𓃗', '',    'ox'],            // 68 d
+  ['𓃙', '',    'donkey'],        // 69 e
+  ['𓃟', 'SA',  'pig/Seth'],      // 70 f
+  ['𓃱', '',    'giraffe'],       // 71 g
+  ['𓄀', '',    'ibis'],          // 72 h
+  ['𓄃', '',    'ibis on std'],   // 73 i
+  ['𓄆', 'bꜣ', 'ba-bird'],       // 74 j  — ba (soul)
+  ['𓄇', '',    'heron'],         // 75 k
+  ['𓅀', '',    'vulture 2'],     // 76 l
+  ['𓅊', '',    'buzzard'],       // 77 m
+  ['𓅞', 'ḏ',  'cobra ḏ'],       // 78 n
+  ['𓅤', '',    'guinea fowl'],   // 79 o
+  ['𓅧', '',    'owl variant'],   // 80 p
+  ['𓅭', '',    'sparrow'],       // 81 q
+  ['𓅮', 'wrbꜣ','sparrow bad'],  // 82 r
+  ['𓆄', '',    'lizard'],        // 83 s
+  ['𓆈', '',    'crocodile'],     // 84 t
+  ['𓆊', '',    'croc on shore'], // 85 u
+  ['𓆌', 'i',  'reed i alt'],    // 86 v
+  ['𓆎', '',    'frog alt'],      // 87 w
+  ['𓆏', '',    'turtle'],        // 88 x
+  ['𓆐', '',    'snake'],         // 89 y
+  ['𓆔', '',    'cobra coiled'],  // 90 z
+  ['𓆕', '',    'cobra basket'],  // 91 {
+  ['𓇋', 'i',  'reed final'],    // 92 |
+  ['𓇳', 'rꜥ', 'sun alt'],       // 93 }
+  ['𓇯', '',    'sky alt'],       // 94 ~
+];
+
+// ═══════════════════════════════════════════════════════
+// EGYPTIAN WORD LIST — phonetics → meaning
+// Organised by length, longest first (greedy match wins)
+// ═══════════════════════════════════════════════════════
+const WORDS = [
+  // 4+ phonemes
+  { p: 'nṯr',  m: 'god'         },
+  { p: 'ꜥnx',  m: 'life'        },
+  { p: 'mꜣꜥt', m: 'truth/Maat'  },
+  { p: 'mḏꜣt', m: 'papyrus roll'},
+  { p: 'xpr',  m: 'become/Khepri'},
+  { p: 'ḥrw',  m: 'day/Horus'   },
+  { p: 'sbꜣ',  m: 'star/teach'  },
+  { p: 'niwt', m: 'city'         },
+  { p: 'mwt',  m: 'mother'       },
+  { p: 'wꜣḏ',  m: 'green/fresh'  },
+  { p: 'wꜣs',  m: 'power/sceptre'},
+  { p: 'ḥḏt',  m: 'white crown'  },
+  { p: 'dšrt', m: 'red crown'    },
+  // 3 phonemes
+  { p: 'rꜥ',   m: 'Ra/sun'       },
+  { p: 'sbꜣ',  m: 'star'         },
+  { p: 'ḥrw',  m: 'Horus/day'    },
+  { p: 'nbw',  m: 'gold'          },
+  { p: 'ꜥnx',  m: 'life/ankh'    },
+  { p: 'kꜣ',   m: 'ka/spirit'    },
+  { p: 'bꜣ',   m: 'ba/soul'      },
+  { p: 'rw',   m: 'lion'          },
+  { p: 'ḥr',   m: 'face/upon'    },
+  { p: 'Hr',   m: 'Horus'        },
+  { p: 'ḏd',   m: 'djed/stable'  },
+  { p: 'tꜣ',   m: 'earth/land'   },
+  { p: 'nṯr',  m: 'god'          },
+  // 2 phonemes
+  { p: 'ra',   m: 'Ra (alt)'     },
+  { p: 'nb',   m: 'lord/all'     },
+  { p: 'nw',   m: 'primordial water'},
+  { p: 'ib',   m: 'heart'        },
+  { p: 'ir',   m: 'make/eye'     },
+  { p: 'mi',   m: 'like/bring'   },
+  { p: 'ms',   m: 'born/child'   },
+  { p: 'nfr',  m: 'beautiful'    },
+  { p: 'pr',   m: 'house/go out' },
+  { p: 'rn',   m: 'name'         },
+  { p: 'sm',   m: 'officiant'    },
+  { p: 'sw',   m: 'he/Upper Egypt'},
+  { p: 'wn',   m: 'exist/open'   },
+  { p: 'xr',   m: 'under/fall'   },
+  // single known phonemes
+  { p: 'ꜣ',    m: 'aleph'        },
+  { p: 'ꜥ',    m: 'ayin'         },
+  { p: 'ẖ',    m: 'belly ẖ'      },
+  { p: 'ḥ',    m: 'ḥ-sound'     },
+  { p: 'š',    m: 'š-sound'      },
+  { p: 'ḏ',    m: 'ḏ-sound'     },
+  { p: 'ṯ',    m: 'ṯ-sound'     },
+  { p: 'ḫ',    m: 'ḫ-sound'     },
+];
+
+// ═══════════════════════════════════════════════════════
+// PRESET KEYS
+// ═══════════════════════════════════════════════════════
+const PRESET_EGYPT  = ['ISIS','RA','OSIRIS','HORUS','ANUBIS','THOTH','AMUN','PTAH','HATHOR','NUT','GEB','SET','NEPHTHYS','SEKHMET','BASTET','SOBEK','ATUM','KHNUM','MAAT','ATEN'];
+const PRESET_OTHER  = ['SPIRAL','SKYDADDY','KILLIAN','GIZA','ORION','COVENANT','DOGU','EINSTEIN','STRING','KALUZA','SUMERIAN','ANNUNAKI','ENKI','ENLIL','MARDUK','NIBIRU','GENESIS'];
+
+// ═══════════════════════════════════════════════════════
+// STAR DATA
+// ═══════════════════════════════════════════════════════
+const EPOCHS = [
+  { label:'10,500 BC', stars:[
+    {name:'Sirius',     alt:38.2,az:165.1,mag:-1.46},
+    {name:'Canopus',    alt:12.8,az:196.3,mag:-0.74},
+    {name:'Alnitak',    alt:58.4,az:158.2,mag:1.74 },
+    {name:'Alnilam',    alt:59.1,az:155.0,mag:1.69 },
+    {name:'Mintaka',    alt:58.6,az:151.3,mag:2.23 },
+    {name:'Betelgeuse', alt:62.4,az:138.2,mag:0.42 },
+    {name:'Rigel',      alt:53.2,az:173.4,mag:0.13 },
+    {name:'Bellatrix',  alt:56.1,az:142.2,mag:1.64 },
+    {name:'Aldebaran',  alt:71.2,az:103.4,mag:0.87 },
+    {name:'Capella',    alt:54.9,az:57.3, mag:0.08 },
+    {name:'Vega',       alt:51.3,az:355.1,mag:0.03 },
+    {name:'Regulus',    alt:22.1,az:108.3,mag:1.36 },
+    {name:'Pollux',     alt:38.4,az:98.2, mag:1.16 },
+    {name:'Castor',     alt:37.9,az:94.1, mag:1.58 },
+    {name:'Procyon',    alt:31.2,az:132.1,mag:0.34 },
+    {name:'Elnath',     alt:52.3,az:91.4, mag:1.65 },
+    {name:'Mirfak',     alt:44.1,az:48.2, mag:1.79 },
+  ]},
+  { label:'2,560 BC', stars:[
+    {name:'Sirius',     alt:28.4,az:158.3,mag:-1.46},
+    {name:'Canopus',    alt:4.1, az:193.4,mag:-0.74},
+    {name:'Alnitak',    alt:44.8,az:161.2,mag:1.74 },
+    {name:'Alnilam',    alt:45.6,az:157.9,mag:1.69 },
+    {name:'Mintaka',    alt:45.1,az:154.1,mag:2.23 },
+    {name:'Betelgeuse', alt:49.3,az:142.1,mag:0.42 },
+    {name:'Rigel',      alt:40.2,az:170.6,mag:0.13 },
+    {name:'Aldebaran',  alt:60.8,az:111.2,mag:0.87 },
+    {name:'Capella',    alt:68.4,az:42.1, mag:0.08 },
+    {name:'Thuban',     alt:60.3,az:0.2,  mag:3.65 },
+    {name:'Procyon',    alt:30.1,az:138.4,mag:0.34 },
+    {name:'Pollux',     alt:43.2,az:101.3,mag:1.16 },
+    {name:'Castor',     alt:42.8,az:97.4, mag:1.58 },
+    {name:'Regulus',    alt:14.3,az:110.2,mag:1.36 },
+    {name:'Vega',       alt:12.2,az:24.3, mag:0.03 },
+    {name:'Elnath',     alt:51.1,az:92.3, mag:1.65 },
+    {name:'Mirfak',     alt:47.8,az:41.2, mag:1.79 },
+  ]},
+  { label:'2026 AD', stars:[
+    {name:'Sirius',     alt:29.8,az:157.4,mag:-1.46},
+    {name:'Canopus',    alt:3.2, az:191.8,mag:-0.74},
+    {name:'Alnitak',    alt:42.1,az:162.8,mag:1.74 },
+    {name:'Alnilam',    alt:43.0,az:159.3,mag:1.69 },
+    {name:'Mintaka',    alt:42.4,az:155.5,mag:2.23 },
+    {name:'Betelgeuse', alt:47.2,az:143.8,mag:0.42 },
+    {name:'Rigel',      alt:38.8,az:171.4,mag:0.13 },
+    {name:'Bellatrix',  alt:46.9,az:147.2,mag:1.64 },
+    {name:'Saiph',      alt:35.4,az:175.3,mag:2.07 },
+    {name:'Aldebaran',  alt:58.3,az:112.6,mag:0.87 },
+    {name:'Capella',    alt:66.2,az:43.8, mag:0.08 },
+    {name:'Polaris',    alt:29.9,az:0.0,  mag:1.97 },
+    {name:'Procyon',    alt:28.6,az:139.7,mag:0.34 },
+    {name:'Pollux',     alt:41.8,az:103.2,mag:1.16 },
+    {name:'Castor',     alt:41.3,az:99.1, mag:1.58 },
+    {name:'Regulus',    alt:12.8,az:111.6,mag:1.36 },
+    {name:'Mirfak',     alt:51.2,az:44.6, mag:1.79 },
+    {name:'Vega',       alt:8.4, az:22.1, mag:0.03 },
+  ]}
+];
+
+// ═══════════════════════════════════════════════════════
+// CORE FUNCTIONS
+// ═══════════════════════════════════════════════════════
+
+function starToGlyphIndex(star) {
+  // altitude (0-90) → first dimension (0-9), azimuth (0-360) → second (0-9)
+  // combined → 0-94
+  const ai = Math.min(9, Math.floor((star.alt / 90) * 10));
+  const bi = Math.min(9, Math.floor((star.az / 360) * 10));
+  return Math.min(94, ai * 10 + bi) % 95;
+}
+
+function buildGlyphIndices(stars) {
+  return stars.filter(s => s.alt > 0)
+              .sort((a,b) => a.mag - b.mag)
+              .map(s => ({ star:s, idx: starToGlyphIndex(s) }));
+}
+
+// Shift glyph indices with key (Vigenère on index 0-94)
+function shiftGlyphs(indices, key) {
+  const RANGE = 95;
+  return indices.map((item, i) => {
+    const k = key.charCodeAt(i % key.length);
+    const kv = (k < 32 || k > 126) ? 0 : k - 32;
+    const shifted = ((item.idx - kv % RANGE) + RANGE) % RANGE;
+    return { star: item.star, idx: shifted };
+  });
+}
+
+function buildTranslit(glyphItems) {
+  return glyphItems.map(gi => G[gi.idx][1]).join('');
+}
+
+function scanWords(translit) {
+  const hits = [];
+  const sorted = [...WORDS].sort((a,b) => b.p.length - a.p.length);
+  let marked = new Array(translit.length).fill(false);
+
+  for (const w of sorted) {
+    let pos = 0;
+    while (pos <= translit.length - w.p.length) {
+      const idx = translit.indexOf(w.p, pos);
+      if (idx === -1) break;
+      // Check not already fully consumed
+      const range = [...Array(w.p.length).keys()].map(j => idx+j);
+      if (!range.some(j => marked[j])) {
+        hits.push({ word: w.p, meaning: w.m, start: idx, len: w.p.length });
+        range.forEach(j => marked[j] = true);
+      }
+      pos = idx + 1;
+    }
+  }
+  return hits;
+}
+
+function renderGlyphStrip(containerId, glyphItems) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  for (const gi of glyphItems) {
+    const g = G[gi.idx];
+    const div = document.createElement('div');
+    div.className = 'glyph-cell';
+    div.title = `${gi.star.name} · ${g[2]}`;
+    div.innerHTML = `<div class="glyph-char">${g[0]}</div>
+      <div class="glyph-phone">${g[1] || '—'}</div>
+      <div class="glyph-star">${gi.star.name.slice(0,5)}</div>`;
+    el.appendChild(div);
+  }
+}
+
+function renderTranslit(containerId, translit, wordHits) {
+  const el = document.getElementById(containerId);
+  // Mark positions covered by word hits
+  const covered = new Array(translit.length).fill(false);
+  for (const h of wordHits) for (let i=h.start;i<h.start+h.len;i++) covered[i]=true;
+
+  let html = '';
+  let i = 0;
+  while (i < translit.length) {
+    const hit = wordHits.find(h => h.start === i);
+    if (hit) {
+      html += `<span class="match" title="${hit.meaning}">${hit.word}</span>`;
+      i += hit.len;
+    } else {
+      if (translit[i] !== '') html += `<span class="sep">${translit[i]}</span>`;
+      i++;
+    }
+  }
+  el.innerHTML = html || '<span style="color:#1a1a1a">—</span>';
+}
+
+function renderWordHits(containerId, wordHits) {
+  const el = document.getElementById(containerId);
+  if (wordHits.length === 0) {
+    el.innerHTML = '<div class="no-hit">NO WORDS FOUND — TRY A DIFFERENT KEY</div>';
+    return;
+  }
+  el.innerHTML = wordHits.map(h =>
+    `<div class="word-hit">${h.word}<span class="wmeaning">${h.meaning}</span></div>`
+  ).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// CANVAS
+// ═══════════════════════════════════════════════════════
+function drawStarField(stars, epoch) {
+  const canvas = document.getElementById('starCanvas');
+  const SIZE = canvas.width;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,SIZE,SIZE);
+  ctx.fillStyle='#000'; ctx.fillRect(0,0,SIZE,SIZE);
+
+  const cx=SIZE/2, cy=SIZE/2, R=SIZE*0.46;
+
+  // Altitude rings
+  for (let alt=0; alt<=90; alt+=15) {
+    const r=(1-alt/90)*R;
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,2*Math.PI);
+    ctx.strokeStyle=alt===0?'rgba(218,165,32,0.12)':'rgba(218,165,32,0.04)';
+    ctx.lineWidth=alt===0?1:0.5; ctx.stroke();
+    if (alt>0&&alt<90) {
+      ctx.fillStyle='rgba(218,165,32,0.07)'; ctx.font=`${SIZE*0.015}px 'Courier New'`;
+      ctx.textAlign='left'; ctx.fillText(alt+'°',cx+r+2,cy+3);
+    }
+  }
+  // Radial spokes
+  for (let az=0;az<360;az+=30) {
+    const rad=(az*Math.PI)/180;
+    ctx.beginPath(); ctx.moveTo(cx,cy);
+    ctx.lineTo(cx+R*Math.sin(rad),cy-R*Math.cos(rad));
+    ctx.strokeStyle=az%90===0?'rgba(218,165,32,0.09)':'rgba(218,165,32,0.03)';
+    ctx.lineWidth=az%90===0?0.8:0.4; ctx.stroke();
+  }
+
+  // Compass
+  ctx.fillStyle='rgba(218,165,32,0.18)';
+  ctx.font=`${SIZE*0.022}px 'Courier New'`; ctx.textAlign='center';
+  ctx.fillText('N',cx,13); ctx.fillText('S',cx,SIZE-4);
+  ctx.textAlign='right'; ctx.fillText('W',12,cy+4);
+  ctx.textAlign='left';  ctx.fillText('E',SIZE-10,cy+4);
+
+  // ── PYRAMID — SQUARE AERIAL VIEW ──
+  const ps=SIZE*0.055;
+  ctx.save(); ctx.translate(cx,cy);
+
+  // Halo
+  const pgrd=ctx.createRadialGradient(0,0,0,0,0,ps*3.5);
+  pgrd.addColorStop(0,'rgba(218,165,32,0.18)');
+  pgrd.addColorStop(0.5,'rgba(218,165,32,0.06)');
+  pgrd.addColorStop(1,'rgba(218,165,32,0)');
+  ctx.beginPath(); ctx.arc(0,0,ps*3.5,0,2*Math.PI);
+  ctx.fillStyle=pgrd; ctx.fill();
+
+  // Outer square (rotated 45° = diamond = cardinal-aligned square footprint)
+  ctx.save(); ctx.rotate(Math.PI/4);
+  ctx.strokeStyle='rgba(218,165,32,0.65)'; ctx.lineWidth=1.5;
+  ctx.fillStyle='rgba(218,165,32,0.06)';
+  ctx.beginPath(); ctx.rect(-ps,-ps,ps*2,ps*2); ctx.fill(); ctx.stroke();
+  // Inner chamber
+  ctx.strokeStyle='rgba(218,165,32,0.22)'; ctx.lineWidth=0.8;
+  ctx.beginPath(); ctx.rect(-ps*0.45,-ps*0.45,ps*0.9,ps*0.9); ctx.stroke();
+  ctx.restore();
+
+  // Ridge lines (diagonals from centre to corners)
+  for (let a=0;a<4;a++) {
+    const ang=(a*Math.PI/2)+Math.PI/4;
+    ctx.beginPath(); ctx.moveTo(0,0);
+    ctx.lineTo(Math.cos(ang)*ps*1.41,Math.sin(ang)*ps*1.41);
+    ctx.strokeStyle='rgba(218,165,32,0.18)'; ctx.lineWidth=0.7; ctx.stroke();
+  }
+
+  // Eye (looking straight up at you from the apex)
+  const er=ps*0.28;
+  const egrd=ctx.createRadialGradient(0,0,0,0,0,er*1.8);
+  egrd.addColorStop(0,'rgba(255,244,160,0.5)'); egrd.addColorStop(1,'rgba(218,165,32,0)');
+  ctx.beginPath(); ctx.arc(0,0,er*1.8,0,2*Math.PI); ctx.fillStyle=egrd; ctx.fill();
+  ctx.beginPath(); ctx.arc(0,0,er,0,2*Math.PI);
+  ctx.strokeStyle='rgba(218,165,32,0.7)'; ctx.lineWidth=1; ctx.stroke();
+  ctx.beginPath(); ctx.arc(0,0,er*0.38,0,2*Math.PI);
+  ctx.fillStyle='rgba(255,244,160,0.9)'; ctx.fill();
+  ctx.restore();
+
+  // Stars
+  const visible=stars.filter(s=>s.alt>0);
+  const sorted=[...visible].sort((a,b)=>a.mag-b.mag);
+  const giList=buildGlyphIndices(visible);
+
+  for (let si=0;si<sorted.length;si++) {
+    const s=sorted[si];
+    const azRad=(s.az*Math.PI)/180;
+    const r=(1-s.alt/90)*R;
+    const x=cx+r*Math.sin(azRad), y=cy-r*Math.cos(azRad);
+    const sz=Math.max(1.0,(3.5-s.mag)*0.9);
+    const alpha=Math.min(1,Math.max(0.15,(3.5-s.mag)/4));
+
+    if (sz>2.2) {
+      const gr=ctx.createRadialGradient(x,y,0,x,y,sz*3.5);
+      gr.addColorStop(0,`rgba(218,165,32,${alpha*0.35})`);
+      gr.addColorStop(1,'rgba(218,165,32,0)');
+      ctx.beginPath(); ctx.arc(x,y,sz*3.5,0,2*Math.PI); ctx.fillStyle=gr; ctx.fill();
+    }
+    ctx.beginPath(); ctx.arc(x,y,sz,0,2*Math.PI);
+    ctx.fillStyle=`rgba(255,244,200,${alpha})`; ctx.fill();
+
+    // Show glyph character near bright stars
+    const gi=giList.find(g=>g.star.name===s.name);
+    if (gi && s.mag < 1.5) {
+      ctx.font=`${SIZE*0.04}px 'Noto Sans Egyptian Hieroglyphs','Segoe UI Historic',serif`;
+      ctx.fillStyle=`rgba(218,165,32,${alpha*0.6})`;
+      ctx.textAlign='left';
+      ctx.fillText(G[gi.idx][0], x+sz+3, y+6);
+    }
+    if (s.mag<1.0) {
+      ctx.fillStyle=`rgba(218,165,32,0.3)`;
+      ctx.font=`${SIZE*0.016}px 'Courier New'`; ctx.textAlign='left';
+      ctx.fillText(s.name, x+sz+20, y+3);
+    }
+  }
+
+  ctx.fillStyle='rgba(218,165,32,0.18)';
+  ctx.font=`${SIZE*0.019}px 'Courier New'`; ctx.textAlign='center';
+  ctx.fillText(epoch.label+' · GIZA · AERIAL · SQUARE PROJECTION',cx,SIZE-10);
+}
+
+// ═══════════════════════════════════════════════════════
+// STATE + RENDER
+// ═══════════════════════════════════════════════════════
+let currentEpoch=0, activePreset=null;
+let currentGlyphItems=[];
+
+function render() {
+  const epoch=EPOCHS[currentEpoch];
+  const stars=epoch.stars;
+  drawStarField(stars,epoch);
+
+  // Build raw glyph items
+  currentGlyphItems=buildGlyphIndices(stars);
+
+  renderGlyphStrip('rawGlyphs',currentGlyphItems);
+  const rawTranslit=buildTranslit(currentGlyphItems);
+  const rawWords=scanWords(rawTranslit);
+  renderTranslit('rawTranslit',rawTranslit,rawWords);
+  renderWordHits('rawWords',rawWords);
+
+  // Raw ASCII string
+  const rawEl=document.getElementById('rawStr');
+  rawEl.innerHTML='';
+  currentGlyphItems.forEach(gi=>{
+    const ac=gi.idx+32;
+    rawEl.innerHTML+=`<span>${String.fromCharCode(ac)}</span>`;
+  });
+
+  // Star table
+  const listEl=document.getElementById('starList');
+  listEl.innerHTML=`<div class="star-row">
+    <div class="sn" style="color:#222">STAR</div>
+    <div class="sa" style="color:#222">ALT°</div>
+    <div class="sb" style="color:#222">AZ°</div>
+    <div class="sg" style="color:#222">GLY</div>
+    <div class="sv" style="color:#222">PHONE</div>
+  </div>`;
+  currentGlyphItems.forEach(gi=>{
+    const g=G[gi.idx];
+    listEl.innerHTML+=`<div class="star-row">
+      <div class="sn">${gi.star.name}</div>
+      <div class="sa">${gi.star.alt.toFixed(1)}</div>
+      <div class="sb">${gi.star.az.toFixed(1)}</div>
+      <div class="sg">${g[0]}</div>
+      <div class="sv">${g[1]||'—'}</div>
+    </div>`;
+  });
+
+  // BIP39 raw
+  renderBip39('bipRaw', buildBip39(stars, null));
+
+  // Re-run active decode
+  const key=document.getElementById('cipherInput').value.trim();
+  if (key) runDecode();
+}
+
+function setEpoch(i) {
+  currentEpoch=i;
+  document.querySelectorAll('.epoch-btn').forEach((b,j)=>b.classList.toggle('active',j===i));
+  render();
+}
+
+function runDecode() {
+  const key=document.getElementById('cipherInput').value.trim().toUpperCase();
+  if (!key||!currentGlyphItems.length) return;
+
+  const shifted=shiftGlyphs(currentGlyphItems,key);
+  renderGlyphStrip('decodedGlyphs',shifted);
+
+  const translit=buildTranslit(shifted);
+  const words=scanWords(translit);
+  renderTranslit('decodedTranslit',translit,words);
+  renderWordHits('decodedWords',words);
+
+  document.getElementById('decodedHead').textContent=`KEY: ${key} — DECODED HIEROGLYPHS`;
+
+  const letters=translit.split('').filter(c=>/[a-zA-Z\u0080-\uFFFF]/.test(c)).length;
+  const pct=Math.round((letters/(translit.length||1))*100);
+  // BIP39 with key
+  const bip=buildBip39(EPOCHS[currentEpoch].stars, key);
+  renderBip39('bipCiphered', bip);
+  const specials=bip.filter(e=>e.notable);
+  const bipNoteEl=document.getElementById('bipNote');
+  if(specials.length>0){
+    bipNoteEl.className='bip-valid hit';
+    bipNoteEl.textContent='SIGNAL: '+specials.map(e=>e.word.toUpperCase()+' (#'+e.idx+')').join(' · ');
+  } else {
+    bipNoteEl.className='bip-valid miss';
+    bipNoteEl.textContent='No notable words — try another key';
+  }
+
+  const scoreEl=document.getElementById('decodedScore');
+  const hit=words.length>1||(words.length===1&&words[0].meaning!=='aleph'&&words[0].meaning!=='ayin');
+  scoreEl.textContent=`PHONETIC DENSITY: ${pct}%  ·  WORDS HIT: ${words.length}${hit?' — POSSIBLE SIGNAL':''}`;
+  scoreEl.className='score-bar '+(hit?'hit':'miss');
+}
+
+function setPreset(key,btn) {
+  if (activePreset===key) {
+    activePreset=null;
+    document.getElementById('cipherInput').value='';
+    document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('on'));
+    document.getElementById('decodedGlyphs').innerHTML='';
+    document.getElementById('decodedTranslit').innerHTML='';
+    document.getElementById('decodedWords').innerHTML='';
+    document.getElementById('decodedHead').textContent='KEY RESULT APPEARS HERE';
+    document.getElementById('decodedScore').textContent='';
+    return;
+  }
+  activePreset=key;
+  document.getElementById('cipherInput').value=key;
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  runDecode();
+}
+
+// Build preset buttons
+function buildPresets() {
+  const eg=document.getElementById('presetEgypt');
+  PRESET_EGYPT.forEach(k=>{
+    const b=document.createElement('button');
+    b.className='preset-btn'; b.textContent=k;
+    b.onclick=()=>setPreset(k,b); eg.appendChild(b);
+  });
+  const ot=document.getElementById('presetOther');
+  PRESET_OTHER.forEach(k=>{
+    const b=document.createElement('button');
+    b.className='preset-btn'; b.textContent=k;
+    b.onclick=()=>setPreset(k,b); ot.appendChild(b);
+  });
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('cipherInput').addEventListener('keydown',e=>{
+    if (e.key==='Enter'){
+      activePreset=null;
+      document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('on'));
+      runDecode();
+    }
+  });
+});
+
+// ═══════════════════════════════════════════════════════
+// BIP39 WORDLIST — Official English 2048 words
+// Remarkable words: 1400=pyramid, 1531=satoshi, 1661=soul, 1680=spirit, 1988=weasel
+// ═══════════════════════════════════════════════════════
+const BIP39_WORDS = 'abandon ability able about above absent absorb abstract absurd abuse access accident account accuse achieve acid acoustic acquire across act action actor actress actual adapt add addict address adjust admit adult advance advice aerobic affair afford afraid again age agent agree ahead aim air airport aisle alarm album alcohol alert alien all alley allow almost alone alpha already also alter always amateur amazing among amount amused analyst anchor ancient anger angle angry animal ankle announce annual another answer antenna antique anxiety any apart apology appear apple approve april arch arctic area arena argue arm armed armor army around arrange arrest arrive arrow art artefact artist artwork ask aspect assault asset assist assume asthma athlete atom attack attend attitude attract auction audit august aunt author auto autumn average avocado avoid awake aware away awesome awful awkward axis baby bachelor bacon badge bag balance balcony ball bamboo banana banner bar barely bargain barrel base basic basket battle beach bean beauty because become beef before begin behave behind believe below belt bench benefit best betray better between beyond bicycle bid bike bind biology bird birth bitter black blade blame blanket blast bleak bless blind blood blossom blouse blue blur blush board boat body boil bomb bone bonus book boost border boring borrow boss bottom bounce box boy bracket brain brand brass brave bread breeze brick bridge brief bright bring brisk broccoli broken bronze broom brother brown brush bubble buddy budget buffalo build bulb bulk bullet bundle bunker burden burger burst bus business busy butter buyer buzz cabbage cabin cable cactus cage cake call calm camera camp can canal cancel candy cannon canoe canvas canyon capable capital captain car carbon card cargo carpet carry cart case cash casino castle casual cat catalog catch category cattle caught cause caution cave ceiling celery cement census century cereal certain chair chalk champion change chaos chapter charge chase chat cheap check cheese chef cherry chest chicken chief child chimney choice choose chronic chuckle chunk churn cigar cinnamon circle citizen city civil claim clap clarify claw clay clean clerk clever click client cliff climb clinic clip clock clog close cloth cloud clown club clump cluster clutch coach coast coconut code coffee coil coin collect color column combine come comfort comic common company concert conduct confirm congress connect consider control convince cook cool copper copy coral core corn correct cost cotton couch country couple course cousin cover coyote crack cradle craft cram crane crash crater crawl crazy cream credit creek crew cricket crime crisp critic crop cross crouch crowd crucial cruel cruise crumble crunch crush cry crystal cube culture cup cupboard curious current curtain curve cushion custom cute cycle dad damage damp dance danger daring dash daughter dawn day deal debate debris decade december decide decline decorate decrease deer defense define defy degree delay deliver demand demise denial dentist deny depart depend deposit depth deputy derive describe desert design desk despair destroy detail detect develop device devote diagram dial diamond diary dice diesel diet differ digital dignity dilemma dinner dinosaur direct dirt disagree discover disease dish dismiss disorder display distance divert divide divorce dizzy doctor document dog doll dolphin domain donate donkey donor door dose double dove draft dragon drama drastic draw dream dress drift drill drink drip drive drop drum dry duck dumb dune during dust dutch duty dwarf dynamic eager eagle early earn earth easily east easy echo ecology economy edge edit educate effort egg eight either elbow elder electric elegant element elephant elevator elite else embark embody embrace emerge emotion employ empower empty enable enact end endless endorse enemy energy enforce engage engine enhance enjoy enlist enough enrich enroll ensure enter entire entry envelope episode equal equip era erase erode erosion error erupt escape essay essence estate eternal ethics evidence evil evoke evolve exact example excess exchange excite exclude excuse execute exercise exhaust exhibit exile exist exit exotic expand expect expire explain expose express extend extra eye eyebrow fabric face faculty fade faint faith fall false fame family famous fan fancy fantasy farm fashion fat fatal father fatigue fault favorite feature february federal fee feed feel female fence festival fetch fever few fiber fiction field figure file film filter final find fine finger finish fire firm first fiscal fish fit fitness fix flag flame flash flat flavor flee flight flip float flock floor flower fluid flush fly foam focus fog foil fold follow food foot force forest forget fork fortune forum forward fossil foster found fox fragile frame frequent fresh friend fringe frog front frost frown frozen fruit fuel fun funny furnace fury future gadget gain galaxy gallery game gap garage garbage garden garlic garment gas gasp gate gather gauge gaze general genius genre gentle genuine gesture ghost giant gift giggle ginger giraffe girl give glad glance glare glass glide glimpse globe gloom glory glove glow glue goat goddess gold good goose gorilla gospel gossip govern gown grab grace grain grant grape grass gravity great green grid grief grit grocery group grow grunt guard guess guide guilt guitar gun gym habit hair half hammer hamster hand happy harbor hard harsh harvest hat have hawk hazard head health heart heavy hedgehog height hello helmet help hen hero hidden high hill hint hip hire history hobby hockey hold hole holiday hollow home honey hood hope horn horror horse hospital host hotel hour hover hub huge human humble humor hundred hungry hunt hurdle hurry hurt husband hybrid ice icon idea identify idle ignore ill illegal illness image imitate immense immune impact impose improve impulse inch include income increase index indicate indoor industry infant inflict inform inhale inherit initial inject injury inmate inner innocent input inquiry insane insect inside inspire install intact interest into invest invite involve iron island isolate issue item ivory jacket jaguar jar jazz jealous jeans jelly jewel job join joke journey joy judge juice jump jungle junior junk just kangaroo keen keep ketchup key kick kid kidney kind kingdom kiss kit kitchen kite kitten kiwi knee knife knock know lab label labor ladder lady lake lamp language laptop large later latin laugh laundry lava law lawn lawsuit layer lazy leader leaf learn leave lecture left leg legal legend leisure lemon lend length lens leopard lesson letter level liar liberty library license life lift light like limb limit link lion liquid list little live lizard load loan lobster local lock logic lonely long loop lottery loud lounge love loyal lucky luggage lumber lunar lunch luxury lyrics machine mad magic magnet maid mail main major make mammal man manage mandate mango mansion manual maple marble march margin marine market marriage mask mass master match material math matrix matter maximum maze meadow mean measure meat mechanic medal media melody melt member memory mention menu mercy merge merit merry mesh message metal method middle midnight milk million mimic mind minimum minor minute miracle mirror misery miss mistake mix mixed mixture mobile model modify mom moment monitor monkey monster month moon moral more morning mosquito mother motion motor mountain mouse move movie much muffin mule multiply muscle museum mushroom music must mutual myself mystery myth naive name napkin narrow nasty nation nature near neck need negative neglect neither nephew nerve nest net network neutral never news next nice night noble noise nominee noodle normal north nose notable note nothing notice novel now nuclear number nurse nut oak obey object oblige obscure observe obtain obvious occur ocean october odor off offer office often oil okay old olive olympic omit once one onion online only open opera opinion oppose option orange orbit orchard order ordinary organ orient original orphan ostrich other outdoor outer output outside oval oven over own owner oxygen oyster ozone pact paddle page pair palace palm panda panel panic panther paper parade parent park parrot party pass patch path patient patrol pattern pause pave payment peace peanut pear peasant pelican pen penalty pencil people pepper perfect permit person pet phone photo phrase physical piano picnic picture piece pig pigeon pill pilot pink pioneer pipe pistol pitch pizza place planet plastic plate play please pledge pluck plug plunge poem poet point polar pole police pond pony pool popular portion position possible post potato pottery poverty powder power practice praise predict prefer prepare present pretty prevent price pride primary print priority prison private prize problem process produce profit program project promote proof property prosper protect proud provide public pudding pull pulp pulse pumpkin punch pupil puppy purchase purity purpose purse push put puzzle pyramid quality quantum quarter question quick quit quiz quote rabbit raccoon race rack radar radio rail rain raise rally ramp ranch random range rapid rare rate rather raven raw razor ready real reason rebel rebuild recall receive recipe record recycle reduce reflect reform refuse region regret regular reject relax release relief rely remain remember remind remove render renew rent reopen repair repeat replace report require rescue resemble resist resource response result retire retreat return reunion reveal review reward rhythm rib ribbon rice rich ride ridge rifle right rigid ring riot ripple risk ritual rival river road roast robot robust rocket romance roof rookie room rose rotate rough round route royal rubber rude rug rule run runway rural sad saddle sadness safe sail salad salmon salon salt salute same sample sand satisfy satoshi sauce sausage save say scale scan scare scatter scene scheme school science scissors scorpion scout scrap screen script scrub sea search season seat second secret section security seed seek segment select sell seminar senior sense sentence series service session settle setup seven shadow shaft shallow share shed shell sheriff shield shift shine ship shiver shock shoe shoot shop short shoulder shove shrimp shrug shuffle shy sibling sick side siege sight sign silent silk silly silver similar simple since sing siren sister situate six size skate sketch ski skill skin skirt skull slab slam sleep slender slice slide slight slim slogan slot slow slush small smart smile smoke smooth snack snake snap sniff snow soap soccer social sock soda soft solar soldier solid solution solve someone song soon sorry sort soul sound soup source south space spare spatial spawn speak special speed spell spend sphere spice spider spike spin spirit split spoil sponsor spoon sport spot spray spread spring spy square squeeze squirrel stable stadium staff stage stairs stamp stand start state stay steak steel stem step stereo stick still sting stock stomach stone stool story stove strategy street strike strong struggle student stuff stumble style subject submit subway success such sudden suffer sugar suggest suit summer sun sunny sunset super supply supreme sure surface surge surprise surround survey suspect sustain swallow swamp swap swarm swear sweet swift swim swing switch sword symbol symptom syrup system table tackle tag tail talent talk tank tape target task taste tattoo taxi teach team tell ten tenant tennis tent term test text thank that theme then theory there they thing this thought three thrive throw thumb thunder ticket tide tiger tilt timber time tiny tip tired tissue title toast tobacco today toddler toe together toilet token tomato tomorrow tone tongue tonight tool tooth top topic topple torch tornado tortoise toss total tourist toward tower town toy track trade traffic tragic train transfer trap trash travel tray treat tree trend trial tribe trick trigger trim trip trophy trouble truck true truly trumpet trust truth try tube tuition tumble tuna tunnel turkey turn turtle twelve twenty twice twin twist two type typical ugly umbrella unable unaware uncle uncover under undo unfair unfold unhappy uniform unique unit universe unknown unlock until unusual unveil update upgrade uphold upon upper upset urban urge usage use used useful useless usual utility vacant vacuum vague valid valley valve van vanish vapor various vast vault vehicle velvet vendor venture venue verb verify version very vessel veteran viable vibrant vicious victory video view village vintage violin virtual virus visa visit visual vital vivid vocal voice void volcano volume vote voyage wage wagon wait walk wall walnut want warfare warm warrior wash wasp waste water wave way wealth weapon wear weasel weather web wedding weekend weird welcome west wet whale what wheat wheel when where whip whisper wide width wife wild will win window wine wing wink winner winter wire wisdom wise wish witness wolf woman wonder wood wool word work world worry worth wrap wreck wrestle wrist write wrong yard year yellow you young youth zebra zero zone zoo'.split(' ');
+
+// ─── BIP39 FUNCTIONS ───
+// Notable word positions (verified):
+// Verified indices (counted from official list):
+// pyramid=1400, satoshi=1531, soul=1661, spirit=1680, ripple=1490, royal=1509
+// gold=802, kingdom=981, weasel=1988 (Aldebaran at 2560BC/DOGU)
+const BIP39_NOTABLE = {1400:'pyramid',1531:'satoshi',1661:'soul',1680:'spirit',1490:'ripple',1509:'royal',802:'gold',981:'kingdom',964:'joy',1059:'love',1988:'weasel'};
+
+function starToBip39Index(star) {
+  // altitude drives the high bits, azimuth the low bits
+  // gives good spread across 0-2047
+  const a = Math.floor((star.alt / 90) * 31);   // 0-31 (5 bits)
+  const b = Math.floor((star.az / 360) * 63);   // 0-63 (6 bits)
+  return Math.min(2047, a * 64 + b);
+}
+
+function buildBip39(stars, key) {
+  const top12 = [...stars].filter(s=>s.alt>0)
+                          .sort((a,b)=>a.mag-b.mag)
+                          .slice(0,12);
+  return top12.map((star, i) => {
+    let idx = starToBip39Index(star);
+    if (key) {
+      const kv = key.charCodeAt(i % key.length) - 32;
+      idx = ((idx + kv * 13) % 2048 + 2048) % 2048; // 13 = prime spread
+    }
+    const word = BIP39_WORDS[idx] || '???';
+    const notable = BIP39_NOTABLE[idx];
+    return { word, idx, star: star.name, notable };
+  });
+}
+
+function renderBip39(containerId, entries) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = entries.map(e => `
+    <div class="bip-word ${e.notable?'special':''}">
+      <div class="bip-w">${e.word}</div>
+      <div class="bip-i">#${e.idx}</div>
+      <div class="bip-star">${e.star.slice(0,5)}</div>
+    </div>`).join('');
+}
+
+// ─── COPY PHRASE ───
+function copyPhrase(containerId) {
+  const el = document.getElementById(containerId);
+  const words = [...el.querySelectorAll('.bip-w')].map(w=>w.textContent).join(' ');
+  navigator.clipboard.writeText(words).then(()=>{
+    const btn = event.target;
+    const orig = btn.textContent;
+    btn.textContent = 'COPIED';
+    setTimeout(()=>btn.textContent=orig, 1500);
+  });
+}
+
+// ─── USE HIEROGLYPH TRANSLITERATION AS BIP39 KEY ───
+function useTranslitAsKey() {
+  const translit = document.getElementById('rawTranslit').textContent.replace(/\s/g,'').toUpperCase();
+  if (!translit) return;
+  const key = translit.slice(0,32); // use up to 32 chars
+  document.getElementById('cipherInput').value = key;
+  activePreset = null;
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('on'));
+  runDecode();
+}
+
+// ─── SCAN ALL PRESET KEYS ───
+function scanAllKeys() {
+  const stars = EPOCHS[currentEpoch].stars;
+  const allKeys = [...PRESET_EGYPT, ...PRESET_OTHER];
+  const results = [];
+
+  for (const key of allKeys) {
+    const bip = buildBip39(stars, key);
+    const specials = bip.filter(e=>e.notable);
+    const words = bip.map(e=>e.word).join(' ');
+    results.push({ key, specials, words, bip });
+  }
+
+  // Sort: hits first, then alphabetical
+  results.sort((a,b)=>b.specials.length-a.specials.length||a.key.localeCompare(b.key));
+
+  const el = document.getElementById('scanResults');
+  el.innerHTML = '<div class="bip-head" style="margin-bottom:8px;">SCAN RESULTS — ALL KEYS</div>' +
+    results.map(r=>`
+      <div style="padding:6px 0;border-bottom:1px solid #0a0a0a;cursor:pointer;"
+           onclick="document.getElementById('cipherInput').value='${r.key}';runDecode();">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:8px;letter-spacing:2px;color:${r.specials.length?'#daa520':'#333'}">${r.key}</span>
+          <span style="font-size:7px;color:${r.specials.length?'#daa520':'#1a1a1a'}">${r.specials.length?r.specials.map(s=>s.word.toUpperCase()).join(' · '):'—'}</span>
+        </div>
+        <div style="font-size:8px;color:#222;margin-top:3px;letter-spacing:1px;">${r.words}</div>
+      </div>`).join('');
+}
+
+buildPresets();
+render();
+</script>
+</body>
+</html>

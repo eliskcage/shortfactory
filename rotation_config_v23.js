@@ -12,6 +12,13 @@ const ROTATION_CONFIG = {
     // All screens in rotation order
     screens: [
         {
+            name: 'ADVERTainment — Interactive Experience',
+            url: '/shortfactory-advertainment.html',
+            description: 'The ADVERTainment interactive screensaver — choices, credits, the future of advertising.',
+            category: 'advertainment',
+            priority: 10
+        },
+        {
             name: 'The Stargate · The Combined Spirit of Man',
             url: '/trump/stargate.html',
             description: 'All encoded souls as a 3D draggable spirit object. Upright triangles (good) + inverted (shadow) form the cortex knowledge distribution polygon. Drag to see every angle.',
@@ -58,6 +65,13 @@ const ROTATION_CONFIG = {
             url: '/pixel_beats.html',
             description: 'Step sequencer - place colored blips to make looping chiptune tracks',
             category: 'interactive'
+        },
+        {
+            name: 'ADVERTainment — Interactive Experience',
+            url: '/shortfactory-advertainment.html',
+            description: 'The ADVERTainment interactive screensaver — choices, credits, the future of advertising.',
+            category: 'advertainment',
+            priority: 10
         },
         {
             name: 'Matrix Showcase',
@@ -126,6 +140,18 @@ const ROTATION_CONFIG = {
             category: 'experience'
         },
         {
+            name: 'Business Automation',
+            url: '/business.html',
+            description: 'ShortFactory business ops — automation pipeline, worker status, lead management',
+            category: 'showcase'
+        },
+        {
+            name: 'SphereNet',
+            url: '/spherenet/wheel.html',
+            description: 'SphereNet — resonance neural architecture. No backprop. HOT+COLD→WARM emergence. Stage 14.',
+            category: 'research'
+        },
+        {
             name: 'Command Center',
             url: '/command_center.html',
             description: 'ShortFactory control panel with locked index/mobile iframes',
@@ -148,6 +174,13 @@ const ROTATION_CONFIG = {
             url: '/showcase_highscores.html',
             description: 'Arcade leaderboard - TOP PLAYERS',
             category: 'showcase'
+        },
+        {
+            name: 'ADVERTainment — Interactive Experience',
+            url: '/shortfactory-advertainment.html',
+            description: 'The ADVERTainment interactive screensaver — choices, credits, the future of advertising.',
+            category: 'advertainment',
+            priority: 10
         },
         {
             name: 'About ShortFactory',
