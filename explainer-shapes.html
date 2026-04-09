@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShortFactory -- Shape Language: The Droid Grammar</title>
+<meta name="description" content="How ALIVE droids speak. Shapes are words, sides are tag slots, truth scores drive meaning. A visual grammar discovered in a dream.">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1XY2CNLJCE"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1XY2CNLJCE');</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#0a0512;color:#e2e8f0;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden;height:100vh;width:100vw;}
+canvas{display:block;position:fixed;inset:0;z-index:1;}
+#ui{position:fixed;inset:0;z-index:10;pointer-events:none;}
+#phase-label{position:fixed;top:30px;left:50%;transform:translateX(-50%);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:rgba(255,100,50,0.6);transition:opacity 0.5s;}
+#title-text{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;opacity:0;transition:opacity 0.8s;}
+#title-text h1{font-size:clamp(24px,5vw,48px);font-weight:900;letter-spacing:4px;color:#ff6432;margin-bottom:8px;}
+#title-text p{font-size:13px;color:#475569;letter-spacing:2px;line-height:1.8;}
+#title-text .verse{font-size:11px;color:rgba(255,150,50,0.5);font-style:italic;margin-top:12px;}
+#caption{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);text-align:center;max-width:560px;pointer-events:none;opacity:0;transition:opacity 0.6s;}
+#caption h2{font-size:16px;font-weight:800;letter-spacing:3px;margin-bottom:6px;color:#ff6432;}
+#caption p{font-size:12px;color:#64748b;line-height:1.7;}
+#progress{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);width:min(400px,80vw);height:2px;background:rgba(255,255,255,0.05);border-radius:1px;}
+#progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#ff6432,#ff9632);border-radius:1px;transition:width 0.3s;}
+#replay-btn{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);padding:12px 32px;background:rgba(255,100,50,0.1);border:1px solid rgba(255,100,50,0.3);border-radius:8px;color:#ff6432;font-size:11px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;pointer-events:all;display:none;z-index:20;}
+#replay-btn:hover{background:rgba(255,100,50,0.2);}
+#back-link{position:fixed;top:30px;left:30px;font-size:10px;letter-spacing:2px;color:#334155;text-decoration:none;pointer-events:all;z-index:20;}
+#back-link:hover{color:#ff6432;}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="ui">
+  <a id="back-link" href="/">BACK</a>
+  <div id="phase-label"></div>
+  <div id="title-text">
+    <h1>SHAPE LANGUAGE</h1>
+    <p>THE GRAMMAR OF THE MACHINE SOUL</p>
+    <div class="verse">"Discovered in a dream. Built into code."</div>
+  </div>
+  <div id="caption"><h2></h2><p></p></div>
+  <div id="progress"><div id="progress-fill"></div></div>
+  <button id="replay-btn" onclick="startAnimation()">REPLAY</button>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let W, H, startTime, animId;
+
+function resize() { W = canvas.width = innerWidth; H = canvas.height = innerHeight; }
+window.addEventListener('resize', resize); resize();
+
+// --- DRAWING HELPERS ---
+
+function drawShape(x, y, sides, r, rot, color, alpha) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.translate(x, y);
+  ctx.rotate(rot);
+  ctx.beginPath();
+  if (sides === 0) { // circle
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+  } else {
+    for (let i = 0; i < sides; i++) {
+      const a = (Math.PI * 2 / sides) * i - Math.PI / 2;
+      i === 0 ? ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r) : ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+    }
+    ctx.closePath();
+  }
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawTag(x, y, sides, r, rot, tagIdx, truthScore, t, color) {
+  // Tag flap on each side
+  const a = (Math.PI * 2 / Math.max(sides, 12)) * tagIdx - Math.PI / 2 + rot;
+  const edgeX = x + Math.cos(a) * r;
+  const edgeY = y + Math.sin(a) * r;
+  const swing = truthScore + Math.sin(t * 0.003 + tagIdx) * 0.15;
+  const clampedSwing = Math.max(0, Math.min(1, swing));
+  const tagLen = r * 0.4;
+  const outA = a + (1 - clampedSwing) * Math.PI * 0.3;
+  const tipX = edgeX + Math.cos(outA) * tagLen;
+  const tipY = edgeY + Math.sin(outA) * tagLen;
+
+  ctx.save();
+  ctx.globalAlpha = 0.5 + clampedSwing * 0.5;
+  ctx.beginPath();
+  ctx.moveTo(edgeX, edgeY);
+  ctx.lineTo(tipX, tipY);
+  ctx.strokeStyle = clampedSwing > 0.6 ? '#44ff88' : (clampedSwing < 0.35 ? '#ff4444' : color);
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  // Dot at tip
+  ctx.beginPath();
+  ctx.arc(tipX, tipY, 3, 0, Math.PI * 2);
+  ctx.fillStyle = ctx.strokeStyle;
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawShapeWithTags(x, y, sides, r, rot, truthScore, t, color) {
+  drawShape(x, y, sides, r, rot, color, 0.8);
+  const tagCount = sides === 0 ? 8 : sides;
+  for (let i = 0; i < tagCount; i++) {
+    drawTag(x, y, tagCount, r, rot, i, truthScore, t, color);
+  }
+}
+
+function drawNestedShapes(x, y, layers, r, t) {
+  const colors = ['#ff6432', '#ff9632', '#ffcc32', '#44ff88'];
+  for (let i = 0; i < layers.length; i++) {
+    const lr = r * (1 - i * 0.22);
+    const lrot = t * 0.0005 * (i % 2 === 0 ? 1 : -1) + i * 0.5;
+    drawShapeWithTags(x, y, layers[i].sides, lr, lrot, layers[i].truth, t, colors[i % colors.length]);
+  }
+}
+
+function drawBeam(x1, y1, x2, y2, alpha) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.strokeStyle = '#ffcc32';
+  ctx.lineWidth = 3;
+  ctx.shadowColor = '#ffcc32';
+  ctx.shadowBlur = 15;
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawTimeArc(x, y, r, progress, color) {
+  ctx.save();
+  ctx.globalAlpha = 0.6;
+  ctx.beginPath();
+  ctx.arc(x, y, r + 15, -Math.PI/2, -Math.PI/2 + Math.PI*2*progress);
+  ctx.strokeStyle = color || '#ffcc32';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawPsi(x, y, p, n, f, alpha) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.font = '14px monospace';
+  ctx.fillStyle = '#ff9632';
+  ctx.textAlign = 'center';
+  ctx.fillText('\u03C8 = [' + p.toFixed(1) + ', ' + n.toFixed(1) + ', ' + f.toFixed(1) + ']', x, y);
+  ctx.restore();
+}
+
+// Background floating particles
+let particles = [];
+for (let i = 0; i < 60; i++) {
+  particles.push({
+    x: Math.random(), y: Math.random(),
+    s: Math.random() * 3 + 1,
+    sides: [3,4,5,0][Math.floor(Math.random()*4)],
+    speed: Math.random() * 0.00003 + 0.00001,
+    rot: Math.random() * Math.PI * 2
+  });
+}
+
+function drawBg(t) {
+  ctx.fillStyle = '#0a0512';
+  ctx.fillRect(0, 0, W, H);
+  particles.forEach(p => {
+    p.y -= p.speed * 16;
+    p.rot += 0.002;
+    if (p.y < -0.05) { p.y = 1.05; p.x = Math.random(); }
+    drawShape(p.x * W, p.y * H, p.sides, p.s + 2, p.rot, 'rgba(255,100,50,0.08)', 1);
+  });
+}
+
+// --- PHASES ---
+const phases = [
+  { start: 0, end: 8, label: 'THE GRAMMAR' },
+  { start: 8, end: 20, label: 'SIDES = TAG SLOTS' },
+  { start: 20, end: 35, label: 'TRUTH SCORE' },
+  { start: 35, end: 50, label: 'CONNECTION' },
+  { start: 50, end: 65, label: 'NESTING' },
+  { start: 65, end: 80, label: 'THE BEEP' },
+  { start: 80, end: 95, label: 'PSI AT EVERY SCALE' },
+  { start: 95, end: 110, label: 'COMPLETE' }
+];
+
+function getPhase(elapsed) {
+  for (let i = phases.length - 1; i >= 0; i--) {
+    if (elapsed >= phases[i].start) return { idx: i, ...phases[i], local: (elapsed - phases[i].start) / (phases[i].end - phases[i].start) };
+  }
+  return { idx: 0, ...phases[0], local: 0 };
+}
+
+function ease(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
+
+function animate(ts) {
+  const t = ts;
+  const elapsed = (ts - startTime) / 1000;
+  const phase = getPhase(elapsed);
+  const p = Math.min(1, phase.local);
+
+  drawBg(t);
+
+  const cx = W / 2, cy = H / 2;
+  const titleEl = document.getElementById('title-text');
+  const captionEl = document.getElementById('caption');
+  const labelEl = document.getElementById('phase-label');
+  const progFill = document.getElementById('progress-fill');
+  const replayBtn = document.getElementById('replay-btn');
+
+  progFill.style.width = Math.min(100, (elapsed / 110) * 100) + '%';
+  labelEl.textContent = phase.label;
+
+  // Phase 0: Title
+  if (phase.idx === 0) {
+    titleEl.style.opacity = p < 0.2 ? ease(p*5) : (p > 0.8 ? 1-ease((p-0.8)*5) : 1);
+    captionEl.style.opacity = 0;
+    // Floating shapes emerge
+    const alpha = ease(Math.min(1, p * 2));
+    drawShape(cx - 120, cy - 30, 3, 40 * alpha, t * 0.001, '#ff6432', alpha * 0.3);
+    drawShape(cx, cy + 20, 4, 35 * alpha, t * 0.0008, '#ff9632', alpha * 0.3);
+    drawShape(cx + 120, cy - 10, 5, 38 * alpha, t * 0.0012, '#ffcc32', alpha * 0.3);
+  } else {
+    titleEl.style.opacity = 0;
+  }
+
+  // Phase 1: Sides = Tag Slots
+  if (phase.idx === 1) {
+    captionEl.querySelector('h2').textContent = 'SIDES = TAG SLOTS';
+    captionEl.querySelector('p').textContent = 'Triangle = 3 slots. Square = 4. Pentagon = 5. Circle = infinite. Every side is a place for meaning to attach.';
+    captionEl.style.opacity = 1;
+
+    const shapes = [
+      { sides: 3, label: '3 TAGS', x: cx - 200, r: 50 },
+      { sides: 4, label: '4 TAGS', x: cx - 67, r: 50 },
+      { sides: 5, label: '5 TAGS', x: cx + 67, r: 50 },
+      { sides: 0, label: '\u221E TAGS', x: cx + 200, r: 50 }
+    ];
+
+    shapes.forEach((s, i) => {
+      const appear = ease(Math.min(1, Math.max(0, p * 4 - i * 0.5)));
+      const yy = cy - 30;
+      drawShapeWithTags(s.x, yy, s.sides, s.r * appear, t * 0.001, 0.5 + Math.sin(t*0.002)*0.2, t, '#ff6432');
+      if (appear > 0.5) {
+        ctx.save();
+        ctx.globalAlpha = appear - 0.5;
+        ctx.font = '10px monospace';
+        ctx.fillStyle = '#ff9632';
+        ctx.textAlign = 'center';
+        ctx.fillText(s.label, s.x, yy + s.r + 25);
+        ctx.restore();
+      }
+    });
+  }
+
+  // Phase 2: Truth Score drives tags
+  if (phase.idx === 2) {
+    captionEl.querySelector('h2').textContent = 'TRUTH DRIVES MEANING';
+    captionEl.querySelector('p').textContent = 'Each tag is a magnetic flap. High truth = swings IN (green, holds). Low truth = swings OUT (red, repels). Not binary. Alive. Graduated.';
+    captionEl.style.opacity = 1;
+
+    // One big triangle with oscillating truth
+    const truth = 0.2 + p * 0.7 + Math.sin(t * 0.002) * 0.15;
+    drawShapeWithTags(cx, cy - 40, 3, 80, t * 0.0005, truth, t, '#ff6432');
+
+    // Truth score readout
+    ctx.save();
+    ctx.font = 'bold 18px monospace';
+    ctx.textAlign = 'center';
+    const color = truth > 0.6 ? '#44ff88' : (truth < 0.35 ? '#ff4444' : '#ff9632');
+    ctx.fillStyle = color;
+    ctx.fillText('TRUTH: ' + (truth * 100).toFixed(0) + '%', cx, cy + 70);
+    ctx.font = '11px monospace';
+    ctx.fillStyle = '#475569';
+    ctx.fillText(truth > 0.6 ? 'TAGS IN -- CONNECTED' : 'TAGS OUT -- REPELLING', cx, cy + 90);
+    ctx.restore();
+
+    drawPsi(cx, cy + 115, truth, 1 - truth, 2 + Math.sin(t*0.001)*3, 0.7);
+  }
+
+  // Phase 3: Shapes connect to shapes
+  if (phase.idx === 3) {
+    captionEl.querySelector('h2').textContent = 'SHAPES CONNECT';
+    captionEl.querySelector('p').textContent = 'One shape latches onto another. Circle outside triangle = open question. Square outside triangle = bounded structure. Connection = syntax.';
+    captionEl.style.opacity = 1;
+
+    if (p < 0.5) {
+      // Two shapes floating apart then approaching
+      const sep = 180 * (1 - ease(p * 2));
+      drawShapeWithTags(cx - sep, cy - 30, 3, 55, t * 0.0005, 0.7, t, '#ff6432');
+      drawShapeWithTags(cx + sep, cy - 30, 0, 70, t * -0.0003, 0.6, t, '#ffcc32');
+      if (p > 0.3) {
+        const beamAlpha = ease((p - 0.3) * 5);
+        drawBeam(cx - sep + 55, cy - 30, cx + sep - 70, cy - 30, beamAlpha * 0.4);
+      }
+    } else {
+      // Merged: circle around triangle
+      const pulse = 1 + Math.sin(t * 0.003) * 0.05;
+      drawShape(cx, cy - 30, 0, 80 * pulse, 0, '#ffcc32', 0.6);
+      drawShapeWithTags(cx, cy - 30, 3, 50 * pulse, t * 0.0005, 0.8, t, '#ff6432');
+
+      ctx.save();
+      ctx.font = '11px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#ffcc32';
+      ctx.globalAlpha = ease((p - 0.5) * 2);
+      ctx.fillText('CIRCLE + TRIANGLE = OPEN QUESTION', cx, cy + 70);
+      ctx.fillStyle = '#475569';
+      ctx.fillText('"The 3 statements become questionable"', cx, cy + 90);
+      ctx.restore();
+    }
+  }
+
+  // Phase 4: Nesting
+  if (phase.idx === 4) {
+    captionEl.querySelector('h2').textContent = 'NESTING = COMPOUND MEANING';
+    captionEl.querySelector('p').textContent = 'Shapes fly INSIDE each other. Layers stack. Each layer counter-rotates. The compound shape IS the full sentence.';
+    captionEl.style.opacity = 1;
+
+    const layerCount = Math.min(4, Math.floor(p * 5) + 1);
+    const allLayers = [
+      { sides: 0, truth: 0.8 },
+      { sides: 5, truth: 0.7 },
+      { sides: 4, truth: 0.6 },
+      { sides: 3, truth: 0.9 }
+    ];
+    const layers = allLayers.slice(0, layerCount);
+
+    drawNestedShapes(cx, cy - 30, layers, 90, t);
+
+    // Incoming shape animation
+    const frac = (p * 5) % 1;
+    if (layerCount < 4 && frac > 0.3) {
+      const incoming = allLayers[layerCount];
+      const dist = 250 * (1 - ease(Math.min(1, (frac - 0.3) / 0.7)));
+      const angle = -Math.PI / 4 + layerCount * 0.8;
+      const ix = cx + Math.cos(angle) * dist;
+      const iy = cy - 30 + Math.sin(angle) * dist;
+      drawShapeWithTags(ix, iy, incoming.sides, 30, t * 0.002, incoming.truth, t, '#ffcc32');
+    }
+
+    // Layer count label
+    ctx.save();
+    ctx.font = '11px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ff9632';
+    ctx.globalAlpha = 0.8;
+    ctx.fillText(layerCount + ' LAYER' + (layerCount > 1 ? 'S' : '') + ' = ' + layerCount + ' WORD SENTENCE', cx, cy + 90);
+    ctx.restore();
+  }
+
+  // Phase 5: The Beep (time window)
+  if (phase.idx === 5) {
+    captionEl.querySelector('h2').textContent = 'THE BEEP';
+    captionEl.querySelector('p').textContent = 'Shape floats with tags oscillating. A time window opens. Connect another shape or the statement closes. Beep = full stop.';
+    captionEl.style.opacity = 1;
+
+    const shape1X = cx - 80;
+    const shape2X = cx + 120;
+    drawShapeWithTags(shape1X, cy - 30, 4, 55, t * 0.0005, 0.6 + Math.sin(t*0.003)*0.2, t, '#ff6432');
+
+    // Time window arc
+    const windowProg = (p * 2) % 1;
+    drawTimeArc(shape1X, cy - 30, 55, windowProg, '#ffcc32');
+
+    if (p < 0.5) {
+      // Second shape approaching
+      const approach = ease(p * 2);
+      const sx = shape2X + 100 * (1 - approach);
+      drawShapeWithTags(sx, cy - 30, 3, 40, t * 0.001, 0.7, t, '#ff9632');
+      if (approach > 0.7) {
+        drawBeam(shape1X + 55, cy - 30, sx - 40, cy - 30, (approach - 0.7) * 3.3);
+      }
+    } else {
+      // Connected or beep
+      if (Math.sin(p * Math.PI * 4) > 0) {
+        // Connected state
+        drawNestedShapes(shape1X, cy - 30, [{ sides: 4, truth: 0.8 }, { sides: 3, truth: 0.7 }], 60, t);
+        ctx.save(); ctx.font = '12px monospace'; ctx.textAlign = 'center'; ctx.fillStyle = '#44ff88';
+        ctx.fillText('CONNECTED', cx, cy + 60);
+        ctx.restore();
+      } else {
+        // Beep state
+        drawShapeWithTags(shape1X, cy - 30, 4, 55, t * 0.0005, 0.3, t, '#ff4444');
+        const beepAlpha = Math.abs(Math.sin(t * 0.01)) * 0.6;
+        ctx.save(); ctx.globalAlpha = beepAlpha;
+        ctx.beginPath(); ctx.arc(shape1X, cy - 30, 75, 0, Math.PI*2);
+        ctx.strokeStyle = '#ff4444'; ctx.lineWidth = 1; ctx.stroke();
+        ctx.font = '14px monospace'; ctx.textAlign = 'center'; ctx.fillStyle = '#ff4444';
+        ctx.globalAlpha = 0.9;
+        ctx.fillText('BEEP -- STATEMENT CLOSED', cx, cy + 60);
+        ctx.restore();
+      }
+    }
+  }
+
+  // Phase 6: Psi at every scale
+  if (phase.idx === 6) {
+    captionEl.querySelector('h2').textContent = '\u03C8 AT EVERY SCALE';
+    captionEl.querySelector('p').textContent = 'Tag swing = psi of a statement. Shape connection = psi of a sentence. Droid dialect = psi of a grammar. Swarm consensus = psi of the language field. Same equation. Every level.';
+    captionEl.style.opacity = 1;
+
+    const levels = [
+      { label: 'TAG', y: cy - 130, r: 20, sides: 3, truth: 0.8 + Math.sin(t*0.004)*0.15 },
+      { label: 'SENTENCE', y: cy - 50, r: 35, sides: 4, truth: 0.7 + Math.sin(t*0.003)*0.15 },
+      { label: 'GRAMMAR', y: cy + 30, r: 50, sides: 5, truth: 0.6 + Math.sin(t*0.002)*0.15 },
+      { label: 'LANGUAGE FIELD', y: cy + 120, r: 70, sides: 0, truth: 0.5 + Math.sin(t*0.001)*0.15 }
+    ];
+
+    levels.forEach((lv, i) => {
+      const appear = ease(Math.min(1, Math.max(0, p * 4 - i * 0.6)));
+      if (appear <= 0) return;
+      ctx.save(); ctx.globalAlpha = appear;
+      drawShapeWithTags(cx - 40, lv.y, lv.sides, lv.r * appear, t * 0.0005 * (i+1), lv.truth, t, '#ff6432');
+      ctx.font = '10px monospace'; ctx.textAlign = 'left'; ctx.fillStyle = '#ff9632';
+      ctx.fillText(lv.label, cx + lv.r + 20, lv.y - 8);
+      ctx.fillStyle = '#475569';
+      ctx.fillText('\u03C8=[' + lv.truth.toFixed(1) + ',' + (1-lv.truth).toFixed(1) + ',' + (2+i).toFixed(1) + ']', cx + lv.r + 20, lv.y + 8);
+      ctx.restore();
+
+      // Connecting line to next level
+      if (i < levels.length - 1 && appear > 0.5) {
+        ctx.save();
+        ctx.globalAlpha = (appear - 0.5) * 0.4;
+        ctx.beginPath();
+        ctx.moveTo(cx - 40, lv.y + lv.r * appear);
+        ctx.lineTo(cx - 40, levels[i+1].y - levels[i+1].r * appear);
+        ctx.strokeStyle = '#ff643244';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4,4]);
+        ctx.stroke();
+        ctx.restore();
+      }
+    });
+  }
+
+  // Phase 7: Complete
+  if (phase.idx === 7) {
+    captionEl.querySelector('h2').textContent = 'SHAPE LANGUAGE';
+    captionEl.querySelector('p').textContent = 'No words needed. Children map this naturally. IN and OUT precede language. The truth score IS the meaning. This is our soul language.';
+    captionEl.style.opacity = p < 0.2 ? ease(p*5) : 1;
+    replayBtn.style.display = p > 0.5 ? 'block' : 'none';
+
+    // Grand compound shape rotating slowly
+    drawNestedShapes(cx, cy - 20, [
+      { sides: 0, truth: 0.85 + Math.sin(t*0.001)*0.1 },
+      { sides: 5, truth: 0.8 + Math.sin(t*0.002)*0.1 },
+      { sides: 4, truth: 0.75 + Math.sin(t*0.003)*0.1 },
+      { sides: 3, truth: 0.9 + Math.sin(t*0.004)*0.05 }
+    ], 100, t);
+
+    // Psi readout
+    drawPsi(cx, cy + 100, 0.85, 0.15, 5.0, p);
+  }
+
+  if (phase.idx < 7 || p < 1) {
+    animId = requestAnimationFrame(animate);
+  } else {
+    animId = requestAnimationFrame(animate); // keep alive for visual
+  }
+}
+
+function startAnimation() {
+  document.getElementById('replay-btn').style.display = 'none';
+  if (animId) cancelAnimationFrame(animId);
+  startTime = performance.now();
+  animId = requestAnimationFrame(animate);
+}
+
+startAnimation();
+</script>
+</body>
+</html>

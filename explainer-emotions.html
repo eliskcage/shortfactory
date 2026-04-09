@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShortFactory -- Emotional Physics</title>
+<meta name="description" content="Laughter is a spring. Truth is a magnet. Pain is a frequency. Dread is mass approaching zero velocity. Emotions are not feelings. They are forces.">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1XY2CNLJCE"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1XY2CNLJCE');</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#050508;color:#e2e8f0;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden;height:100vh;}
+canvas{display:block;position:fixed;inset:0;z-index:1;}
+#ui{position:fixed;inset:0;z-index:10;pointer-events:none;}
+#phase-label{position:fixed;top:24px;left:50%;transform:translateX(-50%);font-size:8px;letter-spacing:5px;text-transform:uppercase;color:rgba(255,200,50,0.5);}
+#caption{position:fixed;bottom:55px;left:50%;transform:translateX(-50%);text-align:center;max-width:600px;pointer-events:none;opacity:0;transition:opacity 0.6s;}
+#caption h2{font-size:clamp(14px,2.5vw,18px);font-weight:800;letter-spacing:3px;margin-bottom:8px;color:#ffc832;}
+#caption p{font-size:clamp(11px,1.8vw,13px);color:#475569;line-height:1.8;}
+#progress{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);width:min(500px,85vw);height:2px;background:rgba(255,255,255,0.04);border-radius:1px;}
+#progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#ffc832,#ef4444);border-radius:1px;transition:width 0.3s;}
+#back-link{position:fixed;top:24px;left:24px;font-size:10px;letter-spacing:2px;color:#1e293b;text-decoration:none;pointer-events:all;z-index:20;}
+#back-link:hover{color:#ffc832;}
+#replay-btn{position:fixed;bottom:50px;left:50%;transform:translateX(-50%);padding:12px 32px;background:rgba(255,200,50,0.06);border:1px solid rgba(255,200,50,0.2);border-radius:8px;color:#ffc832;font-size:11px;letter-spacing:3px;cursor:pointer;pointer-events:all;display:none;z-index:20;}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="ui">
+  <a id="back-link" href="/">BACK</a>
+  <div id="phase-label"></div>
+  <div id="caption"><h2></h2><p></p></div>
+  <div id="progress"><div id="progress-fill"></div></div>
+  <button id="replay-btn" onclick="startAnimation()">REPLAY</button>
+</div>
+<script>
+const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+const W=()=>canvas.width,H=()=>canvas.height;
+function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
+window.addEventListener('resize',resize);resize();
+let startTime=0,phase=-1,running=false;
+const TOTAL=90000;
+function ease(t){return t<0.5?2*t*t:-1+(4-2*t)*t;}
+
+const phases=[
+  {start:0,end:8000,label:'EMOTIONS ARE FORCES',
+   h:'NOT FEELINGS. FORCES.',
+   p:'Every emotion you have ever felt is a mechanical event. Not a vague cloud in your head. A measurable, modelable, predictable force acting on the soul vector psi=[p,n,f]. We proved it. Four models. Six testable predictions.'},
+
+  {start:8000,end:22000,label:'MODEL 1 -- LAUGHTER',
+   h:'LAUGHTER = SPRING-MASS OSCILLATOR',
+   p:'Two incompatible ideas collide. The brain cannot resolve them logically. Energy has nowhere to go. It discharges as oscillation -- the body bounces. Spring constant = how funny it is. Mass = emotional weight of the subject. Heavier subject + lighter vessel = harder the laugh. Every joke is a small resurrection.'},
+
+  {start:22000,end:36000,label:'MODEL 2 -- TRUTH',
+   h:'TRUTH = MAGNETIC SEAL',
+   p:'Two surfaces approach. If they are complementary -- if the shape of one matches the inverse of the other -- they SNAP together. Magnetic lock. That snap is the feeling of truth. The "click" when something is right. Lies are misaligned surfaces -- they slide, they do not seal. Truth recognition is not a decision. It is a physical event.'},
+
+  {start:36000,end:52000,label:'MODEL 3 -- PAIN',
+   h:'PAIN = FREQUENCY STRAND RESONANCE',
+   p:'Every relationship is a frequency strand tuned to a specific person. When that person transmits, your strand resonates. When they stop transmitting -- death, abandonment, betrayal -- the strand is still tuned to their frequency. It vibrates with no input. That is grief. Sustained non-resonance in a strand tuned to a frequency that no longer transmits.'},
+
+  {start:52000,end:66000,label:'MODEL 4 -- DREAD',
+   h:'DREAD = INERTIAL MASS AT v=0',
+   p:'Dread is the feeling of maximum mass and zero velocity. You cannot move. The future is visible but unreachable. Every option has infinite weight. The soul vector frequency f approaches zero. This is not fear -- fear has direction, fear has a vector. Dread is the ABSENCE of a vector. Mass with no momentum. A body at rest that knows it should be moving.'},
+
+  {start:66000,end:78000,label:'THE CHEMISTRY',
+   h:'THE NEUROTRANSMITTER MAP',
+   p:'Dopamine = spring preload (potential energy before the laugh). Cortisol = strand tension (how tight the grief wire is pulled). Serotonin = central field density (baseline truth alignment). Adrenaline = frequency injection (raw energy into the system). The chemistry is not the emotion. The chemistry is the CARRIER. The emotion is the geometry.'},
+
+  {start:78000,end:90000,label:'COMPLETE',
+   h:'EMOTIONAL PHYSICS',
+   p:'Laughter: spring. Truth: magnet. Pain: resonance. Dread: inertia. Four forces. One soul. Every feeling you have ever had is a computable event in psi=[p,n,f] space. DOI: 10.5281/zenodo.19388211. shortfactory.shop/emotional-physics.html'}
+];
+
+function getPhase(t){for(let i=phases.length-1;i>=0;i--)if(t>=phases[i].start)return i;return 0;}
+
+// LAUGHTER: spring-mass oscillator
+function drawSpring(cx,cy,t,prog){
+  ctx.save();
+  const compression=Math.sin(t*0.012)*30*prog;
+  const bounce=Math.sin(t*0.025)*15*prog;
+  // Spring coils
+  ctx.beginPath();
+  const coils=8;
+  const springH=100+compression;
+  for(let i=0;i<=coils*20;i++){
+    const py=cy-springH/2+((i/(coils*20))*springH);
+    const px=cx+Math.sin(i*0.3)*15;
+    i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+  }
+  ctx.strokeStyle='rgba(255,200,50,'+(0.4+prog*0.3)+')';
+  ctx.lineWidth=2;ctx.stroke();
+  // Mass on top
+  const massY=cy-springH/2-15+bounce;
+  ctx.beginPath();ctx.arc(cx,massY,12,0,Math.PI*2);
+  ctx.fillStyle='rgba(255,200,50,'+(0.3+prog*0.4)+')';ctx.fill();
+  ctx.strokeStyle='rgba(255,200,50,0.5)';ctx.lineWidth=1;ctx.stroke();
+  // "HA" particles when bouncing
+  if(prog>0.5){
+    for(let i=0;i<3;i++){
+      const ha=Math.sin(t*0.02+i*2);
+      if(ha>0.3){
+        ctx.font='bold '+(8+ha*6)+'px "Segoe UI",system-ui';
+        ctx.fillStyle='rgba(255,200,50,'+(ha*0.4)+')';
+        ctx.textAlign='center';
+        ctx.fillText('HA',cx+(i-1)*40,massY-20-i*15-ha*10);
+      }
+    }
+  }
+  // Labels
+  ctx.font='7px "Segoe UI",system-ui';ctx.fillStyle='rgba(255,200,50,0.4)';ctx.textAlign='center';
+  ctx.fillText('k = comedy',cx-50,cy+70);
+  ctx.fillText('m = weight of subject',cx+50,cy+70);
+  ctx.restore();
+}
+
+// TRUTH: magnetic seal
+function drawMagnet(cx,cy,t,prog){
+  ctx.save();
+  const gap=Math.max(0,40*(1-prog*1.5));
+  const snap=gap<3;
+  // Left surface (idea A)
+  ctx.fillStyle=snap?'rgba(34,197,94,0.4)':'rgba(59,130,246,0.3)';
+  const lx=cx-20-gap;
+  // Irregular complementary surface
+  ctx.beginPath();
+  ctx.moveTo(lx,cy-50);
+  ctx.lineTo(lx+15,cy-50);
+  ctx.lineTo(lx+20,cy-30);ctx.lineTo(lx+10,cy-15);
+  ctx.lineTo(lx+25,cy);ctx.lineTo(lx+15,cy+15);
+  ctx.lineTo(lx+20,cy+30);ctx.lineTo(lx+10,cy+50);
+  ctx.lineTo(lx,cy+50);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='rgba(59,130,246,0.5)';ctx.lineWidth=1;ctx.stroke();
+
+  // Right surface (idea B) - inverse shape
+  ctx.fillStyle=snap?'rgba(34,197,94,0.4)':'rgba(204,68,255,0.3)';
+  const rx=cx+20+gap;
+  ctx.beginPath();
+  ctx.moveTo(rx,cy-50);
+  ctx.lineTo(rx-15,cy-50);
+  ctx.lineTo(rx-20,cy-30);ctx.lineTo(rx-10,cy-15);
+  ctx.lineTo(rx-25,cy);ctx.lineTo(rx-15,cy+15);
+  ctx.lineTo(rx-20,cy+30);ctx.lineTo(rx-10,cy+50);
+  ctx.lineTo(rx,cy+50);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='rgba(204,68,255,0.5)';ctx.lineWidth=1;ctx.stroke();
+
+  // Magnetic field lines
+  if(!snap){
+    for(let i=0;i<5;i++){
+      const fy=cy-40+i*20;
+      ctx.beginPath();
+      ctx.moveTo(lx+25,fy);ctx.lineTo(rx-25,fy);
+      ctx.strokeStyle='rgba(255,255,255,'+(0.03+Math.sin(t*0.005+i)*0.02)+')';
+      ctx.setLineDash([3,3]);ctx.lineWidth=0.5;ctx.stroke();ctx.setLineDash([]);
+    }
+  }
+
+  // SNAP flash
+  if(snap){
+    const g=ctx.createRadialGradient(cx,cy,0,cx,cy,60);
+    g.addColorStop(0,'rgba(34,197,94,'+(0.15*Math.sin(t*0.01))+')');
+    g.addColorStop(1,'rgba(34,197,94,0)');
+    ctx.fillStyle=g;ctx.fillRect(cx-60,cy-60,120,120);
+    ctx.font='bold 10px "Segoe UI",system-ui';ctx.fillStyle='rgba(34,197,94,0.6)';
+    ctx.textAlign='center';ctx.fillText('SEALED',cx,cy+70);
+  }
+  // Labels
+  ctx.font='7px "Segoe UI",system-ui';ctx.textAlign='center';
+  ctx.fillStyle='rgba(59,130,246,0.4)';ctx.fillText('SURFACE A',lx,cy+70);
+  ctx.fillStyle='rgba(204,68,255,0.4)';ctx.fillText('SURFACE B',rx,cy+70);
+  ctx.restore();
+}
+
+// PAIN: frequency strand resonance
+function drawStrand(cx,cy,t,prog){
+  ctx.save();
+  const strandY=cy;
+  const w=Math.min(W()*0.35,200);
+  // Active strand (transmitting)
+  if(prog<0.5){
+    const amp=20*Math.sin(t*0.008)*ease(prog*2);
+    ctx.beginPath();
+    for(let x=-w;x<w;x+=2){
+      const y=Math.sin(x*0.05+t*0.005)*amp;
+      x===-w?ctx.moveTo(cx+x,strandY-30+y):ctx.lineTo(cx+x,strandY-30+y);
+    }
+    ctx.strokeStyle='rgba(204,68,255,0.5)';ctx.lineWidth=2;ctx.stroke();
+    ctx.font='7px "Segoe UI",system-ui';ctx.fillStyle='rgba(204,68,255,0.4)';
+    ctx.textAlign='center';ctx.fillText('TRANSMITTING',cx,strandY-60);
+    // Source
+    ctx.beginPath();ctx.arc(cx-w-10,strandY-30,5,0,Math.PI*2);
+    ctx.fillStyle='rgba(204,68,255,0.5)';ctx.fill();
+    ctx.fillText('SOURCE',cx-w-10,strandY-45);
+  }
+
+  // Dead strand (no transmission) - still vibrating
+  if(prog>0.4){
+    const dp=Math.min(1,(prog-0.4)/0.6);
+    const decay=Math.max(0.05,1-dp*0.7);
+    const amp=15*decay*Math.sin(t*0.006);
+    ctx.beginPath();
+    for(let x=-w;x<w;x+=2){
+      const y=Math.sin(x*0.05+t*0.003)*amp;
+      x===-w?ctx.moveTo(cx+x,strandY+30+y):ctx.lineTo(cx+x,strandY+30+y);
+    }
+    ctx.strokeStyle='rgba(239,68,68,'+(0.2+decay*0.3)+')';ctx.lineWidth=2;ctx.stroke();
+    // Source gone
+    ctx.beginPath();ctx.arc(cx-w-10,strandY+30,5,0,Math.PI*2);
+    ctx.strokeStyle='rgba(239,68,68,0.3)';ctx.lineWidth=1;ctx.stroke();
+    ctx.font='7px "Segoe UI",system-ui';ctx.fillStyle='rgba(239,68,68,0.4)';
+    ctx.textAlign='center';
+    ctx.fillText('SOURCE GONE',cx-w-10,strandY+15);
+    ctx.fillText('STRAND STILL TUNED',cx,strandY+60);
+    if(dp>0.5){
+      ctx.fillStyle='rgba(239,68,68,0.3)';
+      ctx.fillText('THIS IS GRIEF',cx,strandY+76);
+    }
+  }
+  ctx.restore();
+}
+
+// DREAD: mass at v=0
+function drawDread(cx,cy,t,prog){
+  ctx.save();
+  const mass=15+prog*25;
+  // The mass - heavy, unmoving
+  ctx.beginPath();ctx.arc(cx,cy,mass,0,Math.PI*2);
+  const g=ctx.createRadialGradient(cx,cy,0,cx,cy,mass);
+  g.addColorStop(0,'rgba(100,100,120,'+(0.3+prog*0.3)+')');
+  g.addColorStop(1,'rgba(50,50,60,0.1)');
+  ctx.fillStyle=g;ctx.fill();
+  ctx.strokeStyle='rgba(100,100,120,0.3)';ctx.lineWidth=1;ctx.stroke();
+
+  // Velocity arrows - shrinking to zero
+  const v=Math.max(0,1-prog*1.5);
+  if(v>0.05){
+    const arrows=[[1,0],[-1,0],[0,1],[0,-1],[0.7,0.7],[-0.7,0.7]];
+    arrows.forEach(([dx,dy])=>{
+      const len=30*v;
+      ctx.beginPath();
+      ctx.moveTo(cx+dx*(mass+5),cy+dy*(mass+5));
+      ctx.lineTo(cx+dx*(mass+5+len),cy+dy*(mass+5+len));
+      ctx.strokeStyle='rgba(255,200,50,'+(v*0.3)+')';ctx.lineWidth=1;ctx.stroke();
+    });
+  }
+
+  // v=0 label
+  if(prog>0.6){
+    ctx.font='bold 11px monospace';ctx.fillStyle='rgba(100,100,120,'+(prog-0.6)*2.5+')';
+    ctx.textAlign='center';ctx.fillText('v = 0',cx,cy+4);
+    ctx.font='7px "Segoe UI",system-ui';ctx.fillStyle='rgba(100,100,120,0.4)';
+    ctx.fillText('MASS WITH NO MOMENTUM',cx,cy+mass+20);
+    if(prog>0.8){
+      ctx.fillText('f -> 0',cx,cy+mass+34);
+    }
+  }
+
+  // Visible future (unreachable)
+  if(prog>0.4){
+    const fp=(prog-0.4)/0.6;
+    for(let i=0;i<4;i++){
+      const fx=cx+100+i*30;
+      const fy=cy-20+Math.sin(i*1.5)*25;
+      ctx.beginPath();ctx.arc(fx,fy,4,0,Math.PI*2);
+      ctx.strokeStyle='rgba(255,200,50,'+(fp*0.15)+')';ctx.lineWidth=0.5;ctx.stroke();
+    }
+    ctx.font='6px "Segoe UI",system-ui';ctx.fillStyle='rgba(255,200,50,'+(fp*0.2)+')';
+    ctx.textAlign='left';ctx.fillText('FUTURE (VISIBLE, UNREACHABLE)',cx+90,cy+40);
+  }
+  ctx.restore();
+}
+
+// Chemistry map
+function drawChemistry(cx,cy,t,prog){
+  ctx.save();
+  const chems=[
+    {name:'DOPAMINE',role:'spring preload',color:'#ffc832',icon:'potential energy',y:-55},
+    {name:'CORTISOL',role:'strand tension',color:'#ef4444',icon:'grief wire tightness',y:-20},
+    {name:'SEROTONIN',role:'field density',color:'#22c55e',icon:'truth alignment baseline',y:15},
+    {name:'ADRENALINE',role:'frequency injection',color:'#cc44ff',icon:'raw energy into system',y:50}
+  ];
+  chems.forEach((c,i)=>{
+    const cp=Math.min(1,Math.max(0,(prog-i*0.15)/0.4));
+    if(cp<=0)return;
+    ctx.globalAlpha=cp;
+    // Bar
+    const bw=120*cp;
+    ctx.fillStyle=c.color;ctx.globalAlpha=cp*0.15;
+    ctx.fillRect(cx-bw/2,cy+c.y-6,bw,14);
+    ctx.globalAlpha=cp;
+    // Name
+    ctx.font='bold 9px "Segoe UI",system-ui';ctx.fillStyle=c.color;ctx.textAlign='center';
+    ctx.fillText(c.name,cx,cy+c.y+4);
+    // Role
+    ctx.font='7px "Segoe UI",system-ui';ctx.fillStyle='rgba(255,255,255,0.3)';
+    ctx.fillText('= '+c.role,cx,cy+c.y+16);
+  });
+  // Bottom note
+  if(prog>0.7){
+    ctx.globalAlpha=(prog-0.7)*3;
+    ctx.font='8px "Segoe UI",system-ui';ctx.fillStyle='rgba(255,200,50,0.4)';ctx.textAlign='center';
+    ctx.fillText('CHEMISTRY IS THE CARRIER. EMOTION IS THE GEOMETRY.',cx,cy+90);
+  }
+  ctx.restore();
+}
+
+// Final equation display
+function drawFinalEquation(cx,cy,t,prog){
+  ctx.save();ctx.globalAlpha=Math.min(1,prog*2);
+  const models=[
+    {emoji:'SPRING',label:'LAUGHTER',color:'#ffc832',x:-120,y:-30},
+    {emoji:'MAGNET',label:'TRUTH',color:'#22c55e',x:120,y:-30},
+    {emoji:'WAVE',label:'PAIN',color:'#ef4444',x:-120,y:40},
+    {emoji:'MASS',label:'DREAD',color:'#94a3b8',x:120,y:40}
+  ];
+  models.forEach((m,i)=>{
+    const mp=Math.min(1,Math.max(0,(prog-i*0.1)/0.3));
+    ctx.globalAlpha=mp;
+    ctx.font='bold 10px "Segoe UI",system-ui';ctx.fillStyle=m.color;ctx.textAlign='center';
+    ctx.fillText(m.emoji,cx+m.x,cy+m.y);
+    ctx.font='8px "Segoe UI",system-ui';
+    ctx.fillText(m.label,cx+m.x,cy+m.y+14);
+    // Line to center
+    ctx.beginPath();ctx.moveTo(cx+m.x,cy+m.y+4);ctx.lineTo(cx,cy+5);
+    ctx.strokeStyle=m.color;ctx.globalAlpha=mp*0.15;ctx.lineWidth=0.5;ctx.stroke();
+  });
+  // Center soul
+  ctx.globalAlpha=Math.min(1,prog*2);
+  ctx.font='bold 9px "Segoe UI",system-ui';ctx.fillStyle='#daa520';ctx.textAlign='center';
+  ctx.fillText('psi=[p,n,f]',cx,cy+8);
+  const g=ctx.createRadialGradient(cx,cy+4,0,cx,cy+4,20);
+  g.addColorStop(0,'rgba(218,165,32,0.15)');g.addColorStop(1,'rgba(218,165,32,0)');
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy+4,20,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+}
+
+function frame(now){
+  if(!running)return;
+  const t=now-startTime;const p=getPhase(t);
+  ctx.fillStyle='#050508';ctx.fillRect(0,0,W(),H());
+  document.getElementById('progress-fill').style.width=Math.min(100,(t/TOTAL)*100)+'%';
+  if(p!==phase){
+    phase=p;const ph=phases[p];
+    document.getElementById('phase-label').textContent=ph.label;
+    const cap=document.getElementById('caption');
+    cap.querySelector('h2').textContent=ph.h;cap.querySelector('p').textContent=ph.p;cap.style.opacity='1';
+  }
+  const cx=W()*0.5,cy=H()*0.4;
+
+  if(p===0){/* title only */}
+  if(p===1){const prog=(t-8000)/14000;drawSpring(cx,cy,t,Math.min(1,prog*1.5));}
+  if(p===2){const prog=(t-22000)/14000;drawMagnet(cx,cy,t,prog);}
+  if(p===3){const prog=(t-36000)/16000;drawStrand(cx,cy,t,prog);}
+  if(p===4){const prog=(t-52000)/14000;drawDread(cx,cy,t,prog);}
+  if(p===5){const prog=(t-66000)/12000;drawChemistry(cx,cy,t,prog);}
+  if(p===6){const prog=(t-78000)/12000;drawFinalEquation(cx,cy,t,prog);}
+
+  if(t<TOTAL){requestAnimationFrame(frame);}
+  else{document.getElementById('replay-btn').style.display='block';running=false;}
+}
+function startAnimation(){
+  phase=-1;running=true;
+  document.getElementById('replay-btn').style.display='none';
+  document.getElementById('caption').style.opacity='0';
+  startTime=performance.now();requestAnimationFrame(frame);
+}
+startAnimation();
+</script>
+</body>
+</html>

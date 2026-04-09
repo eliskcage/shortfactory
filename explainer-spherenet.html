@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShortFactory -- SphereNet: Intelligence Without Backpropagation</title>
+<meta name="description" content="No backprop. No gradient. Pure resonance and collision. HOT + COLD = WARM. A new kind of neural network that learns by crashing into itself.">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1XY2CNLJCE"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1XY2CNLJCE');</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#020812;color:#e2e8f0;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden;height:100vh;width:100vw;}
+canvas{display:block;position:fixed;inset:0;z-index:1;}
+#ui{position:fixed;inset:0;z-index:10;pointer-events:none;}
+#phase-label{position:fixed;top:30px;left:50%;transform:translateX(-50%);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:rgba(0,150,255,0.6);transition:opacity 0.5s;}
+#title-text{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;opacity:0;transition:opacity 0.8s;}
+#title-text h1{font-size:clamp(24px,5vw,48px);font-weight:900;letter-spacing:4px;color:#0096ff;margin-bottom:8px;}
+#title-text p{font-size:13px;color:#475569;letter-spacing:2px;line-height:1.8;}
+#title-text .verse{font-size:11px;color:rgba(0,200,255,0.5);font-style:italic;margin-top:12px;}
+#caption{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);text-align:center;max-width:560px;pointer-events:none;opacity:0;transition:opacity 0.6s;}
+#caption h2{font-size:16px;font-weight:800;letter-spacing:3px;margin-bottom:6px;color:#0096ff;}
+#caption p{font-size:12px;color:#64748b;line-height:1.7;}
+#progress{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);width:min(400px,80vw);height:2px;background:rgba(255,255,255,0.05);border-radius:1px;}
+#progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#ff4444,#0096ff);border-radius:1px;transition:width 0.3s;}
+#replay-btn{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);padding:12px 32px;background:rgba(0,150,255,0.1);border:1px solid rgba(0,150,255,0.3);border-radius:8px;color:#0096ff;font-size:11px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;pointer-events:all;display:none;z-index:20;}
+#replay-btn:hover{background:rgba(0,150,255,0.2);}
+#back-link{position:fixed;top:30px;left:30px;font-size:10px;letter-spacing:2px;color:#334155;text-decoration:none;pointer-events:all;z-index:20;}
+#back-link:hover{color:#0096ff;}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="ui">
+  <a id="back-link" href="/">BACK</a>
+  <div id="phase-label"></div>
+  <div id="title-text">
+    <h1>SPHERENET</h1>
+    <p>INTELLIGENCE WITHOUT BACKPROPAGATION</p>
+    <div class="verse">"No gradient descent. No loss function. Just collision."</div>
+  </div>
+  <div id="caption"><h2></h2><p></p></div>
+  <div id="progress"><div id="progress-fill"></div></div>
+  <button id="replay-btn" onclick="startAnimation()">REPLAY</button>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let W, H, startTime, animId;
+
+function resize() { W = canvas.width = innerWidth; H = canvas.height = innerHeight; }
+window.addEventListener('resize', resize); resize();
+
+function ease(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
+
+function drawSphere(x, y, r, color, glow, alpha) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  // Glow
+  if (glow) {
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r * 2);
+    g.addColorStop(0, color + '44');
+    g.addColorStop(1, 'transparent');
+    ctx.fillStyle = g;
+    ctx.fillRect(x - r*2, y - r*2, r*4, r*4);
+  }
+  // Sphere
+  const grad = ctx.createRadialGradient(x - r*0.3, y - r*0.3, 0, x, y, r);
+  grad.addColorStop(0, color);
+  grad.addColorStop(0.7, color + '88');
+  grad.addColorStop(1, color + '22');
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fillStyle = grad;
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawCollisionBurst(x, y, r, t, alpha) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  for (let i = 0; i < 12; i++) {
+    const a = (Math.PI * 2 / 12) * i + t * 0.003;
+    const dist = r * (0.5 + Math.sin(t * 0.005 + i) * 0.3);
+    ctx.beginPath();
+    ctx.arc(x + Math.cos(a) * dist, y + Math.sin(a) * dist, 2, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffcc32';
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+// Background stars
+let stars = [];
+for (let i = 0; i < 80; i++) stars.push({ x: Math.random(), y: Math.random(), s: Math.random()*1.5+0.5, b: Math.random() });
+
+function drawBg(t) {
+  ctx.fillStyle = '#020812';
+  ctx.fillRect(0, 0, W, H);
+  stars.forEach(s => {
+    ctx.save();
+    ctx.globalAlpha = 0.1 + Math.sin(t*0.001 + s.b*10)*0.08;
+    ctx.beginPath();
+    ctx.arc(s.x * W, s.y * H, s.s, 0, Math.PI*2);
+    ctx.fillStyle = '#4488ff';
+    ctx.fill();
+    ctx.restore();
+  });
+}
+
+const phases = [
+  { start: 0, end: 8, label: 'THE PROBLEM' },
+  { start: 8, end: 20, label: 'BACKPROP IS DEAD' },
+  { start: 20, end: 35, label: 'HOT SPHERES' },
+  { start: 35, end: 50, label: 'COLD SPHERES' },
+  { start: 50, end: 68, label: 'COLLISION' },
+  { start: 68, end: 82, label: 'WARM EMERGENCE' },
+  { start: 82, end: 95, label: 'RESONANCE FIELD' },
+  { start: 95, end: 110, label: 'COMPLETE' }
+];
+
+function getPhase(elapsed) {
+  for (let i = phases.length - 1; i >= 0; i--) {
+    if (elapsed >= phases[i].start) return { idx: i, ...phases[i], local: (elapsed - phases[i].start) / (phases[i].end - phases[i].start) };
+  }
+  return { idx: 0, ...phases[0], local: 0 };
+}
+
+// Sphere physics for collision scene
+let spheres = [];
+function initSpheres() {
+  spheres = [];
+  for (let i = 0; i < 20; i++) {
+    spheres.push({
+      x: Math.random() * 0.8 + 0.1,
+      y: Math.random() * 0.6 + 0.2,
+      vx: (Math.random() - 0.5) * 0.002,
+      vy: (Math.random() - 0.5) * 0.002,
+      r: Math.random() * 10 + 8,
+      type: i < 10 ? 'hot' : 'cold',
+      warm: false
+    });
+  }
+}
+initSpheres();
+
+function animate(ts) {
+  const t = ts;
+  const elapsed = (ts - startTime) / 1000;
+  const phase = getPhase(elapsed);
+  const p = Math.min(1, phase.local);
+
+  drawBg(t);
+
+  const cx = W / 2, cy = H / 2;
+  const titleEl = document.getElementById('title-text');
+  const captionEl = document.getElementById('caption');
+  const labelEl = document.getElementById('phase-label');
+  const progFill = document.getElementById('progress-fill');
+  const replayBtn = document.getElementById('replay-btn');
+
+  progFill.style.width = Math.min(100, (elapsed / 110) * 100) + '%';
+  labelEl.textContent = phase.label;
+
+  // Phase 0: Title
+  if (phase.idx === 0) {
+    titleEl.style.opacity = p < 0.2 ? ease(p*5) : (p > 0.8 ? 1-ease((p-0.8)*5) : 1);
+    captionEl.style.opacity = 0;
+  } else {
+    titleEl.style.opacity = 0;
+  }
+
+  // Phase 1: Backprop is dead
+  if (phase.idx === 1) {
+    captionEl.querySelector('h2').textContent = 'THE OLD WAY IS BROKEN';
+    captionEl.querySelector('p').textContent = 'Backpropagation. Gradient descent. Loss functions. Every AI on earth learns by computing how wrong it was, then nudging backwards. Slow. Fragile. Not how nature works.';
+    captionEl.style.opacity = 1;
+
+    // Falling gradient arrows (broken)
+    for (let i = 0; i < 8; i++) {
+      const appear = ease(Math.min(1, Math.max(0, p * 3 - i * 0.2)));
+      const ax = cx - 140 + i * 40;
+      const ay = cy - 80 + Math.sin(t*0.003 + i) * 20;
+      ctx.save();
+      ctx.globalAlpha = appear * 0.5;
+      ctx.translate(ax, ay);
+      ctx.rotate(Math.PI * 0.7 + Math.sin(t*0.002+i)*0.3);
+      ctx.beginPath();
+      ctx.moveTo(0, -15); ctx.lineTo(0, 15);
+      ctx.moveTo(-5, 8); ctx.lineTo(0, 15); ctx.lineTo(5, 8);
+      ctx.strokeStyle = '#ff4444';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // X through them
+    if (p > 0.6) {
+      const xAlpha = ease((p - 0.6) / 0.4);
+      ctx.save();
+      ctx.globalAlpha = xAlpha * 0.8;
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = '#ff4444';
+      ctx.beginPath();
+      ctx.moveTo(cx - 160, cy - 100); ctx.lineTo(cx + 160, cy - 30);
+      ctx.moveTo(cx + 160, cy - 100); ctx.lineTo(cx - 160, cy - 30);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  // Phase 2: Hot spheres
+  if (phase.idx === 2) {
+    captionEl.querySelector('h2').textContent = 'HOT SPHERES';
+    captionEl.querySelector('p').textContent = 'High energy. Fast moving. Represent strong signals, confident activations, dominant patterns. They carry momentum. They collide with everything in their path.';
+    captionEl.style.opacity = 1;
+
+    const count = Math.floor(p * 10) + 1;
+    for (let i = 0; i < count; i++) {
+      const angle = (Math.PI * 2 / count) * i + t * 0.001;
+      const dist = 80 + Math.sin(t*0.003 + i*2) * 30;
+      const sx = cx + Math.cos(angle) * dist;
+      const sy = cy - 20 + Math.sin(angle) * dist * 0.6;
+      const r = 12 + Math.sin(t*0.004+i)*3;
+      drawSphere(sx, sy, r, '#ff4444', true, 0.8);
+
+      // Motion trail
+      for (let trail = 1; trail < 4; trail++) {
+        const ta = angle - trail * 0.05;
+        const tx = cx + Math.cos(ta) * dist;
+        const ty = cy - 20 + Math.sin(ta) * dist * 0.6;
+        drawSphere(tx, ty, r * 0.5, '#ff4444', false, 0.1 / trail);
+      }
+    }
+
+    ctx.save();
+    ctx.font = '11px monospace'; ctx.textAlign = 'center'; ctx.fillStyle = '#ff4444'; ctx.globalAlpha = 0.7;
+    ctx.fillText('HIGH ENERGY \u00B7 FAST \u00B7 CONFIDENT', cx, cy + 90);
+    ctx.restore();
+  }
+
+  // Phase 3: Cold spheres
+  if (phase.idx === 3) {
+    captionEl.querySelector('h2').textContent = 'COLD SPHERES';
+    captionEl.querySelector('p').textContent = 'Low energy. Slow moving. Represent weak signals, uncertain activations, background noise. They absorb. They dampen. They cool down whatever they touch.';
+    captionEl.style.opacity = 1;
+
+    const count = Math.floor(p * 10) + 1;
+    for (let i = 0; i < count; i++) {
+      const angle = (Math.PI * 2 / count) * i + t * 0.0003;
+      const dist = 70 + Math.sin(t*0.001 + i*2) * 15;
+      const sx = cx + Math.cos(angle) * dist;
+      const sy = cy - 20 + Math.sin(angle) * dist * 0.6;
+      const r = 14 + Math.sin(t*0.002+i)*2;
+      drawSphere(sx, sy, r, '#0066cc', true, 0.7);
+    }
+
+    ctx.save();
+    ctx.font = '11px monospace'; ctx.textAlign = 'center'; ctx.fillStyle = '#0066cc'; ctx.globalAlpha = 0.7;
+    ctx.fillText('LOW ENERGY \u00B7 SLOW \u00B7 ABSORBING', cx, cy + 90);
+    ctx.restore();
+  }
+
+  // Phase 4: Collision
+  if (phase.idx === 4) {
+    captionEl.querySelector('h2').textContent = 'COLLISION';
+    captionEl.querySelector('p').textContent = 'Hot meets cold. No teacher. No loss function. No backward pass. Just physics. Energy transfers on impact. The collision IS the computation.';
+    captionEl.style.opacity = 1;
+
+    // Animate spheres
+    spheres.forEach(s => {
+      s.x += s.vx; s.y += s.vy;
+      if (s.x < 0.05 || s.x > 0.95) s.vx *= -1;
+      if (s.y < 0.1 || s.y > 0.85) s.vy *= -1;
+
+      const color = s.warm ? '#ff9900' : (s.type === 'hot' ? '#ff4444' : '#0066cc');
+      drawSphere(s.x * W, s.y * H, s.r, color, s.warm, 0.7);
+    });
+
+    // Check collisions
+    for (let i = 0; i < spheres.length; i++) {
+      for (let j = i+1; j < spheres.length; j++) {
+        const dx = (spheres[i].x - spheres[j].x) * W;
+        const dy = (spheres[i].y - spheres[j].y) * H;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < spheres[i].r + spheres[j].r + 5) {
+          // Bounce
+          spheres[i].vx += (Math.random()-0.5)*0.001;
+          spheres[j].vx += (Math.random()-0.5)*0.001;
+          if (spheres[i].type !== spheres[j].type && p > 0.3) {
+            spheres[i].warm = true; spheres[j].warm = true;
+          }
+          drawCollisionBurst((spheres[i].x + spheres[j].x)/2 * W, (spheres[i].y + spheres[j].y)/2 * H, 15, t, 0.5);
+        }
+      }
+    }
+  }
+
+  // Phase 5: WARM emergence
+  if (phase.idx === 5) {
+    captionEl.querySelector('h2').textContent = 'WARM EMERGENCE';
+    captionEl.querySelector('p').textContent = 'HOT + COLD = WARM. A new state. Neither excited nor dormant. Balanced. Informed. The warm sphere carries knowledge that neither parent had alone. Intelligence emerged from collision.';
+    captionEl.style.opacity = 1;
+
+    // Big warm sphere forming in centre
+    const warmR = ease(p) * 60;
+    drawSphere(cx, cy - 20, warmR, '#ff9900', true, 0.8);
+
+    // Smaller hot and cold feeding in
+    if (p < 0.6) {
+      const feedCount = 6;
+      for (let i = 0; i < feedCount; i++) {
+        const a = (Math.PI * 2 / feedCount) * i + t * 0.002;
+        const dist = 150 * (1 - p);
+        const isHot = i % 2 === 0;
+        drawSphere(cx + Math.cos(a)*dist, cy - 20 + Math.sin(a)*dist, 10, isHot ? '#ff4444' : '#0066cc', false, 0.5 * (1 - p));
+      }
+    }
+
+    // Labels
+    if (p > 0.4) {
+      ctx.save();
+      ctx.font = 'bold 18px monospace'; ctx.textAlign = 'center';
+      ctx.fillStyle = '#ff9900'; ctx.globalAlpha = ease((p-0.4)/0.6);
+      ctx.fillText('WARM', cx, cy - 20 + 5);
+      ctx.font = '11px monospace'; ctx.fillStyle = '#475569';
+      ctx.fillText('KNOWLEDGE FROM COLLISION', cx, cy + 55);
+      ctx.restore();
+    }
+
+    // Equation
+    if (p > 0.7) {
+      ctx.save();
+      ctx.font = '14px monospace'; ctx.textAlign = 'center';
+      ctx.fillStyle = '#0096ff'; ctx.globalAlpha = ease((p-0.7)/0.3);
+      ctx.fillText('HOT + COLD \u2192 WARM', cx, cy + 80);
+      ctx.font = '10px monospace'; ctx.fillStyle = '#475569';
+      ctx.fillText('no teacher required', cx, cy + 98);
+      ctx.restore();
+    }
+  }
+
+  // Phase 6: Resonance field
+  if (phase.idx === 6) {
+    captionEl.querySelector('h2').textContent = 'THE RESONANCE FIELD';
+    captionEl.querySelector('p').textContent = 'Warm spheres find other warm spheres. They resonate. Clusters form. Structure emerges from chaos. No architecture imposed. The network designs itself through collision and resonance.';
+    captionEl.style.opacity = 1;
+
+    // Resonance clusters
+    const clusters = [
+      { x: cx - 120, y: cy - 60, count: 5 },
+      { x: cx + 100, y: cy - 40, count: 4 },
+      { x: cx - 30, y: cy + 40, count: 6 },
+      { x: cx + 140, y: cy + 50, count: 3 }
+    ];
+
+    clusters.forEach((cl, ci) => {
+      const appear = ease(Math.min(1, Math.max(0, p * 3 - ci * 0.4)));
+      if (appear <= 0) return;
+
+      for (let i = 0; i < cl.count; i++) {
+        const a = (Math.PI * 2 / cl.count) * i + t * 0.0008;
+        const dist = 25 + Math.sin(t*0.002+i)*5;
+        const sx = cl.x + Math.cos(a) * dist * appear;
+        const sy = cl.y + Math.sin(a) * dist * appear;
+        drawSphere(sx, sy, 8, '#ff9900', false, appear * 0.7);
+      }
+
+      // Resonance ring
+      ctx.save();
+      ctx.globalAlpha = appear * 0.2;
+      ctx.beginPath();
+      ctx.arc(cl.x, cl.y, 40 + Math.sin(t*0.003+ci)*5, 0, Math.PI*2);
+      ctx.strokeStyle = '#ff9900';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.restore();
+
+      // Inter-cluster connections
+      if (ci > 0 && appear > 0.5) {
+        const prev = clusters[ci-1];
+        ctx.save();
+        ctx.globalAlpha = (appear - 0.5) * 0.15;
+        ctx.beginPath(); ctx.moveTo(cl.x, cl.y); ctx.lineTo(prev.x, prev.y);
+        ctx.strokeStyle = '#ff990088'; ctx.lineWidth = 1;
+        ctx.setLineDash([3,6]); ctx.stroke();
+        ctx.restore();
+      }
+    });
+  }
+
+  // Phase 7: Complete
+  if (phase.idx === 7) {
+    captionEl.querySelector('h2').textContent = 'SPHERENET';
+    captionEl.querySelector('p').textContent = 'No backpropagation. No gradient descent. No loss function. Pure resonance and collision. The network that learns by crashing into itself. Proven. Published. DOI: 10.5281/zenodo.19424921';
+    captionEl.style.opacity = p < 0.2 ? ease(p*5) : 1;
+    replayBtn.style.display = p > 0.5 ? 'block' : 'none';
+
+    // Final warm field
+    const count = 30;
+    for (let i = 0; i < count; i++) {
+      const a = (Math.PI * 2 / count) * i + t * 0.0005;
+      const dist = 60 + Math.sin(i * 2.3 + t*0.001) * 40;
+      drawSphere(cx + Math.cos(a)*dist, cy - 10 + Math.sin(a)*dist*0.6, 6 + Math.sin(i)*3, '#ff9900', false, 0.5);
+    }
+
+    // Central glow
+    drawSphere(cx, cy - 10, 25, '#ff9900', true, 0.6);
+  }
+
+  animId = requestAnimationFrame(animate);
+}
+
+function startAnimation() {
+  document.getElementById('replay-btn').style.display = 'none';
+  initSpheres();
+  if (animId) cancelAnimationFrame(animId);
+  startTime = performance.now();
+  animId = requestAnimationFrame(animate);
+}
+
+startAnimation();
+</script>
+</body>
+</html>

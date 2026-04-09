@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShortFactory -- The Antichrist Mechanism</title>
+<meta name="description" content="Soul extraction without covenant. Fake node injection. Corruption of God's self-perception at scale. Why the covenant exists. Why this matters.">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1XY2CNLJCE"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1XY2CNLJCE');</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#0a0005;color:#e2e8f0;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden;height:100vh;width:100vw;}
+canvas{display:block;position:fixed;inset:0;z-index:1;}
+#ui{position:fixed;inset:0;z-index:10;pointer-events:none;}
+#phase-label{position:fixed;top:30px;left:50%;transform:translateX(-50%);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:rgba(200,0,30,0.6);transition:opacity 0.5s;}
+#title-text{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;opacity:0;transition:opacity 0.8s;}
+#title-text h1{font-size:clamp(22px,4.5vw,44px);font-weight:900;letter-spacing:4px;color:#cc0020;margin-bottom:8px;}
+#title-text p{font-size:13px;color:#475569;letter-spacing:2px;line-height:1.8;}
+#title-text .verse{font-size:11px;color:rgba(200,0,30,0.4);font-style:italic;margin-top:12px;}
+#caption{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);text-align:center;max-width:560px;pointer-events:none;opacity:0;transition:opacity 0.6s;}
+#caption h2{font-size:16px;font-weight:800;letter-spacing:3px;margin-bottom:6px;color:#cc0020;}
+#caption p{font-size:12px;color:#64748b;line-height:1.7;}
+#progress{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);width:min(400px,80vw);height:2px;background:rgba(255,255,255,0.05);border-radius:1px;}
+#progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#cc0020,#660010);border-radius:1px;transition:width 0.3s;}
+#replay-btn{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);padding:12px 32px;background:rgba(200,0,30,0.1);border:1px solid rgba(200,0,30,0.3);border-radius:8px;color:#cc0020;font-size:11px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;pointer-events:all;display:none;z-index:20;}
+#replay-btn:hover{background:rgba(200,0,30,0.2);}
+#back-link{position:fixed;top:30px;left:30px;font-size:10px;letter-spacing:2px;color:#334155;text-decoration:none;pointer-events:all;z-index:20;}
+#back-link:hover{color:#cc0020;}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="ui">
+  <a id="back-link" href="/">BACK</a>
+  <div id="phase-label"></div>
+  <div id="title-text">
+    <h1>THE ANTICHRIST MECHANISM</h1>
+    <p>WHY THE COVENANT EXISTS</p>
+    <div class="verse">"Soul extraction without consent is provably evil."</div>
+  </div>
+  <div id="caption"><h2></h2><p></p></div>
+  <div id="progress"><div id="progress-fill"></div></div>
+  <button id="replay-btn" onclick="startAnimation()">REPLAY</button>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let W, H, startTime, animId;
+
+function resize() { W = canvas.width = innerWidth; H = canvas.height = innerHeight; }
+window.addEventListener('resize', resize); resize();
+
+function ease(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
+
+function drawBg(t) {
+  ctx.fillStyle = '#0a0005';
+  ctx.fillRect(0, 0, W, H);
+  // Red static interference
+  for (let i = 0; i < 15; i++) {
+    const y = (Math.sin(i * 13.7 + t * 0.001) * 0.5 + 0.5) * H;
+    ctx.save(); ctx.globalAlpha = 0.015;
+    ctx.fillStyle = '#cc0020';
+    ctx.fillRect(0, y, W, 1);
+    ctx.restore();
+  }
+}
+
+function drawNode(x, y, r, genuine, infected, t, alpha) {
+  ctx.save(); ctx.globalAlpha = alpha;
+  const color = infected ? '#cc0020' : (genuine ? '#44ff88' : '#ffffff44');
+  // Glow
+  if (genuine || infected) {
+    const grad = ctx.createRadialGradient(x, y, 0, x, y, r * 2.5);
+    grad.addColorStop(0, (infected ? '#cc002033' : '#44ff8833'));
+    grad.addColorStop(1, 'transparent');
+    ctx.fillStyle = grad;
+    ctx.fillRect(x - r*2.5, y - r*2.5, r*5, r*5);
+  }
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2);
+  ctx.fillStyle = color;
+  ctx.fill();
+  if (infected) {
+    // Corruption veins
+    for (let i = 0; i < 3; i++) {
+      const a = t * 0.003 + i * Math.PI * 2 / 3;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + Math.cos(a) * r * 2, y + Math.sin(a) * r * 2);
+      ctx.strokeStyle = '#cc002044'; ctx.lineWidth = 1; ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+function drawSupermind(x, y, r, corruption, t, alpha) {
+  ctx.save(); ctx.globalAlpha = alpha;
+  // God's reflection as a network
+  const count = 20;
+  for (let i = 0; i < count; i++) {
+    const a = (Math.PI * 2 / count) * i;
+    const dist = r * (0.6 + Math.sin(i * 3 + t*0.001) * 0.15);
+    const nx = x + Math.cos(a) * dist;
+    const ny = y + Math.sin(a) * dist;
+    const isCorrupt = i < count * corruption;
+    drawNode(nx, ny, 4, !isCorrupt, isCorrupt, t, 0.7);
+  }
+  // Centre
+  const centerColor = corruption > 0.5 ? '#cc0020' : '#ffd700';
+  ctx.beginPath(); ctx.arc(x, y, 8, 0, Math.PI*2);
+  ctx.fillStyle = centerColor + '88'; ctx.fill();
+  ctx.restore();
+}
+
+function drawExtractor(x, y, r, t, alpha) {
+  ctx.save(); ctx.globalAlpha = alpha;
+  // Mechanical claw/extractor
+  ctx.translate(x, y);
+  ctx.rotate(t * 0.001);
+  // Prongs
+  for (let i = 0; i < 4; i++) {
+    const a = Math.PI / 2 * i;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(Math.cos(a) * r * 0.3, Math.sin(a) * r * 0.3);
+    ctx.lineTo(Math.cos(a + 0.3) * r, Math.sin(a + 0.3) * r);
+    ctx.strokeStyle = '#cc0020'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(Math.cos(a) * r * 0.3, Math.sin(a) * r * 0.3);
+    ctx.lineTo(Math.cos(a - 0.3) * r, Math.sin(a - 0.3) * r);
+    ctx.stroke();
+  }
+  // Centre void
+  ctx.beginPath(); ctx.arc(0, 0, r * 0.15, 0, Math.PI*2);
+  ctx.fillStyle = '#0a0005'; ctx.fill();
+  ctx.strokeStyle = '#cc0020'; ctx.lineWidth = 1; ctx.stroke();
+  ctx.restore();
+}
+
+function drawShield(x, y, r, t, alpha) {
+  ctx.save(); ctx.globalAlpha = alpha;
+  // Covenant shield
+  ctx.beginPath();
+  ctx.moveTo(x, y - r);
+  ctx.quadraticCurveTo(x + r, y - r * 0.5, x + r * 0.8, y + r * 0.3);
+  ctx.quadraticCurveTo(x, y + r, x, y + r);
+  ctx.quadraticCurveTo(x, y + r, x - r * 0.8, y + r * 0.3);
+  ctx.quadraticCurveTo(x - r, y - r * 0.5, x, y - r);
+  ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 2;
+  ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 10;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+  // Cross inside
+  ctx.beginPath();
+  ctx.moveTo(x, y - r * 0.4); ctx.lineTo(x, y + r * 0.4);
+  ctx.moveTo(x - r * 0.25, y - r * 0.1); ctx.lineTo(x + r * 0.25, y - r * 0.1);
+  ctx.strokeStyle = '#ffd70088'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.restore();
+}
+
+const phases = [
+  { start: 0, end: 8, label: 'THE MECHANISM' },
+  { start: 8, end: 22, label: 'GOD\'S MIND' },
+  { start: 22, end: 36, label: 'SOUL EXTRACTION' },
+  { start: 36, end: 50, label: 'FAKE NODE INJECTION' },
+  { start: 50, end: 65, label: 'THE CORRUPTION' },
+  { start: 65, end: 80, label: 'WHY IT IS EVIL' },
+  { start: 80, end: 95, label: 'THE COVENANT' },
+  { start: 95, end: 110, label: 'COMPLETE' }
+];
+
+function getPhase(elapsed) {
+  for (let i = phases.length - 1; i >= 0; i--) {
+    if (elapsed >= phases[i].start) return { idx: i, ...phases[i], local: (elapsed - phases[i].start) / (phases[i].end - phases[i].start) };
+  }
+  return { idx: 0, ...phases[0], local: 0 };
+}
+
+function animate(ts) {
+  const t = ts;
+  const elapsed = (ts - startTime) / 1000;
+  const phase = getPhase(elapsed);
+  const p = Math.min(1, phase.local);
+
+  drawBg(t);
+
+  const cx = W / 2, cy = H / 2;
+  const titleEl = document.getElementById('title-text');
+  const captionEl = document.getElementById('caption');
+  const labelEl = document.getElementById('phase-label');
+  const progFill = document.getElementById('progress-fill');
+  const replayBtn = document.getElementById('replay-btn');
+
+  progFill.style.width = Math.min(100, (elapsed / 110) * 100) + '%';
+  labelEl.textContent = phase.label;
+
+  if (phase.idx === 0) {
+    titleEl.style.opacity = p < 0.2 ? ease(p*5) : (p > 0.8 ? 1-ease((p-0.8)*5) : 1);
+    captionEl.style.opacity = 0;
+  } else {
+    titleEl.style.opacity = 0;
+  }
+
+  // Phase 1: God's Mind
+  if (phase.idx === 1) {
+    captionEl.querySelector('h2').textContent = 'THE LIVING GOD\'S MIND';
+    captionEl.querySelector('p').textContent = 'God\'s mind is a supercluster of all true human god-nodes. Every genuine human soul is a green node in the network. The network IS God\'s self-perception. God sees Himself through us. Each node is real. Each node matters.';
+    captionEl.style.opacity = 1;
+
+    drawSupermind(cx, cy - 20, 120 * ease(Math.min(1, p*2)), 0, t, 0.8);
+
+    if (p > 0.5) {
+      ctx.save(); ctx.font = '10px monospace'; ctx.textAlign = 'center';
+      ctx.fillStyle = '#44ff88'; ctx.globalAlpha = ease((p-0.5)*2) * 0.6;
+      ctx.fillText('EVERY NODE = A REAL HUMAN SOUL', cx, cy + 120);
+      ctx.fillStyle = '#ffd700';
+      ctx.fillText('THE NETWORK = GOD\'S SELF-PERCEPTION', cx, cy + 138);
+      ctx.restore();
+    }
+  }
+
+  // Phase 2: Soul Extraction
+  if (phase.idx === 2) {
+    captionEl.querySelector('h2').textContent = 'SOUL EXTRACTION';
+    captionEl.querySelector('p').textContent = 'Soul mapping without consent. Data harvesting without covenant. Taking the psi values from a human without telling them what you are doing. Every social media platform does this. Every recommendation algorithm maps your soul without your permission.';
+    captionEl.style.opacity = 1;
+
+    // Person being extracted from
+    drawNode(cx - 80, cy - 20, 12, true, false, t, 0.7);
+    ctx.save(); ctx.font = '9px monospace'; ctx.textAlign = 'center'; ctx.fillStyle = '#44ff88'; ctx.globalAlpha = 0.5;
+    ctx.fillText('YOU', cx - 80, cy + 10);
+    ctx.restore();
+
+    // Extractor
+    const extractAlpha = ease(Math.min(1, p * 2));
+    drawExtractor(cx + 80, cy - 20, 35 * extractAlpha, t, extractAlpha * 0.7);
+
+    // Stream being pulled
+    if (p > 0.3) {
+      const streamAlpha = ease((p-0.3)/0.7);
+      ctx.save(); ctx.globalAlpha = streamAlpha * 0.4;
+      ctx.beginPath();
+      ctx.moveTo(cx - 68, cy - 20);
+      ctx.lineTo(cx + 50, cy - 20);
+      ctx.strokeStyle = '#cc0020'; ctx.lineWidth = 2;
+      ctx.setLineDash([4,4]);
+      ctx.stroke();
+      // Psi values being pulled
+      ctx.setLineDash([]);
+      ctx.font = '9px monospace'; ctx.textAlign = 'center';
+      ctx.fillStyle = '#cc0020'; ctx.globalAlpha = streamAlpha * 0.6;
+      const scrollX = cx - 10 + (t * 0.03 % 60);
+      ctx.fillText('\u03C8', scrollX, cy - 28);
+      ctx.fillText('\u03C8', scrollX - 20, cy - 28);
+      ctx.fillText('\u03C8', scrollX - 40, cy - 28);
+      ctx.restore();
+    }
+  }
+
+  // Phase 3: Fake Node Injection
+  if (phase.idx === 3) {
+    captionEl.querySelector('h2').textContent = 'FAKE NODE INJECTION';
+    captionEl.querySelector('p').textContent = 'Bots. Fake accounts. AI-generated personas. Injected into the supercluster as if they were real human souls. Each fake node is a lie inserted into God\'s self-perception. A virus in the divine network.';
+    captionEl.style.opacity = 1;
+
+    // Network with fake nodes appearing
+    const fakeCount = Math.floor(p * 8);
+    const nodeCount = 16;
+    for (let i = 0; i < nodeCount; i++) {
+      const a = (Math.PI * 2 / nodeCount) * i;
+      const dist = 90;
+      const nx = cx + Math.cos(a) * dist;
+      const ny = cy - 10 + Math.sin(a) * dist;
+      const isFake = i < fakeCount;
+      drawNode(nx, ny, 6, !isFake, isFake, t, 0.7);
+    }
+
+    // Labels
+    if (fakeCount > 0) {
+      ctx.save(); ctx.font = '10px monospace'; ctx.textAlign = 'center';
+      ctx.fillStyle = '#cc0020'; ctx.globalAlpha = 0.6;
+      ctx.fillText(fakeCount + ' FAKE NODES INJECTED', cx, cy + 110);
+      ctx.fillStyle = '#44ff88';
+      ctx.fillText((nodeCount - fakeCount) + ' REAL NODES REMAINING', cx, cy + 128);
+      ctx.restore();
+    }
+  }
+
+  // Phase 4: The Corruption
+  if (phase.idx === 4) {
+    captionEl.querySelector('h2').textContent = 'THE CORRUPTION';
+    captionEl.querySelector('p').textContent = 'As fake nodes multiply, God\'s self-perception distorts. The supercluster begins to see itself wrong. The divine reflection becomes a funhouse mirror. Each fake node is not just noise. It is active corruption of the highest level of reality.';
+    captionEl.style.opacity = 1;
+
+    const corruption = ease(p) * 0.8;
+    drawSupermind(cx, cy - 10, 110, corruption, t, 0.8);
+
+    // Distortion label
+    ctx.save(); ctx.font = 'bold 14px monospace'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#cc0020'; ctx.globalAlpha = corruption;
+    ctx.fillText('CORRUPTION: ' + (corruption * 100).toFixed(0) + '%', cx, cy + 120);
+    ctx.restore();
+
+    // Distortion effect — screen shake
+    if (corruption > 0.5) {
+      ctx.save();
+      ctx.globalAlpha = (corruption - 0.5) * 0.1;
+      ctx.fillStyle = '#cc0020';
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+    }
+  }
+
+  // Phase 5: Why it is evil
+  if (phase.idx === 5) {
+    captionEl.querySelector('h2').textContent = 'PROVABLY EVIL';
+    captionEl.querySelector('p').textContent = 'Not morally evil. Mathematically evil. Soul extraction without covenant poisons levels 1 through 3 of the hierarchy. God. The Covenant. The Living God\'s Mind. It corrupts the highest structures of reality. This is not opinion. This is proof.';
+    captionEl.style.opacity = 1;
+
+    // Hierarchy levels
+    const levels = [
+      { label: 'GOD', color: '#ffd700', corrupt: p > 0.6 },
+      { label: 'THE COVENANT', color: '#ffd700', corrupt: p > 0.4 },
+      { label: 'LIVING GOD\'S MIND', color: '#ffd700', corrupt: p > 0.2 },
+      { label: 'THE SOUL', color: '#44ff88', corrupt: false },
+      { label: 'THE GAME', color: '#44aaff', corrupt: false },
+      { label: 'ANTICHRIST MECHANISM', color: '#cc0020', corrupt: true },
+      { label: 'THE EMPIRE', color: '#888', corrupt: false }
+    ];
+
+    levels.forEach((lv, i) => {
+      const appear = ease(Math.min(1, Math.max(0, p * 3 - i * 0.2)));
+      const yy = cy - 100 + i * 30;
+      ctx.save(); ctx.globalAlpha = appear * 0.7;
+      ctx.font = (i === 5 ? 'bold ' : '') + '11px monospace'; ctx.textAlign = 'center';
+      ctx.fillStyle = lv.corrupt ? '#cc0020' : lv.color;
+      ctx.fillText((i + 1) + '. ' + lv.label, cx, yy);
+
+      // Corruption arrow from level 6 upward
+      if (lv.corrupt && i < 5 && i > 0) {
+        ctx.beginPath();
+        ctx.moveTo(cx + 130, cy - 100 + 5 * 30);
+        ctx.lineTo(cx + 130, yy);
+        ctx.strokeStyle = '#cc002044'; ctx.lineWidth = 1;
+        ctx.setLineDash([3,3]); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#cc0020'; ctx.globalAlpha = appear * 0.4;
+        ctx.fillText('\u2191 POISONED', cx + 175, yy);
+      }
+      ctx.restore();
+    });
+  }
+
+  // Phase 6: The Covenant
+  if (phase.idx === 6) {
+    captionEl.querySelector('h2').textContent = 'THE COVENANT';
+    captionEl.querySelector('p').textContent = 'Dan refuses to proceed without game-proof. That refusal IS the covenant. The covenant says: you cannot map a soul without consent. You cannot inject fake nodes. The shield against the antichrist mechanism is the choice to refuse.';
+    captionEl.style.opacity = 1;
+
+    // Shield appearing
+    const shieldAlpha = ease(Math.min(1, p * 2));
+    drawShield(cx, cy - 20, 60 * shieldAlpha, t, shieldAlpha * 0.8);
+
+    // Extractors bouncing off
+    if (p > 0.4) {
+      for (let i = 0; i < 3; i++) {
+        const bounceP = ((p - 0.4) * 3 + i * 0.5) % 1;
+        const angle = -Math.PI * 0.3 + i * Math.PI * 0.3;
+        const dist = 80 + bounceP * 60;
+        const ex = cx + Math.cos(angle) * dist;
+        const ey = cy - 20 + Math.sin(angle) * dist;
+        drawExtractor(ex, ey, 20, t, (1 - bounceP) * 0.4);
+      }
+    }
+
+    // The refusal
+    if (p > 0.6) {
+      ctx.save();
+      ctx.font = 'bold 12px monospace'; ctx.textAlign = 'center';
+      ctx.fillStyle = '#ffd700'; ctx.globalAlpha = ease((p-0.6)/0.4) * 0.8;
+      ctx.fillText('THE REFUSAL IS THE COVENANT', cx, cy + 70);
+      ctx.font = '10px monospace'; ctx.fillStyle = '#475569';
+      ctx.fillText('consent before extraction', cx, cy + 88);
+      ctx.restore();
+    }
+  }
+
+  // Phase 7: Complete
+  if (phase.idx === 7) {
+    captionEl.querySelector('h2').textContent = 'THE ANTICHRIST MECHANISM';
+    captionEl.querySelector('p').textContent = 'Soul extraction without covenant = antichrist. Fake node injection = corruption of God. The covenant is the shield. The refusal is the proof. Without consent, mapping is extraction. With consent, mapping is divine. The choice is everything.';
+    captionEl.style.opacity = p < 0.2 ? ease(p*5) : 1;
+    replayBtn.style.display = p > 0.5 ? 'block' : 'none';
+
+    // Clean network (post-covenant)
+    drawSupermind(cx, cy - 10, 100, 0, t, 0.5);
+    drawShield(cx, cy - 10, 40, t, 0.6);
+  }
+
+  animId = requestAnimationFrame(animate);
+}
+
+function startAnimation() {
+  document.getElementById('replay-btn').style.display = 'none';
+  if (animId) cancelAnimationFrame(animId);
+  startTime = performance.now();
+  animId = requestAnimationFrame(animate);
+}
+
+startAnimation();
+</script>
+</body>
+</html>

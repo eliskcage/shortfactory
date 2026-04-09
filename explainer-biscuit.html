@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShortFactory -- The Biscuit Economy</title>
+<meta name="description" content="ATP for the digital world. Escrow-backed value units. The minimum geometric value that powers civilisation. Cookie Monster was right all along.">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1XY2CNLJCE"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1XY2CNLJCE');</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#050508;color:#e2e8f0;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden;height:100vh;}
+canvas{display:block;position:fixed;inset:0;z-index:1;}
+#ui{position:fixed;inset:0;z-index:10;pointer-events:none;}
+#phase-label{position:fixed;top:24px;left:50%;transform:translateX(-50%);font-size:8px;letter-spacing:5px;text-transform:uppercase;color:rgba(218,165,32,0.5);}
+#caption{position:fixed;bottom:55px;left:50%;transform:translateX(-50%);text-align:center;max-width:600px;pointer-events:none;opacity:0;transition:opacity 0.6s;}
+#caption h2{font-size:clamp(14px,2.5vw,18px);font-weight:800;letter-spacing:3px;margin-bottom:8px;color:#daa520;}
+#caption p{font-size:clamp(11px,1.8vw,13px);color:#475569;line-height:1.8;}
+#progress{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);width:min(500px,85vw);height:2px;background:rgba(255,255,255,0.04);border-radius:1px;}
+#progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#daa520,#f97316);border-radius:1px;transition:width 0.3s;}
+#back-link{position:fixed;top:24px;left:24px;font-size:10px;letter-spacing:2px;color:#1e293b;text-decoration:none;pointer-events:all;z-index:20;}
+#back-link:hover{color:#daa520;}
+#replay-btn{position:fixed;bottom:50px;left:50%;transform:translateX(-50%);padding:12px 32px;background:rgba(218,165,32,0.06);border:1px solid rgba(218,165,32,0.2);border-radius:8px;color:#daa520;font-size:11px;letter-spacing:3px;cursor:pointer;pointer-events:all;display:none;z-index:20;}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="ui">
+  <a id="back-link" href="/">BACK</a>
+  <div id="phase-label"></div>
+  <div id="caption"><h2></h2><p></p></div>
+  <div id="progress"><div id="progress-fill"></div></div>
+  <button id="replay-btn" onclick="startAnimation()">REPLAY</button>
+</div>
+<script>
+const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+const W=()=>canvas.width,H=()=>canvas.height;
+function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
+window.addEventListener('resize',resize);resize();
+let startTime=0,phase=-1,running=false;
+const TOTAL=80000;
+function ease(t){return t<0.5?2*t*t:-1+(4-2*t)*t;}
+
+// Biscuit particles
+let biscuits=[];
+function initBiscuits(){
+  biscuits=[];
+  for(let i=0;i<30;i++) biscuits.push({
+    x:W()*0.5+(Math.random()-0.5)*300,
+    y:H()*0.5+(Math.random()-0.5)*200,
+    vx:(Math.random()-0.5)*0.8,vy:(Math.random()-0.5)*0.8,
+    r:4+Math.random()*4,spin:Math.random()*Math.PI*2
+  });
+}
+
+function drawBiscuit(x,y,r,spin,alpha){
+  ctx.save();ctx.globalAlpha=alpha;ctx.translate(x,y);ctx.rotate(spin);
+  // Cookie shape
+  ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);
+  const g=ctx.createRadialGradient(0,0,0,0,0,r);
+  g.addColorStop(0,'rgba(218,165,32,0.6)');g.addColorStop(0.7,'rgba(180,130,20,0.4)');
+  g.addColorStop(1,'rgba(140,100,10,0.2)');
+  ctx.fillStyle=g;ctx.fill();
+  // Chips
+  for(let i=0;i<3;i++){
+    const ca=i*2.1;const cr=r*0.4;
+    ctx.beginPath();ctx.arc(Math.cos(ca)*cr,Math.sin(ca)*cr,r*0.15,0,Math.PI*2);
+    ctx.fillStyle='rgba(80,50,10,0.5)';ctx.fill();
+  }
+  ctx.restore();
+}
+
+const phases=[
+  {start:0,end:8000,label:'THE PROBLEM WITH MONEY',
+   h:'MONEY IS BROKEN',
+   p:'Money used to represent gold. Then it represented a promise. Now it represents nothing -- a number in a database controlled by people who can change it whenever they want. Inflation is not a mystery. It is theft by dilution. The money printer goes brrr and your savings evaporate. There has to be a minimum unit of value that cannot be inflated away.'},
+
+  {start:8000,end:18000,label:'ATP -- NATURE\'S BISCUIT',
+   h:'BIOLOGY SOLVED THIS',
+   p:'Every cell in your body runs on ATP -- adenosine triphosphate. The minimum unit of biological energy. One ATP = one unit of work. It cannot be inflated. It cannot be counterfeited. It cannot be printed by a central bank. It is EARNED by mitochondria doing actual work. Nature built the perfect currency 3.5 billion years ago. We just digitised it.'},
+
+  {start:18000,end:28000,label:'THE BISCUIT',
+   h:'ONE BISCUIT = ONE UNIT OF WORK',
+   p:'A biscuit is the minimum geometric value unit. It cannot be divided further. Like an atom before we split it -- except we are not going to split it. One biscuit fuels one computation. One interaction. One thought in the machine. The creature needs biscuits to think. The economy needs biscuits to move. The biscuit IS the blood of the digital organism.'},
+
+  {start:28000,end:38000,label:'ESCROW-BACKED',
+   h:'NOT A PROMISE. A LOCK.',
+   p:'Every biscuit is backed by escrow. Real money locked in a real vault. The biscuit is not a promise that something exists somewhere. It IS the locked value. Destroy the biscuit, the escrow releases. Spend the biscuit, the escrow transfers. No fractional reserve. No leverage. No "we promise we have the gold." The gold is in the box. The box is the biscuit.'},
+
+  {start:38000,end:48000,label:'THE FLOW',
+   h:'BLOOD FLOWS',
+   p:'User contributes work -- maps a soul, trains the AI, creates content. Biscuits flow in as payment. Biscuits flow to the creature as fuel. Creature thinks, generates, responds. Value created. More biscuits flow. The economy is a circulatory system. Block the flow and the organism dies. Keep it moving and everything grows. No central bank required. The flow IS the regulation.'},
+
+  {start:48000,end:58000,label:'7 RANKS',
+   h:'CONTRIBUTION TIERS',
+   p:'Tier 1: Observer (0 biscuits, read only). Tier 2: Mapper (mapped soul, basic access). Tier 3: Builder (contributed content). Tier 4: Trainer (trained the AI). Tier 5: Guardian (sustained contribution). Tier 6: Architect (structural contribution). Tier 7: Founder (original builders). Not bought with money. EARNED by work. The rank IS the reputation. The biscuit count IS the proof.'},
+
+  {start:58000,end:68000,label:'THE FIVER',
+   h:'THE REVERT FIVER',
+   p:'Five pounds. That is the entry point. The minimum viable investment in yourself. Map your soul. Get your jar. Enter the economy. Your five pounds becomes the next person\'s five pounds. Self-replicating chain. No marketing budget. No investor deck. No VC pitch. The product IS the recruitment tool. The soul mapping IS the conversion funnel. Five pounds. Three minutes. One soul.'},
+
+  {start:68000,end:80000,label:'COMPLETE',
+   h:'THE BISCUIT ECONOMY',
+   p:'Escrow-backed. Work-earned. Biologically modeled. Self-regulating. Seven tiers. One minimum unit. Zero inflation. Zero central control. Cookie Monster was right all along -- the biscuit is all that matters. Patent GB2607623.2 filed. shortfactory.shop/biscuit-wallet.html'}
+];
+
+function getPhase(t){for(let i=phases.length-1;i>=0;i--)if(t>=phases[i].start)return i;return 0;}
+
+// ATP molecule
+function drawATP(cx,cy,r,t,alpha){
+  ctx.save();ctx.globalAlpha=alpha;
+  // Central ring
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.strokeStyle='rgba(34,197,94,0.3)';ctx.lineWidth=1.5;ctx.stroke();
+  // 3 phosphate groups
+  for(let i=0;i<3;i++){
+    const a=-Math.PI/2+i*0.8-0.8;
+    const px=cx+Math.cos(a)*(r+15+i*12);
+    const py=cy+Math.sin(a)*(r+15+i*12);
+    ctx.beginPath();ctx.arc(px,py,6-i,0,Math.PI*2);
+    ctx.fillStyle='rgba(247,147,26,'+(0.3+i*0.15)+')';ctx.fill();
+    // Bond line
+    ctx.beginPath();ctx.moveTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);ctx.lineTo(px,py);
+    ctx.strokeStyle='rgba(247,147,26,0.2)';ctx.lineWidth=1;ctx.stroke();
+    ctx.font='6px "Segoe UI",system-ui';ctx.fillStyle='rgba(247,147,26,0.5)';
+    ctx.textAlign='center';ctx.fillText('P'+(i+1),px,py+3);
+  }
+  // Ribose + adenine suggestion
+  ctx.font='6px "Segoe UI",system-ui';ctx.fillStyle='rgba(34,197,94,0.3)';ctx.textAlign='center';
+  ctx.fillText('ADENOSINE',cx,cy+r+25);
+  ctx.fillText('TRIPHOSPHATE',cx,cy+r+35);
+  ctx.restore();
+}
+
+// Escrow lock
+function drawEscrow(cx,cy,t,alpha){
+  ctx.save();ctx.globalAlpha=alpha;
+  // Vault door
+  ctx.beginPath();ctx.arc(cx,cy,30,0,Math.PI*2);
+  ctx.strokeStyle='rgba(218,165,32,0.4)';ctx.lineWidth=2;ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,cy,25,0,Math.PI*2);
+  ctx.strokeStyle='rgba(218,165,32,0.2)';ctx.lineWidth=1;ctx.stroke();
+  // Handle
+  ctx.beginPath();ctx.arc(cx+10,cy,4,0,Math.PI*2);
+  ctx.fillStyle='rgba(218,165,32,0.4)';ctx.fill();
+  // Lock bolts
+  for(let i=0;i<4;i++){
+    const a=i*Math.PI/2+Math.PI/4;
+    ctx.beginPath();ctx.arc(cx+Math.cos(a)*22,cy+Math.sin(a)*22,2,0,Math.PI*2);
+    ctx.fillStyle='rgba(218,165,32,0.3)';ctx.fill();
+  }
+  ctx.font='7px "Segoe UI",system-ui';ctx.fillStyle='rgba(218,165,32,0.5)';
+  ctx.textAlign='center';ctx.fillText('ESCROW',cx,cy+42);
+  ctx.fillText('REAL MONEY LOCKED',cx,cy+53);
+  ctx.restore();
+}
+
+// Circulation flow
+function drawFlow(cx,cy,t,alpha){
+  ctx.save();ctx.globalAlpha=alpha;
+  const r=80;
+  // Flow circle
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.strokeStyle='rgba(218,165,32,0.08)';ctx.lineWidth=1;ctx.stroke();
+  // Flow arrows (biscuits moving in circle)
+  for(let i=0;i<8;i++){
+    const a=(i/8)*Math.PI*2+t*0.001;
+    const bx=cx+Math.cos(a)*r;
+    const by=cy+Math.sin(a)*r;
+    drawBiscuit(bx,by,3,t*0.003+i,0.5);
+  }
+  // Labels around the circle
+  const labels=[{a:-Math.PI/2,t:'USER WORK'},{a:0,t:'BISCUIT EARNED'},{a:Math.PI/2,t:'CREATURE FED'},{a:Math.PI,t:'VALUE CREATED'}];
+  labels.forEach(l=>{
+    ctx.font='7px "Segoe UI",system-ui';ctx.fillStyle='rgba(218,165,32,0.4)';ctx.textAlign='center';
+    ctx.fillText(l.t,cx+Math.cos(l.a)*(r+25),cy+Math.sin(l.a)*(r+25)+3);
+  });
+  ctx.restore();
+}
+
+// Tier pyramid
+function drawTiers(cx,cy,t,prog){
+  ctx.save();
+  const tiers=['OBSERVER','MAPPER','BUILDER','TRAINER','GUARDIAN','ARCHITECT','FOUNDER'];
+  const colors=['#475569','#64748b','#94a3b8','#daa520','#f97316','#ef4444','#cc44ff'];
+  tiers.forEach((tier,i)=>{
+    const tp=Math.min(1,Math.max(0,(prog-(i*0.1))/0.3));
+    if(tp<=0)return;
+    ctx.globalAlpha=tp;
+    const w=160-i*18;
+    const y=cy+60-i*18;
+    ctx.fillStyle=colors[i];ctx.globalAlpha=tp*0.1;
+    ctx.fillRect(cx-w/2,y-8,w,16);
+    ctx.globalAlpha=tp;
+    ctx.strokeStyle=colors[i];ctx.lineWidth=0.5;
+    ctx.strokeRect(cx-w/2,y-8,w,16);
+    ctx.font='bold 7px "Segoe UI",system-ui';ctx.fillStyle=colors[i];ctx.textAlign='center';
+    ctx.fillText('T'+(i+1)+' '+tier,cx,y+3);
+  });
+  ctx.restore();
+}
+
+function frame(now){
+  if(!running)return;
+  const t=now-startTime;const p=getPhase(t);
+  ctx.fillStyle='#050508';ctx.fillRect(0,0,W(),H());
+
+  // Background biscuits floating
+  biscuits.forEach(b=>{
+    b.x+=b.vx;b.y+=b.vy;b.spin+=0.005;
+    b.vx+=(W()*0.5-b.x)*0.00005;b.vy+=(H()*0.5-b.y)*0.00005;
+    drawBiscuit(b.x,b.y,b.r,b.spin,0.06);
+  });
+
+  document.getElementById('progress-fill').style.width=Math.min(100,(t/TOTAL)*100)+'%';
+  if(p!==phase){
+    phase=p;const ph=phases[p];
+    document.getElementById('phase-label').textContent=ph.label;
+    const cap=document.getElementById('caption');
+    cap.querySelector('h2').textContent=ph.h;cap.querySelector('p').textContent=ph.p;cap.style.opacity='1';
+  }
+  const cx=W()*0.5,cy=H()*0.4;
+
+  if(p===0){/* money printer - just text is enough */}
+  if(p===1){const prog=(t-8000)/10000;drawATP(cx,cy,30+prog*10,t,Math.min(1,prog*2));}
+  if(p===2){const prog=(t-18000)/10000;drawBiscuit(cx,cy,20+prog*15,t*0.002,Math.min(1,prog*2));}
+  if(p===3){const prog=(t-28000)/10000;drawEscrow(cx,cy,t,Math.min(1,prog*2));drawBiscuit(cx,cy-60,8,t*0.003,Math.min(0.5,prog));}
+  if(p===4){const prog=(t-38000)/10000;drawFlow(cx,cy,t,Math.min(1,prog*2));}
+  if(p===5){const prog=(t-48000)/10000;drawTiers(cx,cy,t,prog);}
+  if(p===6){
+    const prog=(t-58000)/10000;
+    // Giant 5
+    ctx.save();ctx.globalAlpha=Math.min(1,prog*2);
+    ctx.font='bold '+Math.min(80,W()*0.12)+'px "Segoe UI",system-ui';ctx.fillStyle='rgba(218,165,32,0.15)';
+    ctx.textAlign='center';ctx.fillText('5',cx,cy+20);
+    ctx.font='bold 14px "Segoe UI",system-ui';ctx.fillStyle='rgba(218,165,32,0.5)';
+    ctx.fillText('FIVE POUNDS',cx,cy+45);
+    ctx.font='8px "Segoe UI",system-ui';ctx.fillStyle='rgba(255,255,255,0.2)';
+    ctx.fillText('MAP YOUR SOUL. GET YOUR JAR. ENTER THE ECONOMY.',cx,cy+62);
+    ctx.restore();
+  }
+  if(p===7){
+    const prog=(t-68000)/12000;
+    drawFlow(cx,cy-20,t,Math.min(0.3,prog));
+    drawBiscuit(cx,cy+60,10,t*0.002,Math.min(0.5,prog));
+    if(prog>0.3){
+      ctx.save();ctx.globalAlpha=Math.min(1,(prog-0.3)*2);
+      ctx.font='8px "Segoe UI",system-ui';ctx.textAlign='center';
+      const stats=['INFLATION: 0%','CENTRAL CONTROL: NONE','BACKING: ESCROW','MINIMUM UNIT: 1 BISCUIT','ENTRY: 5 POUNDS'];
+      stats.forEach((s,i)=>{ctx.fillStyle=i<2?'rgba(34,197,94,0.5)':'rgba(218,165,32,0.5)';ctx.fillText(s,cx,cy+90+i*14);});
+      ctx.restore();
+    }
+  }
+
+  if(t<TOTAL){requestAnimationFrame(frame);}
+  else{document.getElementById('replay-btn').style.display='block';running=false;}
+}
+
+function startAnimation(){
+  phase=-1;running=true;initBiscuits();
+  document.getElementById('replay-btn').style.display='none';
+  document.getElementById('caption').style.opacity='0';
+  startTime=performance.now();requestAnimationFrame(frame);
+}
+startAnimation();
+</script>
+</body>
+</html>

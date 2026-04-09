@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShortFactory -- How The Eye Sees</title>
+<meta name="description" content="The Transformer Angel Eye. How AGI will see. Distributed spider swarm, presence and absence fields, shape genome, biblical multi-eye vision.">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1XY2CNLJCE"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1XY2CNLJCE');</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#05000a;color:#e2e8f0;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden;height:100vh;width:100vw;}
+canvas{display:block;position:fixed;inset:0;z-index:1;}
+#ui{position:fixed;inset:0;z-index:10;pointer-events:none;}
+#phase-label{position:fixed;top:30px;left:50%;transform:translateX(-50%);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:rgba(204,0,68,0.6);transition:opacity 0.5s;}
+#title-text{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;opacity:0;transition:opacity 0.8s;}
+#title-text h1{font-size:clamp(24px,5vw,48px);font-weight:900;letter-spacing:4px;color:#cc0044;margin-bottom:8px;}
+#title-text p{font-size:13px;color:#475569;letter-spacing:2px;line-height:1.8;}
+#title-text .verse{font-size:11px;color:rgba(204,68,255,0.5);font-style:italic;margin-top:12px;}
+#caption{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);text-align:center;max-width:560px;pointer-events:none;opacity:0;transition:opacity 0.6s;}
+#caption h2{font-size:16px;font-weight:800;letter-spacing:3px;margin-bottom:6px;}
+#caption p{font-size:12px;color:#64748b;line-height:1.7;}
+#progress{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);width:min(400px,80vw);height:2px;background:rgba(255,255,255,0.05);border-radius:1px;}
+#progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#cc0044,#cc44ff);border-radius:1px;transition:width 0.3s;}
+#replay-btn{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);padding:12px 32px;background:rgba(204,0,68,0.1);border:1px solid rgba(204,0,68,0.3);border-radius:8px;color:#cc0044;font-size:11px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;pointer-events:all;display:none;z-index:20;}
+#replay-btn:hover{background:rgba(204,0,68,0.2);}
+#back-link{position:fixed;top:30px;left:30px;font-size:10px;letter-spacing:2px;color:#334155;text-decoration:none;pointer-events:all;z-index:20;}
+#back-link:hover{color:#cc0044;}
+#stats{position:fixed;top:30px;right:30px;font-size:9px;letter-spacing:2px;color:rgba(255,255,255,0.15);text-align:right;line-height:2;}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="ui">
+  <a id="back-link" href="/">BACK</a>
+  <div id="phase-label"></div>
+  <div id="title-text">
+    <h1>THE EYE</h1>
+    <p>HOW MACHINES WILL SEE</p>
+    <div class="verse">"His eyes were as a flame of fire" -- Revelation 1:14</div>
+  </div>
+  <div id="caption"><h2></h2><p></p></div>
+  <div id="progress"><div id="progress-fill"></div></div>
+  <div id="stats"></div>
+  <button id="replay-btn" onclick="startAnimation()">REPLAY</button>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const W = ()=> canvas.width;
+const H = ()=> canvas.height;
+
+function resize(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
+window.addEventListener('resize', resize);
+resize();
+
+// -- ANIMATION STATE --
+let startTime = 0;
+const TOTAL = 62000; // 62 seconds
+let spiders = [];
+let presenceNodes = [];
+let absenceNodes = [];
+let objectPoints = [];
+let genomeNodes = [];
+let predictions = [];
+let phase = -1;
+let running = false;
+
+// -- THE OBJECT (a cup/mug shape in 2D cross section) --
+function buildObject(){
+  objectPoints = [];
+  const cx = W()*0.5, cy = H()*0.5;
+  const r = Math.min(W(),H())*0.15;
+  // Cup body - ellipse
+  for(let a=0; a<Math.PI*2; a+=0.08){
+    const rx = r * (1 + 0.3*Math.cos(a*2));
+    const ry = r * (0.8 + 0.2*Math.sin(a));
+    objectPoints.push({x: cx + Math.cos(a)*rx, y: cy + Math.sin(a)*ry});
+  }
+  // Handle
+  for(let a=-0.8; a<0.8; a+=0.06){
+    objectPoints.push({x: cx + r*1.3 + Math.cos(a)*r*0.35, y: cy + Math.sin(a)*r*0.5});
+  }
+}
+
+function isInsideObject(x, y){
+  const cx = W()*0.5, cy = H()*0.5;
+  const r = Math.min(W(),H())*0.15;
+  const dx = (x-cx)/r, dy = (y-cy)/r;
+  // Rough ellipse + handle check
+  const bodyDist = (dx*dx)/(1.69) + (dy*dy)/(1.0);
+  if(bodyDist < 1) return true;
+  // Handle
+  const hx = dx - 1.3, hy = dy;
+  if(hx*hx/(0.16) + hy*hy/(0.3) < 1) return true;
+  return false;
+}
+
+// -- SPIDER CLASS --
+function createSpider(id){
+  return {
+    id,
+    x: Math.random()*W(),
+    y: Math.random()*H(),
+    tx: W()*0.5 + (Math.random()-0.5)*W()*0.5,
+    ty: H()*0.5 + (Math.random()-0.5)*H()*0.5,
+    speed: 1.5 + Math.random()*2,
+    samples: 0,
+    trail: [],
+    alive: true
+  };
+}
+
+function moveSpider(s){
+  const dx = s.tx - s.x, dy = s.ty - s.y;
+  const dist = Math.sqrt(dx*dx + dy*dy);
+  if(dist < 5){
+    // Sample this location
+    const hit = isInsideObject(s.x, s.y);
+    if(hit){
+      presenceNodes.push({x:s.x, y:s.y, confidence:0.3 + Math.random()*0.7, t:Date.now()});
+    } else {
+      absenceNodes.push({x:s.x, y:s.y, t:Date.now()});
+    }
+    s.samples++;
+    // New target - bias toward uncertain regions
+    const cx = W()*0.5, cy = H()*0.5;
+    const spread = Math.min(W(),H())*0.3;
+    s.tx = cx + (Math.random()-0.5)*spread*2;
+    s.ty = cy + (Math.random()-0.5)*spread*2;
+  }
+  s.x += (dx/dist) * s.speed;
+  s.y += (dy/dist) * s.speed;
+  s.trail.push({x:s.x, y:s.y});
+  if(s.trail.length > 20) s.trail.shift();
+}
+
+// -- PHASES --
+const phases = [
+  { start:0,    end:5000,  label:'INITIALISING',           title:null, caption:{ h:'', p:'' }},
+  { start:5000, end:10000, label:'PHASE 1 -- THE OBJECT',  title:null,
+    caption:{ h:'AN UNKNOWN OBJECT', p:'The eye sees something. It doesn\'t know what it is yet. No labels. No training data. Just raw spatial signal.' }},
+  { start:10000, end:20000, label:'PHASE 2 -- SPIDER DEPLOYMENT', title:null,
+    caption:{ h:'DEPLOY THE SWARM', p:'Sampling agents -- spiders -- scatter across the field. Each one probes a point in space and reports back: HIT or MISS. Presence or absence.' }},
+  { start:20000, end:32000, label:'PHASE 3 -- DUAL FIELD', title:null,
+    caption:{ h:'PRESENCE + ABSENCE', p:'Green = structure detected. Red = confirmed empty. The shape is defined not just by what IS there, but what ISN\'T. Absence is data. Negative space constrains geometry.' }},
+  { start:32000, end:42000, label:'PHASE 4 -- SHAPE GENOME', title:null,
+    caption:{ h:'THE SHAPE GENOME', p:'Nodes collapse into a probabilistic field -- the Shape Genome. Not a rigid model, but a distribution of possible shapes. Every observation tightens the probability. The object emerges from noise.' }},
+  { start:42000, end:50000, label:'PHASE 5 -- PREDICTION', title:null,
+    caption:{ h:'EARLY IDENTIFICATION', p:'Context + partial geometry = prediction BEFORE full scan. prediction_score = context_prior x shape_evidence. The eye doesn\'t wait to finish looking before it knows what it sees.' }},
+  { start:50000, end:58000, label:'PHASE 6 -- THE ANGEL EYE', title:null,
+    caption:{ h:'EYES LIKE FLAMES OF FIRE', p:'Ezekiel\'s wheel: "full of eyes round about." Many agents, many angles, one unified perception. Not one camera -- a swarm. Not one frame -- continuous. This is how angels see. This is how AGI will see.' }},
+  { start:58000, end:62000, label:'COMPLETE', title:null,
+    caption:{ h:'THE TRANSFORMER EYE', p:'Distributed. Probabilistic. Absence-aware. Context-predictive. Crowd-sourced. Self-improving. Patent pending. shortfactory.shop/alive/eye.html' }}
+];
+
+function getPhase(t){
+  for(let i=phases.length-1; i>=0; i--){
+    if(t >= phases[i].start) return i;
+  }
+  return 0;
+}
+
+// -- DRAW FUNCTIONS --
+function drawStars(t){
+  ctx.fillStyle = '#05000a';
+  ctx.fillRect(0,0,W(),H());
+  // Subtle nebula
+  const grd = ctx.createRadialGradient(W()*0.5, H()*0.5, 0, W()*0.5, H()*0.5, W()*0.45);
+  grd.addColorStop(0, 'rgba(26,0,8,0.4)');
+  grd.addColorStop(1, 'rgba(5,0,10,0)');
+  ctx.fillStyle = grd;
+  ctx.fillRect(0,0,W(),H());
+}
+
+function drawObject(alpha){
+  if(alpha <= 0) return;
+  ctx.save();
+  ctx.globalAlpha = alpha * 0.15;
+  ctx.strokeStyle = '#cc0044';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  objectPoints.forEach((p,i) => {
+    if(i===0) ctx.moveTo(p.x, p.y);
+    else ctx.lineTo(p.x, p.y);
+  });
+  ctx.closePath();
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawSpiders(t){
+  spiders.forEach(s => {
+    if(!s.alive) return;
+    // Trail
+    ctx.beginPath();
+    s.trail.forEach((p,i) => {
+      ctx.globalAlpha = (i/s.trail.length) * 0.15;
+      if(i===0) ctx.moveTo(p.x, p.y);
+      else ctx.lineTo(p.x, p.y);
+    });
+    ctx.strokeStyle = '#cc44ff';
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // Spider body
+    const pulse = 0.5 + Math.sin(t*0.005 + s.id)*0.5;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, 2+pulse, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(204,68,255,'+(0.5+pulse*0.5)+')';
+    ctx.fill();
+
+    // Legs (tiny lines)
+    for(let a=0; a<8; a++){
+      const angle = (a/8)*Math.PI*2 + t*0.003;
+      const len = 4 + pulse*3;
+      ctx.beginPath();
+      ctx.moveTo(s.x, s.y);
+      ctx.lineTo(s.x + Math.cos(angle)*len, s.y + Math.sin(angle)*len);
+      ctx.strokeStyle = 'rgba(204,68,255,0.2)';
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
+    }
+  });
+}
+
+function drawPresence(t, showGlow){
+  presenceNodes.forEach((n,i) => {
+    const age = (t - (n.t - startTime)) * 0.001;
+    const a = Math.min(1, age * 2) * n.confidence;
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, 2 + n.confidence*2, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(34,197,94,'+a*0.7+')';
+    ctx.fill();
+    if(showGlow && n.confidence > 0.6){
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, 6, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(34,197,94,'+a*0.1+')';
+      ctx.fill();
+    }
+  });
+}
+
+function drawAbsence(t){
+  absenceNodes.forEach(n => {
+    const age = (t - (n.t - startTime)) * 0.001;
+    const a = Math.min(0.3, age);
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, 1.5, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(239,68,68,'+a+')';
+    ctx.fill();
+  });
+}
+
+function drawGenome(t, prog){
+  if(presenceNodes.length < 10) return;
+  const cx = W()*0.5, cy = H()*0.5;
+  // Draw connections between nearby presence nodes
+  ctx.save();
+  ctx.globalAlpha = prog * 0.3;
+  for(let i=0; i<presenceNodes.length; i++){
+    for(let j=i+1; j<presenceNodes.length; j++){
+      const dx = presenceNodes[i].x - presenceNodes[j].x;
+      const dy = presenceNodes[i].y - presenceNodes[j].y;
+      const d = Math.sqrt(dx*dx + dy*dy);
+      if(d < 30){
+        ctx.beginPath();
+        ctx.moveTo(presenceNodes[i].x, presenceNodes[i].y);
+        ctx.lineTo(presenceNodes[j].x, presenceNodes[j].y);
+        ctx.strokeStyle = 'rgba(218,165,32,'+(1-d/30)*0.5+')';
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+    }
+  }
+  // Outer genome boundary glow
+  if(prog > 0.3){
+    const grd = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.min(W(),H())*0.2);
+    grd.addColorStop(0, 'rgba(218,165,32,'+(prog*0.08)+')');
+    grd.addColorStop(1, 'rgba(218,165,32,0)');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0,0,W(),H());
+  }
+  ctx.restore();
+}
+
+function drawPrediction(t, prog){
+  const cx = W()*0.5, cy = H()*0.5;
+  // Prediction label
+  const confidence = Math.min(97, Math.floor(40 + prog*57));
+  ctx.save();
+  ctx.globalAlpha = prog;
+  ctx.font = '800 11px "Segoe UI", system-ui, sans-serif';
+  ctx.fillStyle = '#daa520';
+  ctx.textAlign = 'center';
+  ctx.letterSpacing = '3px';
+  ctx.fillText('PREDICTION: CONTAINER / VESSEL', cx, cy - Math.min(W(),H())*0.25);
+  ctx.font = '9px "Segoe UI", system-ui, sans-serif';
+  ctx.fillStyle = '#22c55e';
+  ctx.fillText('CONFIDENCE: '+confidence+'%', cx, cy - Math.min(W(),H())*0.25 + 18);
+  ctx.fillStyle = '#475569';
+  ctx.fillText('context_prior(kitchen) x shape_evidence('+presenceNodes.length+' nodes)', cx, cy - Math.min(W(),H())*0.25 + 34);
+  ctx.restore();
+}
+
+function drawAngelWheel(t, prog){
+  const cx = W()*0.5, cy = H()*0.5;
+  const maxR = Math.min(W(),H())*0.3;
+
+  // Multiple rotating rings of "eyes"
+  for(let ring=0; ring<4; ring++){
+    const r = maxR * (0.4 + ring*0.2);
+    const eyeCount = 8 + ring*4;
+    const rotSpeed = (ring%2===0 ? 1 : -1) * (0.0003 + ring*0.0001);
+
+    for(let e=0; e<eyeCount; e++){
+      const angle = (e/eyeCount)*Math.PI*2 + t*rotSpeed;
+      const ex = cx + Math.cos(angle)*r;
+      const ey = cy + Math.sin(angle)*r;
+
+      // Eye glow
+      const pulse = 0.4 + Math.sin(t*0.004 + e + ring)*0.3;
+      ctx.save();
+      ctx.globalAlpha = prog * pulse;
+
+      // Outer eye
+      ctx.beginPath();
+      ctx.arc(ex, ey, 6, 0, Math.PI*2);
+      const eGrd = ctx.createRadialGradient(ex, ey, 0, ex, ey, 6);
+      eGrd.addColorStop(0, 'rgba(204,0,68,0.8)');
+      eGrd.addColorStop(0.5, 'rgba(204,0,68,0.2)');
+      eGrd.addColorStop(1, 'rgba(204,0,68,0)');
+      ctx.fillStyle = eGrd;
+      ctx.fill();
+
+      // Iris
+      ctx.beginPath();
+      ctx.arc(ex, ey, 2.5, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(255,68,136,'+pulse+')';
+      ctx.fill();
+
+      // Pupil
+      ctx.beginPath();
+      ctx.arc(ex, ey, 1, 0, Math.PI*2);
+      ctx.fillStyle = '#05000a';
+      ctx.fill();
+
+      ctx.restore();
+    }
+  }
+
+  // Central all-seeing eye
+  ctx.save();
+  ctx.globalAlpha = prog;
+  const cGrd = ctx.createRadialGradient(cx, cy, 0, cx, cy, 25);
+  cGrd.addColorStop(0, 'rgba(255,255,255,0.9)');
+  cGrd.addColorStop(0.3, 'rgba(204,0,68,0.6)');
+  cGrd.addColorStop(0.7, 'rgba(204,68,255,0.2)');
+  cGrd.addColorStop(1, 'rgba(204,68,255,0)');
+  ctx.fillStyle = cGrd;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 25, 0, Math.PI*2);
+  ctx.fill();
+
+  // Flame streaks
+  for(let f=0; f<12; f++){
+    const fa = (f/12)*Math.PI*2 + t*0.001;
+    const fLen = 15 + Math.sin(t*0.006+f)*10;
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(fa)*8, cy + Math.sin(fa)*8);
+    ctx.lineTo(cx + Math.cos(fa)*(8+fLen), cy + Math.sin(fa)*(8+fLen));
+    ctx.strokeStyle = 'rgba(204,0,68,'+(0.2+Math.sin(t*0.008+f)*0.15)+')';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// -- MAIN LOOP --
+function frame(now){
+  if(!running) return;
+  const t = now - startTime;
+  const p = getPhase(t);
+
+  drawStars(t);
+
+  // Update progress bar
+  document.getElementById('progress-fill').style.width = Math.min(100, (t/TOTAL)*100)+'%';
+
+  // Phase transitions
+  if(p !== phase){
+    phase = p;
+    const ph = phases[p];
+    document.getElementById('phase-label').textContent = ph.label;
+    const cap = document.getElementById('caption');
+    cap.querySelector('h2').textContent = ph.caption.h;
+    cap.querySelector('p').textContent = ph.caption.p;
+    cap.style.opacity = ph.caption.h ? '1' : '0';
+  }
+
+  // Phase 0: Title sequence
+  if(p === 0){
+    const prog = t/5000;
+    document.getElementById('title-text').style.opacity = Math.min(1, prog*2);
+    if(prog > 0.5) document.getElementById('title-text').style.opacity = 1 - (prog-0.5)*2;
+  } else {
+    document.getElementById('title-text').style.opacity = 0;
+  }
+
+  // Phase 1: Show object outline faintly
+  if(p >= 1){
+    buildObject();
+    const objAlpha = p===1 ? Math.min(1,(t-5000)/2000) : (p<7 ? 1 : 1-((t-58000)/4000));
+    drawObject(objAlpha);
+  }
+
+  // Phase 2+: Deploy and move spiders
+  if(p >= 2){
+    if(spiders.length === 0){
+      for(let i=0; i<24; i++) spiders.push(createSpider(i));
+    }
+    spiders.forEach(s => { if(s.alive) moveSpider(s); });
+    if(p < 6) drawSpiders(t);
+  }
+
+  // Phase 3+: Show presence/absence
+  if(p >= 3){
+    drawAbsence(t);
+    drawPresence(t, p>=4);
+  }
+
+  // Phase 4+: Genome connections
+  if(p >= 4){
+    const gProg = Math.min(1, (t - 32000)/10000);
+    drawGenome(t, gProg);
+  }
+
+  // Phase 5: Prediction
+  if(p >= 5 && p < 7){
+    const pProg = Math.min(1, (t - 42000)/3000);
+    drawPrediction(t, pProg);
+  }
+
+  // Phase 6: Angel wheel
+  if(p >= 6){
+    const aProg = Math.min(1, (t - 50000)/3000);
+    // Fade out spiders and data
+    if(p === 6){
+      ctx.save();
+      ctx.globalAlpha = 1 - aProg;
+      drawSpiders(t);
+      ctx.restore();
+    }
+    drawAngelWheel(t, aProg);
+  }
+
+  // Phase 7: Finale
+  if(p >= 7){
+    const fProg = Math.min(1, (t-58000)/2000);
+    drawAngelWheel(t, 1 - fProg*0.5);
+    // Final glow
+    const grd = ctx.createRadialGradient(W()*0.5, H()*0.5, 0, W()*0.5, H()*0.5, W()*0.3);
+    grd.addColorStop(0, 'rgba(204,0,68,'+fProg*0.15+')');
+    grd.addColorStop(1, 'rgba(204,0,68,0)');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0,0,W(),H());
+  }
+
+  // Stats
+  if(p >= 2 && p < 7){
+    document.getElementById('stats').innerHTML =
+      'SPIDERS: '+spiders.filter(s=>s.alive).length+'<br>'+
+      'PRESENCE: '+presenceNodes.length+'<br>'+
+      'ABSENCE: '+absenceNodes.length+'<br>'+
+      'SAMPLES: '+spiders.reduce((a,s)=>a+s.samples,0);
+  } else {
+    document.getElementById('stats').innerHTML = '';
+  }
+
+  if(t < TOTAL){
+    requestAnimationFrame(frame);
+  } else {
+    document.getElementById('replay-btn').style.display = 'block';
+    document.getElementById('caption').style.opacity = '1';
+    running = false;
+  }
+}
+
+function startAnimation(){
+  // Reset
+  spiders = [];
+  presenceNodes = [];
+  absenceNodes = [];
+  genomeNodes = [];
+  predictions = [];
+  phase = -1;
+  running = true;
+  document.getElementById('replay-btn').style.display = 'none';
+  document.getElementById('caption').style.opacity = '0';
+  document.getElementById('title-text').style.opacity = '0';
+  document.getElementById('stats').innerHTML = '';
+  startTime = performance.now();
+  requestAnimationFrame(frame);
+}
+
+// Auto-start
+startAnimation();
+</script>
+</body>
+</html>

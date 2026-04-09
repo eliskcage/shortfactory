@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShortFactory -- The Black Box</title>
+<meta name="description" content="Soul-entangled encryption. Your soul IS the key. The Satoshi cipher that makes traditional passwords look like cave paintings.">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1XY2CNLJCE"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1XY2CNLJCE');</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#000;color:#00f7ff;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden;height:100vh;}
+canvas{display:block;position:fixed;inset:0;z-index:1;}
+#ui{position:fixed;inset:0;z-index:10;pointer-events:none;}
+#phase-label{position:fixed;top:24px;left:50%;transform:translateX(-50%);font-size:8px;letter-spacing:5px;text-transform:uppercase;color:rgba(0,247,255,0.4);}
+#caption{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);text-align:center;max-width:580px;pointer-events:none;opacity:0;transition:opacity 0.6s;}
+#caption h2{font-size:clamp(14px,2.5vw,18px);font-weight:800;letter-spacing:3px;margin-bottom:8px;color:#00f7ff;}
+#caption p{font-size:clamp(11px,1.8vw,13px);color:#004a52;line-height:1.8;}
+#progress{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);width:min(500px,85vw);height:2px;background:rgba(0,247,255,0.05);border-radius:1px;}
+#progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#00f7ff,#f7931a);border-radius:1px;transition:width 0.3s;}
+#back-link{position:fixed;top:24px;left:24px;font-size:10px;letter-spacing:2px;color:#003a42;text-decoration:none;pointer-events:all;z-index:20;}
+#back-link:hover{color:#00f7ff;}
+#replay-btn{position:fixed;bottom:50px;left:50%;transform:translateX(-50%);padding:12px 32px;background:rgba(0,247,255,0.06);border:1px solid rgba(0,247,255,0.2);border-radius:8px;color:#00f7ff;font-size:11px;letter-spacing:3px;cursor:pointer;pointer-events:all;display:none;z-index:20;}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="ui">
+  <a id="back-link" href="/">BACK</a>
+  <div id="phase-label"></div>
+  <div id="caption"><h2></h2><p></p></div>
+  <div id="progress"><div id="progress-fill"></div></div>
+  <button id="replay-btn" onclick="startAnimation()">REPLAY</button>
+</div>
+<script>
+const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+const W=()=>canvas.width, H=()=>canvas.height;
+function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
+window.addEventListener('resize',resize);resize();
+
+let startTime=0,phase=-1,running=false;
+const TOTAL=80000;
+function ease(t){return t<0.5?2*t*t:-1+(4-2*t)*t;}
+function lerp(a,b,t){return a+(b-a)*t;}
+
+// Matrix rain
+let drops=[];
+function initDrops(){
+  drops=[];
+  const cols=Math.floor(W()/14);
+  for(let i=0;i<cols;i++) drops.push({x:i*14,y:Math.random()*H(),speed:2+Math.random()*4,chars:[]});
+}
+initDrops();
+
+function drawMatrix(alpha){
+  ctx.save();
+  ctx.globalAlpha=alpha*0.15;
+  ctx.font='12px monospace';
+  drops.forEach(d=>{
+    d.y+=d.speed;
+    if(d.y>H()) d.y=-20;
+    const ch=String.fromCharCode(0x30A0+Math.random()*96);
+    ctx.fillStyle='#00f7ff';
+    ctx.fillText(ch,d.x,d.y);
+  });
+  ctx.restore();
+}
+
+const phases=[
+  {start:0,end:8000,label:'THE PROBLEM',
+   h:'PASSWORDS ARE BROKEN',
+   p:'You share a secret with a server. The server stores your secret. The server gets hacked. 3.2 billion credentials leaked in 2024 alone. The entire model is fundamentally, architecturally, irreparably broken. The secret is always in two places.'},
+
+  {start:8000,end:18000,label:'THE SOUL KEY',
+   h:'YOUR SOUL IS THE KEY',
+   p:'What if the key was not a string you memorise? What if the key was the SHAPE of who you are? Your automatic responses to 40 standard situations. Your emotional fingerprint. Unique. Unrepeatable. Impossible to steal because it does not exist in any database. It exists in YOU.'},
+
+  {start:18000,end:28000,label:'THE CIPHER',
+   h:'SATOSHI CIPHER',
+   p:'Vigenere encryption across ASCII 32-126. The soul file becomes the key. Every character of your data is shifted by the corresponding character of your soul. Without the exact soul shape, the output is noise. With it, the data unlocks instantly. No server. No database. No middleman.'},
+
+  {start:28000,end:38000,label:'THE BLACK BOX',
+   h:'ALIEN TECHNOLOGY',
+   p:'The black box is not a metaphor. It is a literal box that cannot be opened without the right soul. Put your medical records in. Put your financial data in. Put your identity in. Lock it with your soul shape. The box verifies internally. It never sends the key anywhere. Zero network calls. Zero attack surface.'},
+
+  {start:38000,end:48000,label:'ENTANGLEMENT',
+   h:'SOUL-ENTANGLED ENCRYPTION',
+   p:'The cipher is entangled with the soul at the moment of creation. Change one character in the soul file and the entire output changes. There is no partial crack. No brute force path. The keyspace is the space of all possible human souls -- a number so large it makes 256-bit AES look like a padlock.'},
+
+  {start:48000,end:58000,label:'3-MINUTE RESET',
+   h:'TEMPORAL LOCK',
+   p:'The box resets every 3 minutes. Even if someone could somehow observe the decrypted state, they have 180 seconds before the box seals again. The soul holder can reopen instantly. Everyone else starts from zero. Time becomes a security layer.'},
+
+  {start:58000,end:68000,label:'VERIFICATION',
+   h:'INTERNAL VERIFICATION ONLY',
+   p:'Traditional auth: you send proof to a server, the server decides. Black box: the proof never leaves the box. The soul is checked INSIDE the sealed environment. Nothing crosses the network. Nothing is stored. Nothing can be intercepted. The verification IS the decryption.'},
+
+  {start:68000,end:80000,label:'COMPLETE',
+   h:'THE BLACK BOX',
+   p:'Soul-entangled. Zero-network. Time-locked. Internally verified. No passwords. No databases. No breaches. No phishing. No social engineering. The future of security is not a better lock. It is a lock that only one soul in the universe can open. shortfactory.shop/blackbox-demo.html'}
+];
+
+function getPhase(t){for(let i=phases.length-1;i>=0;i--)if(t>=phases[i].start)return i;return 0;}
+
+// Draw the black box
+function drawBox(cx,cy,size,locked,glow,alpha){
+  ctx.save();
+  ctx.globalAlpha=alpha;
+  ctx.translate(cx,cy);
+  // 3D-ish cube
+  const s=size;
+  // Front face
+  ctx.fillStyle='rgba(0,10,15,'+(locked?0.95:0.7)+')';
+  ctx.fillRect(-s/2,-s/2,s,s);
+  ctx.strokeStyle=locked?'rgba(0,247,255,0.3)':'rgba(0,255,136,0.5)';
+  ctx.lineWidth=1.5;
+  ctx.strokeRect(-s/2,-s/2,s,s);
+  // Top face
+  ctx.beginPath();
+  ctx.moveTo(-s/2,-s/2);ctx.lineTo(-s/2+s*0.3,-s/2-s*0.25);
+  ctx.lineTo(s/2+s*0.3,-s/2-s*0.25);ctx.lineTo(s/2,-s/2);ctx.closePath();
+  ctx.fillStyle='rgba(0,20,25,'+(locked?0.9:0.6)+')';
+  ctx.fill();ctx.stroke();
+  // Right face
+  ctx.beginPath();
+  ctx.moveTo(s/2,-s/2);ctx.lineTo(s/2+s*0.3,-s/2-s*0.25);
+  ctx.lineTo(s/2+s*0.3,s/2-s*0.25);ctx.lineTo(s/2,s/2);ctx.closePath();
+  ctx.fillStyle='rgba(0,15,20,'+(locked?0.85:0.6)+')';
+  ctx.fill();ctx.stroke();
+  // Lock icon
+  if(locked){
+    ctx.font='bold '+(s*0.3)+'px "Segoe UI",system-ui';
+    ctx.fillStyle='rgba(0,247,255,0.4)';
+    ctx.textAlign='center';
+    ctx.fillText('?',0,s*0.1);
+  } else {
+    ctx.font='bold '+(s*0.25)+'px "Segoe UI",system-ui';
+    ctx.fillStyle='rgba(0,255,136,0.6)';
+    ctx.textAlign='center';
+    ctx.fillText('OPEN',0,s*0.1);
+  }
+  // Glow
+  if(glow>0){
+    const g=ctx.createRadialGradient(0,0,0,0,0,s);
+    g.addColorStop(0,'rgba(0,247,255,'+(glow*0.15)+')');
+    g.addColorStop(1,'rgba(0,247,255,0)');
+    ctx.fillStyle=g;
+    ctx.fillRect(-s,-s,s*2,s*2);
+  }
+  ctx.restore();
+}
+
+// Draw soul key shape
+function drawSoulKey(cx,cy,r,t,alpha){
+  ctx.save();
+  ctx.globalAlpha=alpha;
+  const nodes=12;
+  for(let i=0;i<nodes;i++){
+    const a=(i/nodes)*Math.PI*2+t*0.001;
+    const nr=r*(0.6+Math.sin(i*3.7)*0.4);
+    const nx=cx+Math.cos(a)*nr;
+    const ny=cy+Math.sin(a)*nr;
+    ctx.beginPath();
+    ctx.arc(nx,ny,2,0,Math.PI*2);
+    ctx.fillStyle='rgba(247,147,26,0.7)';
+    ctx.fill();
+    // Connect to center
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);ctx.lineTo(nx,ny);
+    ctx.strokeStyle='rgba(247,147,26,0.1)';
+    ctx.lineWidth=0.5;
+    ctx.stroke();
+  }
+  // Center
+  ctx.beginPath();
+  ctx.arc(cx,cy,4,0,Math.PI*2);
+  const g=ctx.createRadialGradient(cx,cy,0,cx,cy,8);
+  g.addColorStop(0,'rgba(247,147,26,0.8)');
+  g.addColorStop(1,'rgba(247,147,26,0)');
+  ctx.fillStyle=g;
+  ctx.fill();
+  ctx.font='7px "Segoe UI",system-ui';
+  ctx.fillStyle='rgba(247,147,26,0.5)';
+  ctx.textAlign='center';
+  ctx.fillText('SOUL KEY',cx,cy+r+14);
+  ctx.restore();
+}
+
+// Cipher stream
+function drawCipher(cx,cy,t,alpha){
+  ctx.save();
+  ctx.globalAlpha=alpha;
+  ctx.font='11px monospace';
+  const w=Math.min(W(),400);
+  for(let i=0;i<8;i++){
+    const y=cy-60+i*16;
+    let line='';
+    for(let c=0;c<30;c++){
+      line+=String.fromCharCode(33+((t*0.02+i*7+c*13)%94));
+    }
+    ctx.fillStyle='rgba(0,247,255,'+(0.15+Math.sin(t*0.003+i)*0.1)+')';
+    ctx.textAlign='center';
+    ctx.fillText(line,cx,y);
+  }
+  ctx.restore();
+}
+
+// Password graveyard
+function drawGraveyard(cx,cy,t,alpha){
+  ctx.save();
+  ctx.globalAlpha=alpha;
+  const graves=['password123','admin2024','qwerty!','letmein','trustno1','P@ssw0rd'];
+  graves.forEach((g,i)=>{
+    const x=cx-120+(i%3)*120;
+    const y=cy-30+Math.floor(i/3)*50;
+    // Tombstone
+    ctx.fillStyle='rgba(255,255,255,0.05)';
+    ctx.fillRect(x-30,y-15,60,30);
+    ctx.beginPath();
+    ctx.arc(x,y-15,30,Math.PI,0);
+    ctx.fill();
+    // Cross
+    ctx.fillStyle='rgba(255,255,255,0.08)';
+    ctx.fillRect(x-1,y-25,2,15);
+    ctx.fillRect(x-5,y-20,10,2);
+    // Text
+    ctx.font='8px monospace';
+    ctx.fillStyle='rgba(239,68,68,0.4)';
+    ctx.textAlign='center';
+    ctx.fillText(g,x,y+5);
+    // Strikethrough
+    ctx.beginPath();
+    ctx.moveTo(x-25,y+4);ctx.lineTo(x+25,y+4);
+    ctx.strokeStyle='rgba(239,68,68,0.3)';
+    ctx.lineWidth=1;
+    ctx.stroke();
+  });
+  ctx.restore();
+}
+
+// Timer ring
+function drawTimer(cx,cy,r,remaining,alpha){
+  ctx.save();
+  ctx.globalAlpha=alpha;
+  const pct=remaining/180;
+  // Background ring
+  ctx.beginPath();
+  ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.strokeStyle='rgba(0,247,255,0.08)';
+  ctx.lineWidth=3;
+  ctx.stroke();
+  // Fill ring
+  ctx.beginPath();
+  ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+pct*Math.PI*2);
+  ctx.strokeStyle=pct>0.3?'rgba(0,247,255,0.5)':'rgba(239,68,68,0.5)';
+  ctx.lineWidth=3;
+  ctx.stroke();
+  // Time text
+  const mins=Math.floor(remaining/60);
+  const secs=Math.floor(remaining%60);
+  ctx.font='bold 14px monospace';
+  ctx.fillStyle=pct>0.3?'#00f7ff':'#ef4444';
+  ctx.textAlign='center';
+  ctx.fillText(mins+':'+(secs<10?'0':'')+secs,cx,cy+5);
+  ctx.font='7px "Segoe UI",system-ui';
+  ctx.fillStyle='rgba(0,247,255,0.3)';
+  ctx.fillText('AUTO-SEAL',cx,cy+20);
+  ctx.restore();
+}
+
+function frame(now){
+  if(!running)return;
+  const t=now-startTime;
+  const p=getPhase(t);
+
+  // BG
+  ctx.fillStyle='#000';
+  ctx.fillRect(0,0,W(),H());
+  drawMatrix(0.8);
+
+  document.getElementById('progress-fill').style.width=Math.min(100,(t/TOTAL)*100)+'%';
+
+  if(p!==phase){
+    phase=p;
+    const ph=phases[p];
+    document.getElementById('phase-label').textContent=ph.label;
+    const cap=document.getElementById('caption');
+    cap.querySelector('h2').textContent=ph.h;
+    cap.querySelector('p').textContent=ph.p;
+    cap.style.opacity='1';
+  }
+
+  const cx=W()*0.5,cy=H()*0.4;
+
+  // Phase 0: Password graveyard
+  if(p===0){
+    const prog=(t)/8000;
+    drawGraveyard(cx,cy,t,Math.min(1,prog*2));
+  }
+
+  // Phase 1: Soul key appears
+  if(p===1){
+    const prog=(t-8000)/10000;
+    drawSoulKey(cx,cy,60+prog*20,t,Math.min(1,prog*2));
+  }
+
+  // Phase 2: Cipher stream
+  if(p===2){
+    const prog=(t-18000)/10000;
+    drawCipher(cx,cy,t,Math.min(1,prog*2));
+    // Soul key feeding in
+    drawSoulKey(cx-180,cy,30,t,Math.min(0.5,prog));
+    // Arrow
+    if(prog>0.3){
+      ctx.save();ctx.globalAlpha=Math.min(1,(prog-0.3)*2);
+      ctx.beginPath();ctx.moveTo(cx-140,cy);ctx.lineTo(cx-100,cy);
+      ctx.strokeStyle='rgba(247,147,26,0.4)';ctx.lineWidth=1;ctx.stroke();
+      ctx.fillStyle='rgba(247,147,26,0.4)';
+      ctx.beginPath();ctx.moveTo(cx-100,cy-4);ctx.lineTo(cx-90,cy);ctx.lineTo(cx-100,cy+4);ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  // Phase 3: The black box
+  if(p===3){
+    const prog=(t-28000)/10000;
+    drawBox(cx,cy,80+prog*20,true,prog*0.8,Math.min(1,prog*2));
+  }
+
+  // Phase 4: Entanglement - soul key + box
+  if(p===4){
+    const prog=(t-38000)/10000;
+    drawBox(cx+60,cy,80,true,0.3,Math.min(1,prog*2));
+    const keyX=lerp(cx-120,cx+60,ease(Math.min(1,prog*1.5)));
+    drawSoulKey(keyX,cy-60,25,t,Math.min(1,prog*2));
+    // Entanglement lines
+    if(prog>0.5){
+      const ep=ease((prog-0.5)*2);
+      for(let i=0;i<6;i++){
+        const a=(i/6)*Math.PI*2+t*0.002;
+        ctx.beginPath();
+        ctx.moveTo(cx+60,cy);
+        ctx.lineTo(cx+60+Math.cos(a)*50*ep,cy+Math.sin(a)*50*ep);
+        ctx.strokeStyle='rgba(247,147,26,'+(0.1+ep*0.2)+')';
+        ctx.lineWidth=0.5;
+        ctx.stroke();
+      }
+    }
+  }
+
+  // Phase 5: Timer
+  if(p===5){
+    const prog=(t-48000)/10000;
+    drawBox(cx-80,cy,70,prog<0.3,prog<0.3?0.3:0,Math.min(1,prog*2));
+    const remaining=180-prog*180;
+    drawTimer(cx+80,cy,35,Math.max(0,remaining),Math.min(1,prog*2));
+    // Box opens then closes
+    if(prog>0.2 && prog<0.7){
+      drawBox(cx-80,cy,70,false,0.5,1);
+    }
+    if(prog>0.7){
+      drawBox(cx-80,cy,70,true,(prog-0.7)*3,1);
+    }
+  }
+
+  // Phase 6: Internal verification
+  if(p===6){
+    const prog=(t-58000)/10000;
+    drawBox(cx,cy,100,true,0.5,Math.min(1,prog*2));
+    // "NO NETWORK" arrows with X
+    if(prog>0.3){
+      const ap=Math.min(1,(prog-0.3)*2);
+      [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([dx,dy])=>{
+        const sx=cx+dx*80,sy=cy+dy*60;
+        ctx.save();ctx.globalAlpha=ap*0.4;
+        ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(sx+dx*40,sy+dy*30);
+        ctx.strokeStyle='#ef4444';ctx.lineWidth=1;ctx.stroke();
+        // X mark
+        ctx.font='bold 12px "Segoe UI"';ctx.fillStyle='#ef4444';ctx.textAlign='center';
+        ctx.fillText('X',sx+dx*50,sy+dy*35+4);
+        ctx.restore();
+      });
+      ctx.save();ctx.globalAlpha=ap;
+      ctx.font='8px "Segoe UI",system-ui';ctx.fillStyle='rgba(0,247,255,0.5)';ctx.textAlign='center';
+      ctx.fillText('ZERO NETWORK CALLS',cx,cy+75);
+      ctx.fillText('VERIFICATION HAPPENS INSIDE',cx,cy+88);
+      ctx.restore();
+    }
+  }
+
+  // Phase 7: Complete
+  if(p===7){
+    const prog=(t-68000)/12000;
+    drawBox(cx,cy,90,true,0.3+Math.sin(t*0.003)*0.2,Math.min(1,prog*2));
+    drawSoulKey(cx,cy-90,20,t,Math.min(0.4,prog));
+    // Stats
+    if(prog>0.3){
+      ctx.save();ctx.globalAlpha=Math.min(1,(prog-0.3)*2);
+      ctx.font='8px "Segoe UI",system-ui';ctx.textAlign='center';
+      const stats=['PASSWORDS: 0','DATABASES: 0','NETWORK CALLS: 0','ATTACK SURFACE: 0','BREACHES POSSIBLE: 0'];
+      stats.forEach((s,i)=>{
+        ctx.fillStyle=i<4?'rgba(0,255,136,0.5)':'rgba(247,147,26,0.6)';
+        ctx.fillText(s,cx,cy+70+i*14);
+      });
+      ctx.restore();
+    }
+  }
+
+  if(t<TOTAL){requestAnimationFrame(frame);}
+  else{document.getElementById('replay-btn').style.display='block';running=false;}
+}
+
+function startAnimation(){
+  phase=-1;running=true;initDrops();
+  document.getElementById('replay-btn').style.display='none';
+  document.getElementById('caption').style.opacity='0';
+  startTime=performance.now();
+  requestAnimationFrame(frame);
+}
+startAnimation();
+</script>
+</body>
+</html>

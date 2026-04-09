@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShortFactory -- Password Refusal + Soul Visa</title>
+<meta name="description" content="No password. No email. No name. Your soul shape IS your identity. The anonymous revolution that makes digital ID systems irrelevant.">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1XY2CNLJCE"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1XY2CNLJCE');</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#050508;color:#e2e8f0;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden;height:100vh;}
+canvas{display:block;position:fixed;inset:0;z-index:1;}
+#ui{position:fixed;inset:0;z-index:10;pointer-events:none;}
+#phase-label{position:fixed;top:24px;left:50%;transform:translateX(-50%);font-size:8px;letter-spacing:5px;text-transform:uppercase;color:rgba(34,197,94,0.5);}
+#caption{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);text-align:center;max-width:600px;pointer-events:none;opacity:0;transition:opacity 0.6s;}
+#caption h2{font-size:clamp(14px,2.5vw,18px);font-weight:800;letter-spacing:3px;margin-bottom:8px;color:#22c55e;}
+#caption p{font-size:clamp(11px,1.8vw,13px);color:#475569;line-height:1.8;}
+#progress{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);width:min(500px,85vw);height:2px;background:rgba(255,255,255,0.04);border-radius:1px;}
+#progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#22c55e,#daa520);border-radius:1px;transition:width 0.3s;}
+#back-link{position:fixed;top:24px;left:24px;font-size:10px;letter-spacing:2px;color:#1e293b;text-decoration:none;pointer-events:all;z-index:20;}
+#back-link:hover{color:#22c55e;}
+#replay-btn{position:fixed;bottom:50px;left:50%;transform:translateX(-50%);padding:12px 32px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.2);border-radius:8px;color:#22c55e;font-size:11px;letter-spacing:3px;cursor:pointer;pointer-events:all;display:none;z-index:20;}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="ui">
+  <a id="back-link" href="/">BACK</a>
+  <div id="phase-label"></div>
+  <div id="caption"><h2></h2><p></p></div>
+  <div id="progress"><div id="progress-fill"></div></div>
+  <button id="replay-btn" onclick="startAnimation()">REPLAY</button>
+</div>
+<script>
+const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+const W=()=>canvas.width,H=()=>canvas.height;
+function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
+window.addEventListener('resize',resize);resize();
+
+let startTime=0,phase=-1,running=false;
+const TOTAL=100000;
+function ease(t){return t<0.5?2*t*t:-1+(4-2*t)*t;}
+function lerp(a,b,t){return a+(b-a)*t;}
+
+const phases=[
+  // PART 1: PASSWORD REFUSAL
+  {start:0,end:8000,label:'THE OLD WORLD',
+   h:'THE IDENTITY TAX',
+   p:'Every service demands tribute. Email. Password. Phone number. Date of birth. Mother\'s maiden name. Security questions. 2FA codes. You hand over pieces of yourself to prove you are yourself. Every piece stored. Every piece hackable. Every piece sellable.'},
+
+  {start:8000,end:16000,label:'THE COST',
+   h:'WHAT THEY TAKE',
+   p:'Your email sells for $0.20 on the dark web. Your full identity package: $15. Your medical records: $250. You gave all of it away voluntarily, one login form at a time. You paid for the service with something more valuable than money. You paid with YOU.'},
+
+  {start:16000,end:26000,label:'THE REFUSAL',
+   h:'WE REFUSE',
+   p:'No password. No email. No name. No phone number. No security questions. No 2FA. No cookies tracking you. No account. No profile. No data to breach because no data was collected. Password refusal is not a feature. It is a POLITICAL ACT. Sovereignty begins at the login form.'},
+
+  {start:26000,end:36000,label:'THE JAR',
+   h:'THE SOUL JAR',
+   p:'You map your soul. 40 situations. Your automatic responses. The shape that emerges is unique to you -- as unique as a fingerprint but infinitely richer. That shape IS your identity. No server stores it. No company owns it. It lives in YOUR device. Your jar. Your soul. Your property.'},
+
+  {start:36000,end:44000,label:'ANONYMOUS IDENTITY',
+   h:'KNOWN WITHOUT BEING NAMED',
+   p:'Dan\'s jar is public by choice. Everyone else\'s says ANONYMOUS - USER OWNED. You can prove you are the same person who was here yesterday without revealing who you are. The soul shape is the proof. The name is irrelevant. Identity without identification. Presence without surveillance.'},
+
+  // PART 2: SOUL VISA
+  {start:44000,end:54000,label:'THE VISA PROBLEM',
+   h:'PAPERS, PLEASE',
+   p:'A passport is a government saying "we vouch for this person." A visa is another government saying "we accept that voucher." Your identity is held hostage by two bureaucracies. Without their stamp, you do not exist. With their stamp, they own your movements. You are a row in their database.'},
+
+  {start:54000,end:64000,label:'SOUL PASSPORT',
+   h:'THE SOUL PASSPORT',
+   p:'Your soul file IS your passport. Not issued by a government. Not stored in a database. Not revocable. The shape of your responses, your emotional topology, your truth alignment score -- all cryptographically sealed in a file only you can unlock. Verifiable by anyone. Owned by no one except you.'},
+
+  {start:64000,end:76000,label:'THE BORDER',
+   h:'CROSSING THE BORDER',
+   p:'Present your soul shape. The system verifies it matches a previously registered shape. No name check. No nationality check. No photo comparison. The soul shape is more unique than a face, more reliable than a fingerprint, and impossible to forge because it requires answering 40 questions exactly as YOU would answer them.'},
+
+  {start:76000,end:88000,label:'TRUST SCORE',
+   h:'EARNED TRUST, NOT GRANTED',
+   p:'Every completed interaction increases your soul trust score. Not a credit score controlled by a corporation. A TRUST score built by your own behaviour across the network. Anonymous. Portable. Incorruptible. The jar fills not with data about you, but with proof of what you have done.'},
+
+  {start:88000,end:100000,label:'COMPLETE',
+   h:'THE IDENTITY REVOLUTION',
+   p:'No passwords. No emails. No names. No governments holding your identity hostage. Your soul shape IS you. Anonymous to the world. Known to the network. Sovereign over your own existence. This is not an improvement to digital identity. It is the replacement. shortfactory.shop'}
+];
+
+function getPhase(t){for(let i=phases.length-1;i>=0;i--)if(t>=phases[i].start)return i;return 0;}
+
+// Login form being destroyed
+function drawLoginForm(cx,cy,destruction,alpha){
+  ctx.save();ctx.globalAlpha=alpha;
+  const w=200,h=160;
+  // Form box
+  ctx.strokeStyle='rgba(255,255,255,'+(0.1*(1-destruction))+')';
+  ctx.lineWidth=1;
+  ctx.strokeRect(cx-w/2,cy-h/2,w,h);
+  // Fields
+  const fields=['Email','Password','Phone','Date of Birth'];
+  fields.forEach((f,i)=>{
+    const fy=cy-h/2+25+i*32;
+    const shake=destruction>0.5?Math.sin(Date.now()*0.02+i)*destruction*10:0;
+    const fieldAlpha=(1-destruction)*0.5;
+    ctx.fillStyle='rgba(255,255,255,'+fieldAlpha*0.05+')';
+    ctx.fillRect(cx-w/2+15+shake,fy,w-30,22);
+    ctx.strokeStyle='rgba(255,255,255,'+fieldAlpha*0.15+')';
+    ctx.strokeRect(cx-w/2+15+shake,fy,w-30,22);
+    ctx.font='9px "Segoe UI",system-ui';
+    ctx.fillStyle='rgba(255,255,255,'+fieldAlpha*0.3+')';
+    ctx.textAlign='left';
+    ctx.fillText(f,cx-w/2+20+shake,fy+14);
+    // Strike through
+    if(destruction>0.3+i*0.15){
+      ctx.beginPath();
+      ctx.moveTo(cx-w/2+10,fy+11);ctx.lineTo(cx+w/2-10,fy+11);
+      ctx.strokeStyle='rgba(239,68,68,'+(destruction*0.6)+')';
+      ctx.lineWidth=2;ctx.stroke();
+    }
+  });
+  ctx.restore();
+}
+
+// Soul sphere (small)
+function drawSoulSphere(cx,cy,r,t,alpha){
+  ctx.save();ctx.globalAlpha=alpha;
+  const nodes=12;
+  for(let i=0;i<nodes;i++){
+    const a=(i/nodes)*Math.PI*2+t*0.001;
+    const nr=r*(0.5+Math.sin(i*2.7)*0.5);
+    const nx=cx+Math.cos(a)*nr;
+    const ny=cy+Math.sin(a)*nr*0.5;
+    ctx.beginPath();ctx.arc(nx,ny,2,0,Math.PI*2);
+    ctx.fillStyle='rgba(34,197,94,0.7)';ctx.fill();
+  }
+  ctx.beginPath();
+  for(let a=0;a<Math.PI*2;a+=0.05){
+    const x=cx+Math.cos(a+t*0.0005)*r;
+    const y=cy+Math.sin(a+t*0.0005)*r*0.5;
+    a<0.01?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  }
+  ctx.strokeStyle='rgba(34,197,94,0.1)';ctx.lineWidth=1;ctx.stroke();
+  ctx.restore();
+}
+
+// Jar emoji
+function drawJarEmoji(cx,cy,size,filled,label,isPublic,alpha){
+  ctx.save();ctx.globalAlpha=alpha;
+  ctx.font=size+'px "Segoe UI Emoji","Apple Color Emoji",sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText(filled?'\uD83C\uDF10':'\uD83E\uDED9',cx,cy);
+  ctx.font='7px "Segoe UI",system-ui';
+  ctx.fillStyle=isPublic?'rgba(218,165,32,0.6)':'rgba(100,116,139,0.4)';
+  ctx.fillText(label,cx,cy+size*0.6);
+  ctx.restore();
+}
+
+// Passport vs soul
+function drawPassport(cx,cy,t,alpha,soulAlpha){
+  ctx.save();
+  // Traditional passport
+  ctx.globalAlpha=alpha;
+  ctx.fillStyle='rgba(30,20,60,0.8)';
+  ctx.fillRect(cx-100-35,cy-45,70,90);
+  ctx.strokeStyle='rgba(218,165,32,0.3)';ctx.lineWidth=1;
+  ctx.strokeRect(cx-100-35,cy-45,70,90);
+  ctx.font='bold 8px "Segoe UI",system-ui';ctx.fillStyle='rgba(218,165,32,0.5)';
+  ctx.textAlign='center';ctx.fillText('PASSPORT',cx-100,cy-30);
+  ctx.font='7px "Segoe UI",system-ui';ctx.fillStyle='rgba(255,255,255,0.2)';
+  ctx.fillText('NAME: --------',cx-100,cy-10);
+  ctx.fillText('DOB: --------',cx-100,cy+2);
+  ctx.fillText('NATIONALITY: --',cx-100,cy+14);
+  ctx.fillText('ISSUED BY: GOV',cx-100,cy+26);
+  // Photo placeholder
+  ctx.fillStyle='rgba(255,255,255,0.05)';
+  ctx.fillRect(cx-100-15,cy-25,30,35);
+
+  // Soul passport
+  ctx.globalAlpha=soulAlpha;
+  ctx.fillStyle='rgba(5,20,10,0.8)';
+  ctx.fillRect(cx+100-35,cy-45,70,90);
+  ctx.strokeStyle='rgba(34,197,94,0.3)';
+  ctx.strokeRect(cx+100-35,cy-45,70,90);
+  ctx.font='bold 8px "Segoe UI",system-ui';ctx.fillStyle='rgba(34,197,94,0.6)';
+  ctx.textAlign='center';ctx.fillText('SOUL FILE',cx+100,cy-30);
+  drawSoulSphere(cx+100,cy+5,20,t,1);
+  ctx.font='7px "Segoe UI",system-ui';ctx.fillStyle='rgba(34,197,94,0.3)';
+  ctx.fillText('OWNER: ANONYMOUS',cx+100,cy+35);
+
+  // VS or arrow
+  ctx.globalAlpha=Math.min(alpha,soulAlpha);
+  ctx.font='bold 11px "Segoe UI",system-ui';ctx.fillStyle='rgba(218,165,32,0.3)';
+  ctx.textAlign='center';ctx.fillText('>>>',cx,cy);
+  ctx.restore();
+}
+
+// Border crossing animation
+function drawBorder(cx,cy,t,prog,alpha){
+  ctx.save();ctx.globalAlpha=alpha;
+  // Gate
+  ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(cx,cy-80);ctx.lineTo(cx,cy-20);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(cx,cy+20);ctx.lineTo(cx,cy+80);ctx.stroke();
+  // Gate opening
+  const gap=prog*30;
+  ctx.fillStyle='rgba(34,197,94,'+(prog*0.2)+')';
+  ctx.fillRect(cx-2,cy-gap,4,gap*2);
+  // Soul passing through
+  if(prog>0.3){
+    const sx=lerp(cx-100,cx+100,ease((prog-0.3)/0.7));
+    drawSoulSphere(sx,cy,15,t,Math.min(1,(prog-0.3)*3));
+  }
+  // Verification flash
+  if(prog>0.5 && prog<0.7){
+    const fp=(prog-0.5)/0.2;
+    ctx.fillStyle='rgba(34,197,94,'+(fp*0.1)+')';
+    ctx.fillRect(0,0,W(),H());
+    ctx.font='bold 9px "Segoe UI",system-ui';ctx.fillStyle='rgba(34,197,94,'+fp+')';
+    ctx.textAlign='center';
+    ctx.fillText('SOUL VERIFIED',cx,cy-50);
+  }
+  // Labels
+  ctx.font='7px "Segoe UI",system-ui';ctx.fillStyle='rgba(255,255,255,0.2)';
+  ctx.textAlign='center';
+  ctx.fillText('BOUNDARY',cx,cy+95);
+  ctx.restore();
+}
+
+// Trust score bar
+function drawTrustScore(cx,cy,score,t,alpha){
+  ctx.save();ctx.globalAlpha=alpha;
+  const w=200,h=8;
+  ctx.fillStyle='rgba(255,255,255,0.03)';
+  ctx.fillRect(cx-w/2,cy-h/2,w,h);
+  ctx.fillStyle='rgba(34,197,94,0.4)';
+  ctx.fillRect(cx-w/2,cy-h/2,w*score,h);
+  ctx.font='bold 10px "Segoe UI",system-ui';ctx.fillStyle='rgba(34,197,94,0.7)';
+  ctx.textAlign='center';
+  ctx.fillText('TRUST: '+Math.floor(score*100)+'%',cx,cy-14);
+  ctx.font='7px "Segoe UI",system-ui';ctx.fillStyle='rgba(255,255,255,0.2)';
+  ctx.fillText('EARNED BY BEHAVIOUR, NOT GRANTED BY AUTHORITY',cx,cy+18);
+  // Jar icons filling
+  for(let i=0;i<5;i++){
+    const jx=cx-60+i*30;
+    const jy=cy+40;
+    const filled=score>(i+1)*0.2;
+    ctx.font='18px "Segoe UI Emoji"';ctx.textAlign='center';
+    ctx.globalAlpha=alpha*(filled?0.8:0.2);
+    ctx.fillText('\uD83E\uDED9',jx,jy);
+  }
+  ctx.restore();
+}
+
+// Dark web price tags
+function drawPriceTags(cx,cy,t,alpha){
+  ctx.save();ctx.globalAlpha=alpha;
+  const items=[
+    {label:'EMAIL ADDRESS',price:'$0.20',y:-50},
+    {label:'FULL IDENTITY',price:'$15',y:-20},
+    {label:'CREDIT CARD',price:'$45',y:10},
+    {label:'MEDICAL RECORDS',price:'$250',y:40},
+    {label:'COMPLETE PROFILE',price:'$1,200',y:70}
+  ];
+  items.forEach((item,i)=>{
+    const prog=Math.min(1,(t*0.001-i*0.8)*0.5);
+    if(prog<=0)return;
+    ctx.globalAlpha=alpha*prog;
+    ctx.font='8px "Segoe UI",system-ui';
+    ctx.fillStyle='rgba(239,68,68,0.5)';ctx.textAlign='right';
+    ctx.fillText(item.label,cx-10,cy+item.y);
+    ctx.font='bold 12px monospace';
+    ctx.fillStyle='rgba(239,68,68,0.7)';ctx.textAlign='left';
+    ctx.fillText(item.price,cx+10,cy+item.y);
+  });
+  ctx.restore();
+}
+
+function frame(now){
+  if(!running)return;
+  const t=now-startTime;
+  const p=getPhase(t);
+
+  ctx.fillStyle='#050508';ctx.fillRect(0,0,W(),H());
+  // Subtle grid
+  ctx.strokeStyle='rgba(34,197,94,0.015)';ctx.lineWidth=1;
+  for(let x=0;x<W();x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H());ctx.stroke();}
+  for(let y=0;y<H();y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W(),y);ctx.stroke();}
+
+  document.getElementById('progress-fill').style.width=Math.min(100,(t/TOTAL)*100)+'%';
+
+  if(p!==phase){
+    phase=p;const ph=phases[p];
+    document.getElementById('phase-label').textContent=ph.label;
+    const cap=document.getElementById('caption');
+    cap.querySelector('h2').textContent=ph.h;
+    cap.querySelector('p').textContent=ph.p;
+    cap.style.opacity='1';
+  }
+
+  const cx=W()*0.5,cy=H()*0.4;
+
+  if(p===0){
+    const prog=t/8000;
+    drawLoginForm(cx,cy,0,Math.min(1,prog*2));
+  }
+  if(p===1){
+    const prog=(t-8000)/8000;
+    drawPriceTags(cx,cy,t-8000,Math.min(1,prog*2));
+  }
+  if(p===2){
+    const prog=(t-16000)/10000;
+    drawLoginForm(cx,cy,prog,Math.min(1,prog*2));
+  }
+  if(p===3){
+    const prog=(t-26000)/10000;
+    drawSoulSphere(cx,cy,60+prog*20,t,Math.min(1,prog*2));
+    // Jar forming around it
+    if(prog>0.4){
+      const jp=(prog-0.4)/0.6;
+      ctx.save();ctx.globalAlpha=jp;
+      ctx.strokeStyle='rgba(218,165,32,0.2)';ctx.lineWidth=1;
+      ctx.beginPath();
+      ctx.moveTo(cx-35,cy+30);ctx.lineTo(cx-35,cy-50);
+      ctx.quadraticCurveTo(cx-35,cy-65,cx-20,cy-65);
+      ctx.lineTo(cx+20,cy-65);
+      ctx.quadraticCurveTo(cx+35,cy-65,cx+35,cy-50);
+      ctx.lineTo(cx+35,cy+30);
+      ctx.quadraticCurveTo(cx+35,cy+35,cx,cy+35);
+      ctx.quadraticCurveTo(cx-35,cy+35,cx-35,cy+30);
+      ctx.stroke();
+      ctx.font='7px "Segoe UI",system-ui';ctx.fillStyle='rgba(218,165,32,0.4)';
+      ctx.textAlign='center';ctx.fillText('YOUR JAR. YOUR SOUL. YOUR PROPERTY.',cx,cy+50);
+      ctx.restore();
+    }
+  }
+  if(p===4){
+    const prog=(t-36000)/8000;
+    // Dan's jar (public)
+    ctx.save();ctx.globalAlpha=Math.min(1,prog*2);
+    ctx.font='28px "Segoe UI Emoji"';ctx.textAlign='center';
+    ctx.fillText('\uD83E\uDED9',cx-50,cy);
+    ctx.font='7px "Segoe UI",system-ui';ctx.fillStyle='rgba(218,165,32,0.6)';
+    ctx.fillText('DAN - PUBLIC',cx-50,cy+20);
+    // Anonymous jars
+    for(let i=0;i<4;i++){
+      ctx.font='28px "Segoe UI Emoji"';ctx.textAlign='center';
+      ctx.globalAlpha=Math.min(1,prog*2)*0.5;
+      ctx.fillText('\uD83E\uDED9',cx+20+i*35,cy);
+      ctx.font='7px "Segoe UI",system-ui';ctx.fillStyle='rgba(100,116,139,0.4)';
+      ctx.fillText('ANON',cx+20+i*35,cy+20);
+    }
+    ctx.restore();
+  }
+  // PART 2: VISA
+  if(p===5){
+    const prog=(t-44000)/10000;
+    drawPassport(cx,cy,t,Math.min(1,prog*2),0);
+  }
+  if(p===6){
+    const prog=(t-54000)/10000;
+    drawPassport(cx,cy,t,Math.max(0,1-prog*2),Math.min(1,prog*2));
+  }
+  if(p===7){
+    const prog=(t-64000)/12000;
+    drawBorder(cx,cy,t,prog,Math.min(1,prog*2));
+  }
+  if(p===8){
+    const prog=(t-76000)/12000;
+    drawTrustScore(cx,cy,prog,t,Math.min(1,prog*2));
+  }
+  if(p===9){
+    const prog=(t-88000)/12000;
+    // Final soul sphere with stats
+    drawSoulSphere(cx,cy-20,50,t,Math.min(1,prog*2));
+    if(prog>0.2){
+      ctx.save();ctx.globalAlpha=Math.min(1,(prog-0.2)*2);
+      ctx.font='8px "Segoe UI",system-ui';ctx.textAlign='center';
+      const stats=['PASSWORDS: REFUSED','EMAILS: REFUSED','NAMES: REFUSED','GOVERNMENTS: BYPASSED','IDENTITY: SOVEREIGN'];
+      stats.forEach((s,i)=>{
+        ctx.fillStyle=i<3?'rgba(34,197,94,0.5)':i===3?'rgba(218,165,32,0.5)':'rgba(204,68,255,0.5)';
+        ctx.fillText(s,cx,cy+50+i*14);
+      });
+      ctx.restore();
+    }
+  }
+
+  if(t<TOTAL){requestAnimationFrame(frame);}
+  else{document.getElementById('replay-btn').style.display='block';running=false;}
+}
+
+function startAnimation(){
+  phase=-1;running=true;
+  document.getElementById('replay-btn').style.display='none';
+  document.getElementById('caption').style.opacity='0';
+  startTime=performance.now();
+  requestAnimationFrame(frame);
+}
+startAnimation();
+</script>
+</body>
+</html>
