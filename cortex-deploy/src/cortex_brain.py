@@ -316,11 +316,27 @@ class CortexMind:
 
         right_reply = self.right.process(user_msg)
         # TICKER: right hemisphere
+        right_or_fired = getattr(self.right, '_or_gate_fired', False)
         thinking_log.append({
             'stage': 'right', 'label': 'RIGHT HEMISPHERE',
             'text': right_reply[:150] if right_reply and right_reply.strip() else '(silence)',
-            'data': {'length': len(right_reply) if right_reply else 0}
+            'data': {'length': len(right_reply) if right_reply else 0, 'or_gate': right_or_fired}
         })
+
+        # --- OR GATE OVERRIDE: if right hemisphere fired the OR gate, its response is sacred ---
+        # No synthesis, no blending, no frequency resolver. Clean commit only.
+        if right_or_fired and right_reply and right_reply.strip():
+            thinking_log.append({
+                'stage': 'synthesis', 'label': 'OR GATE',
+                'text': 'Right hemisphere OR gate fired — bypassing synthesis',
+                'data': {'mode': 'or_gate', 'winner': 'right'}
+            })
+            debate = self._make_debate(user_msg, left_reply, right_reply, qtype, 'or_gate', right_reply)
+            debate['intent'] = intent or 'unknown'
+            debate['thinking_log'] = thinking_log
+            self._enrich_debate(debate, right_reply)
+            self._log_debate(debate)
+            return right_reply, debate
 
         if not left_reply.strip() and not right_reply.strip():
             # Both hemispheres silent — try cortex's own brain

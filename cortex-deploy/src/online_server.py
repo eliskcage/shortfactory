@@ -663,6 +663,7 @@ class OnlineHandler(http.server.SimpleHTTPRequestHandler):
                 },
                 'recent_words': [{'word': w, 'means': m[:60], 'source': s, 'learned': l} for w, m, s, l in recent_words],
                 'right_recent_words': [{'word': w, 'means': m[:60], 'source': s, 'learned': l} for w, m, s, l in right_recent],
+                'or_pressure': getattr(right_brain, '_or_pressure', {}),
                 'recent_chat': [{'user': c.get('user','')[:60], 'response': c.get('response','')[:60], 'time': c.get('time','')} for c in recent_log],
                 'clusters': {k: v[:8] for k, v in list(clusters.items())[:10]},
                 'recycled': list(recycled.keys()),

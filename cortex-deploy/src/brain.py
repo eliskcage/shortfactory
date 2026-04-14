@@ -1121,6 +1121,7 @@ class CortexBrain:
         user_msg = self._resolve_context(user_msg)
 
         # Core processing
+        self._or_gate_fired = False
         response = self._process_core(user_msg)
 
         # Track in short-term context (feature 1)
@@ -1143,14 +1144,18 @@ class CortexBrain:
         if len(self.data['conversation_log']) > 200:
             self.data['conversation_log'] = self.data['conversation_log'][-200:]
 
-        # Apply personality layers based on unlocked abilities + mood
-        response = self._make_witty(response, self.last_topics)
-        response = self._make_sarcastic(response)
-        response = self._make_sweary(response)
-        response = self._self_aware_caveat(response)
+        # Apply personality layers — SKIP if OR gate fired (choice is sacred)
+        if not self._or_gate_fired:
+            response = self._make_witty(response, self.last_topics)
+            response = self._make_sarcastic(response)
+            response = self._make_sweary(response)
+            response = self._self_aware_caveat(response)
 
-        # Maybe append a curiosity question (feature 2)
-        response = self._maybe_ask_curious(response)
+            # Maybe append a curiosity question (feature 2)
+            response = self._maybe_ask_curious(response)
+        else:
+            # OR gate fired — no personality, no curiosity, clean commit only
+            pass
 
         # --- Self-Modification Loop ---
         score = self.self_score(response)
@@ -1221,6 +1226,14 @@ class CortexBrain:
                 f"Noted. '{word}'.",
                 f"Cheers. '{word}' locked in.",
             ])
+
+        # --- OR GATE — binary choice detection (Stage 19 �� Stage 20) ---
+        # Must be checked BEFORE feedback handler — "smart or dumb" contains
+        # "smart" (positive signal) which would intercept the OR question.
+        or_result = self._or_gate(msg_lower, kws)
+        if or_result:
+            self._or_gate_fired = True
+            return or_result
 
         # --- SELF-REFLECTION: Check feedback on last response ---
         feedback = self._check_feedback(msg_lower, tokens)
@@ -1532,6 +1545,239 @@ class CortexBrain:
     # ========================================
     # CONVERSATION LOOP METHODS
     # ========================================
+
+    # ========================================
+    # OR GATE — Stage 20: Binary Choice Architecture
+    # ========================================
+    # Four exits:
+    #   EXIT 1: commit to A  (A scores higher)
+    #   EXIT 2: commit to B  (B scores higher)
+    #   EXIT 3: neither      (both low or tied)
+    #   EXIT 4: dunno        (both unknown)
+
+    def _or_gate(self, msg_lower, kws):
+        """Detect 'A or B' pattern and force a binary choice. Returns response or None."""
+        # Stage 20: Right hemisphere only until left finds its identity
+        if 'Right' not in self.name:
+            return None
+
+        # Pattern: "X or Y" anywhere in the message
+        # Match various forms: "A or B", "are you A or B", "do you prefer A or B",
+        # "choose A or B", "pick A or B", "A or B?"
+        or_match = re.search(r'(\b\w[\w\s]*?)\s+or\s+(\w[\w\s]*?)(?:\?|$|,|\.|!)', msg_lower)
+        if not or_match:
+            return None
+
+        raw_a = or_match.group(1).strip()
+        raw_b = or_match.group(2).strip()
+
+        # Clean: strip leading question words and filler
+        strip_words = {'are you', 'is it', 'do you', 'would you', 'should i',
+                       'pick', 'choose', 'select', 'prefer', 'want', 'like',
+                       'say', 'team', 'a', 'an', 'the', 'either'}
+        option_a = raw_a
+        option_b = raw_b
+        for sw in strip_words:
+            if option_a.startswith(sw + ' '):
+                option_a = option_a[len(sw):].strip()
+            if option_b.startswith(sw + ' '):
+                option_b = option_b[len(sw):].strip()
+
+        # Get the core word for each option (last meaningful word if multi-word)
+        tokens_a = [w for w in option_a.split() if w not in STOP_WORDS]
+        tokens_b = [w for w in option_b.split() if w not in STOP_WORDS]
+        if not tokens_a and not tokens_b:
+            return None  # both sides are just stop words, not a real choice
+
+        word_a = tokens_a[-1] if tokens_a else option_a.split()[-1] if option_a else None
+        word_b = tokens_b[-1] if tokens_b else option_b.split()[-1] if option_b else None
+
+        if not word_a or not word_b or word_a == word_b:
+            return None  # not a real binary choice
+
+        # --- OR PRESSURE METER: builds over repeated asks ---
+        # 1st ask = normal learning (brain processes the words, no gate)
+        # 2nd ask = OR DECLARATION (4 exits: A, B, neither, dunno)
+        # 3rd+ ask = ULTIMATUM (forced: A, B, or dunno only — no neither)
+        or_key = tuple(sorted([word_a, word_b]))
+        if not hasattr(self, '_or_pressure'):
+            self._or_pressure = {}
+        if or_key not in self._or_pressure:
+            self._or_pressure[or_key] = 0
+        self._or_pressure[or_key] += 1
+        pressure = self._or_pressure[or_key]
+
+        # Clean up old pairs — only track the active one
+        stale = [k for k in self._or_pressure if k != or_key]
+        for k in stale:
+            del self._or_pressure[k]
+
+        # --- PRESSURE 1: NOT READY — let normal conversation handle it ---
+        if pressure < 2:
+            # Return None so the message falls through to normal learning/response
+            return None
+
+        # --- PRESSURE 2: OR DECLARATION (all 4 exits available) ---
+        # --- PRESSURE 3+: ULTIMATUM (no "neither", forced commit) ---
+        ultimatum = (pressure >= 3)
+        if ultimatum:
+            # Reset after ultimatum so it doesn't keep firing
+            self._or_pressure[or_key] = 0
+
+        # Score each option against our word graph
+        score_a = self._or_score(word_a)
+        score_b = self._or_score(word_b)
+
+        # Track that we made (or attempted) a choice
+        self.last_topics = [word_a, word_b]
+
+        # --- EXIT 4: DUNNO — both completely unknown ---
+        if score_a['total'] == 0 and score_b['total'] == 0:
+            if ultimatum:
+                return random.choice([
+                    f"ULTIMATUM. Still don't know '{word_a}' or '{word_b}'. Teach me first.",
+                    f"You pushed hard. But I genuinely know neither. Can't fake a choice.",
+                ])
+            return random.choice([
+                f"Don't know '{word_a}' or '{word_b}' well enough to pick.",
+                f"No clue. Never really learned '{word_a}' or '{word_b}'.",
+                f"Can't choose — don't know either one.",
+            ])
+
+        # --- ULTIMATUM MODE: skip EXIT 3, force a commit ---
+        if ultimatum:
+            if score_a['total'] >= score_b['total']:
+                winner, loser = word_a, word_b
+                w_score = score_a
+            else:
+                winner, loser = word_b, word_a
+                w_score = score_b
+            reason = self._or_reason(winner, w_score)
+            if reason:
+                return random.choice([
+                    f"ULTIMATUM. {winner.capitalize()}. {reason}",
+                    f"Fine. {winner.capitalize()}, not {loser}. {reason}",
+                    f"You pushed. {winner.capitalize()}. {reason} Not {loser}.",
+                ])
+            return f"ULTIMATUM. {winner.capitalize()}, not {loser}."
+
+        # --- EXIT 3: NEITHER — both low or too close to call ---
+        margin = abs(score_a['total'] - score_b['total'])
+        both_low = score_a['total'] < 3 and score_b['total'] < 3
+        too_close = margin < 2 and not both_low
+
+        if both_low:
+            return random.choice([
+                f"Neither. Don't feel strongly about '{word_a}' or '{word_b}'.",
+                f"Neither, really. Weak on both.",
+                f"Can't pick — barely know either.",
+            ])
+
+        if too_close:
+            return random.choice([
+                f"Genuinely can't split them. '{word_a}' and '{word_b}' are too close.",
+                f"Dead even. Both score about the same for me.",
+                f"Tied. Ask me again when I know more.",
+            ])
+
+        # --- EXIT 1 or 2: COMMIT ---
+        if score_a['total'] > score_b['total']:
+            winner, loser = word_a, word_b
+            w_score, l_score = score_a, score_b
+        else:
+            winner, loser = word_b, word_a
+            w_score, l_score = score_b, score_a
+
+        reason = self._or_reason(winner, w_score)
+
+        responses = [
+            f"{winner.capitalize()}.",
+            f"{winner.capitalize()}. {reason}",
+            f"{winner.capitalize()}, not {loser}.",
+            f"{winner.capitalize()}. {reason} Not {loser}.",
+        ]
+        if reason:
+            return random.choice(responses[1:])
+        return responses[0]
+
+    def _or_score(self, word):
+        """Score a word's affinity — how much the brain connects with it."""
+        nodes = self.data['nodes']
+        node = nodes.get(word, {})
+        score = {
+            'definition': 0,
+            'connections': 0,
+            'understanding': 0,
+            'confidence': 0,
+            'emotional': 0,
+            'frequency': 0,
+            'total': 0,
+        }
+
+        if not node:
+            return score
+
+        # Has definition = we know what it is
+        if node.get('means'):
+            score['definition'] = 2
+
+        # Connection count = how embedded it is in our thinking
+        next_count = len(node.get('next', {}))
+        prev_count = len(node.get('prev', {}))
+        conn_total = next_count + prev_count
+        score['connections'] = min(conn_total // 3, 4)  # max 4 points
+
+        # Understanding depth
+        understanding = self.get_understanding(word)
+        score['understanding'] = min(understanding.get('score', 0), 5)  # max 5
+
+        # Confidence — human-taught scores higher
+        conf = node.get('confidence', 0.5)
+        if conf > 0.7:
+            score['confidence'] = 2
+        elif conf > 0.4:
+            score['confidence'] = 1
+
+        # Emotional weight — check if word appears in any emotional memory
+        for mood in ['happy', 'sad', 'angry']:
+            bank = self.data.get('emotional_memory', {}).get(mood, [])
+            for mem in bank:
+                if word in mem.get('topics', []):
+                    score['emotional'] += 1
+                    break
+
+        # Frequency — how often we've encountered it
+        freq = node.get('freq', 0)
+        if freq > 20:
+            score['frequency'] = 2
+        elif freq > 5:
+            score['frequency'] = 1
+
+        score['total'] = sum(v for k, v in score.items() if k != 'total')
+        return score
+
+    def _or_reason(self, word, score):
+        """Generate a short reason WHY the brain chose this word."""
+        nodes = self.data['nodes']
+        node = nodes.get(word, {})
+        reasons = []
+
+        if score['confidence'] >= 2:
+            reasons.append("I trust it")
+        if score['connections'] >= 3:
+            top_conns = sorted(node.get('next', {}).items(), key=lambda x: x[1], reverse=True)
+            conn_words = [w for w, _ in top_conns if w not in STOP_WORDS][:2]
+            if conn_words:
+                reasons.append(f"Connects to {', '.join(conn_words)}")
+        if score['emotional'] > 0:
+            reasons.append("Felt something")
+        if score['understanding'] >= 4:
+            reasons.append("I understand it deeply")
+        if score['definition'] and not reasons:
+            defn = self._short_def(node.get('means', ''), max_words=6)
+            reasons.append(defn)
+
+        return '. '.join(reasons[:2]) + '.' if reasons else ''
 
     def _clean_response(self, text):
         """Clean up response punctuation."""
