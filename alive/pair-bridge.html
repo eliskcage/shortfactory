@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>ALIVE Pair Bridge</title></head>
+<body>
+<script>
+// ALIVE Pair Bridge — loaded in hidden iframe by Boy and Girl
+// ONE request per poll cycle (no race condition)
+// Usage: <iframe src="/alive/pair-bridge.html?role=boy"> or ?role=girl
+
+var ROLE = new URLSearchParams(location.search).get('role');
+if (ROLE !== 'boy' && ROLE !== 'girl') {
+  document.body.textContent = 'ERROR: ?role=boy or ?role=girl required';
+  throw new Error('no role');
+}
+
+var API = '/alive/pair.php';
+var paired = false;
+var pollMs = 2000;
+
+function msg(type, data) {
+  try {
+    var m = { alive: true, role: ROLE, type: type };
+    for (var k in data) { if (data.hasOwnProperty(k)) m[k] = data[k]; }
+    parent.postMessage(m, '*');
+  } catch(e) {}
+}
+
+var myStatus = { blood: 0, alive: false, mood: 'unknown' };
+
+window.addEventListener('message', function(e) {
+  if (!e.data || !e.data.alive) return;
+
+  if (e.data.type === 'status') {
+    myStatus = { blood: e.data.blood || 0, alive: !!e.data.alive_state, mood: e.data.mood || 'unknown' };
+  }
+
+  if (e.data.type === 'note' && paired) {
+    fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: ROLE, action: 'note', shape: e.data.shape })
+    }).catch(function(){});
+  }
+
+  if (e.data.type === 'anger' && paired) {
+    fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: ROLE, action: 'anger' })
+    }).catch(function(){});
+  }
+
+  if (e.data.type === 'pair-tap') {
+    fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: ROLE })
+    }).then(function(r){ return r.json(); }).then(function(d) {
+      msg('pair-tap-result', { ok: d.ok, paired: d.paired });
+      if (d.paired && !paired) {
+        paired = true;
+        pollMs = 1000;
+        restartPoll();
+      }
+    }).catch(function(){});
+  }
+
+  if (e.data.type === 'revive' && ROLE === 'boy') {
+    fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: 'boy', action: 'revive', song: e.data.song })
+    }).then(function(r){ return r.json(); }).then(function(d) {
+      msg('revive-result', { ok: d.ok, revived: d.revived });
+    }).catch(function(){});
+  }
+});
+
+// SINGLE combined poll — reports status + checks other + consumes notes in ONE request
+function poll() {
+  fetch(API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from: ROLE,
+      action: 'poll',
+      blood: myStatus.blood,
+      alive: myStatus.alive,
+      mood: myStatus.mood
+    })
+  }).then(function(r){ return r.json(); }).then(function(d) {
+    if (!d.ok) return;
+
+    var wasPaired = paired;
+    paired = !!d.paired;
+
+    if (paired !== wasPaired) {
+      pollMs = paired ? 1000 : 2000;
+      restartPoll();
+      msg(paired ? 'paired' : 'unpaired', {});
+    }
+
+    msg('state', {
+      paired: paired,
+      other: d.other,
+      other_ping: d.other_ping,
+      other_status: d.other_status,
+      paired_at: d.paired_at
+    });
+
+    if (d.notes && d.notes.length > 0) {
+      msg('notes', { notes: d.notes });
+    }
+
+    if (d.revive && ROLE === 'girl') {
+      msg('revive', { revive: d.revive });
+    }
+
+    if (d.anger) {
+      msg('anger-hit', {});
+    }
+  }).catch(function(){});
+}
+
+var pollTimer = null;
+function restartPoll() {
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(poll, pollMs);
+}
+
+poll();
+restartPoll();
+msg('ready', {});
+</script>
+</body>
+</html>

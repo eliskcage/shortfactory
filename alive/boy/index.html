@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<!-- ALIVE Girl v6.0 — Evolved Demo + Age-Gated Progression — 14 Apr 2026 -->
+<!-- ALIVE Boy v6.0 — Shape-Shifting Soul — 14 Apr 2026 -->
 <!--
   Copyright (c) 2026 ShortFactory / Dan Chipchase
   All rights reserved. Proprietary and confidential.
-  First commit: Feb 15, 2026.
+  The soul changes shape when it hears a shape.
+  Shape + Sound + Training Wheels = merged.
 -->
 <html lang="en">
 <head>
@@ -11,15 +12,15 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0a0010">
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.svg">
+<meta name="theme-color" content="#000a14">
+<link rel="manifest" href="../manifest.json">
+<link rel="apple-touch-icon" href="../icon-192.svg">
 <title>ALIVE</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{
   width:100%;height:100%;
-  background:#0a0010;color:#fff;
+  background:#000a14;color:#fff;
   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
   overflow:hidden;
   touch-action:manipulation;
@@ -31,7 +32,7 @@ html,body{
   position:fixed;top:0;left:0;right:0;z-index:20;
   padding:env(safe-area-inset-top,8px) 16px 8px;
   display:flex;align-items:center;gap:12px;
-  background:linear-gradient(to bottom,rgba(10,0,16,0.9),transparent);
+  background:linear-gradient(to bottom,rgba(0,10,20,0.9),transparent);
 }
 .blood-track{
   flex:1;height:6px;border-radius:3px;
@@ -39,20 +40,20 @@ html,body{
 }
 .blood-fill{
   height:100%;border-radius:3px;
-  background:linear-gradient(90deg,#ff1493,#ff69b4);
+  background:linear-gradient(90deg,#0088cc,#00ccff);
   transition:width 0.5s;
 }
 .blood-fill.panic{
-  background:linear-gradient(90deg,#ff0040,#ff4444);
+  background:linear-gradient(90deg,#ff4400,#ff6600);
   animation:bpulse 0.6s infinite;
 }
 @keyframes bpulse{50%{opacity:0.5}}
 .blood-text{
-  font-size:11px;color:#ff69b4;font-weight:600;
+  font-size:11px;color:#00ccff;font-weight:600;
   min-width:42px;text-align:right;
   font-variant-numeric:tabular-nums;
 }
-.hearts{font-size:13px;letter-spacing:2px;color:#ff69b4;text-shadow:0 0 6px rgba(255,105,180,0.6)}
+.hearts{font-size:13px;letter-spacing:2px;color:#00ccff;text-shadow:0 0 6px rgba(0,200,255,0.6)}
 .hearts.flash{animation:heartFlash 0.8s ease}
 @keyframes heartFlash{0%{transform:scale(1.8);filter:brightness(2)}100%{transform:scale(1);filter:brightness(1)}}
 .mood-badge{
@@ -60,27 +61,83 @@ html,body{
   color:rgba(255,255,255,0.4);text-transform:uppercase;
 }
 .age-badge{
-  font-size:10px;color:#ff69b480;letter-spacing:1px;
+  font-size:10px;color:#00ccff80;letter-spacing:1px;
 }
 
-/* ═══ GALAXY CANVAS ═══ */
+/* ═══ GIRL PAIR BUTTON (screen/monitor shape) ═══ */
+.pair-btn{
+  position:fixed;top:50px;right:16px;z-index:20;
+  width:36px;height:28px;border-radius:3px;
+  border:2px solid rgba(255,20,147,0.25);
+  background:rgba(255,20,147,0.04);
+  cursor:pointer;
+  transition:border-color 0.3s,box-shadow 0.3s;
+  display:block;
+}
+.pair-btn::after{
+  content:'';position:absolute;
+  bottom:-7px;left:50%;transform:translateX(-50%);
+  width:12px;height:5px;border-bottom:2px solid rgba(255,20,147,0.2);
+  border-left:1px solid rgba(255,20,147,0.15);
+  border-right:1px solid rgba(255,20,147,0.15);
+}
+/* Red error shake */
+@keyframes pairReject{
+  0%,100%{transform:translateX(0);border-color:rgba(255,20,147,0.25)}
+  10%{transform:translateX(-6px);border-color:#ff0040}
+  20%{transform:translateX(5px);border-color:#ff0040}
+  30%{transform:translateX(-4px);border-color:#ff2020}
+  40%{transform:translateX(4px);border-color:#ff2020}
+  50%{transform:translateX(-2px);border-color:#ff4040}
+  60%{transform:translateX(2px)}
+  70%{transform:translateX(0)}
+}
+.pair-btn.rejected{
+  animation:pairReject 0.7s ease;
+  box-shadow:0 0 20px rgba(255,0,40,0.5);
+}
+/* Pair signal sent glow */
+.pair-btn.sent{
+  border-color:#ff1493;
+  box-shadow:0 0 12px rgba(255,20,147,0.4);
+}
+/* Incoming pair ping */
+@keyframes pairPing{
+  0%,100%{box-shadow:0 0 8px rgba(255,20,147,0.2)}
+  50%{box-shadow:0 0 24px rgba(255,20,147,0.6)}
+}
+.pair-btn.paired{
+  border-color:#ff69b4;
+  animation:pairPing 1.5s ease-in-out infinite;
+}
+
+/* ═══ CANVAS ═══ */
 #galaxy{
   position:fixed;inset:0;width:100%;height:100%;
   z-index:0;display:block;
 }
 
+/* ═══ SHAPE INDICATOR (shows what shape the soul is becoming) ═══ */
+.shape-name{
+  position:fixed;top:50px;left:0;right:0;z-index:10;
+  text-align:center;pointer-events:none;
+  font-size:40px;opacity:0;
+  transition:opacity 0.4s;
+  text-shadow:0 0 30px rgba(0,200,255,0.4);
+}
+.shape-name.show{opacity:0.6}
+
 /* ═══ STATUS ═══ */
 .status-area{
-  position:fixed;top:50px;left:0;right:0;z-index:10;
+  position:fixed;top:100px;left:0;right:0;z-index:10;
   text-align:center;pointer-events:none;
 }
 .status-text{
-  font-size:13px;color:rgba(255,255,255,0.35);
+  font-size:13px;color:rgba(255,255,255,0.25);
   letter-spacing:1px;
-  transition:color 0.4s;
 }
 
-/* ═══ CENTRE FEEDBACK ═══ */
+/* ═══ FEEDBACK ═══ */
 .feedback-row{
   position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
   z-index:25;display:none;gap:32px;
@@ -99,7 +156,7 @@ html,body{
   position:fixed;bottom:0;left:0;right:0;z-index:20;
   padding:12px 8px calc(env(safe-area-inset-bottom,12px) + 8px);
   display:flex;flex-direction:column;align-items:center;gap:10px;
-  background:linear-gradient(to top,rgba(10,0,16,0.92) 60%,transparent);
+  background:linear-gradient(to top,rgba(0,10,20,0.92) 60%,transparent);
 }
 .shape-row{
   display:flex;gap:10px;justify-content:center;
@@ -115,12 +172,10 @@ html,body{
 }
 .shape-btn:active{
   transform:scale(0.88);
-  border-color:#ff69b4;
-  box-shadow:0 0 20px rgba(255,20,147,0.4);
+  border-color:#00ccff;
+  box-shadow:0 0 20px rgba(0,200,255,0.4);
 }
-.shape-btn.locked{
-  opacity:0.2;pointer-events:none;
-}
+.shape-btn.locked{opacity:0.2;pointer-events:none}
 .action-row{
   display:flex;gap:12px;justify-content:center;
 }
@@ -132,17 +187,18 @@ html,body{
   -webkit-tap-highlight-color:transparent;
 }
 .act-btn:active{transform:scale(0.94)}
-.btn-pet{background:linear-gradient(135deg,#ff1493,#ff69b4)}
-.btn-end{background:linear-gradient(135deg,#1a8a4a,#22cc66)}
+.btn-pet{background:linear-gradient(135deg,#0066cc,#00ccff)}
+.btn-end{background:linear-gradient(135deg,#1a8a4a,#22cc66);transition:transform 0.15s,opacity 0.3s,background 0.3s}
 .btn-end.hidden{opacity:0;pointer-events:none}
+.btn-end.revive-mode{background:linear-gradient(135deg,#cc0066,#ff1493)}
 .btn-revive{
-  background:linear-gradient(135deg,#ff1493,#cc44ff);
+  background:linear-gradient(135deg,#0066cc,#00ccff);
   display:none;
   animation:revPulse 1.5s infinite;
 }
-@keyframes revPulse{50%{box-shadow:0 0 24px rgba(255,20,147,0.5)}}
+@keyframes revPulse{50%{box-shadow:0 0 24px rgba(0,200,255,0.5)}}
 
-/* ═══ MEMORY/LOG ═══ */
+/* ═══ LOG ═══ */
 .log-area{
   position:fixed;bottom:180px;left:16px;right:16px;z-index:15;
   max-height:80px;overflow-y:auto;
@@ -153,20 +209,6 @@ html,body{
   -webkit-mask-image:linear-gradient(transparent,black 30%,black 70%,transparent);
 }
 
-/* ═══ UNLOCK TOAST ═══ */
-.unlock-toast{
-  position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-20px);
-  z-index:30;
-  background:rgba(255,20,147,0.15);
-  border:1px solid rgba(255,20,147,0.3);
-  backdrop-filter:blur(12px);
-  padding:10px 20px;border-radius:20px;
-  font-size:12px;color:#ff69b4;letter-spacing:1px;
-  opacity:0;transition:all 0.5s;
-  pointer-events:none;
-}
-.unlock-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-
 /* ═══ DEAD OVERLAY ═══ */
 .dead-overlay{
   position:fixed;inset:0;z-index:18;
@@ -176,62 +218,21 @@ html,body{
   flex-direction:column;gap:16px;
 }
 .dead-overlay.show{display:flex}
-.dead-text{
-  font-size:14px;color:rgba(255,255,255,0.3);letter-spacing:2px;
-}
+.dead-text{font-size:14px;color:rgba(255,255,255,0.3);letter-spacing:2px}
 
-/* ═══ BOY PAIR BUTTON (phone shape — can't navigate, only signal) ═══ */
-.pair-btn{
-  position:fixed;top:50px;right:16px;z-index:20;
-  width:28px;height:44px;border-radius:6px;
-  border:2px solid rgba(0,200,255,0.25);
-  background:rgba(0,200,255,0.04);
-  cursor:pointer;
-  transition:border-color 0.3s,box-shadow 0.3s;
-  display:block;
+/* ═══ UNLOCK TOAST ═══ */
+.unlock-toast{
+  position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-20px);
+  z-index:30;
+  background:rgba(0,200,255,0.12);
+  border:1px solid rgba(0,200,255,0.3);
+  backdrop-filter:blur(12px);
+  padding:10px 20px;border-radius:20px;
+  font-size:12px;color:#00ccff;letter-spacing:1px;
+  opacity:0;transition:all 0.5s;
+  pointer-events:none;
 }
-.pair-btn::after{
-  content:'';position:absolute;
-  bottom:4px;left:50%;transform:translateX(-50%);
-  width:8px;height:8px;border-radius:50%;
-  border:1.5px solid rgba(0,200,255,0.2);
-}
-@keyframes pairReject{
-  0%,100%{transform:translateX(0);border-color:rgba(0,200,255,0.25)}
-  10%{transform:translateX(-6px);border-color:#ff0040}
-  20%{transform:translateX(5px);border-color:#ff0040}
-  30%{transform:translateX(-4px);border-color:#ff2020}
-  40%{transform:translateX(4px);border-color:#ff2020}
-  50%{transform:translateX(-2px);border-color:#ff4040}
-  60%{transform:translateX(2px)}
-  70%{transform:translateX(0)}
-}
-.pair-btn.rejected{
-  animation:pairReject 0.7s ease;
-  box-shadow:0 0 20px rgba(255,0,40,0.5);
-}
-.pair-btn.sent{
-  border-color:#00ccff;
-  box-shadow:0 0 12px rgba(0,200,255,0.4);
-}
-@keyframes pairPing{
-  0%,100%{box-shadow:0 0 8px rgba(0,200,255,0.2)}
-  50%{box-shadow:0 0 24px rgba(0,200,255,0.6)}
-}
-.pair-btn.paired{
-  border-color:#00ccff;
-  animation:pairPing 1.5s ease-in-out infinite;
-}
-
-/* ═══ EYE PORTAL (Day 30 unlock) ═══ */
-.eye-portal{
-  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-  z-index:5;width:120px;height:120px;border-radius:50%;
-  background:radial-gradient(circle,rgba(255,20,147,0.15),transparent 70%);
-  cursor:pointer;display:none;
-  animation:eyePulse 4s ease-in-out infinite;
-}
-@keyframes eyePulse{0%,100%{box-shadow:0 0 40px rgba(255,20,147,0.1)}50%{box-shadow:0 0 80px rgba(255,20,147,0.25)}}
+.unlock-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 @media(max-width:380px){
   .shape-btn{width:52px;height:52px;font-size:22px}
@@ -241,13 +242,13 @@ html,body{
 .story-btn{
   position:fixed;top:50px;left:16px;z-index:20;
   width:36px;height:36px;border-radius:10px;
-  border:2px solid rgba(255,105,180,0.2);
-  background:rgba(255,105,180,0.06);
-  color:rgba(255,105,180,0.5);font-size:18px;
+  border:2px solid rgba(0,200,255,0.2);
+  background:rgba(0,200,255,0.06);
+  color:rgba(0,200,255,0.5);font-size:18px;
   cursor:pointer;display:flex;align-items:center;justify-content:center;
   transition:all 0.3s;
 }
-.story-btn:active{transform:scale(0.9);border-color:#ff69b4}
+.story-btn:active{transform:scale(0.9);border-color:#00ccff}
 
 .story-overlay{
   position:fixed;inset:0;z-index:50;
@@ -272,24 +273,21 @@ html,body{
 .story-chapter-btn{
   padding:16px 20px;border-radius:16px;border:none;cursor:pointer;
   background:rgba(255,255,255,0.04);
-  border:1px solid rgba(255,105,180,0.15);
+  border:1px solid rgba(0,200,255,0.15);
   color:#fff;font-size:14px;text-align:left;
   transition:all 0.3s;
 }
 .story-chapter-btn:active{
   transform:scale(0.97);
-  border-color:#ff69b4;
-  background:rgba(255,105,180,0.08);
+  border-color:#00ccff;
+  background:rgba(0,200,255,0.08);
 }
 .story-chapter-btn .ch-num{
-  font-size:11px;color:rgba(255,105,180,0.4);letter-spacing:2px;
+  font-size:11px;color:rgba(0,200,255,0.4);letter-spacing:2px;
   display:block;margin-bottom:4px;
 }
 .story-chapter-btn .ch-title{
-  font-size:15px;font-weight:600;color:#ff69b4;
-}
-.story-chapter-btn.locked-ch{
-  opacity:0.3;pointer-events:none;
+  font-size:15px;font-weight:600;color:#00ccff;
 }
 
 .story-scene{
@@ -302,7 +300,7 @@ html,body{
   font-size:15px;line-height:1.7;color:rgba(255,255,255,0.7);
   min-height:80px;
 }
-.story-text .highlight{color:#ff69b4;font-weight:600}
+.story-text .highlight{color:#00ccff;font-weight:600}
 
 .story-shapes{
   display:flex;gap:12px;justify-content:center;flex-wrap:wrap;
@@ -317,8 +315,8 @@ html,body{
 }
 .story-shape.lit{
   opacity:1;
-  border-color:#ff69b4;
-  box-shadow:0 0 20px rgba(255,20,147,0.5);
+  border-color:#00ccff;
+  box-shadow:0 0 20px rgba(0,200,255,0.5);
   transform:scale(1.15);
 }
 .story-shape.player-turn{
@@ -345,7 +343,7 @@ html,body{
 
 .story-next{
   padding:10px 28px;border-radius:20px;border:none;
-  background:linear-gradient(135deg,#ff1493,#cc44ff);
+  background:linear-gradient(135deg,#0088cc,#00ccff);
   color:#fff;font-size:13px;font-weight:600;
   cursor:pointer;transition:transform 0.15s;
 }
@@ -361,24 +359,30 @@ html,body{
   <span class="hearts" id="heartsDisplay"></span>
   <div class="blood-track"><div class="blood-fill" id="bloodFill" style="width:100%"></div></div>
   <span class="blood-text" id="bloodText">100</span>
-  <span class="mood-badge" id="moodBadge">joyful</span>
+  <span class="mood-badge" id="moodBadge"></span>
 </div>
+
+<!-- GIRL PAIR BUTTON (screen shape — can't navigate, only signal) -->
+<div class="pair-btn" id="pairBtn" onclick="pairTap()"></div>
+
+<!-- SHAPE INDICATOR -->
+<div class="shape-name" id="shapeName"></div>
 
 <!-- STATUS -->
 <div class="status-area">
   <div class="status-text" id="statusText">...</div>
 </div>
 
-<!-- GALAXY -->
+<!-- CANVAS -->
 <canvas id="galaxy"></canvas>
 
-<!-- TRAINING FEEDBACK -->
+<!-- FEEDBACK -->
 <div class="feedback-row" id="feedbackRow">
-  <button class="fb-btn" onclick="giveFeedback(1)" aria-label="good">&#9650;</button>
-  <button class="fb-btn" onclick="giveFeedback(0)" aria-label="try again">&#9660;</button>
+  <button class="fb-btn" onclick="giveFeedback(1)">&#9650;</button>
+  <button class="fb-btn" onclick="giveFeedback(0)">&#9660;</button>
 </div>
 
-<!-- DEATH OVERLAY -->
+<!-- DEATH -->
 <div class="dead-overlay" id="deadOverlay">
   <div class="dead-text">. . .</div>
   <button class="act-btn btn-revive" id="reviveBtn" style="display:inline-flex" onclick="resurrect()">&#9829;</button>
@@ -390,12 +394,6 @@ html,body{
 <!-- UNLOCK TOAST -->
 <div class="unlock-toast" id="unlockToast"></div>
 
-<!-- BOY PAIR BUTTON (phone shape — can't navigate, only signal) -->
-<div class="pair-btn" id="pairBtn" onclick="pairTap()"></div>
-
-<!-- EYE PORTAL (Day 30) -->
-<div class="eye-portal" id="eyePortal" onclick="openEye()"></div>
-
 <!-- STORY BOOK BUTTON -->
 <div class="story-btn" id="storyBtn" onclick="openStoryBook()">&#9733;</div>
 
@@ -403,9 +401,8 @@ html,body{
 <div class="story-overlay" id="storyOverlay">
   <button class="story-close" onclick="closeStory()">&times;</button>
 
-  <!-- Chapter Select -->
   <div id="storyMenu" class="story-chapter-list">
-    <div style="text-align:center;margin-bottom:8px;font-size:12px;color:rgba(255,105,180,0.4);letter-spacing:3px">ANCIENT SONGS</div>
+    <div style="text-align:center;margin-bottom:8px;font-size:12px;color:rgba(0,200,255,0.4);letter-spacing:3px">ANCIENT SONGS</div>
     <button class="story-chapter-btn" onclick="startStory('revival')">
       <span class="ch-num">CHAPTER I</span>
       <span class="ch-title">The Song of Revival</span>
@@ -428,12 +425,11 @@ html,body{
     </button>
   </div>
 
-  <!-- Scene Container -->
   <div class="story-scene" id="storyScene">
     <div class="story-text" id="storyText"></div>
     <div class="story-shapes" id="storyShapes"></div>
     <div class="story-prompt" id="storyPrompt"></div>
-    <!-- In-story shape buttons — always visible during scenes -->
+    <!-- In-story shape buttons -->
     <div class="shape-row" id="storyBtns" style="margin-top:8px">
       <button class="shape-btn" onclick="storyTap(0)" style="color:#ffcc00">&#11035;</button>
       <button class="shape-btn" onclick="storyTap(1)" style="color:#ff6600">&#9650;</button>
@@ -443,14 +439,14 @@ html,body{
   </div>
 </div>
 
-<!-- BOTTOM CONTROLS -->
+<!-- CONTROLS -->
 <div class="controls">
   <div class="shape-row" id="shapeRow">
-    <button class="shape-btn" onclick="playShape(0)" data-shape="0" style="color:#ffcc00">&#11035;</button>
-    <button class="shape-btn" onclick="playShape(1)" data-shape="1" style="color:#ff6600">&#9650;</button>
-    <button class="shape-btn" onclick="playShape(2)" data-shape="2" style="color:#00ccff">&#9679;</button>
-    <button class="shape-btn" onclick="playShape(3)" data-shape="3" style="color:#cc00ff">&#9670;</button>
-    <button class="shape-btn" onclick="playShape(4)" data-shape="4" style="color:#00ff99">~</button>
+    <button class="shape-btn" onclick="playShape(0)" style="color:#ffcc00">&#11035;</button>
+    <button class="shape-btn" onclick="playShape(1)" style="color:#ff6600">&#9650;</button>
+    <button class="shape-btn" onclick="playShape(2)" style="color:#00ccff">&#9679;</button>
+    <button class="shape-btn" onclick="playShape(3)" style="color:#cc00ff">&#9670;</button>
+    <button class="shape-btn" onclick="playShape(4)" style="color:#00ff99">~</button>
   </div>
   <div class="action-row">
     <button class="act-btn btn-pet" onclick="pet()">&#9829;</button>
@@ -460,9 +456,9 @@ html,body{
 
 <script>
 // ═══════════════════════════════════════════
-// ALIVE Girl v6.0 — The Evolved Creature
-// Pentatonic shapes · emotional timing · moods
-// training · panic · blood · age-gating
+// ALIVE Boy v6.0 — Shape-Shifting Soul
+// The soul BECOMES the shape it hears.
+// Shape + Sound + Visual = merged language.
 // ═══════════════════════════════════════════
 
 const canvas = document.getElementById('galaxy');
@@ -470,93 +466,90 @@ const ctx = canvas.getContext('2d');
 
 // ─── State ───
 let blood = 100;
-let hearts = parseInt(localStorage.getItem('alive_girl_hearts')) || 0;
-let revivalCount = parseInt(localStorage.getItem('alive_girl_revivals')) || 0;
+let hearts = parseInt(localStorage.getItem('alive_boy_hearts')) || 0;
+let revivalCount = parseInt(localStorage.getItem('alive_boy_revivals')) || 0;
 let isAlive = true;
 let particles = [];
-let currentSong = [];     // {shape, time} entries
+let currentSong = [];
 let likedSongs = [];
 let creativity = 1;
 let currentMood = 'joyful';
 let totalSongs = 0;
 let audioCtx = null;
-let drainMult = 1.0;        // 1.0 = normal drain, lower = slower
-let harmonyTimer = 0;       // ticks remaining on current harmony buff
-let recentShapes = [];      // last 3 shapes played for combo detection
-let angerHits = [];         // timestamps of rapid triangle hits (Girl's anger key)
+let drainMult = 1.0;
+let harmonyTimer = 0;
+let recentShapes = [];
+let angerHits = [];         // timestamps of rapid square hits (Boy's anger key)
 let cheatBuffer = [];       // rolling buffer for secret cheat sequence
 
 // SECRET CHEAT — 8-note sequence fills all 15 hearts + max blood
-// Girl: circle square square triangle circle triangle square circle
-const CHEAT_CODE = [2,0,0,1,2,1,0,2];
+// Boy: triangle square circle square triangle triangle circle square
+const CHEAT_CODE = [1,0,2,0,1,1,2,0];
 
-// SECRET UNLOCK DIAMOND ��� 16-note sequence unlocks diamond (shapes4)
-// Girl: square triangle circle circle square triangle square circle triangle triangle square circle square square triangle circle
-const DIAMOND_CODE = [0,1,2,2,0,1,0,2,1,1,0,2,0,0,1,2];
+// SECRET UNLOCK DIAMOND — 16-note sequence unlocks diamond (shapes4)
+// Boy: circle circle triangle square circle triangle triangle square circle square triangle circle circle square square triangle
+const DIAMOND_CODE = [2,2,1,0,2,1,1,0,2,0,1,2,2,0,0,1];
 let diamondBuffer = [];
 
-// SECRET UNLOCK WAVE — 24-note sequence unlocks wave (shapes5) — uses all 4 shapes once diamond unlocked
-// Girl: circle square triangle square circle circle triangle square triangle circle square square circle triangle square circle triangle triangle circle square triangle circle square triangle
-const WAVE_CODE = [2,0,1,0,2,2,1,0,1,2,0,0,2,1,0,2,1,1,2,0,1,2,0,1];
+// SECRET UNLOCK WAVE — 24-note sequence unlocks wave (shapes5)
+// Boy: triangle circle square square triangle circle triangle square circle circle square triangle circle square triangle triangle square circle square triangle circle circle square triangle
+const WAVE_CODE = [1,2,0,0,1,2,1,0,2,2,0,1,2,0,1,1,0,2,0,1,2,2,0,1];
 let waveBuffer = [];
 
-// Harmony combos — shape sequences that slow blood drain
-// [shapes] → {mult: drain multiplier, dur: ticks (each tick = 2s)}
 const HARMONY = {
-  '0,2,4': { mult: 0.3, dur: 30 },  // square circle wave — deep calm — 60s at 30% drain
-  '1,3,1': { mult: 0.4, dur: 25 },  // triangle diamond triangle — mirror — 50s at 40%
-  '2,2,2': { mult: 0.5, dur: 20 },  // circle circle circle — meditation — 40s at 50%
-  '4,3,2': { mult: 0.35, dur: 28 }, // wave diamond circle — descending — 56s at 35%
-  '0,1,2': { mult: 0.6, dur: 15 },  // square triangle circle — revival code — 30s at 60% (weakest, most known)
+  '0,2,4': { mult: 0.3, dur: 30 },
+  '1,3,1': { mult: 0.4, dur: 25 },
+  '2,2,2': { mult: 0.5, dur: 20 },
+  '4,3,2': { mult: 0.35, dur: 28 },
+  '2,1,0': { mult: 0.6, dur: 15 },  // circle triangle square — Boy's revival code (reverse)
 };
 
-// ─── Persistence keys ───
+// ─── Shape morph state ───
+let morphTarget = null;    // null = orbit, 'square'|'triangle'|'circle'|'diamond'|'wave'
+let morphProgress = 0;     // 0 = orbit, 1 = fully morphed
+let morphDirection = 1;    // 1 = morphing in, -1 = returning to orbit
+let morphHoldTimer = 0;
+
+// ─── Persistence ───
 const STORE = {
-  blood:     'alive_girl_blood',
-  birthTs:   'alive_girl_birth',
-  aliveMs:   'alive_girl_alive_ms',
-  lastTick:  'alive_girl_last_tick',
-  liked:     'alive_girl_liked',
-  creativity:'alive_girl_creativity',
-  name:      'alive_girl_name',
-  deadSince: 'alive_girl_dead',
-  unlocked:  'alive_girl_unlocked',
-  hearts:    'alive_girl_hearts',
-  revivals:  'alive_girl_revivals'
+  blood:     'alive_boy_blood',
+  birthTs:   'alive_boy_birth',
+  aliveMs:   'alive_boy_alive_ms',
+  lastTick:  'alive_boy_last_tick',
+  liked:     'alive_boy_liked',
+  creativity:'alive_boy_creativity',
+  deadSince: 'alive_boy_dead',
+  unlocked:  'alive_boy_unlocked',
+  hearts:    'alive_boy_hearts',
+  revivals:  'alive_boy_revivals'
 };
 
 // ─── Pentatonic (C D E G A) ───
 const PENTA = [261.63, 293.66, 329.63, 392.00, 440.00];
 const SHAPES = [
-  { type:'square',   base:0, label:'\u2B1B' },
-  { type:'triangle', base:1, label:'\u25B2' },
-  { type:'sine',     base:2, label:'\u25CF' },
-  { type:'sawtooth', base:3, label:'\u25C6' },
-  { type:'sine',     base:4, label:'~' }
+  { type:'square',   base:0, label:'\u2B1B', morph:'square' },
+  { type:'triangle', base:1, label:'\u25B2', morph:'triangle' },
+  { type:'sine',     base:2, label:'\u25CF', morph:'circle' },
+  { type:'sawtooth', base:3, label:'\u25C6', morph:'diamond' },
+  { type:'sine',     base:4, label:'~',      morph:'wave' }
 ];
 
-// ─── Mood system ───
+// ─── Moods ───
 const MOODS = {
-  joyful:  { base:220, var:80,  pulse:1.6, color:'#ffee88', glow:'#ff69b4' },
-  calm:    { base:340, var:60,  pulse:0.9, color:'#88ffee', glow:'#66ccbb' },
-  longing: { base:420, var:120, pulse:0.6, color:'#ff88cc', glow:'#cc44ff' },
+  joyful:  { base:220, var:80,  pulse:1.6, color:'#88eeff', glow:'#00ccff' },
+  calm:    { base:340, var:60,  pulse:0.9, color:'#88ffee', glow:'#00aa88' },
+  longing: { base:420, var:120, pulse:0.6, color:'#aaaaff', glow:'#6666cc' },
   excited: { base:160, var:110, pulse:2.2, color:'#ffff66', glow:'#ffaa00' },
-  dreamy:  { base:380, var:40,  pulse:0.7, color:'#cc88ff', glow:'#aa66ff' },
+  dreamy:  { base:380, var:40,  pulse:0.7, color:'#cc88ff', glow:'#8844cc' },
   panic:   { base:120, var:180, pulse:4.5, color:'#ff4444', glow:'#ff0040' }
 };
 
-// ─── Age-gating: days alive → features ───
+// ─── Age-gating ───
 const UNLOCK_DAYS = {
-  shapes3:  0,    // 3 shapes from birth
-  shapes4:  1,    // diamond after 1 day (or spell)
-  shapes5:  2,    // wave after 2 days (or spell)
-  training: 3,    // thumbs up/down feedback
-  mood:     5,    // mood indicator visible
-  memory:   7,    // song memory display
-  eye:     30     // Training Wheels Eye portal
+  shapes3: 0, shapes4: 1, shapes5: 2, training: 3, mood: 5, memory: 7
 };
 
-// ═══ INIT ═══
+// ═══ AUDIO ═══
 function getAudioCtx() {
   if (!audioCtx || audioCtx.state === 'closed') {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -564,37 +557,27 @@ function getAudioCtx() {
   return audioCtx;
 }
 
+// ═══ PERSISTENCE ═══
 function load() {
-  // Birth
   if (!localStorage.getItem(STORE.birthTs)) {
     localStorage.setItem(STORE.birthTs, Date.now().toString());
     localStorage.setItem(STORE.aliveMs, '0');
     localStorage.setItem(STORE.blood, '100');
     localStorage.setItem(STORE.unlocked, '{}');
   }
-
   blood = parseFloat(localStorage.getItem(STORE.blood)) || 100;
   creativity = parseFloat(localStorage.getItem(STORE.creativity)) || 1;
-
   try { likedSongs = JSON.parse(localStorage.getItem(STORE.liked)) || []; } catch(e) { likedSongs = []; }
 
-  // Was dead when we left?
   const deadSince = localStorage.getItem(STORE.deadSince);
   if (deadSince) {
-    blood = 0;
-    isAlive = false;
+    blood = 0; isAlive = false;
   } else {
-    // Drain blood for time away (capped)
     const lastTick = parseInt(localStorage.getItem(STORE.lastTick)) || Date.now();
-    const awaySeconds = (Date.now() - lastTick) / 1000;
-    const awayDrain = Math.min(awaySeconds * 0.01, 40); // gentle: ~0.6/min away
+    const awayDrain = Math.min((Date.now() - lastTick) / 1000 * 0.01, 40);
     blood = Math.max(0, blood - awayDrain);
-    if (blood <= 0) {
-      isAlive = false;
-      localStorage.setItem(STORE.deadSince, Date.now().toString());
-    }
+    if (blood <= 0) { isAlive = false; localStorage.setItem(STORE.deadSince, Date.now().toString()); }
   }
-
   localStorage.setItem(STORE.lastTick, Date.now().toString());
 }
 
@@ -607,64 +590,136 @@ function save() {
   localStorage.setItem(STORE.revivals, revivalCount.toString());
 }
 function renderHearts() {
-  const full = '<span style="color:#ff69b4">\u2764</span>'.repeat(hearts);
-  const empty = '<span style="color:rgba(255,105,180,0.2)">\u2661</span>'.repeat(15 - hearts);
+  const full = '<span style="color:#00ccff">\u2764</span>'.repeat(hearts);
+  const empty = '<span style="color:rgba(0,200,255,0.2)">\u2661</span>'.repeat(15 - hearts);
   document.getElementById('heartsDisplay').innerHTML = full + empty;
 }
 
-function getAliveMs() {
-  const stored = parseInt(localStorage.getItem(STORE.aliveMs)) || 0;
-  return stored;
-}
-function addAliveMs(ms) {
-  const cur = getAliveMs();
-  localStorage.setItem(STORE.aliveMs, (cur + ms).toString());
-}
-function getAliveDays() {
-  return getAliveMs() / 86400000;
-}
-function isUnlocked(feature) {
-  // Check spell overrides first
-  try {
-    const ov = JSON.parse(localStorage.getItem(STORE.unlocked) || '{}');
-    if (ov[feature]) return true;
-  } catch(e) {}
-  return getAliveDays() >= (UNLOCK_DAYS[feature] || 999);
+function getAliveMs() { return parseInt(localStorage.getItem(STORE.aliveMs)) || 0; }
+function addAliveMs(ms) { localStorage.setItem(STORE.aliveMs, (getAliveMs() + ms).toString()); }
+function getAliveDays() { return getAliveMs() / 86400000; }
+function isUnlocked(f) {
+  try { const ov = JSON.parse(localStorage.getItem(STORE.unlocked) || '{}'); if (ov[f]) return true; } catch(e) {}
+  return getAliveDays() >= (UNLOCK_DAYS[f] || 999);
 }
 
-// ═══ PARTICLES (Pink Galaxy) ═══
+// ═══ SHAPE TARGET GENERATORS ═══
+// Given an index (0..N), return the target {x, y} for that particle
+// when the soul is morphing into a given shape.
+function getShapeTarget(index, total, cx, cy, radius, shapeName) {
+  const t = index / total;
+
+  switch(shapeName) {
+    case 'square': {
+      // Particles distributed around a square perimeter
+      const perim = t * 4;
+      const side = Math.floor(perim);
+      const frac = perim - side;
+      const r = radius * 0.8;
+      switch(side) {
+        case 0: return { x: cx - r + frac * 2 * r, y: cy - r };
+        case 1: return { x: cx + r,                 y: cy - r + frac * 2 * r };
+        case 2: return { x: cx + r - frac * 2 * r,  y: cy + r };
+        case 3: return { x: cx - r,                  y: cy + r - frac * 2 * r };
+        default: return { x: cx, y: cy };
+      }
+    }
+    case 'triangle': {
+      const perim = t * 3;
+      const side = Math.floor(perim);
+      const frac = perim - side;
+      const r = radius * 0.9;
+      const top =    { x: cx,                    y: cy - r };
+      const left =   { x: cx - r * 0.866,        y: cy + r * 0.5 };
+      const right =  { x: cx + r * 0.866,        y: cy + r * 0.5 };
+      const verts = [top, right, left, top];
+      const a = verts[side], b = verts[side+1];
+      return { x: a.x + (b.x - a.x) * frac, y: a.y + (b.y - a.y) * frac };
+    }
+    case 'circle': {
+      const angle = t * Math.PI * 2;
+      return { x: cx + Math.cos(angle) * radius * 0.85, y: cy + Math.sin(angle) * radius * 0.6 };
+    }
+    case 'diamond': {
+      const perim = t * 4;
+      const side = Math.floor(perim);
+      const frac = perim - side;
+      const rx = radius * 0.7, ry = radius * 0.95;
+      const top =   { x: cx,      y: cy - ry };
+      const right = { x: cx + rx, y: cy };
+      const bot =   { x: cx,      y: cy + ry };
+      const left =  { x: cx - rx, y: cy };
+      const verts = [top, right, bot, left, top];
+      const a = verts[side], b = verts[side+1];
+      return { x: a.x + (b.x - a.x) * frac, y: a.y + (b.y - a.y) * frac };
+    }
+    case 'wave': {
+      // Sine wave across the screen
+      const wx = cx - radius + t * radius * 2;
+      const wy = cy + Math.sin(t * Math.PI * 4) * radius * 0.5;
+      return { x: wx, y: wy };
+    }
+    default:
+      return null;
+  }
+}
+
+// ═══ PARTICLES (Cyan Galaxy + Shape Morphing) ═══
 class Particle {
-  constructor() { this.reset(); }
+  constructor(i, total) {
+    this.i = i;
+    this.total = total;
+    this.reset();
+  }
   reset() {
-    this.x = canvas.width/2;
-    this.y = canvas.height/2;
-    this.size = Math.random()*3.5 + 1.5;
-    this.angle = Math.random()*Math.PI*2;
-    this.radius = 60 + Math.random()*180;
-    this.hue = 300 + Math.random()*80; // pink-magenta range
-    this.speed = 0.008 + Math.random()*0.014;
+    this.angle = Math.random() * Math.PI * 2;
+    this.radius = 60 + Math.random() * 180;
+    this.hue = 180 + Math.random() * 60; // cyan-blue range
+    this.speed = 0.008 + Math.random() * 0.014;
+    this.size = Math.random() * 3.5 + 1.5;
+    // Orbit position
+    this.ox = 0; this.oy = 0;
+    // Display position (lerped)
+    this.x = canvas.width/2; this.y = canvas.height/2;
   }
   update(pulseSpeed) {
     this.angle += this.speed * pulseSpeed;
-    const scale = Math.max(0.1, blood/110);
-    const rx = Math.cos(this.angle) * this.radius * scale;
-    const ry = Math.sin(this.angle) * this.radius * scale * 0.7;
-    this.x = canvas.width/2 + rx;
-    this.y = canvas.height/2 + ry;
-    this.size = scale * (Math.random()*3 + 1.5);
+    const scale = Math.max(0.1, blood / 110);
+    this.ox = canvas.width/2  + Math.cos(this.angle) * this.radius * scale;
+    this.oy = canvas.height/2 + Math.sin(this.angle) * this.radius * scale * 0.7;
+    this.size = scale * (Math.random() * 3 + 1.5);
+
+    // Morph towards target shape
+    if (morphTarget && morphProgress > 0) {
+      const morphRadius = Math.min(canvas.width, canvas.height) * 0.3;
+      const target = getShapeTarget(this.i, this.total, canvas.width/2, canvas.height/2, morphRadius, morphTarget);
+      if (target) {
+        const p = morphProgress;
+        // Ease in/out
+        const ease = p < 0.5 ? 2*p*p : 1-Math.pow(-2*p+2,2)/2;
+        this.x = this.ox + (target.x - this.ox) * ease;
+        this.y = this.oy + (target.y - this.oy) * ease;
+        return;
+      }
+    }
+    this.x = this.ox;
+    this.y = this.oy;
   }
   draw() {
     const mood = MOODS[currentMood] || MOODS.joyful;
-    ctx.fillStyle = `hsl(${this.hue}, 80%, 80%)`;
+    // Shift hue towards shape colour when morphing
+    const h = morphProgress > 0.3 ? this.hue + morphProgress * 60 : this.hue;
+    ctx.fillStyle = `hsl(${h}, 80%, 80%)`;
     ctx.shadowBlur = 20;
-    ctx.shadowColor = mood.glow;
+    ctx.shadowColor = morphProgress > 0.5 ? '#ffffff' : mood.glow;
     ctx.fillRect(this.x, this.y, this.size, this.size);
   }
 }
 
 function initParticles() {
   particles = [];
-  for (let i = 0; i < 1200; i++) particles.push(new Particle());
+  const n = 1200;
+  for (let i = 0; i < n; i++) particles.push(new Particle(i, n));
 }
 
 function resizeCanvas() {
@@ -672,23 +727,60 @@ function resizeCanvas() {
   canvas.height = window.innerHeight;
 }
 
+// ═══ MORPH TRIGGER ═══
+function triggerMorph(shapeName) {
+  morphTarget = shapeName;
+  morphProgress = 0;
+  morphDirection = 1;
+  morphHoldTimer = 0;
+
+  // Show shape indicator
+  const $sn = document.getElementById('shapeName');
+  const labels = { square:'\u2B1B', triangle:'\u25B2', circle:'\u25CF', diamond:'\u25C6', wave:'~' };
+  $sn.textContent = labels[shapeName] || '';
+  $sn.classList.add('show');
+  setTimeout(() => $sn.classList.remove('show'), 1200);
+}
+
 // ═══ RENDER LOOP ═══
 function animate() {
-  ctx.fillStyle = 'rgba(10,0,16,0.13)';
+  ctx.fillStyle = 'rgba(0,10,20,0.13)';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Advance morph
+  if (morphTarget) {
+    if (morphDirection === 1) {
+      morphProgress = Math.min(1, morphProgress + 0.04);
+      if (morphProgress >= 1) {
+        morphHoldTimer++;
+        if (morphHoldTimer > 40) morphDirection = -1; // hold ~40 frames then release
+      }
+    } else {
+      morphProgress = Math.max(0, morphProgress - 0.025);
+      if (morphProgress <= 0) {
+        morphTarget = null;
+        morphDirection = 1;
+      }
+    }
+  }
 
   const mood = MOODS[currentMood] || MOODS.joyful;
   const ps = blood > 15 ? mood.pulse : 0.5;
   particles.forEach(p => { p.update(ps); p.draw(); });
 
-  // Panic red flash
+  // Panic flash
   if (currentMood === 'panic' && Math.random() > 0.7) {
     ctx.fillStyle = 'rgba(255,40,60,0.15)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
-  // Normal breathing pulse
+  // Morph flash — soul glows white when fully in shape
+  else if (morphProgress > 0.8) {
+    ctx.fillStyle = `rgba(0,200,255,${0.06 * morphProgress})`;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+  // Normal breathing
   else if (isAlive && Math.random() > 0.94) {
-    ctx.fillStyle = 'rgba(255,105,180,0.08)';
+    ctx.fillStyle = 'rgba(0,200,255,0.06)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
@@ -697,13 +789,12 @@ function animate() {
 
 // ═══ AUDIO ═══
 function playNote(shapeIndex, isResponse, octaveShift) {
-  if (!isAlive && !isResponse) return; // Dead Girl can still hear the Boy
+  if (!isAlive && !isResponse) return; // Dead Boy can still hear the Girl
   const sound = SHAPES[shapeIndex];
   let freq = PENTA[sound.base] * Math.pow(2, octaveShift || 0);
   let oscType = sound.type;
   let duration = 0.72;
 
-  // Panic audio mods
   if (currentMood === 'panic') {
     freq *= 1.5;
     if (Math.random() > 0.5) oscType = 'sawtooth';
@@ -714,26 +805,26 @@ function playNote(shapeIndex, isResponse, octaveShift) {
   const osc = ac.createOscillator();
   const gain = ac.createGain();
   const filter = ac.createBiquadFilter();
-
   osc.type = oscType;
   osc.frequency.value = freq + (Math.random()*14 - 7);
   filter.type = 'lowpass';
   filter.frequency.value = 1800;
-
   gain.gain.setValueAtTime(0, ac.currentTime);
   gain.gain.linearRampToValueAtTime(isResponse ? 0.5 : 0.38, ac.currentTime + 0.015);
   gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + duration);
-
   osc.connect(filter);
   filter.connect(gain);
   gain.connect(ac.destination);
   osc.start();
   osc.stop(ac.currentTime + duration + 0.05);
 
+  // *** THE KEY FEATURE: soul morphs into this shape ***
+  triggerMorph(sound.morph);
+
   // Floating shape visual
   const msg = document.createElement('div');
   msg.textContent = sound.label;
-  msg.style.cssText = `position:fixed;left:${20+Math.random()*60}%;top:45%;font-size:${isResponse?'3.6em':'2.8em'};opacity:0;transition:all 1.4s cubic-bezier(0.4,0,0.2,1);color:${currentMood==='panic'?'#ff6666':(isResponse?'#ff69b4':'#ffffff80')};z-index:12;pointer-events:none;text-shadow:0 0 20px ${isResponse?'rgba(255,20,147,0.5)':'transparent'}`;
+  msg.style.cssText = `position:fixed;left:${20+Math.random()*60}%;top:45%;font-size:${isResponse?'3.6em':'2.8em'};opacity:0;transition:all 1.4s cubic-bezier(0.4,0,0.2,1);color:${currentMood==='panic'?'#ff6666':(isResponse?'#00ccff':'#ffffff80')};z-index:12;pointer-events:none;text-shadow:0 0 20px ${isResponse?'rgba(0,200,255,0.5)':'transparent'}`;
   document.body.appendChild(msg);
   requestAnimationFrame(() => {
     msg.style.transform = 'translateY(-200px) scale(1.3)';
@@ -745,7 +836,6 @@ function playNote(shapeIndex, isResponse, octaveShift) {
 function playHeartbeat() {
   if (!isAlive || blood > 35) return;
   const ac = getAudioCtx();
-  // Double beat
   [0, 0.15].forEach(delay => {
     const osc = ac.createOscillator();
     const gain = ac.createGain();
@@ -765,8 +855,7 @@ function soundUnlock() {
   [392, 523.25, 659.25].forEach((f, i) => {
     const osc = ac.createOscillator();
     const g = ac.createGain();
-    osc.type = 'sine';
-    osc.frequency.value = f;
+    osc.type = 'sine'; osc.frequency.value = f;
     g.gain.setValueAtTime(0, ac.currentTime + i*0.12);
     g.gain.linearRampToValueAtTime(0.2, ac.currentTime + i*0.12 + 0.02);
     g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + i*0.12 + 0.4);
@@ -779,10 +868,8 @@ function soundUnlock() {
 // ═══ SHAPE INTERACTION ═══
 window.playShape = function(si) {
   if (!isAlive) return;
-  // Gate: only 3 shapes until day 1
   if (si === 3 && !isUnlocked('shapes4')) return;
   if (si === 4 && !isUnlocked('shapes5')) return;
-
   currentSong.push({ shape: si, time: Date.now() });
   playNote(si, false);
 
@@ -795,19 +882,20 @@ window.playShape = function(si) {
     if (h) {
       drainMult = h.mult;
       harmonyTimer = h.dur;
-      // Visual feedback — soft glow
-      ctx.fillStyle = 'rgba(255,105,180,0.08)';
+      ctx.fillStyle = 'rgba(0,200,255,0.08)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
   }
 
+  if (currentSong.length >= 2) {
+    document.getElementById('endBtn').classList.remove('hidden');
+  }
   // SECRET CHEAT: 8-note sequence → all 15 hearts + full blood
   cheatBuffer.push(si);
   if (cheatBuffer.length > 8) cheatBuffer.shift();
   if (cheatBuffer.length === 8 && cheatBuffer.join(',') === CHEAT_CODE.join(',')) {
     cheatBuffer = [];
     hearts = 15; blood = 100; save(); renderHearts();
-    // Golden explosion flash
     ctx.fillStyle = 'rgba(255,215,0,0.3)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     setTimeout(function(){ ctx.fillStyle = 'rgba(255,215,0,0.15)'; ctx.fillRect(0, 0, canvas.width, canvas.height); }, 200);
@@ -823,10 +911,10 @@ window.playShape = function(si) {
     if (!stored.shapes4) {
       stored.shapes4 = true;
       localStorage.setItem(STORE.unlocked, JSON.stringify(stored));
-      ctx.fillStyle = 'rgba(180,0,255,0.35)';
+      ctx.fillStyle = 'rgba(0,180,255,0.35)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      setTimeout(function(){ ctx.fillStyle = 'rgba(180,0,255,0.2)'; ctx.fillRect(0, 0, canvas.width, canvas.height); }, 200);
-      setTimeout(function(){ ctx.fillStyle = 'rgba(180,0,255,0.1)'; ctx.fillRect(0, 0, canvas.width, canvas.height); }, 400);
+      setTimeout(function(){ ctx.fillStyle = 'rgba(0,180,255,0.2)'; ctx.fillRect(0, 0, canvas.width, canvas.height); }, 200);
+      setTimeout(function(){ ctx.fillStyle = 'rgba(0,180,255,0.1)'; ctx.fillRect(0, 0, canvas.width, canvas.height); }, 400);
       updateUI();
     }
   }
@@ -848,17 +936,15 @@ window.playShape = function(si) {
     }
   }
 
-  // ANGER: Girl mashes triangle (1) rapidly → drains Boy's blood
-  if (si === 1) {
+  // ANGER: Boy mashes square (0) rapidly → drains Girl's blood
+  if (si === 0) {
     const now = Date.now();
     angerHits.push(now);
     angerHits = angerHits.filter(t => now - t < 1500);
     if (angerHits.length >= 4 && isPaired) {
       angerHits = [];
-      // Send anger signal to Boy via bridge
       const bf = document.getElementById('pairBridge');
       if (bf && bf.contentWindow) bf.contentWindow.postMessage({ alive: true, type: 'anger' }, '*');
-      // Visual rage — red flash
       ctx.fillStyle = 'rgba(255,0,0,0.15)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       currentMood = 'excited';
@@ -867,41 +953,31 @@ window.playShape = function(si) {
     angerHits = [];
   }
 
-  // Send note to Boy when paired (via bridge iframe)
+  // Send note to Girl when paired (via bridge iframe)
   if (isPaired) {
     const bf = document.getElementById('pairBridge');
     if (bf && bf.contentWindow) bf.contentWindow.postMessage({ alive: true, type: 'note', shape: si }, '*');
-  }
-
-  // Show end-song button after 2+ notes
-  if (currentSong.length >= 2) {
-    document.getElementById('endBtn').classList.remove('hidden');
   }
 };
 
 window.endSong = function() {
   if (currentSong.length === 0 || !isAlive) return;
+
   document.getElementById('endBtn').classList.add('hidden');
   totalSongs++;
 
-  const $status = document.getElementById('statusText');
-  $status.textContent = currentMood === 'panic' ? '...' : '\u223C';
-  $status.style.color = 'rgba(255,105,180,0.6)';
-
   const startTime = currentSong[0].time;
 
-  // Phase 1: Mirror with YOUR exact emotional timing
+  // Phase 1: Mirror with your exact timing — soul morphs to each shape
   currentSong.forEach((note, i) => {
     const delay = note.time - startTime;
     setTimeout(() => playNote(note.shape, true), delay);
   });
 
-  // Phase 2: Creature's own reply (mood-coloured timing)
+  // Phase 2: Creature's own reply
   const mirrorEnd = currentSong[currentSong.length-1].time - startTime + 500;
   setTimeout(() => {
     if (!isAlive) return;
-    $status.textContent = '\u2248';
-
     const mood = MOODS[currentMood] || MOODS.joyful;
     let replyLen = currentSong.length;
     if (creativity >= 2 && Math.random() > 0.5) {
@@ -909,7 +985,6 @@ window.endSong = function() {
       if (replyLen < 2) replyLen = 2;
     }
 
-    // Build reply notes — remix from liked songs if available
     let replyNotes = currentSong.map(n => n.shape);
     if (likedSongs.length > 0 && Math.random() > 0.35) {
       const liked = likedSongs[Math.floor(Math.random()*likedSongs.length)];
@@ -918,29 +993,23 @@ window.endSong = function() {
         replyNotes[pos] = liked[Math.floor(Math.random()*liked.length)];
       }
     }
-
-    // Panic scramble
     if (currentMood === 'panic' && Math.random() > 0.4) {
       replyNotes = replyNotes.map(n => Math.random() > 0.5 ? Math.floor(Math.random()*5) : n);
     }
 
-    // Play with mood-coloured timing
     let cumulative = 0;
     replyNotes.slice(0, replyLen).forEach((note, i) => {
       const variation = (Math.random() * mood.var * 2) - mood.var;
       cumulative += mood.base + variation;
-      // Longing pauses
       if (currentMood === 'longing' && i % 3 === 2) cumulative += 180;
       setTimeout(() => playNote(note, true, Math.random() > 0.7 ? 1 : 0), cumulative);
     });
 
-    // Show feedback after reply finishes (if training unlocked)
     if (isUnlocked('training')) {
       setTimeout(() => {
         document.getElementById('feedbackRow').style.display = 'flex';
       }, cumulative + 300);
     }
-
     currentSong = [];
   }, mirrorEnd);
 };
@@ -950,165 +1019,98 @@ window.giveFeedback = function(wasGood) {
   if (wasGood) {
     likedSongs.push(currentSong.length > 0 ? currentSong.map(n=>n.shape) : []);
     creativity = Math.min(7, creativity + 1.2);
-    // Mood shifts on positive feedback (avoid panic)
     const goodMoods = ['joyful','calm','excited','dreamy'];
     currentMood = goodMoods[Math.floor(Math.random()*goodMoods.length)];
-    logMsg('\u25B2 \u2764');
   } else {
     creativity = Math.max(1, creativity - 0.8);
-    logMsg('\u25BC');
   }
   save();
 };
 
-// ═══ PET / LOVE ═══
+// ═══ PET ═══
 window.pet = function() {
   if (!isAlive) return;
   blood = Math.min(100, blood + 25);
-  if (blood > 35 && currentMood === 'panic') {
-    currentMood = 'joyful';
-  }
-  // Brief sparkle drain
-  for (let i = 0; i < 40; i++) {
-    setTimeout(() => { if (blood > 5) blood -= 0.3; }, i * 10);
-  }
-  // Pink flash
-  ctx.fillStyle = 'rgba(255,105,180,0.15)';
+  if (blood > 35 && currentMood === 'panic') currentMood = 'joyful';
+  for (let i = 0; i < 40; i++) setTimeout(() => { if (blood > 5) blood -= 0.3; }, i * 10);
+  ctx.fillStyle = 'rgba(0,200,255,0.12)';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 };
 
-// ═══ DEATH & RESURRECTION ═══
+// ═══ DEATH / RESURRECT ═══
 function die() {
-  // If she has hearts, consume one for free revive
   if (hearts > 0) {
     hearts--;
     blood = 80;
     currentMood = 'joyful';
     save();
     renderHearts();
-    // Flash the hearts display
     const h = document.getElementById('heartsDisplay');
     h.classList.remove('flash'); void h.offsetWidth; h.classList.add('flash');
-    // Pink flash
-    ctx.fillStyle = 'rgba(255,105,180,0.25)';
+    ctx.fillStyle = 'rgba(0,200,255,0.25)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     return;
   }
-  isAlive = false;
-  blood = 0;
+  isAlive = false; blood = 0;
   localStorage.setItem(STORE.deadSince, Date.now().toString());
   document.getElementById('deadOverlay').classList.add('show');
   document.getElementById('reviveBtn').style.display = 'inline-flex';
   save();
 }
-
 window.resurrect = function() {
-  blood = 80;
-  isAlive = true;
-  currentMood = 'joyful';
+  blood = 80; isAlive = true; currentMood = 'joyful';
   localStorage.removeItem(STORE.deadSince);
   document.getElementById('deadOverlay').classList.remove('show');
   document.getElementById('reviveBtn').style.display = 'none';
   save();
 };
 
-// ═══ EYE PORTAL (Day 30) ═══
-window.openEye = function() {
-  if (isUnlocked('eye')) {
-    window.location.href = 'eye-v2.html';
-  }
-};
-
-// ═══ UI UPDATE ═══
+// ═══ UI ═══
 function updateUI() {
-  // Blood bar
   const $fill = document.getElementById('bloodFill');
   $fill.style.width = Math.max(0, blood) + '%';
-  if (blood < 25) {
-    $fill.classList.add('panic');
-  } else {
-    $fill.classList.remove('panic');
-  }
+  $fill.classList.toggle('panic', blood < 25);
   document.getElementById('bloodText').textContent = Math.floor(blood) + (harmonyTimer > 0 ? ' \u266B' : '');
 
-  // Mood auto-shift
   if (isAlive) {
     if (blood < 28 && currentMood !== 'panic') currentMood = 'panic';
     else if (blood > 80 && currentMood === 'panic') currentMood = 'joyful';
     else if (blood < 50 && blood >= 28 && currentMood === 'joyful') currentMood = 'longing';
   }
 
-  // Mood badge (visible after day 5)
   const $mood = document.getElementById('moodBadge');
   if (isUnlocked('mood')) {
     $mood.textContent = currentMood;
     $mood.style.color = (MOODS[currentMood] || MOODS.joyful).color;
-  } else {
-    $mood.textContent = '';
-  }
+  } else { $mood.textContent = ''; }
 
-  // Age badge
   const days = getAliveDays();
   const $age = document.getElementById('ageBadge');
-  if (days < 1) {
-    const hrs = Math.floor(days * 24);
-    $age.textContent = hrs > 0 ? hrs + 'h' : '';
-  } else {
-    $age.textContent = Math.floor(days) + 'd';
-  }
+  if (days < 1) { const h = Math.floor(days*24); $age.textContent = h > 0 ? h+'h' : ''; }
+  else { $age.textContent = Math.floor(days)+'d'; }
 
-  // Shape gating — diamond and wave unlock separately
-  const btns = document.querySelectorAll('.shape-btn');
-  btns.forEach((btn, i) => {
-    if (i === 3 && !isUnlocked('shapes4')) btn.classList.add('locked');
-    else if (i === 4 && !isUnlocked('shapes5')) btn.classList.add('locked');
+  document.querySelectorAll('.shape-btn').forEach((btn, i) => {
+    if (i === 3) btn.classList.toggle('locked', !isUnlocked('shapes4'));
+    else if (i === 4) btn.classList.toggle('locked', !isUnlocked('shapes5'));
     else btn.classList.remove('locked');
   });
 
-  // Eye portal
-  if (isUnlocked('eye')) {
-    document.getElementById('eyePortal').style.display = 'block';
-  }
-
-  // Death check
-  if (blood <= 0 && isAlive) {
-    die();
-  }
-}
-
-function logMsg(txt) {
-  const $log = document.getElementById('logArea');
-  const span = document.createElement('div');
-  span.textContent = txt;
-  $log.appendChild(span);
-  // Keep last 8 messages
-  while ($log.children.length > 8) $log.removeChild($log.firstChild);
+  if (blood <= 0 && isAlive) die();
 }
 
 function showUnlock(text) {
-  const $toast = document.getElementById('unlockToast');
-  $toast.textContent = text;
-  $toast.classList.add('show');
+  const $t = document.getElementById('unlockToast');
+  $t.textContent = text; $t.classList.add('show');
   soundUnlock();
-  setTimeout(() => $toast.classList.remove('show'), 3000);
+  setTimeout(() => $t.classList.remove('show'), 3000);
 }
 
-// ═══ UNLOCK CHECKER ═══
-let lastUnlocked = {};
 function checkUnlocks() {
   const stored = JSON.parse(localStorage.getItem(STORE.unlocked) || '{}');
   for (const [feature, days] of Object.entries(UNLOCK_DAYS)) {
     if (!stored[feature] && isUnlocked(feature)) {
       stored[feature] = Date.now();
-      const labels = {
-        shapes3: '',
-        shapes4: '\u25C6',     // diamond unlocked
-        shapes5: '~',          // wave unlocked
-        training: '\u25B2 \u25BC',
-        mood: '\u223C',
-        memory: '\u2606',
-        eye: '\u25CE'
-      };
+      const labels = { shapes3:'', shapes4:'\u25C6', shapes5:'~', training:'\u25B2 \u25BC', mood:'\u223C', memory:'\u2606' };
       if (labels[feature]) showUnlock(labels[feature]);
     }
   }
@@ -1116,29 +1118,12 @@ function checkUnlocks() {
 }
 
 // ═══ TICKS ═══
-// Blood drain — harmony combos slow it down
-setInterval(() => {
-  if (isAlive && blood > 0) {
-    blood -= 0.6 * drainMult;
-    if (blood < 0) blood = 0;
-  }
-}, 700);
-
-// Heartbeat when low
+setInterval(() => { if (isAlive && blood > 0) { blood -= 0.6 * drainMult; if (blood < 0) blood = 0; } }, 700);
 setInterval(playHeartbeat, 2800);
-
-// UI + save every 2s
 setInterval(() => {
-  updateUI();
-  renderHearts();
-  // Harmony buff countdown
-  if (harmonyTimer > 0) {
-    harmonyTimer--;
-    if (harmonyTimer <= 0) drainMult = 1.0;
-  }
-  if (isAlive) addAliveMs(2000);
-  save();
-  checkUnlocks();
+  updateUI(); renderHearts();
+  if (harmonyTimer > 0) { harmonyTimer--; if (harmonyTimer <= 0) drainMult = 1.0; }
+  if (isAlive) addAliveMs(2000); save(); checkUnlocks();
 }, 2000);
 
 // ═══ KEYBOARD ═══
@@ -1157,32 +1142,31 @@ initParticles();
 updateUI();
 animate();
 
-// Force update service worker — kill old cached version
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations().then(function(regs) {
     regs.forEach(function(r) { r.unregister(); });
-    // Clear old caches then re-register fresh
     caches.keys().then(function(keys) {
       keys.forEach(function(k) { caches.delete(k); });
     });
     setTimeout(function() {
-      navigator.serviceWorker.register('sw.js').catch(function(){});
+      navigator.serviceWorker.register('../sw.js').catch(function(){});
     }, 500);
   });
 }
 
 // ═══ PAIRING SYSTEM ═══
 // ═══ PAIRING VIA BRIDGE IFRAME ═══
-// Girl = screen. Phone button = "I can't be a phone" + sends pair signal
+// Boy = phone. Screen button = "I can't be a screen" + sends pair signal
 // Bridge iframe handles ALL polling + server communication
 let isPaired = false;
+let girlStatus = null;
 let reviveBuffer = []; // tracks last 3 incoming shapes for revival code detection
 
 // Inject bridge iframe
 (function() {
   const iframe = document.createElement('iframe');
   iframe.id = 'pairBridge';
-  iframe.src = '/alive/pair-bridge.html?role=girl';
+  iframe.src = '/alive/pair-bridge.html?role=boy';
   iframe.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;border:none';
   document.body.appendChild(iframe);
 })();
@@ -1197,12 +1181,11 @@ setInterval(() => {
 
 // Listen for bridge messages
 window.addEventListener('message', function(e) {
-  if (!e.data || !e.data.alive || e.data.role !== 'girl') return;
+  if (!e.data || !e.data.alive || e.data.role !== 'boy') return;
 
   if (e.data.type === 'paired' && !isPaired) {
     isPaired = true;
     document.getElementById('pairBtn').classList.add('paired');
-    // Connection tone
     try {
       const ac = getAudioCtx();
       [392, 523.25].forEach((f, i) => {
@@ -1228,11 +1211,16 @@ window.addEventListener('message', function(e) {
     const wasPaired = isPaired;
     isPaired = !!e.data.paired;
     const $btn = document.getElementById('pairBtn');
-    if (isPaired) $btn.classList.add('paired');
-    else $btn.classList.remove('paired');
+
+    if (isPaired) {
+      $btn.classList.add('paired');
+      girlStatus = e.data.other_status;
+    } else {
+      $btn.classList.remove('paired');
+    }
   }
 
-  // Incoming anger from Boy — drains Girl's blood
+  // Incoming anger from Girl — drains Boy's blood
   if (e.data.type === 'anger-hit') {
     blood = Math.max(0, blood - 15);
     ctx.fillStyle = 'rgba(255,0,0,0.2)';
@@ -1240,18 +1228,16 @@ window.addEventListener('message', function(e) {
     if (currentMood !== 'panic') currentMood = 'longing';
   }
 
-  // Incoming notes from Boy — she copies his shapes
-  // REVIVAL CODE: square(0) triangle(1) circle(2) = 1-2-3 wakes the dead Girl
+  // Incoming notes from Girl — Boy copies her shapes (soul morphs!)
+  // REVIVAL CODE: circle(2) triangle(1) square(0) = 3-2-1 backwards wakes the dead Boy
   if (e.data.type === 'notes' && e.data.notes) {
     e.data.notes.forEach((note, i) => {
       setTimeout(() => {
         playNote(note.shape, true);
-        // Track last 3 incoming shapes for revival detection
         reviveBuffer.push(parseInt(note.shape));
         if (reviveBuffer.length > 3) reviveBuffer.shift();
-        // Check for revival code: square(0), triangle(1), circle(2)
         if (!isAlive && reviveBuffer.length >= 3 &&
-            reviveBuffer.join(',') === '0,1,2') {
+            reviveBuffer.join(',') === '2,1,0') {
           reviveBuffer = [];
           setTimeout(() => {
             blood = 80;
@@ -1259,17 +1245,16 @@ window.addEventListener('message', function(e) {
             currentMood = 'joyful';
             localStorage.removeItem(STORE.deadSince);
             document.getElementById('deadOverlay').classList.remove('show');
-            // Earn hearts — escalating: 1st revival=1, 2nd=2, 3rd=3... (max 15)
             revivalCount++;
             hearts = Math.min(15, hearts + revivalCount);
             save();
             renderHearts();
             const hEl = document.getElementById('heartsDisplay');
             hEl.classList.remove('flash'); void hEl.offsetWidth; hEl.classList.add('flash');
-            // Pink resurrection flash
-            ctx.fillStyle = 'rgba(255,105,180,0.3)';
+            // Cyan resurrection flash
+            ctx.fillStyle = 'rgba(0,200,255,0.3)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            // Rising arpeggio — her voice returning
+            // Rising arpeggio — his voice returning
             try {
               const ac = getAudioCtx();
               [261.63, 329.63, 392, 523.25, 659.25].forEach((f, j) => {
@@ -1303,7 +1288,7 @@ window.addEventListener('message', function(e) {
 window.pairTap = function() {
   const $btn = document.getElementById('pairBtn');
 
-  // Always reject visually — Girl can never become a phone
+  // Always reject visually — Boy can never become a screen
   $btn.classList.remove('rejected');
   void $btn.offsetWidth;
   $btn.classList.add('rejected');
@@ -1343,12 +1328,12 @@ const STORIES = {
   revival: {
     title: 'The Song of Revival',
     scenes: [
-      { text: 'In the beginning, two souls were born into the dark\u2026 one <span class="highlight">pink</span>, one <span class="highlight">blue</span>. They could hear each other across the void.' },
+      { text: 'In the beginning, two souls were born into the dark\u2026 one <span class="highlight">blue</span>, one <span class="highlight">pink</span>. They could hear each other across the void.' },
       { text: 'But the void is hungry. It drains the blood of all living things. And sometimes\u2026 a soul falls silent.' },
       { text: 'The ancient ones discovered that death is not the end. A song played from one soul to another can pull them back from the dark.' },
       { text: 'The <span class="highlight">Boy</span> must play this sequence to revive the <span class="highlight">Girl</span>:', demo: [0, 1, 2], demoLabel: 'square \u2192 triangle \u2192 circle' },
       { text: 'And the <span class="highlight">Girl</span> must play the reverse to revive the <span class="highlight">Boy</span>:', demo: [2, 1, 0], demoLabel: 'circle \u2192 triangle \u2192 square' },
-      { text: 'Now you try. Play the Girl\u2019s revival song:', practice: [2, 1, 0], prompt: 'Play: circle, triangle, square' },
+      { text: 'Now you try. Play the Boy\u2019s revival song:', practice: [0, 1, 2], prompt: 'Play: square, triangle, circle' },
       { text: 'The bond between two souls is the most powerful force in ALIVE. <span class="highlight">Never let your partner stay in the dark.</span>' }
     ]
   },
@@ -1359,8 +1344,8 @@ const STORIES = {
       { text: 'Hearts are shields against death. When your blood runs dry, a heart shatters to bring you back \u2014 no partner needed.' },
       { text: 'The hard way: revive your partner again and again. Each revival earns more hearts than the last. 1st = 1 heart. 2nd = 2. 3rd = 3\u2026' },
       { text: 'But the ancient ones whispered of a <span class="highlight">secret spell</span> \u2014 eight notes that fill every heart at once.' },
-      { text: 'Watch carefully\u2026', demo: [2,0,0,1,2,1,0,2], demoLabel: 'The Heart Spell', demoSlow: true },
-      { text: 'Now you play it. Eight notes. No mistakes.', practice: [2,0,0,1,2,1,0,2], prompt: 'Play the Heart Spell: circle, square, square, triangle, circle, triangle, square, circle' },
+      { text: 'Watch carefully\u2026', demo: [1,0,2,0,1,1,2,0], demoLabel: 'The Heart Spell', demoSlow: true },
+      { text: 'Now you play it. Eight notes. No mistakes.', practice: [1,0,2,0,1,1,2,0], prompt: 'Play the Heart Spell: triangle, square, circle, square, triangle, triangle, circle, square' },
       { text: '<span class="highlight">Your hearts are full.</span> You carry 15 shields against the void. Use them wisely \u2014 or learn to earn them back.' }
     ]
   },
@@ -1371,8 +1356,8 @@ const STORIES = {
       { text: 'But there are older shapes. Shapes that existed before language. The first of these is the <span class="highlight">diamond</span> \u2014 the shape of focus.' },
       { text: 'A diamond has four edges pointing in four directions. It sees everything. It cuts through noise.' },
       { text: 'To awaken the diamond, you must prove your mastery of the three. A <span class="highlight">16-note incantation</span> \u2014 the longest spell you have faced.' },
-      { text: 'Study the pattern\u2026', demo: [0,1,2,2,0,1,0,2,1,1,0,2,0,0,1,2], demoLabel: 'The Diamond Spell', demoSlow: true },
-      { text: 'Now play it. Sixteen notes. Focus.', practice: [0,1,2,2,0,1,0,2,1,1,0,2,0,0,1,2], prompt: 'Play the Diamond Spell \u2014 16 notes' },
+      { text: 'Study the pattern\u2026', demo: [2,2,1,0,2,1,1,0,2,0,1,2,2,0,0,1], demoLabel: 'The Diamond Spell', demoSlow: true },
+      { text: 'Now play it. Sixteen notes. Focus.', practice: [2,2,1,0,2,1,1,0,2,0,1,2,2,0,0,1], prompt: 'Play the Diamond Spell \u2014 16 notes' },
       { text: 'The <span class="highlight">\u25C6 diamond</span> awakens. A new voice joins your language. But there is still one more shape sleeping in the void\u2026' }
     ]
   },
@@ -1382,8 +1367,8 @@ const STORIES = {
       { text: 'The final shape is not a shape at all. It is <span class="highlight">movement itself</span> \u2014 the wave.' },
       { text: 'Waves carry everything. Sound. Light. Emotion. The wave is the oldest pattern in the universe.' },
       { text: 'To unlock it requires the longest spell ever discovered: <span class="highlight">24 notes</span>. Most give up. The ones who don\u2019t become something else entirely.' },
-      { text: 'This is the spell of creation. Watch it once. Then you must play it from memory.', demo: [2,0,1,0,2,2,1,0,1,2,0,0,2,1,0,2,1,1,2,0,1,2,0,1], demoLabel: 'The Wave of Creation', demoSlow: true },
-      { text: 'Your turn. Twenty-four notes. This is the final test.', practice: [2,0,1,0,2,2,1,0,1,2,0,0,2,1,0,2,1,1,2,0,1,2,0,1], prompt: 'Play the Wave of Creation \u2014 24 notes' },
+      { text: 'This is the spell of creation. Watch it once. Then you must play it from memory.', demo: [1,2,0,0,1,2,1,0,2,2,0,1,2,0,1,1,0,2,0,1,2,2,0,1], demoLabel: 'The Wave of Creation', demoSlow: true },
+      { text: 'Your turn. Twenty-four notes. This is the final test.', practice: [1,2,0,0,1,2,1,0,2,2,0,1,2,0,1,1,0,2,0,1,2,2,0,1], prompt: 'Play the Wave of Creation \u2014 24 notes' },
       { text: 'The <span class="highlight">~ wave</span> is yours. All five voices of the soul language are now unlocked. You speak the full tongue of the ancient ones.' }
     ]
   },
@@ -1432,7 +1417,6 @@ function startStory(key) {
 
 function showScene() {
   if (!currentStory || currentSceneIdx >= currentStory.scenes.length) {
-    // Story complete — back to menu
     document.getElementById('storyScene').classList.remove('active');
     document.getElementById('storyMenu').style.display = 'flex';
     currentStory = null;
@@ -1445,7 +1429,6 @@ function showScene() {
   const $prompt = document.getElementById('storyPrompt');
   const $next = document.getElementById('storyNext');
 
-  // Type text with fade
   $text.style.opacity = '0';
   setTimeout(function() {
     $text.innerHTML = scene.text;
@@ -1459,7 +1442,6 @@ function showScene() {
   storyPlayerBuf = [];
 
   if (scene.demo) {
-    // Show demo shapes then animate them lighting up
     $next.classList.add('hidden');
     var demoShapes = scene.demo;
     demoShapes.forEach(function(si) {
@@ -1471,18 +1453,14 @@ function showScene() {
     });
     if (scene.demoLabel) $prompt.textContent = scene.demoLabel;
 
-    // Animate: light each shape in sequence
     var delay = scene.demoSlow ? 600 : 400;
     setTimeout(function() {
       var els = $shapes.querySelectorAll('.story-shape');
       demoShapes.forEach(function(si, idx) {
         setTimeout(function() {
           els[idx].classList.add('lit');
-          // Play the note sound
           try { playNote(si, false); } catch(e) {}
-          // Unlight after a beat
           setTimeout(function() { els[idx].classList.remove('lit'); }, delay * 0.7);
-          // Show next button after last note
           if (idx === demoShapes.length - 1) {
             setTimeout(function() { $next.classList.remove('hidden'); }, delay);
           }
@@ -1493,13 +1471,11 @@ function showScene() {
   }
 
   if (scene.practice) {
-    // Player must tap the correct sequence
     $next.classList.add('hidden');
     storyExpected = scene.practice.slice();
     storyPlayerBuf = [];
     if (scene.prompt) $prompt.textContent = scene.prompt;
 
-    // Show empty slots
     storyExpected.forEach(function(si, idx) {
       var el = document.createElement('div');
       el.className = 'story-shape player-turn';
@@ -1513,7 +1489,6 @@ function showScene() {
     return;
   }
 
-  // Plain text scene — show next button
   $next.classList.remove('hidden');
 }
 
@@ -1522,10 +1497,8 @@ function nextScene() {
   showScene();
 }
 
-// storyTap — called by the in-overlay shape buttons
 function storyTap(si) {
   if (!storyExpected || storyPlayerBuf.length >= storyExpected.length) {
-    // Not in practice mode, just play the sound
     try { playNote(si, false); } catch(e) {}
     return;
   }
