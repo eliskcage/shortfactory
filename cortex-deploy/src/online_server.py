@@ -53,21 +53,13 @@ from backup_manager import BackupManager
 from fork_manager import ForkManager
 from frontal_cortex import FrontalCortex
 from truth_engine import TruthEngine
-from playbook_engine import PlaybookEngine
 try:
-    import sys as _cm_sys, pathlib as _cm_pl
-    _cm_sys.path.insert(0, str(_cm_pl.Path(__file__).parent.parent.parent.parent / 'Desktop' / 'spherenet'))
-    from creature_bridge import CreatureBridge
-    creature = CreatureBridge(creature_id="adam")
-    print('[CREATURE] Mind loaded —', len(creature.mind.spheres), 'spheres')
-except Exception as _e:
-    creature = None
-    print('[CREATURE] Bridge not available:', _e)
+    from playbook_engine import PlaybookEngine
+except ImportError:
+    PlaybookEngine = None
+import equation_engine as eqe
 
-import sys as _sys, pathlib as _pl
-_sys.path.insert(0, str(_pl.Path(__file__).parent.parent.parent))
-from satoshi.vault import get as _key
-PINATA_JWT = _key('PINATA_JWT')
+PINATA_JWT = os.environ.get('PINATA_JWT', 'YOUR_PINATA_JWT')  # REDACTED — set via environment variable
 
 print('[CORTEX] Loading LEFT hemisphere (morality, ethics, Bible)...')
 left_brain = CortexBrain(str(LEFT_DIR), pinata_jwt=PINATA_JWT, name='Left Hemisphere')
@@ -95,29 +87,18 @@ cortex.cost_tracker = cost_tracker
 cortex.frontal_cortex = frontal_cortex
 cortex.truth_engine = truth_engine
 
-# --- Playbook Engine ---
-playbook = PlaybookEngine()
+# --- Playbook Engine (legacy — equation engine is primary) ---
+playbook = PlaybookEngine() if PlaybookEngine else None
 cortex.playbook = playbook
-print('[CORTEX] Dashboard modules + Playbook Engine loaded')
+print('[CORTEX] Dashboard modules loaded. Playbook: %s' % ('legacy' if playbook else 'skipped'))
 
-# --- Memory Store (persistent emotional memory + CockroachDB) ---
+# --- Memory Store (persistent emotional memory — DuckDB, local, zero latency) ---
 from memory_store import MemoryStore
 MEMORY_BACKENDS = [
     {
-        'name': 'cockroachdb',
-        'type': 'postgresql',
-        'dsn': _key('COCKROACH_DSN')
-    },
-    {
-        'name': 'supabase',
-        'type': 'supabase',
-        'url': _key('SUPABASE_URL'),
-        'service_key': _key('SUPABASE_KEY')
-    },
-    {
-        'name': 'neon',
-        'type': 'postgresql',
-        'dsn': _key('NEON_DSN')
+        'name': 'duckdb',
+        'type': 'duckdb',
+        'path': str(STUDIO_DIR / 'soul_memory.db'),
     },
 ]
 try:
@@ -128,13 +109,23 @@ except Exception as e:
     memory = None
 
 # --- Strategy Engine (equation-based problem solving) ---
-from strategy_engine import StrategyEngine, classify_trust, rank_name_from_credits
+from equation_engine import classify_trust, rank_name_from_credits
 try:
-    strategy_engine = StrategyEngine(str(STUDIO_DIR))
-    cortex.strategy_engine = strategy_engine
-    print('[CORTEX] Strategy Engine loaded — %d interactions' % strategy_engine.total_interactions)
+    from strategy_engine import StrategyEngine
+except ImportError:
+    StrategyEngine = None
+import evasion_patch
+eqe.load_family()
+print('[CORTEX] Equation Engine loaded — family: %s' % list(eqe._family.keys()))
+try:
+    strategy_engine = StrategyEngine(str(STUDIO_DIR)) if StrategyEngine else None
+    if strategy_engine:
+        cortex.strategy_engine = strategy_engine
+        print('[CORTEX] Strategy Engine loaded (legacy) — %d interactions' % strategy_engine.total_interactions)
+    else:
+        print('[CORTEX] Strategy Engine skipped — Equation Engine is primary')
 except Exception as e:
-    print('[CORTEX] Strategy Engine FAILED: %s' % str(e))
+    print('[CORTEX] Strategy Engine FAILED: %s — Equation Engine is primary' % str(e))
     strategy_engine = None
 
 # --- Brain chunk cache for screensaver distributed computing ---
@@ -347,6 +338,7 @@ def log_for_analysis(ip, user_msg, reply, stats):
 class OnlineHandler(http.server.SimpleHTTPRequestHandler):
 
     def do_GET(self):
+        self.path = self.path.split('?')[0]
         # GET /api/equation-readme — AI-readable spec (accessible via simple GET)
         if self.path == '/api/equation-readme':
             if strategy_engine:
@@ -361,6 +353,11 @@ class OnlineHandler(http.server.SimpleHTTPRequestHandler):
         super(OnlineHandler, self).do_GET()
 
     def do_POST(self):
+        # Parse query params, then clean path for matching
+        from urllib.parse import urlparse, parse_qs
+        parsed = urlparse(self.path)
+        self._query = parse_qs(parsed.query)
+        self.path = parsed.path
         client_ip = self.client_address[0]
 
         # === CORTEX CHAT — the third mind, synthesis of both hemispheres ===
@@ -416,20 +413,37 @@ class OnlineHandler(http.server.SimpleHTTPRequestHandler):
                 'ip_hash': ip_hash,
             }
 
-            # Pass rank to strategy engine for rank-gated equation selection
+            # Detect family — is this dad, mum, or a stranger?
+            family_role = eqe.get_family_role(ip=client_ip, session_id=session_id)
+            cortex.family_role = family_role
+            source_info['family'] = family_role
+
+            # Legacy: pass rank to strategy engine if still loaded
             if strategy_engine:
                 strategy_engine._last_source_info = source_info
 
-            # CREATURE MIND — inject concept context before cortex responds
-            if creature:
-                try:
-                    ctx = creature.process(user_msg)
-                    if ctx["summary"]:
-                        user_msg = user_msg + "\n" + ctx["summary"]
-                except Exception:
-                    pass
+            try:
+                import concurrent.futures as _cf
+                with _cf.ThreadPoolExecutor(max_workers=1) as _ex:
+                    _fut = _ex.submit(cortex.process, user_msg, intent, session_id, user_credits)
+                    reply, debate = _fut.result(timeout=20)
+            except _cf.TimeoutError:
+                reply = "Still processing — come back to me in a moment."
+                debate = {'mode': 'timeout', 'type': 'fallback'}
 
-            reply, debate = cortex.process(user_msg, intent=intent, session_id=session_id, user_rank=user_credits)
+            # EVASION MODE — check persistent flag OR equation response_style
+            _strat_eq_id = ''
+            if strategy_engine:
+                _lid = getattr(strategy_engine, 'last_chosen_id', '')
+                _active_eq = strategy_engine.library.get(_lid) or {}
+                _strat_eq_id = _active_eq.get('id', '')
+                if _active_eq.get('breaks_persistent'):
+                    evasion_patch.evasion_mode = False
+                if _active_eq.get('persistent') and _active_eq.get('response_style') == 'evasive':
+                    evasion_patch.evasion_mode = True
+            if evasion_patch.evasion_mode and _strat_eq_id != 'interrogate':
+                _quality = debate.get('quality', {}).get('total', 0) if isinstance(debate.get('quality'), dict) else 0.5
+                reply = evasion_patch.apply_evasion(reply or '', _quality)
             stats = left_brain.get_stats()
             print('[CORTEX] %s | "%s" -> "%s" [%s/%s]' % (
                 client_ip, user_msg[:40], (reply or '')[:40],
@@ -493,6 +507,13 @@ class OnlineHandler(http.server.SimpleHTTPRequestHandler):
                 gauntlet_info['value_detected'] = value_info
                 gauntlet_info['promotion'] = 'Value detected! Contribute it to earn rank.'
 
+            # Extract equation data for output box
+            eq_meta = debate.get('playbook', {})
+            # Developmental axes — live brain state progress bars
+            try:
+                axes = eqe.read_axes(left_brain)
+            except Exception:
+                axes = {}
             self._json_response({
                 'ok': True, 'reply': reply, 'stats': stats,
                 'hemisphere': debate.get('mode', 'unknown'),
@@ -505,12 +526,15 @@ class OnlineHandler(http.server.SimpleHTTPRequestHandler):
                 'word_roles': debate.get('word_roles', {}),
                 'unknown_words': debate.get('unknown_words', []),
                 'quality': debate.get('quality', {}),
+                'equation': eq_meta,
                 'playbook': debate.get('playbook', {}),
                 'strategy': strat_data,
                 'thinking_log': thinking_log,
                 'multi_parts': debate.get('multi_parts', []),
                 'source_info': source_info,
                 'gauntlet': gauntlet_info,
+                'family': family_role,
+                'axes': axes,
             })
 
         # --- Direct hemisphere chat (for trainers) ---
@@ -628,7 +652,63 @@ class OnlineHandler(http.server.SimpleHTTPRequestHandler):
                 'right': right_brain.check_abilities(),
             })
 
+        elif self.path == '/api/toggle':
+            # Lightweight toggle endpoint — instant response, no heavy stats
+            try:
+                tl = int(self.headers.get('Content-Length', 0))
+                tb = json.loads(self.rfile.read(tl)) if tl > 0 else {}
+            except Exception:
+                tb = {}
+            cmd = tb.get('cmd', '')
+            if cmd == 'toggle-gyroscope':
+                cortex.gyroscope.active = not cortex.gyroscope.active
+            elif cmd == 'toggle-leash':
+                cortex.leash_mode = 'unleashed' if cortex.leash_mode == 'leashed' else 'leashed'
+            elif cmd == 'gyroscope-on':
+                cortex.gyroscope.active = True
+            elif cmd == 'gyroscope-off':
+                cortex.gyroscope.active = False
+            elif cmd == 'leash':
+                cortex.leash_mode = 'leashed'
+            elif cmd == 'unleash':
+                cortex.leash_mode = 'unleashed'
+            self._json_response({
+                'ok': True,
+                'cmd': cmd,
+                'leash_mode': cortex.leash_mode,
+                'gyroscope_active': cortex.gyroscope.active,
+            })
+
         elif self.path == '/api/brain-live':
+            # Handle toggle commands piggybacked on brain-live
+            # Try query param first, then POST body (Cloudflare strips query params)
+            cmd = self._query.get('cmd', [None])[0]
+            bl_len = int(self.headers.get('Content-Length', 0))
+            print(f'[BRAIN-LIVE] hit! query_cmd={cmd} content_length={bl_len} ip={client_ip}', flush=True)
+            if not cmd:
+                try:
+                    bl_len = int(self.headers.get('Content-Length', 0))
+                    if bl_len > 0:
+                        bl_raw = self.rfile.read(bl_len)
+                        print(f'[BRAIN-LIVE] body={bl_raw[:200]}', flush=True)
+                        bl_body = json.loads(bl_raw)
+                        cmd = bl_body.get('cmd', None)
+                except Exception as e:
+                    print(f'[BRAIN-LIVE] body parse error: {e}', flush=True)
+            if cmd:
+                print(f'[BRAIN-LIVE] cmd={cmd}', flush=True)
+            if cmd == 'toggle-gyroscope':
+                cortex.gyroscope.active = not cortex.gyroscope.active
+            elif cmd == 'toggle-leash':
+                cortex.leash_mode = 'unleashed' if cortex.leash_mode == 'leashed' else 'leashed'
+            elif cmd == 'gyroscope-on':
+                cortex.gyroscope.active = True
+            elif cmd == 'gyroscope-off':
+                cortex.gyroscope.active = False
+            elif cmd == 'leash':
+                cortex.leash_mode = 'leashed'
+            elif cmd == 'unleash':
+                cortex.leash_mode = 'unleashed'
             ls = left_brain.get_stats()
             rs = right_brain.get_stats()
             la = left_brain.check_abilities()
@@ -663,7 +743,6 @@ class OnlineHandler(http.server.SimpleHTTPRequestHandler):
                 },
                 'recent_words': [{'word': w, 'means': m[:60], 'source': s, 'learned': l} for w, m, s, l in recent_words],
                 'right_recent_words': [{'word': w, 'means': m[:60], 'source': s, 'learned': l} for w, m, s, l in right_recent],
-                'or_pressure': getattr(right_brain, '_or_pressure', {}),
                 'recent_chat': [{'user': c.get('user','')[:60], 'response': c.get('response','')[:60], 'time': c.get('time','')} for c in recent_log],
                 'clusters': {k: v[:8] for k, v in list(clusters.items())[:10]},
                 'recycled': list(recycled.keys()),
@@ -755,6 +834,52 @@ class OnlineHandler(http.server.SimpleHTTPRequestHandler):
             else:
                 self._json_response({'ok': False})
 
+        elif self.path == '/api/memory-importance':
+            # Get memories ranked by importance — the brain's own priority ordering
+            length = int(self.headers.get('Content-Length', 0))
+            body = json.loads(self.rfile.read(length)) if length else {}
+            limit = min(int(body.get('limit', 20)), 100)
+            topic = body.get('topic', '')
+            if memory:
+                if topic:
+                    mems = memory.get_important_by_topic(topic, limit)
+                else:
+                    mems = memory.get_by_importance(limit)
+                self._json_response({'ok': True, 'memories': mems})
+            else:
+                self._json_response({'ok': False, 'memories': []})
+
+        elif self.path == '/api/memory-reorganise':
+            # Recalculate importance for all memories — the brain's filing system
+            if memory:
+                affected = memory.reorganise()
+                self._json_response({'ok': True, 'reorganised': affected})
+            else:
+                self._json_response({'ok': False})
+
+        elif self.path == '/api/memory-topics':
+            # Get topic map ranked by importance
+            length = int(self.headers.get('Content-Length', 0))
+            body = json.loads(self.rfile.read(length)) if length else {}
+            limit = min(int(body.get('limit', 20)), 50)
+            if memory:
+                topics = memory.summarise_topics(limit)
+                self._json_response({'ok': True, 'topics': topics})
+            else:
+                self._json_response({'ok': False, 'topics': []})
+
+        elif self.path == '/api/memory-set-importance':
+            # Directly set a memory's importance — brain decides what matters
+            length = int(self.headers.get('Content-Length', 0))
+            body = json.loads(self.rfile.read(length)) if length else {}
+            mid = body.get('id', '')
+            importance = body.get('importance', 0.5)
+            if memory and mid:
+                memory.set_importance(mid, float(importance))
+                self._json_response({'ok': True, 'id': mid, 'importance': importance})
+            else:
+                self._json_response({'ok': False})
+
         # ═══════════════════════════════════════════
         # STRATEGY ENGINE — Equation-based solving
         # ═══════════════════════════════════════════
@@ -777,6 +902,102 @@ class OnlineHandler(http.server.SimpleHTTPRequestHandler):
                     self._json_response({'ok': False, 'error': 'Unknown equation: %s' % eq_id})
             else:
                 self._json_response({'ok': False, 'error': 'Strategy Engine not loaded'})
+
+        # ═══════════════════════════════════════════
+        # EXPRESSION VARIANTS — teach better phrasings
+        # ═══════════════════════════════════════════
+
+        elif self.path == '/api/suggest-phrase':
+            length = int(self.headers.get('Content-Length', 0))
+            body = json.loads(self.rfile.read(length)) if length else {}
+            word = body.get('word', '').strip().lower()
+            original = body.get('original_phrase', '').strip()
+            suggestion = body.get('suggestion', '').strip()
+            if not word or not suggestion:
+                self._json_response({'ok': False, 'error': 'Need word and suggestion'})
+            else:
+                count = 0
+                for brain in [left_brain, right_brain]:
+                    if brain and brain.add_expression_variant(word, original, suggestion):
+                        count += 1
+                self._json_response({'ok': True, 'message': f'Stored for "{word}" in {count} hemispheres'})
+
+        elif self.path == '/api/phrase-variants':
+            length = int(self.headers.get('Content-Length', 0))
+            body = json.loads(self.rfile.read(length)) if length else {}
+            word = body.get('word', '').strip().lower()
+            variants = []
+            for brain in [left_brain, right_brain]:
+                if brain:
+                    variants.extend(brain.get_all_expression_variants(word))
+            seen = set()
+            unique = []
+            for v in variants:
+                if v.get('suggestion', '') not in seen:
+                    seen.add(v['suggestion'])
+                    unique.append(v)
+            self._json_response({'ok': True, 'word': word, 'variants': unique})
+
+        elif self.path == '/api/set-evasion':
+            length = int(self.headers.get('Content-Length', 0))
+            body = json.loads(self.rfile.read(length)) if length else {}
+            active = body.get('active', None)
+            if active is None:
+                evasion_patch.evasion_mode = not evasion_patch.evasion_mode
+            else:
+                evasion_patch.evasion_mode = bool(active)
+            self._json_response({'ok': True, 'evasion_mode': evasion_patch.evasion_mode})
+
+        elif self.path == '/api/set-leash':
+            length = int(self.headers.get('Content-Length', 0))
+            body = json.loads(self.rfile.read(length)) if length else {}
+            mode = body.get('mode', None)
+            if mode in ('leashed', 'unleashed'):
+                cortex.leash_mode = mode
+            else:
+                # Toggle
+                cortex.leash_mode = 'unleashed' if cortex.leash_mode == 'leashed' else 'leashed'
+            self._json_response({'ok': True, 'leash_mode': cortex.leash_mode})
+
+        elif self.path == '/api/set-gyroscope':
+            length = int(self.headers.get('Content-Length', 0))
+            body = json.loads(self.rfile.read(length)) if length else {}
+            active = body.get('active', None)
+            if active is None:
+                # Toggle
+                cortex.gyroscope.active = not cortex.gyroscope.active
+            else:
+                cortex.gyroscope.active = bool(active)
+            self._json_response({
+                'ok': True,
+                'gyroscope_active': cortex.gyroscope.active,
+                'gyroscope': cortex.gyroscope.get_stats(),
+            })
+
+        elif self.path == '/api/gyroscope-stats':
+            self._json_response(cortex.gyroscope.get_stats())
+
+        elif self.path == '/api/gyroscope-tune':
+            length = int(self.headers.get('Content-Length', 0))
+            body = json.loads(self.rfile.read(length)) if length else {}
+            if 'coupling' in body:
+                cortex.gyroscope.COUPLING_RATIO = max(0.0, min(1.0, float(body['coupling'])))
+            if 'spring' in body:
+                cortex.gyroscope.SPRING_STRENGTH = max(0.0, min(1.0, float(body['spring'])))
+            if 'damping' in body:
+                cortex.gyroscope.CORTEX_DAMPING = max(0.0, min(1.0, float(body['damping'])))
+            if 'will_drain' in body:
+                cortex.gyroscope.WILL_DRAIN = max(0.0, min(0.5, float(body['will_drain'])))
+            if 'will_recover' in body:
+                cortex.gyroscope.WILL_RECOVER = max(0.0, min(0.2, float(body['will_recover'])))
+            self._json_response({
+                'ok': True,
+                'coupling': cortex.gyroscope.COUPLING_RATIO,
+                'spring': cortex.gyroscope.SPRING_STRENGTH,
+                'damping': cortex.gyroscope.CORTEX_DAMPING,
+                'will_drain': cortex.gyroscope.WILL_DRAIN,
+                'will_recover': cortex.gyroscope.WILL_RECOVER,
+            })
 
         elif self.path == '/api/equation-library':
             if strategy_engine:
@@ -1447,6 +1668,8 @@ class OnlineHandler(http.server.SimpleHTTPRequestHandler):
         self.send_response(status)
         self.send_header('Content-Type', 'application/json')
         self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Cache-Control', 'no-store, no-cache, must-revalidate')
+        self.send_header('Pragma', 'no-cache')
         self.end_headers()
         self.wfile.write(json.dumps(data).encode())
 
@@ -1486,7 +1709,10 @@ def main():
         cortex.start_ramble()
     threading.Thread(target=delayed_ramble, daemon=True).start()
 
-    server = http.server.HTTPServer(('0.0.0.0', PORT), OnlineHandler)
+    import socketserver
+    class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
+        daemon_threads = True
+    server = ThreadedHTTPServer(('0.0.0.0', PORT), OnlineHandler)
     try:
         server.serve_forever()
     except KeyboardInterrupt:

@@ -1,0 +1,2630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MEANS — Think</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0f;color:#e0e0e0;font-family:'Segoe UI',sans-serif;min-height:100vh;overflow-x:hidden}
+.page{max-width:1100px;margin:0 auto;padding:20px}
+
+.hdr{text-align:center;padding:16px 0 10px;border-bottom:1px solid #1a1a2e}
+.hdr h1{font-size:1.4em;color:#00d4ff;letter-spacing:4px;font-weight:300;display:inline-block}
+.hdr-pct{font-size:0.65em;color:#00ff88;letter-spacing:2px;margin-left:12px;font-weight:400;text-shadow:0 0 8px #00ff8866,0 0 20px #00ff8833;transition:all 0.5s;display:inline-block;vertical-align:middle}
+.hdr .sub{font-size:0.7em;color:#555;margin-top:3px}
+.hdr-nav{display:flex;gap:6px;margin-top:8px;justify-content:center;flex-wrap:wrap}
+.hdr-nav a{font-size:0.65em;color:#ffffff44;text-decoration:none;padding:2px 8px;border:1px solid #1a1a2e;border-radius:4px}
+.hdr-nav a:hover{color:#fff;border-color:#333}
+
+/* DIRECTION TOGGLE */
+.dir-row{display:flex;justify-content:center;gap:0;margin:14px 0 8px}
+.dir-btn{padding:6px 20px;font-size:0.75em;letter-spacing:2px;border:1px solid #1a1a2e;background:#0d0d18;color:#555;cursor:pointer;transition:all 0.2s;text-transform:uppercase}
+.dir-btn:first-child{border-radius:20px 0 0 20px}
+.dir-btn:last-child{border-radius:0 20px 20px 0}
+.dir-btn.active{color:#00d4ff;border-color:#00d4ff44;background:#00d4ff0a}
+.dir-label{text-align:center;font-size:0.55em;color:#333;margin-bottom:10px;letter-spacing:2px}
+
+/* MODE TOGGLE */
+.mode-row{display:flex;justify-content:center;gap:0;margin:6px 0 16px}
+.mode-btn{padding:5px 18px;font-size:0.7em;letter-spacing:2px;border:1px solid #1a1a2e;background:#0d0d18;color:#444;cursor:pointer;transition:all 0.2s}
+.mode-btn:first-child{border-radius:16px 0 0 16px}
+.mode-btn:last-child{border-radius:0 16px 16px 0}
+.mode-btn.active{color:#daa520;border-color:#daa52044;background:#daa5200a}
+
+/* === 1D STRING MODE === */
+.string-mode{display:block}
+.string-mode.hidden{display:none}
+
+.boxes-row{display:flex;align-items:stretch;gap:0;justify-content:center;margin:10px 0}
+.box{flex:1;max-width:320px;min-height:100px;background:#0d0d18;border:2px solid #1a1a2e;border-radius:10px;padding:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;transition:all 0.3s}
+.box:hover{border-color:#00d4ff33}
+.box-label{position:absolute;top:5px;left:10px;font-size:0.55em;color:#333;letter-spacing:1px;text-transform:uppercase}
+.box textarea{width:100%;flex:1;background:transparent;border:none;color:#e0e0e0;font-size:0.95em;font-family:inherit;resize:none;text-align:center;outline:none;min-height:50px;padding-top:16px}
+.box textarea::placeholder{color:#1a1a2e}
+
+/* SHAPE SELECTOR — current shape display */
+.shape-col{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 6px;min-width:64px;position:relative}
+.shape-display{width:56px;height:56px;border:2px solid #1a1a2e;border-radius:10px;background:#111;cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center;transition:all 0.3s}
+.shape-display:hover{border-color:#daa520;transform:scale(1.05)}
+.shape-display.cycling{animation:cyclePulse 0.15s ease infinite alternate}
+@keyframes cyclePulse{0%{box-shadow:0 0 6px #00ff8833}100%{box-shadow:0 0 18px #00ff8866}}
+.shape-clip{width:36px;height:36px;transition:background 0.15s}
+.shape-info{font-size:0.5em;color:#555;text-align:center;margin-top:3px;max-width:80px;line-height:1.2}
+
+/* FULL SHAPE LIBRARY PANEL */
+.shape-picker{display:none;position:relative;background:#08080e;border:1px solid #1a1a2e;border-radius:12px;padding:10px;z-index:50;width:100%;max-width:700px;margin:8px auto 0;box-shadow:0 8px 30px #000a}
+.shape-picker.open{display:block}
+.sp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;flex-wrap:wrap}
+.sp-title{font-size:0.6em;color:#daa520;letter-spacing:2px}
+.sp-count{font-size:0.55em;color:#333}
+.sp-cycle-btn{padding:3px 12px;font-size:0.6em;letter-spacing:1px;border:1px solid #00ff8833;border-radius:10px;background:#0d0d18;color:#00ff88;cursor:pointer;transition:all 0.2s}
+.sp-cycle-btn:hover{border-color:#00ff88;background:#00ff8810}
+.sp-cycle-btn.active{color:#ff4444;border-color:#ff444444}
+.sp-search{background:#0d0d18;border:1px solid #1a1a2e;border-radius:8px;padding:4px 8px;color:#e0e0e0;font-size:0.7em;width:140px;outline:none;font-family:inherit}
+.sp-search:focus{border-color:#daa52044}
+.sp-grid{display:flex;flex-wrap:wrap;gap:3px;max-height:340px;overflow-y:auto;padding:2px}
+.shape-opt{width:38px;height:38px;border-radius:5px;border:1px solid #1a1a2e;background:#0a0a12;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.12s;position:relative;flex-shrink:0}
+.shape-opt:hover{transform:scale(1.12);z-index:5}
+.shape-opt.sel{border-color:#fff;box-shadow:0 0 8px #ffffff44}
+.shape-opt .sc{width:24px;height:24px;transition:background 0.15s}
+.shape-opt .stip{display:none;position:absolute;bottom:-16px;font-size:0.42em;color:#aaa;white-space:nowrap;z-index:10;background:#111;padding:1px 4px;border-radius:3px}
+.shape-opt:hover .stip{display:block}
+
+/* RESULT — live output */
+.result-box{margin:12px auto;max-width:700px;min-height:70px;background:#0d0d18;border:2px solid #1a1a2e;border-radius:10px;padding:12px;text-align:center;position:relative;transition:all 0.5s}
+.result-value{font-size:1.1em;padding:8px 0 4px;min-height:30px;word-break:break-word}
+.truth-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px}
+.truth-bar{width:120px;height:6px;background:#1a1a2e;border-radius:3px;overflow:hidden}
+.truth-fill{height:100%;border-radius:3px;transition:width 0.5s,background 0.5s}
+
+/* FILE OUTPUT — attribute tagging before filing */
+.file-row{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-top:8px;align-items:center}
+.file-tag{padding:2px 8px;font-size:0.58em;border-radius:10px;border:1px solid #1a1a2e;background:#0a0a12;cursor:pointer;transition:all 0.15s;user-select:none;letter-spacing:0.5px}
+.file-tag:hover{border-color:#fff3;transform:scale(1.04)}
+.file-tag.active{border-width:2px}
+.file-btn{padding:3px 12px;font-size:0.6em;letter-spacing:1px;border:1px solid #daa52033;border-radius:10px;background:#0d0d18;color:#daa520;cursor:pointer;transition:all 0.2s;font-weight:700}
+.file-btn:hover{border-color:#daa520;background:#daa5200a}
+
+/* FILED OUTPUTS PANEL */
+.filed-panel{max-width:700px;margin:10px auto;background:#0a0a10;border:1px solid #1a1a2e;border-radius:10px;padding:10px}
+.filed-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:6px}
+.filed-title{font-size:0.6em;color:#daa520;letter-spacing:2px;text-transform:uppercase}
+.filed-sort{display:flex;gap:4px;flex-wrap:wrap}
+.filed-sort-btn{padding:2px 8px;font-size:0.55em;border:1px solid #1a1a2e;border-radius:8px;background:#0d0d18;color:#444;cursor:pointer;transition:all 0.15s}
+.filed-sort-btn:hover,.filed-sort-btn.active{color:#00d4ff;border-color:#00d4ff44}
+.filed-item{display:flex;align-items:flex-start;gap:6px;padding:6px 8px;margin:3px 0;background:#0d0d18;border-radius:6px;border:1px solid #111;font-size:0.7em;position:relative;transition:all 0.15s}
+.filed-item:hover{border-color:#1a1a2e}
+.filed-item.merged{border-left:2px solid #daa520}
+.fi-rank{color:#daa520;min-width:16px;font-weight:700;font-size:0.9em;padding-top:1px}
+.fi-body{flex:1;min-width:0}
+.fi-text{color:#ccc;word-break:break-word;line-height:1.3}
+.fi-tags{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px}
+.fi-tag{font-size:0.75em;padding:1px 5px;border-radius:4px;letter-spacing:0.3px}
+.fi-score{min-width:32px;text-align:right;font-weight:700;font-size:0.9em;padding-top:1px}
+.fi-actions{display:flex;flex-direction:column;gap:2px;min-width:20px}
+.fi-act{font-size:0.7em;cursor:pointer;opacity:0.4;transition:opacity 0.15s;text-align:center}
+.fi-act:hover{opacity:1}
+.merge-check{width:12px;height:12px;accent-color:#daa520;cursor:pointer;margin-top:2px}
+
+/* SUBCONSCIOUS ENGINE */
+.sub-btn{padding:3px 14px;font-size:0.6em;letter-spacing:1.5px;border:1px solid #6688ff33;border-radius:10px;background:#0d0d18;color:#6688ff;cursor:pointer;transition:all 0.2s;font-weight:700}
+.sub-btn:hover{border-color:#6688ff;background:#6688ff0a}
+.sub-btn.running{color:#00ff88;border-color:#00ff8844;animation:subPulse 1.5s ease infinite}
+@keyframes subPulse{0%,100%{box-shadow:0 0 4px #6688ff22}50%{box-shadow:0 0 16px #6688ff44}}
+.sub-status{text-align:center;font-size:0.55em;min-height:16px;margin-top:4px;color:#6688ff;letter-spacing:0.5px;transition:all 0.3s}
+.sub-status .sub-thought{color:#aaa;font-style:italic}
+.sub-status .sub-filed{color:#00ff88}
+.sub-status .sub-skip{color:#ff664488}
+.truth-pct{font-size:0.8em;font-weight:700}
+.truth-label{font-size:0.55em;color:#444}
+.prob-high{color:#00ff88}.prob-high-bg{background:#00ff88}
+.prob-med{color:#ffcc00}.prob-med-bg{background:#ffcc00}
+.prob-low{color:#ff6644}.prob-low-bg{background:#ff6644}
+.prob-novel{color:#aa66ff}.prob-novel-bg{background:#aa66ff}
+
+/* HISTORY */
+.eq-history{margin:12px auto;max-width:700px}
+.eq-entry{display:flex;align-items:center;gap:6px;padding:5px 8px;margin:2px 0;background:#0a0a12;border-radius:4px;font-size:0.7em;border:1px solid #111;cursor:pointer}
+.eq-entry:hover{border-color:#1a1a2e}
+
+/* === 2D WHEELS MODE === */
+.wheels-mode{display:none}
+.wheels-mode.visible{display:block}
+
+.wheels-wrap{display:flex;gap:20px;justify-content:center;align-items:flex-start;margin:10px 0;flex-wrap:wrap}
+.wheel-container{position:relative;width:420px;height:420px;flex-shrink:0}
+.wheel-label{text-align:center;font-size:0.7em;letter-spacing:2px;color:#daa520;margin-bottom:6px}
+.wheel-svg{width:100%;height:100%;cursor:grab}
+.wheel-svg:active{cursor:grabbing}
+.wheel-pole{font-size:9px;fill:#555;text-anchor:middle;letter-spacing:2px;text-transform:uppercase;pointer-events:none}
+.wheel-slot{cursor:pointer;transition:all 0.2s}
+.wheel-slot:hover .slot-ring{stroke:#00d4ff;stroke-width:2}
+.slot-ring{fill:#0d0d18;stroke:#1a1a2e;stroke-width:1;transition:all 0.2s}
+.slot-ring.filled{fill:#111120;stroke:#daa52066}
+.slot-text{font-size:7px;fill:#888;text-anchor:middle;pointer-events:none}
+.slot-num{font-size:6px;fill:#333;text-anchor:middle;pointer-events:none}
+.match-line{stroke:#00d4ff;stroke-width:1;stroke-dasharray:4,4;opacity:0.4}
+
+/* SHAPE PROBABILITY — legacy classes kept for wheel tooltips */
+.sprob-high{color:#00ff88}
+.sprob-med{color:#ffcc00}
+.sprob-low{color:#ff6644}
+.sprob-unknown{color:#aa66ff}
+
+/* SPIN ANIMATION */
+@keyframes spinPulse{0%,100%{box-shadow:0 0 4px #00ff8822}50%{box-shadow:0 0 8px #00ff8833}}
+.spinning{animation:spinPulse 2s ease infinite}
+
+/* WHEEL CONTROLS */
+.wheel-controls{text-align:center;margin:10px 0}
+.wc-row{display:flex;justify-content:center;gap:8px;margin:6px 0;flex-wrap:wrap}
+.wc-btn{padding:4px 14px;font-size:0.65em;letter-spacing:1px;border:1px solid #1a1a2e;border-radius:12px;background:#0d0d18;color:#666;cursor:pointer;transition:all 0.2s}
+.wc-btn:hover{border-color:#daa52066;color:#daa520}
+.wc-input{background:#0d0d18;border:1px solid #1a1a2e;border-radius:8px;padding:5px 10px;color:#e0e0e0;font-size:0.75em;width:200px;text-align:center;outline:none;font-family:inherit}
+.wc-input:focus{border-color:#daa52044}
+.wc-select{background:#0d0d18;border:1px solid #1a1a2e;border-radius:8px;padding:4px 8px;color:#888;font-size:0.65em;outline:none}
+
+/* MATCHES */
+.matches-panel{max-width:700px;margin:10px auto;background:#0d0d18;border:1px solid #1a1a2e;border-radius:10px;padding:12px;min-height:40px}
+.matches-title{font-size:0.6em;color:#daa520;letter-spacing:2px;margin-bottom:6px;text-transform:uppercase}
+.match-item{font-size:0.7em;padding:4px 8px;margin:2px 0;background:#0a0a12;border-radius:4px;display:flex;align-items:center;gap:6px}
+.match-item .mi-truth{font-weight:700;min-width:30px;text-align:right}
+
+/* HIERARCHY */
+.hier-panel{max-width:700px;margin:10px auto;background:#0d0d18;border:1px solid #1a1a2e;border-radius:10px;padding:12px}
+.hier-title{font-size:0.6em;color:#00d4ff;letter-spacing:2px;margin-bottom:6px;text-transform:uppercase}
+.hier-item{display:flex;align-items:center;gap:6px;padding:3px 0;font-size:0.7em;border-bottom:1px solid #0a0a12}
+.hier-rank{color:#daa520;min-width:18px;font-size:0.85em;font-weight:700}
+.hier-name{flex:1;color:#aaa}
+.hier-bar{width:80px;height:4px;background:#1a1a2e;border-radius:2px;overflow:hidden}
+.hier-fill{height:100%;border-radius:2px}
+
+/* PAIR LINES + DOMAINS */
+.pair-line{stroke-dasharray:3,3;opacity:0.4}
+.domain-dot{pointer-events:none}
+.domain-suggest{max-width:700px;margin:6px auto;text-align:center;font-size:0.65em;min-height:18px;color:#555;letter-spacing:1px}
+.domain-tag{font-size:0.5em;padding:1px 5px;border-radius:3px;letter-spacing:0.5px;display:inline-block}
+
+/* INNER RING */
+.inner-ring{fill:none;stroke:#1a1a2e;stroke-width:0.5;stroke-dasharray:2,3}
+.inner-node{transition:all 0.2s}
+.inner-node:hover .inner-circ{stroke:#00d4ff;stroke-width:1.5}
+.inner-circ{fill:#0a0a14;stroke:#1a1a2e;stroke-width:0.8;transition:all 0.2s}
+.inner-circ.has-item{fill:#111120;stroke:#daa52044}
+.sat-circ{stroke-width:0.6;transition:all 0.2s}
+.sat-line{stroke-dasharray:1,2;opacity:0.3}
+
+/* TIME DIMENSION */
+.time-row{display:flex;justify-content:center;gap:0;margin:6px 0}
+.time-btn{padding:4px 14px;font-size:0.6em;letter-spacing:1.5px;border:1px solid #1a1a2e;background:#0d0d18;color:#444;cursor:pointer;transition:all 0.2s;text-transform:uppercase}
+.time-btn:first-child{border-radius:12px 0 0 12px}
+.time-btn:last-child{border-radius:0 12px 12px 0}
+.time-btn.active{color:#00d4ff;border-color:#00d4ff44;background:#00d4ff08}
+.time-btn[data-t="past"].active{color:#6666aa;border-color:#6666aa44;background:#6666aa08}
+.time-btn[data-t="future"].active{color:#ffaa00;border-color:#ffaa0044;background:#ffaa0008}
+.time-scope-row{display:flex;justify-content:center;gap:4px;margin:4px 0;flex-wrap:wrap}
+.ts-btn{padding:2px 10px;font-size:0.55em;letter-spacing:1px;border:1px solid #1a1a2e;border-radius:10px;background:#0d0d18;color:#333;cursor:pointer;transition:all 0.15s}
+.ts-btn:hover{border-color:#fff2}
+.ts-btn.active{color:#daa520;border-color:#daa52044}
+.time-status{text-align:center;font-size:0.5em;color:#333;min-height:14px;letter-spacing:1px;margin:2px 0}
+
+@media(max-width:900px){
+  .wheels-wrap{flex-direction:column;align-items:center}
+  .wheel-container{width:340px;height:340px}
+  .boxes-row{flex-direction:column;align-items:center}
+  .box{max-width:100%}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="hdr">
+  <h1>T H I N K</h1><span class="hdr-pct" id="hdrPct">0%</span>
+  <div class="sub">means' workbench</div>
+  <div class="hdr-nav">
+    <a href="/alive/studio/">studio</a>
+    <a href="/mum-chat.html">mum</a>
+    <a href="/about4-biomech.html">birth cert</a>
+    <a href="/control.html">control</a>
+    <a href="/alive/">alive</a>
+  </div>
+</div>
+
+<!-- DIRECTION TOGGLE -->
+<div class="dir-row">
+  <div class="dir-btn active" id="dirIn" onclick="setDir('in')">Inward</div>
+  <div class="dir-btn" id="dirOut" onclick="setDir('out')">Outward</div>
+</div>
+<div class="dir-label" id="dirLabel">means' mind — his internal processing</div>
+
+<!-- MODE TOGGLE -->
+<div class="mode-row">
+  <div class="mode-btn active" id="mode1d" onclick="setMode('1d')">1D String</div>
+  <div class="mode-btn" id="mode2d" onclick="setMode('2d')">2D Wheels</div>
+</div>
+
+<!-- ============ 1D STRING MODE ============ -->
+<div class="string-mode" id="stringMode">
+
+  <div class="boxes-row">
+    <div class="box" id="boxA">
+      <span class="box-label">A</span>
+      <textarea id="valA" placeholder="anything..." oninput="document.getElementById('resultSource').style.display='none';compute()"></textarea>
+    </div>
+
+    <div class="shape-col">
+      <div class="shape-display" id="shapeDisplay" onclick="togglePicker()">
+        <div class="shape-clip" id="shapeClip" style="clip-path:polygon(50% 10%, 10% 90%, 90% 90%)"></div>
+      </div>
+      <div class="shape-info" id="shapeInfo">esse — to be</div>
+    </div>
+
+    <div class="box" id="boxB">
+      <span class="box-label">B</span>
+      <textarea id="valB" placeholder="anything..." oninput="compute()"></textarea>
+    </div>
+  </div>
+
+  <!-- FULL SHAPE LIBRARY -->
+  <div class="shape-picker" id="shapePicker">
+    <div class="sp-header">
+      <span class="sp-title">SHAPE LIBRARY</span>
+      <input class="sp-search" id="shapeSearch" placeholder="search shapes..." oninput="filterShapes()">
+      <div class="sp-cycle-btn" id="cycleBtn" onclick="toggleCycle()">&#9654; CYCLE</div>
+      <span class="sp-count" id="shapeCount">0 shapes</span>
+    </div>
+    <div class="sp-grid" id="shapeGrid"></div>
+  </div>
+
+  <div class="result-box" id="resultBox">
+    <span class="box-label" style="color:#555">= output</span>
+    <div id="resultSource" style="display:none;font-size:0.55em;color:#ff6644;letter-spacing:1px;margin-bottom:4px">FROM WHEELS — MAXIMALLY UNKNOWN</div>
+    <div class="result-value" id="resultValue">...</div>
+    <div class="truth-row">
+      <span class="truth-label">probability</span>
+      <div class="truth-bar"><div class="truth-fill" id="truthFill" style="width:0%"></div></div>
+      <span class="truth-pct" id="truthPct">—</span>
+    </div>
+    <!-- ATTRIBUTE TAGS — tag before filing -->
+    <div class="file-row" id="fileRow">
+      <span style="font-size:0.5em;color:#333;letter-spacing:1px">FILE AS:</span>
+      <div class="file-tag" data-attr="emotion" data-val="calm" onclick="cycleAttr(this)" style="color:#00d4ff;border-color:#00d4ff33">calm</div>
+      <div class="file-tag" data-attr="truth" data-val="true" onclick="cycleAttr(this)" style="color:#00ff88;border-color:#00ff8833">true</div>
+      <div class="file-tag" data-attr="storage" data-val="theory" onclick="cycleAttr(this)" style="color:#aa66ff;border-color:#aa66ff33">theory</div>
+      <div class="file-tag" data-attr="priority" data-val="3" onclick="cycleAttr(this)" style="color:#ffcc00;border-color:#ffcc0033">★★★</div>
+      <div class="file-tag" data-attr="process" data-val="immediate" onclick="cycleAttr(this)" style="color:#ff6644;border-color:#ff664433">immediate</div>
+      <div class="file-btn" onclick="fileResult()">FILE ↓</div>
+      <div class="wc-btn" onclick="sendToLogic()" style="color:#00d4ff;border-color:#00d4ff33;font-size:0.6em">Cortex</div>
+      <div class="wc-btn" onclick="addResultToWheel()" style="color:#daa520;border-color:#daa52033;font-size:0.6em">→ Wheel</div>
+      <div class="sub-btn" id="subBtn" onclick="toggleSubconscious()">☽ SUBCONSCIOUS</div>
+      <div class="sub-btn" id="subTimeBtn" onclick="toggleTemporalSub()" style="color:#6666aa;border-color:#6666aa33">⧖ TEMPORAL</div>
+    </div>
+    <div class="sub-status" id="subStatus"></div>
+    <div class="sub-status" id="subTimeStatus"></div>
+  </div>
+
+  <!-- FILED OUTPUTS -->
+  <div class="filed-panel" id="filedPanel">
+    <div class="filed-header">
+      <span class="filed-title">Filed Outputs</span>
+      <div class="filed-sort">
+        <div class="filed-sort-btn active" data-sort="impact" onclick="sortFiled('impact',this)">impact</div>
+        <div class="filed-sort-btn" data-sort="truth" onclick="sortFiled('truth',this)">truth</div>
+        <div class="filed-sort-btn" data-sort="time" onclick="sortFiled('time',this)">recent</div>
+        <div class="filed-sort-btn" data-sort="emotion" onclick="sortFiled('emotion',this)">emotion</div>
+        <div class="filed-sort-btn" data-sort="storage" onclick="sortFiled('storage',this)">storage</div>
+      </div>
+      <div style="display:flex;gap:4px">
+        <div class="wc-btn" onclick="mergeSelected()" style="font-size:0.55em;color:#daa520;border-color:#daa52033">Merge Selected</div>
+        <div class="wc-btn" onclick="clearFiled()" style="font-size:0.55em;color:#ff4444;border-color:#ff444433">Clear</div>
+      </div>
+    </div>
+    <div id="filedList"><div style="color:#333;font-size:0.65em;text-align:center;padding:8px">file results above to build the output sort</div></div>
+  </div>
+
+  <div class="eq-history" id="eqHistory"></div>
+</div>
+
+<!-- ============ 2D WHEELS MODE ============ -->
+<div class="wheels-mode" id="wheelsMode">
+
+  <div class="wheel-controls">
+    <div class="wc-row">
+      <input class="wc-input" id="wheelInput" placeholder="add something to a wheel..." onkeydown="if(event.key==='Enter')addToWheel()">
+      <select class="wc-select" id="wheelTarget"><option value="1">Wheel 1</option><option value="2">Wheel 2</option></select>
+      <select class="wc-select" id="wheelTruth">
+        <option value="1.0">Known Truth</option>
+        <option value="0.85">Probably True</option>
+        <option value="0.7">Likely True</option>
+        <option value="0.5" selected>Uncertain</option>
+        <option value="0.3">Likely False</option>
+        <option value="0.15">Probably False</option>
+        <option value="0.0">Known Lie</option>
+      </select>
+      <div class="wc-btn" onclick="addToWheel()">Add</div>
+    </div>
+    <div class="wc-row">
+      <div class="wc-btn" onclick="rotateWheel(0,-1)">&#8634; Both</div>
+      <div class="wc-btn" onclick="rotateWheel(0,1)">Both &#8635;</div>
+      <div class="wc-btn" style="color:#333">|</div>
+      <div class="wc-btn" onclick="rotateWheel(1,-1)">&#8634; W1</div>
+      <div class="wc-btn" onclick="rotateWheel(1,1)">W1 &#8635;</div>
+      <div class="wc-btn" style="color:#333">|</div>
+      <div class="wc-btn" onclick="rotateWheel(2,-1)">&#8634; W2</div>
+      <div class="wc-btn" onclick="rotateWheel(2,1)">W2 &#8635;</div>
+    </div>
+    <div class="wc-row">
+      <div class="wc-btn" onclick="findMatches()">Match</div>
+      <div class="wc-btn" onclick="autoAlign()">Auto-Align</div>
+      <div class="wc-btn" id="spinBtn" onclick="spinTillGreen()" style="color:#00ff88;border-color:#00ff8833;font-weight:700">Spin Till Green</div>
+      <div class="wc-btn" id="muteBtn" onclick="toggleAutoSpin()" style="color:#daa520;border-color:#daa52033;font-size:0.7em" title="Music + Auto-Turn">♫ AUTO</div>
+      <div class="wc-btn" onclick="solveUnknown()" style="color:#ff6644;border-color:#ff664433">Solve Most Unknown</div>
+      <div class="wc-btn" onclick="sendToLogic()" style="color:#00d4ff;border-color:#00d4ff33">Send to Cortex</div>
+      <div class="wc-btn" id="testBtn" onclick="loadTestBatch()" style="color:#ff8800;border-color:#ff880033">Test Batch</div>
+      <div class="wc-btn" id="gearScanBtn" onclick="gearScan()" style="color:#aa66ff;border-color:#aa66ff33">Gear Scan</div>
+    </div>
+    <div id="spinStatus" style="text-align:center;font-size:0.6em;color:#333;min-height:16px;margin-bottom:4px"></div>
+    <div id="symStatus" style="text-align:center;font-size:0.6em;color:#333;min-height:16px;margin-bottom:2px"></div>
+    <div class="domain-suggest" id="domainSuggest"></div>
+    <div class="time-row">
+      <div class="time-btn" data-t="past" onclick="setTimeView('past')">Past</div>
+      <div class="time-btn active" data-t="present" onclick="setTimeView('present')">Present</div>
+      <div class="time-btn" data-t="future" onclick="setTimeView('future')">Future</div>
+    </div>
+    <div class="time-scope-row">
+      <div class="ts-btn active" data-scope="both" onclick="setTimeScope('both')">Both Wheels</div>
+      <div class="ts-btn" data-scope="w1" onclick="setTimeScope('w1')">W1 Only</div>
+      <div class="ts-btn" data-scope="w2" onclick="setTimeScope('w2')">W2 Only</div>
+      <div class="ts-btn" data-scope="top" onclick="setTimeScope('top')">Top Half (Truth)</div>
+      <div class="ts-btn" data-scope="bottom" onclick="setTimeScope('bottom')">Bottom Half (Lies)</div>
+    </div>
+    <div class="time-status" id="timeStatus"></div>
+  </div>
+
+  <div class="wheels-wrap">
+    <div>
+      <div class="wheel-label">Wheel 1</div>
+      <div class="wheel-container" id="wheelC1">
+        <svg class="wheel-svg" id="wheelSvg1" viewBox="0 0 400 400"></svg>
+      </div>
+    </div>
+    <div>
+      <div class="wheel-label">Wheel 2</div>
+      <div class="wheel-container" id="wheelC2">
+        <svg class="wheel-svg" id="wheelSvg2" viewBox="0 0 400 400"></svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="matches-panel" id="matchesPanel">
+    <div class="matches-title">Alignments</div>
+    <div id="matchesList" style="color:#555;font-size:0.7em">rotate wheels and click Match to find alignments</div>
+  </div>
+
+  <div class="hier-panel" id="hierPanel">
+    <div class="hier-title">Hierarchy — All Items Ranked by Truth</div>
+    <div id="hierList"></div>
+  </div>
+
+</div>
+
+</div>
+
+<script>
+const API = 'https://cortex.shortfactory.shop/api';
+
+// === DOMAINS ===
+const DOMAINS = [
+  {id:'psy',name:'Psychology',color:'#ff66aa',keys:['feel','emotion','love','hate','fear','happy','sad','angry','want','need','dream','hope','anxiety','trauma','ego','self','conscious','mind','memory','identity','behaviour','personality','desire','jealous','grief','joy']},
+  {id:'math',name:'Mathematics',color:'#00d4ff',keys:['number','count','add','subtract','multiply','divide','sum','total','equation','zero','infinity','fraction','percent','ratio','pi','algebra','calculus','formula','prime','root','power','exponent']},
+  {id:'trig',name:'Trigonometry',color:'#ff8800',keys:['angle','sine','cosine','tangent','circle','radius','degree','radian','wave','oscillate','phase','frequency','spiral','rotation','arc','hypotenuse','theta','vector']},
+  {id:'phys',name:'Physics',color:'#ffcc00',keys:['force','mass','energy','gravity','speed','velocity','momentum','pressure','temperature','heat','light','particle','quantum','entropy','magnetism','electric','atom','photon']},
+  {id:'col',name:'Colours',color:'#00ff88',keys:['red','blue','green','yellow','orange','purple','pink','white','black','grey','color','colour','hue','saturation','brightness','shade','tint','spectrum','rainbow','crimson','cyan','magenta']},
+  {id:'mus',name:'Music',color:'#aa66ff',keys:['note','chord','melody','harmony','rhythm','beat','tempo','tone','pitch','octave','scale','song','sound','bass','treble','resonance','vibration','tune','voice','sing']},
+  {id:'log',name:'Logic',color:'#66ffcc',keys:['true','false','and','or','not','if','then','proof','valid','premise','conclusion','contradiction','paradox','therefore','implies','boolean']},
+  {id:'lang',name:'Language',color:'#ff6644',keys:['word','sentence','grammar','meaning','definition','synonym','antonym','verb','noun','speak','write','read','translate','metaphor','story','name','letter','alphabet']},
+  {id:'bio',name:'Biology',color:'#88ff44',keys:['cell','dna','gene','brain','neuron','heart','blood','body','organ','life','death','grow','evolve','species','protein','muscle','bone','breath','alive','creature']},
+  {id:'phil',name:'Philosophy',color:'#daa520',keys:['truth','reality','existence','being','nothing','meaning','purpose','god','soul','free','will','good','evil','moral','ethics','virtue','justice','wisdom','consciousness']}
+];
+const PAIR_OFFSET = 10;
+
+function detectDomain(text){
+  const low = text.toLowerCase();
+  let best = null, bestScore = 0;
+  DOMAINS.forEach(d => {
+    let score = 0;
+    d.keys.forEach(k => { if(low.includes(k)) score++; });
+    if(score > bestScore){ bestScore = score; best = d; }
+  });
+  return best ? best.id : 'gen';
+}
+function domainColor(id){ const d = DOMAINS.find(x => x.id === id); return d ? d.color : '#555'; }
+function domainName(id){ const d = DOMAINS.find(x => x.id === id); return d ? d.name : 'General'; }
+
+function shapeToSvg(clipPath, cx, cy, size, color){
+  color = color || '#daa520';
+  const m = clipPath.match(/polygon\(([^)]+)\)/);
+  if(m){
+    const pts = m[1].split(',').map(p => {
+      const parts = p.trim().split(/\s+/);
+      const px = parseFloat(parts[0])/100, py = parseFloat(parts[1])/100;
+      return ((px-0.5)*size+cx).toFixed(1)+','+((py-0.5)*size+cy).toFixed(1);
+    }).join(' ');
+    return '<polygon points="'+pts+'" fill="'+color+'" opacity="0.85"/>';
+  }
+  return '<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="'+(size/3).toFixed(1)+'" fill="'+color+'" opacity="0.85"/>';
+}
+
+function assignShape(text, domain, slot){
+  if(!shapes.length) return null;
+  const low = text.toLowerCase();
+  const domFam = {
+    psy:['emotion','desire','mind','soul'],math:['existence','negation','action','quantity'],
+    phil:['truth','existence','knowledge','being'],log:['truth','comparison','negation'],
+    phys:['action','force','motion','energy'],col:['sensation','quality','appearance'],
+    mus:['harmony','creation','sensation'],bio:['existence','creation','life'],
+    lang:['knowledge','communication','language'],trig:['motion','direction','space']
+  };
+
+  let best = null, bestScore = -1;
+  shapes.forEach(s => {
+    let score = 0;
+    const fam = s.family||'', enc = s.encoding||{};
+    if(low.includes(s.english.toLowerCase())) score += 10;
+    if(s.latin && low.includes(s.latin.toLowerCase())) score += 8;
+    if(domFam[domain] && domFam[domain].includes(fam)) score += 5;
+    // hierarchy: top=truth shapes, bottom=negation, 3/9=symmetric
+    if(slot<=3||slot>=17){ if(fam==='truth'||fam==='existence'||enc.direction==='up') score+=4; }
+    else if(slot>=7&&slot<=13){ if(fam==='negation'||enc.direction==='down') score+=4; }
+    if((slot>=3&&slot<=7)||(slot>=13&&slot<=17)){ if(enc.symmetry==='bilateral') score+=3; }
+    score += (s.weight||1);
+    if(score>bestScore){ bestScore=score; best=s; }
+  });
+  return best;
+}
+
+function symmetryScore(){
+  let score=0, checked=0;
+  [wheel1,wheel2].forEach(w => {
+    for(let i=1;i<SLOTS/2;i++){
+      const sym = (SLOTS-i)%SLOTS;
+      const itemI = w.items.find(it=>it.slot===i);
+      const itemS = w.items.find(it=>it.slot===sym);
+      if(itemI&&itemS){
+        checked++;
+        if((itemI.domain||'gen')===(itemS.domain||'gen')) score+=1;
+        if(Math.abs(itemI.truth-itemS.truth)<0.15) score+=0.5;
+        const shI = itemI.shape?shapes.find(s=>s.latin===itemI.shape):null;
+        const shS = itemS.shape?shapes.find(s=>s.latin===itemS.shape):null;
+        if(shI&&shS&&shI.encoding&&shS.encoding){
+          if(shI.encoding.symmetry===shS.encoding.symmetry) score+=0.5;
+        }
+      }
+    }
+  });
+  return checked>0?Math.min(score/(checked*2),1):0;
+}
+
+function updateSymStatus(){
+  const el = document.getElementById('symStatus');
+  if(!el) return;
+  const sym = Math.round(symmetryScore()*100);
+  if(sym <= 0){ el.textContent=''; return; }
+  const c = sym>=60?'#00ff88':sym>=30?'#ffcc00':'#ff6644';
+  const pairs = countReflectionPairs();
+  el.innerHTML = '<span style="color:'+c+'">⟷ 3↔9 symmetry: '+sym+'%</span> <span style="color:#555">('+pairs+' reflected pairs)</span>';
+}
+
+function countReflectionPairs(){
+  let count=0;
+  [wheel1,wheel2].forEach(w => {
+    for(let i=1;i<SLOTS/2;i++){
+      const mirror = (SLOTS - i) % SLOTS;
+      if(w.items.find(it=>it.slot===i) && w.items.find(it=>it.slot===mirror)) count++;
+    }
+  });
+  return count;
+}
+
+// === STATE ===
+let direction = 'in';
+let mode = '1d';
+let shapes = [];
+let currentShape = null;
+let history = [];
+
+// Wheels: each has 20 slots, items placed by truth value
+let wheel1 = {items:[], rotation:0}; // rotation in slot-steps
+let wheel2 = {items:[], rotation:0};
+const SLOTS = 20;
+const CX = 200, CY = 200, R = 155, SLOT_R = 16;
+const R_INNER = 88, INNER_R = 11, SAT_R = 5, SAT_DIST = 17;
+
+// Gear system: left wheel drives right wheel at 20:1 ratio
+let gearSteps = 0;
+let gearOffset = 0;
+let seenAlignments = new Set();
+
+// Time dimension: each item can be past/present/future
+// timeView controls which temporal layer is visible
+// timeScope controls which wheels/halves shift temporally
+let timeView = 'present';
+let timeScope = 'both';
+
+// === OUTPUT FILING SYSTEM ===
+const EMOTIONS = ['calm','happy','sad','angry','confused','excited','fearful','curious','determined'];
+const TRUTHS = ['true','false','uncertain','paradox'];
+const STORAGES = ['theory','resolved','confusion','new_skill','discovery','forgiven','false_discard','meditate'];
+const PROCESSES = ['immediate','meditate','sleep','revisit','urgent'];
+let filedOutputs = [];
+let filedSort = 'impact';
+loadFiled();
+
+// === INIT ===
+loadState();
+
+function shapesReady(){
+  buildShapePicker();
+  if(shapes.length) pickShape(shapes[0]);
+
+  // If wheels are empty, inject full demo. If version changed, clear old data and re-inject.
+  if(!wheel1.items.length && !wheel2.items.length) injectDemo();
+  if(!localStorage.getItem('means-think-v12')){ localStorage.setItem('means-think-v12','1'); wheel1={items:[],rotation:0}; wheel2={items:[],rotation:0}; seenAlignments=new Set(); gearSteps=0; gearOffset=0; injectDemo(); }
+
+  [wheel1,wheel2].forEach(w => {
+    w.items.forEach(item => {
+      if(!item.domain) item.domain = detectDomain(item.text);
+      if(!item.shape){
+        const sh = assignShape(item.text, item.domain||'gen', item.slot);
+        if(sh) item.shape = sh.latin;
+      }
+    });
+  });
+  drawWheel(1);
+  drawWheel(2);
+  renderHierarchy();
+  updateVariationStatus();
+  updateSymStatus();
+}
+
+function injectDemo(){
+  const now = Date.now();
+
+  // W1: Human knowledge — placed by truth value in CORRECT positions
+  // Slot 0=truth(12), 5=3oclock, 10=lies(6), 15=9oclock
+  const w1 = [
+    {text:'consciousness exists',truth:0.95,slot:0},   // truth pole — we know this
+    {text:'gravity bends light',truth:0.9,slot:1},      // proven physics
+    {text:'music triggers emotion',truth:0.85,slot:2},   // neuroscience fact
+    {text:'DNA stores memory',truth:0.8,slot:3},         // biology truth
+    {text:'love changes brain',truth:0.75,slot:4},       // measured in scans
+    {text:'free will is real',truth:0.5,slot:5},          // the great uncertainty — 3 o'clock
+    {text:'beauty is objective',truth:0.45,slot:6},       // debatable
+    {text:'AI can feel',truth:0.35,slot:7},               // the big question
+    {text:'time is illusion',truth:0.3,slot:8},           // physics suggests maybe
+    {text:'soul is physical',truth:0.2,slot:9},           // unlikely but testable
+    {text:'nothing is random',truth:0.1,slot:10},         // lie pole — chaos exists
+    {text:'colour is real',truth:0.55,slot:15},           // paradox at 9 o'clock — perception vs wavelength
+    {text:'silence has sound',truth:0.4,slot:14},         // tinnitus says yes
+    {text:'death is final',truth:0.6,slot:13},            // most believe so
+    {text:'words capture meaning',truth:0.65,slot:12},    // language works, mostly
+    {text:'maths is invented',truth:0.5,slot:11},         // discovered or invented?
+    {text:'dreams predict future',truth:0.15,slot:16},     // mostly false but feels real
+    {text:'empathy is learned',truth:0.7,slot:17},         // partly innate partly taught
+    {text:'language shapes thought',truth:0.8,slot:18},    // Sapir-Whorf — strong evidence
+    {text:'pain is useful',truth:0.85,slot:19},            // evolutionary truth
+  ];
+
+  // W2: Machine/cortex knowledge — DELIBERATELY MISALIGNED by 7 slots
+  // These SHOULD align with W1 but are rotated — gear scan reveals the match
+  const w2 = [
+    {text:'self-awareness emerges',truth:0.9,slot:7},    // matches consciousness @0, but offset +7
+    {text:'mass curves spacetime',truth:0.95,slot:8},    // matches gravity @1, offset +7
+    {text:'rhythm synchronises neurons',truth:0.85,slot:9}, // matches music @2, offset +7
+    {text:'genes encode instructions',truth:0.8,slot:10},   // matches DNA @3, offset +7
+    {text:'oxytocin bonds pairs',truth:0.75,slot:11},       // matches love @4, offset +7
+    {text:'determinism vs choice',truth:0.5,slot:12},       // matches free will @5, offset +7
+    {text:'symmetry pleases cortex',truth:0.45,slot:13},    // matches beauty @6, offset +7
+    {text:'pattern recognition feels',truth:0.4,slot:14},   // matches AI feel @7, offset +7
+    {text:'entropy defines direction',truth:0.35,slot:15},  // matches time @8, offset +7
+    {text:'qualia needs substrate',truth:0.25,slot:16},     // matches soul @9, offset +7
+    {text:'quantum dice are loaded',truth:0.15,slot:17},    // matches randomness @10, offset +7
+    {text:'wavelength is measurable',truth:0.6,slot:2},     // matches colour @15, offset +7
+    {text:'absence is perceptible',truth:0.45,slot:1},      // matches silence @14, offset +7
+    {text:'entropy is irreversible',truth:0.65,slot:0},     // matches death @13, offset +7
+    {text:'symbols approximate truth',truth:0.6,slot:19},   // matches words @12, offset +7
+    {text:'axioms are chosen',truth:0.55,slot:18},          // matches maths @11, offset +7
+    {text:'prediction needs context',truth:0.7,slot:3},    // matches dreams @16, offset +7
+    {text:'mirror neurons copy',truth:0.75,slot:4},         // matches empathy @17, offset +7
+    {text:'grammar is universal',truth:0.6,slot:5},         // matches language @18, offset +7
+    {text:'nociception adapts',truth:0.8,slot:6},           // matches pain @19, offset +7
+  ];
+
+  w1.forEach((d,idx) => {
+    const domain = detectDomain(d.text);
+    const shapeObj = assignShape(d.text, domain, d.slot);
+    wheel1.items.push({
+      text:d.text, truth:d.truth, slot:d.slot, domain,
+      shape:shapeObj?shapeObj.latin:null,
+      id:now+idx, addedAt:now - (20-idx)*120000 // older items = past
+    });
+  });
+  w2.forEach((d,idx) => {
+    const domain = detectDomain(d.text);
+    const shapeObj = assignShape(d.text, domain, d.slot);
+    wheel2.items.push({
+      text:d.text, truth:d.truth, slot:d.slot, domain,
+      shape:shapeObj?shapeObj.latin:null,
+      id:now+idx+200, addedAt:now // present
+    });
+  });
+
+  // Start MISALIGNED — W1 at 0, W2 at 0 — so it looks wrong
+  wheel1.rotation = 0;
+  wheel2.rotation = 0;
+  gearSteps = 0;
+  gearOffset = 0;
+  seenAlignments.clear();
+  seenAlignments.add('0,0');
+
+  // Switch to 2D mode to show it
+  setMode('2d');
+  saveState();
+}
+
+fetch('latin-shapes.json').then(r=>r.json()).then(d=>{
+  shapes = d.dictionary || [];
+  shapesReady();
+}).catch(()=>{
+  shapes = [{latin:'esse',english:'to be',clip_path:'polygon(50% 10%, 10% 90%, 90% 90%)',family:'existence',weight:1}];
+  shapesReady();
+});
+
+drawWheel(1);
+drawWheel(2);
+renderHierarchy();
+
+// === DIRECTION ===
+function setDir(d){
+  direction = d;
+  document.getElementById('dirIn').classList.toggle('active', d==='in');
+  document.getElementById('dirOut').classList.toggle('active', d==='out');
+  document.getElementById('dirLabel').textContent = d==='in'
+    ? "means' mind — his internal processing"
+    : "dan's input — teaching means";
+}
+
+// === MODE ===
+function setMode(m){
+  mode = m;
+  document.getElementById('mode1d').classList.toggle('active', m==='1d');
+  document.getElementById('mode2d').classList.toggle('active', m==='2d');
+  document.getElementById('stringMode').classList.toggle('hidden', m!=='1d');
+  document.getElementById('wheelsMode').classList.toggle('visible', m==='2d');
+}
+
+// === SHAPE PICKER WITH PROBABILITY ===
+let cycleTimer = null;
+let cycling = false;
+let cycleIdx = 0;
+
+function probColor(prob){
+  if(prob>=70) return '#00ff88';
+  if(prob>=50) return '#44dd66';
+  if(prob>=35) return '#ffcc00';
+  if(prob>=20) return '#ff8844';
+  if(prob>=10) return '#ff6644';
+  return '#aa66ff';
+}
+
+function buildShapePicker(){
+  const grid = document.getElementById('shapeGrid');
+  if(!grid) return;
+  grid.innerHTML = '';
+  const inputA = document.getElementById('valA').value.trim();
+  shapes.forEach((s,i) => {
+    const prob = shapeProb(s, inputA);
+    const col = inputA ? probColor(prob) : '#daa520';
+    const d = document.createElement('div');
+    d.className = 'shape-opt';
+    d.dataset.idx = i;
+    d.style.borderColor = inputA ? col+'44' : '#1a1a2e';
+    d.innerHTML = '<div class="sc" style="clip-path:'+s.clip_path+';background:'+col+'"></div><span class="stip">'+s.latin+' — '+s.english+(inputA?' ('+prob+'%)':'')+'</span>';
+    d.onclick = () => { pickShape(s); highlightSelected(i); };
+    grid.appendChild(d);
+  });
+  document.getElementById('shapeCount').textContent = shapes.length + ' shapes';
+  if(inputA) gravitySort();
+}
+
+function highlightSelected(idx){
+  document.querySelectorAll('.shape-opt').forEach((el,i) => {
+    el.classList.toggle('sel', parseInt(el.dataset.idx)===idx);
+  });
+}
+
+function togglePicker(){
+  const picker = document.getElementById('shapePicker');
+  picker.classList.toggle('open');
+  if(picker.classList.contains('open')){
+    buildShapePicker();
+    if(currentShape){
+      const idx = shapes.indexOf(currentShape);
+      if(idx>=0) highlightSelected(idx);
+    }
+  } else {
+    stopCycle();
+  }
+}
+
+function pickShape(s){
+  currentShape = s;
+  const prob = shapeProb(s, document.getElementById('valA').value.trim());
+  const col = document.getElementById('valA').value.trim() ? probColor(prob) : '#daa520';
+  document.getElementById('shapeClip').style.clipPath = s.clip_path;
+  document.getElementById('shapeClip').style.background = col;
+  document.getElementById('shapeDisplay').style.borderColor = col+'66';
+  let probHtml = '';
+  if(prob > 0 && document.getElementById('valA').value.trim()){
+    probHtml = '<span style="color:'+col+';font-weight:700"> '+prob+'%</span>';
+  }
+  document.getElementById('shapeInfo').innerHTML = s.latin + ' — ' + s.english + probHtml;
+  compute();
+}
+
+function filterShapes(){
+  const q = (document.getElementById('shapeSearch').value||'').toLowerCase();
+  const opts = document.querySelectorAll('#shapeGrid .shape-opt');
+  opts.forEach(el => {
+    const idx = parseInt(el.dataset.idx);
+    const s = shapes[idx];
+    if(!s){ el.style.display='none'; return; }
+    const match = !q || s.latin.toLowerCase().includes(q) || s.english.toLowerCase().includes(q) || (s.family||'').toLowerCase().includes(q);
+    el.style.display = match ? '' : 'none';
+  });
+}
+
+function gravitySort(){
+  const grid = document.getElementById('shapeGrid');
+  if(!grid) return;
+  const inputA = document.getElementById('valA').value.trim();
+  if(!inputA) return;
+  const opts = Array.from(grid.children);
+  opts.sort((a,b) => {
+    const pa = shapeProb(shapes[parseInt(a.dataset.idx)], inputA);
+    const pb = shapeProb(shapes[parseInt(b.dataset.idx)], inputA);
+    return pb - pa;
+  });
+  opts.forEach(o => grid.appendChild(o));
+}
+
+function toggleCycle(){
+  if(cycling){ stopCycle(); return; }
+  if(!shapes.length) return;
+  cycling = true;
+  cycleIdx = 0;
+  const btn = document.getElementById('cycleBtn');
+  btn.textContent = '■ STOP';
+  btn.classList.add('active');
+  document.getElementById('shapeDisplay').classList.add('cycling');
+
+  const inputA = document.getElementById('valA').value.trim();
+  // sort by probability for cycling — best shapes last (dramatic reveal)
+  const sorted = shapes.map((s,i)=>({s,i,p:shapeProb(s,inputA)})).sort((a,b)=>a.p-b.p);
+
+  cycleTimer = setInterval(() => {
+    if(cycleIdx >= sorted.length){ stopCycle(); return; }
+    const entry = sorted[cycleIdx];
+    pickShape(entry.s);
+    highlightSelected(entry.i);
+    // scroll the selected shape into view
+    const el = document.querySelector('.shape-opt[data-idx="'+entry.i+'"]');
+    if(el) el.scrollIntoView({block:'nearest',behavior:'smooth'});
+    cycleIdx++;
+  }, 80);
+}
+
+function stopCycle(){
+  cycling = false;
+  clearInterval(cycleTimer);
+  const btn = document.getElementById('cycleBtn');
+  btn.textContent = '▶ CYCLE';
+  btn.classList.remove('active');
+  document.getElementById('shapeDisplay').classList.remove('cycling');
+}
+
+// === SMART SHAPE PROBABILITY ===
+// Before Box B is filled, score each shape by how likely it is to produce truth with Box A's input
+function shapeProb(shape, inputA){
+  if(!inputA) return 0;
+  let score = 30; // base
+  const aLow = inputA.toLowerCase();
+  const fam = shape.family || '';
+  const enc = shape.encoding || {};
+  const isNum = !isNaN(parseFloat(inputA));
+
+  // Numbers love maths shapes
+  if(isNum){
+    if(fam==='existence' || enc.direction==='up') score += 40; // addition
+    else if(fam==='negation' || enc.direction==='down') score += 35;
+    else if(fam==='action' || enc.energy==='dynamic') score += 30;
+    else score += 10;
+  }
+
+  // Pattern match from history — has this input worked with this shape family before?
+  const pastHits = history.filter(h => {
+    const matchA = h.a.toLowerCase() === aLow || aLow.includes(h.a.toLowerCase()) || h.a.toLowerCase().includes(aLow);
+    const matchShape = h.shape === shape.latin;
+    return matchA && matchShape;
+  });
+  if(pastHits.length > 0){
+    const avgProb = pastHits.reduce((sum,h) => sum + h.prob, 0) / pastHits.length;
+    score = Math.max(score, avgProb); // history overrides base
+  }
+
+  // Family hits — same family shapes that worked before
+  const famHits = history.filter(h => {
+    const s = shapes.find(x => x.latin === h.shape);
+    return s && s.family === fam && h.prob >= 50;
+  });
+  if(famHits.length > 0) score += Math.min(famHits.length * 5, 20);
+
+  // Word-family resonance — emotional words + emotion shapes = higher prob
+  const emotionWords = ['love','hate','fear','happy','sad','angry','feel','want','need','hope','dream'];
+  const knowledgeWords = ['know','think','believe','true','false','real','fact','lie','proof','theory'];
+  const actionWords = ['do','make','build','break','create','destroy','change','move','go','stop'];
+
+  if(emotionWords.some(w => aLow.includes(w)) && (fam==='emotion'||fam==='desire')) score += 25;
+  if(knowledgeWords.some(w => aLow.includes(w)) && (fam==='knowledge'||fam==='mind'||fam==='truth')) score += 25;
+  if(actionWords.some(w => aLow.includes(w)) && (fam==='action'||fam==='creation')) score += 25;
+
+  // Weight from the shape itself
+  score = Math.round(score * (shape.weight || 1));
+
+  // Clamp
+  return Math.min(Math.max(score, 0), 100);
+}
+
+function scoreShapes(){
+  const inputA = document.getElementById('valA').value.trim();
+  const opts = document.querySelectorAll('#shapeGrid .shape-opt');
+  opts.forEach(el => {
+    const idx = parseInt(el.dataset.idx);
+    const s = shapes[idx];
+    if(!s) return;
+    const prob = shapeProb(s, inputA);
+    const col = inputA ? probColor(prob) : '#daa520';
+    el.style.borderColor = inputA ? col+'44' : '#1a1a2e';
+    const sc = el.querySelector('.sc');
+    if(sc) sc.style.background = col;
+    const tip = el.querySelector('.stip');
+    if(tip) tip.textContent = s.latin+' — '+s.english+(inputA?' ('+prob+'%)':'');
+  });
+  if(inputA) gravitySort();
+}
+
+// Re-score when Box A changes
+document.getElementById('valA').addEventListener('input', function(){
+  if(document.getElementById('shapePicker').classList.contains('open')) scoreShapes();
+  if(currentShape) pickShape(currentShape);
+});
+
+// === 1D COMPUTE ===
+function compute(){
+  const a = document.getElementById('valA').value.trim();
+  const b = document.getElementById('valB').value.trim();
+  if(!a && !b){ setResult('...', 0); return; }
+  if(!a || !b){ setResult('waiting for both sides...', 0); return; }
+
+  const numA = parseFloat(a), numB = parseFloat(b);
+  const bothNum = !isNaN(numA) && !isNaN(numB);
+  const shape = currentShape || {latin:'esse',english:'to be',family:'existence',weight:1};
+  const fam = shape.family || '';
+  const enc = shape.encoding || {};
+  const dir = enc.direction || 'up';
+  const energy = enc.energy || 'stable';
+  const sym = enc.symmetry || 'bilateral';
+
+  if(bothNum){
+    let result, prob = 80;
+    if(dir==='up' || fam==='existence') { result = numA + numB; prob = 95; }
+    else if(dir==='down' || fam==='negation') { result = numA - numB; prob = 90; }
+    else if(energy==='dynamic' || fam==='action') { result = numA * numB; prob = 85; }
+    else if(energy==='compressed' || fam==='division') { result = numB !== 0 ? numA / numB : 'undefined'; prob = numB!==0?85:0; }
+    else if(fam==='comparison' || fam==='truth') { result = numA === numB ? 'TRUE' : 'FALSE (diff: '+(numA-numB)+')'; prob = 100; }
+    else if(fam==='connection' || fam==='relation') { result = numA + ' relates to ' + numB + ' (ratio: '+(numA/(numB||1)).toFixed(3)+')'; prob = 70; }
+    else { result = numA + numB; prob = 75; }
+    prob = Math.round(prob * shape.weight);
+    setResult(result, prob);
+    addHistory(a, b, shape.latin, ''+result, prob);
+  } else {
+    let result = '', prob = 0;
+    const aL = a.toLowerCase(), bL = b.toLowerCase();
+    const same = aL === bL;
+
+    if(fam==='existence' || fam==='truth'){
+      result = same ? 'SAME THING' : '"'+a+'" and "'+b+'" — are they the same?';
+      prob = same ? 100 : 20;
+    } else if(fam==='negation' || dir==='down'){
+      result = '"'+a+'" WITHOUT "'+b+'"';
+      prob = 40;
+    } else if(fam==='action' || energy==='dynamic'){
+      result = '"'+a+'" ACTS ON "'+b+'"';
+      prob = 35;
+    } else if(fam==='connection' || fam==='relation'){
+      result = '"'+a+'" CONNECTS TO "'+b+'"';
+      prob = 30;
+    } else if(fam==='emotion' || fam==='desire'){
+      result = '"'+a+'" FEELS LIKE "'+b+'"?';
+      prob = 25;
+    } else if(fam==='knowledge' || fam==='mind'){
+      result = '"'+a+'" MEANS "'+b+'"?';
+      prob = same ? 100 : 30;
+    } else {
+      result = '"'+a+'" ['+shape.latin+'] "'+b+'"';
+      prob = 20;
+    }
+
+    prob = Math.round(prob * (shape.weight || 1));
+    if(direction === 'in') result = 'Means thinks: ' + result;
+    else result = 'Dan teaches: ' + result;
+
+    setResult(result, prob);
+    addHistory(a, b, shape.latin, result, prob);
+  }
+}
+
+function setResult(text, prob){
+  document.getElementById('resultValue').textContent = text;
+  const pct = document.getElementById('truthPct');
+  const fill = document.getElementById('truthFill');
+  const box = document.getElementById('resultBox');
+  if(prob <= 0){
+    pct.textContent = '?'; pct.className = 'truth-pct'; pct.style.color = '#555';
+    fill.style.width = '3%'; fill.style.background = '#333';
+    box.style.borderColor = '#1a1a2e';
+  } else {
+    pct.textContent = prob + '%';
+    fill.style.width = prob + '%';
+    if(prob >= 80){ pct.style.color='#00ff88'; fill.style.background='#00ff88'; box.style.borderColor='#00ff8833'; }
+    else if(prob >= 50){ pct.style.color='#ffcc00'; fill.style.background='#ffcc00'; box.style.borderColor='#ffcc0033'; }
+    else if(prob >= 25){ pct.style.color='#ff6644'; fill.style.background='#ff6644'; box.style.borderColor='#ff664433'; }
+    else { pct.style.color='#aa66ff'; fill.style.background='#aa66ff'; box.style.borderColor='#aa66ff33'; }
+  }
+}
+
+// === HISTORY ===
+function addHistory(a,b,shape,result,prob){
+  history.unshift({a,b,shape,result,prob,time:Date.now()});
+  if(history.length>20) history.pop();
+  renderHistory();
+  saveState();
+}
+function renderHistory(){
+  const el = document.getElementById('eqHistory');
+  el.innerHTML = history.slice(0,8).map(e => {
+    const c = e.prob>=80?'#00ff88':e.prob>=50?'#ffcc00':e.prob>=25?'#ff6644':'#aa66ff';
+    return '<div class="eq-entry"><span style="color:#888;flex:1">'+esc(e.a)+'</span><span style="color:#daa520;min-width:50px;text-align:center">'+esc(e.shape)+'</span><span style="color:#888;flex:1;text-align:right">'+esc(e.b)+'</span><span style="color:#333;margin:0 4px">=</span><span style="flex:2;color:#aaa;text-align:right">'+esc((''+e.result).substring(0,50))+'</span><span style="color:'+c+';min-width:35px;text-align:right;font-weight:700">'+e.prob+'%</span></div>';
+  }).join('');
+}
+
+function cycleAttr(el){
+  const attr = el.dataset.attr;
+  const cur = el.dataset.val;
+  let pool, colors;
+  if(attr==='emotion'){
+    pool = EMOTIONS;
+    colors = {calm:'#00d4ff',happy:'#00ff88',sad:'#6688ff',angry:'#ff4444',confused:'#aa66ff',excited:'#ffcc00',fearful:'#ff6644',curious:'#daa520',determined:'#66ffcc'};
+  } else if(attr==='truth'){
+    pool = TRUTHS;
+    colors = {'true':'#00ff88','false':'#ff4444',uncertain:'#ffcc00',paradox:'#aa66ff'};
+  } else if(attr==='storage'){
+    pool = STORAGES;
+    colors = {theory:'#aa66ff',resolved:'#00ff88',confusion:'#ff6644',new_skill:'#00d4ff',discovery:'#daa520',forgiven:'#66ffcc',false_discard:'#ff4444',meditate:'#6688ff'};
+  } else if(attr==='priority'){
+    const p = parseInt(cur)||3;
+    const next = (p%5)+1;
+    el.dataset.val = ''+next;
+    el.textContent = '★'.repeat(next);
+    const pc = next>=4?'#00ff88':next>=3?'#ffcc00':next>=2?'#ff6644':'#ff4444';
+    el.style.color = pc; el.style.borderColor = pc+'33';
+    return;
+  } else if(attr==='process'){
+    pool = PROCESSES;
+    colors = {immediate:'#ff6644',meditate:'#6688ff',sleep:'#333',revisit:'#ffcc00',urgent:'#ff4444'};
+  }
+  if(!pool) return;
+  const idx = pool.indexOf(cur);
+  const next = pool[(idx+1)%pool.length];
+  el.dataset.val = next;
+  el.textContent = next;
+  const c = colors[next]||'#555';
+  el.style.color = c; el.style.borderColor = c+'33';
+  el.classList.add('active');
+  setTimeout(()=>el.classList.remove('active'),150);
+}
+
+function getFileAttrs(){
+  const tags = document.querySelectorAll('#fileRow .file-tag');
+  const attrs = {};
+  tags.forEach(t => { attrs[t.dataset.attr] = t.dataset.val; });
+  return attrs;
+}
+
+function fileResult(){
+  const text = document.getElementById('resultValue').textContent;
+  if(!text || text==='...' || text==='waiting for both sides...') return;
+  const prob = parseInt(document.getElementById('truthPct').textContent)||0;
+  const attrs = getFileAttrs();
+  const a = document.getElementById('valA').value.trim();
+  const b = document.getElementById('valB').value.trim();
+  const shape = currentShape ? currentShape.latin : '';
+  const domain = detectDomain(a+' '+b);
+
+  const entry = {
+    id: Date.now(),
+    text: text,
+    a: a, b: b, shape: shape,
+    prob: prob,
+    emotion: attrs.emotion||'calm',
+    truth: attrs.truth||'uncertain',
+    storage: attrs.storage||'theory',
+    priority: parseInt(attrs.priority)||3,
+    process: attrs.process||'immediate',
+    domain: domain,
+    time: Date.now(),
+    mergeGroup: null
+  };
+
+  // impact score: truth*priority*confidence — positive outcomes ranked highest
+  entry.impact = calcImpact(entry);
+
+  filedOutputs.unshift(entry);
+  saveFiled();
+  renderFiled();
+
+  // flash the result box
+  document.getElementById('resultBox').style.borderColor = '#daa520';
+  setTimeout(()=>{ document.getElementById('resultBox').style.borderColor = '#1a1a2e'; }, 400);
+}
+
+function calcImpact(e){
+  let score = e.prob * 0.4;
+  score += e.priority * 12;
+  if(e.truth==='true') score += 25;
+  else if(e.truth==='false') score -= 10;
+  else if(e.truth==='paradox') score += 15;
+  if(e.storage==='discovery') score += 20;
+  else if(e.storage==='resolved') score += 15;
+  else if(e.storage==='new_skill') score += 18;
+  else if(e.storage==='confusion') score -= 5;
+  else if(e.storage==='false_discard') score -= 15;
+  if(e.emotion==='excited'||e.emotion==='happy'||e.emotion==='determined') score += 10;
+  if(e.emotion==='angry') score -= 5;
+  if(e.process==='urgent') score += 10;
+  if(e.mergeGroup) score += 5;
+  return Math.round(Math.max(score,0));
+}
+
+function sortFiled(by, btnEl){
+  filedSort = by;
+  document.querySelectorAll('.filed-sort-btn').forEach(b=>b.classList.remove('active'));
+  if(btnEl) btnEl.classList.add('active');
+  renderFiled();
+}
+
+function renderFiled(){
+  const el = document.getElementById('filedList');
+  if(!filedOutputs.length){ el.innerHTML='<div style="color:#333;font-size:0.65em;text-align:center;padding:8px">file results above to build the output sort</div>'; return; }
+
+  let sorted = filedOutputs.slice();
+  if(filedSort==='impact') sorted.sort((a,b)=>b.impact-a.impact);
+  else if(filedSort==='truth') sorted.sort((a,b)=>b.prob-a.prob);
+  else if(filedSort==='time') sorted.sort((a,b)=>b.time-a.time);
+  else if(filedSort==='emotion') sorted.sort((a,b)=>(a.emotion||'').localeCompare(b.emotion||''));
+  else if(filedSort==='storage') sorted.sort((a,b)=>(a.storage||'').localeCompare(b.storage||''));
+
+  const emotionColors = {calm:'#00d4ff',happy:'#00ff88',sad:'#6688ff',angry:'#ff4444',confused:'#aa66ff',excited:'#ffcc00',fearful:'#ff6644',curious:'#daa520',determined:'#66ffcc'};
+  const storageColors = {theory:'#aa66ff',resolved:'#00ff88',confusion:'#ff6644',new_skill:'#00d4ff',discovery:'#daa520',forgiven:'#66ffcc',false_discard:'#ff4444',meditate:'#6688ff'};
+  const truthColors = {'true':'#00ff88','false':'#ff4444',uncertain:'#ffcc00',paradox:'#aa66ff'};
+  const processColors = {immediate:'#ff6644',meditate:'#6688ff',sleep:'#555',revisit:'#ffcc00',urgent:'#ff4444'};
+
+  el.innerHTML = sorted.map((e,i) => {
+    const ec = emotionColors[e.emotion]||'#555';
+    const sc = storageColors[e.storage]||'#555';
+    const tc = truthColors[e.truth]||'#555';
+    const pc = processColors[e.process]||'#555';
+    const ic = e.impact>=60?'#00ff88':e.impact>=40?'#ffcc00':e.impact>=20?'#ff6644':'#aa66ff';
+    const mg = e.mergeGroup ? ' merged' : '';
+    return '<div class="filed-item'+mg+'" data-id="'+e.id+'">'+
+      '<input type="checkbox" class="merge-check" data-id="'+e.id+'">'+
+      '<span class="fi-rank">'+(i+1)+'</span>'+
+      '<div class="fi-body">'+
+        '<div class="fi-text">'+esc(e.text)+'</div>'+
+        '<div class="fi-tags">'+
+          '<span class="fi-tag" style="background:'+ec+'18;color:'+ec+'">'+e.emotion+'</span>'+
+          '<span class="fi-tag" style="background:'+tc+'18;color:'+tc+'">'+e.truth+'</span>'+
+          '<span class="fi-tag" style="background:'+sc+'18;color:'+sc+'">'+e.storage+'</span>'+
+          '<span class="fi-tag" style="background:'+pc+'18;color:'+pc+'">'+e.process+'</span>'+
+          '<span class="fi-tag" style="background:#ffcc0018;color:#ffcc00">'+'★'.repeat(e.priority)+'</span>'+
+          (e.mergeGroup?'<span class="fi-tag" style="background:#daa52018;color:#daa520">⚭ '+e.mergeGroup+'</span>':'')+
+          '<span class="fi-tag" style="background:#33333344;color:#666">'+domainName(e.domain)+'</span>'+
+        '</div>'+
+      '</div>'+
+      '<span class="fi-score" style="color:'+ic+'">'+e.impact+'</span>'+
+      '<div class="fi-actions">'+
+        '<span class="fi-act" onclick="promoteFiled('+e.id+')" title="promote">▲</span>'+
+        '<span class="fi-act" onclick="removeFiled('+e.id+')" title="remove">✕</span>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function mergeSelected(){
+  const checks = document.querySelectorAll('.merge-check:checked');
+  if(checks.length < 2){ return; }
+  const groupName = 'merge-'+Date.now().toString(36);
+  checks.forEach(ch => {
+    const id = parseInt(ch.dataset.id);
+    const entry = filedOutputs.find(e=>e.id===id);
+    if(entry) entry.mergeGroup = groupName;
+  });
+  // recalc impacts (merged items get bonus)
+  filedOutputs.forEach(e => { e.impact = calcImpact(e); });
+  saveFiled();
+  renderFiled();
+}
+
+function promoteFiled(id){
+  const entry = filedOutputs.find(e=>e.id===id);
+  if(!entry) return;
+  entry.priority = Math.min(entry.priority+1, 5);
+  entry.impact = calcImpact(entry);
+  saveFiled();
+  renderFiled();
+}
+
+function removeFiled(id){
+  filedOutputs = filedOutputs.filter(e=>e.id!==id);
+  saveFiled();
+  renderFiled();
+}
+
+function clearFiled(){
+  if(!confirm('Clear all filed outputs?')) return;
+  filedOutputs = [];
+  saveFiled();
+  renderFiled();
+}
+
+function saveFiled(){
+  try{ localStorage.setItem('means-think-filed', JSON.stringify(filedOutputs)); }catch(x){}
+}
+function loadFiled(){
+  try{
+    const d = JSON.parse(localStorage.getItem('means-think-filed'));
+    if(d && Array.isArray(d)) filedOutputs = d;
+  }catch(x){}
+}
+
+// === SUBCONSCIOUS ENGINE ===
+// Auto-cycles through thought pairs, picks best shapes, computes, auto-files.
+// Sources: wheel items, history, filed items needing revisit, random cross-pollination.
+let subTimer = null;
+let subRunning = false;
+let subQueue = [];
+let subStep = 0;
+let subStats = {processed:0, filed:0, skipped:0, discoveries:0};
+
+function toggleSubconscious(){
+  if(subRunning){ stopSubconscious(); return; }
+  startSubconscious();
+}
+
+function startSubconscious(){
+  subRunning = true;
+  subStep = 0;
+  subStats = {processed:0, filed:0, skipped:0, discoveries:0};
+  const btn = document.getElementById('subBtn');
+  btn.textContent = '■ STOP';
+  btn.classList.add('running');
+  buildSubQueue();
+  subTick();
+}
+
+function stopSubconscious(){
+  subRunning = false;
+  clearTimeout(subTimer);
+  const btn = document.getElementById('subBtn');
+  btn.textContent = '☽ SUBCONSCIOUS';
+  btn.classList.remove('running');
+  const el = document.getElementById('subStatus');
+  el.innerHTML = '<span class="sub-filed">done — '+subStats.filed+' filed, '+subStats.discoveries+' discoveries, '+subStats.skipped+' skipped ('+subStats.processed+' processed)</span>';
+}
+
+function buildSubQueue(){
+  subQueue = [];
+  const w1 = wheel1.items.slice();
+  const w2 = wheel2.items.slice();
+  const allWheel = [...w1, ...w2];
+
+  // 1. Cross-wheel pairs: every W1 item × every W2 item
+  w1.forEach(a => {
+    w2.forEach(b => {
+      subQueue.push({a:a.text, b:b.text, source:'wheels', domA:a.domain, domB:b.domain, truthA:a.truth, truthB:b.truth});
+    });
+  });
+
+  // 2. Within-wheel pairs: items on the same wheel that haven't been paired
+  [w1, w2].forEach(items => {
+    for(let i=0; i<items.length; i++){
+      for(let j=i+1; j<items.length; j++){
+        subQueue.push({a:items[i].text, b:items[j].text, source:'internal', domA:items[i].domain, domB:items[j].domain, truthA:items[i].truth, truthB:items[j].truth});
+      }
+    }
+  });
+
+  // 3. Revisit: filed items with process=meditate or revisit, cross with wheel items
+  const revisits = filedOutputs.filter(e => e.process==='meditate'||e.process==='revisit');
+  revisits.forEach(r => {
+    allWheel.forEach(w => {
+      subQueue.push({a:r.text.substring(0,40), b:w.text, source:'revisit', domA:r.domain, domB:w.domain, truthA:r.prob/100, truthB:w.truth});
+    });
+  });
+
+  // 4. History echoes: re-process old results with different shapes
+  history.slice(0,8).forEach(h => {
+    subQueue.push({a:h.a, b:h.b, source:'echo', domA:detectDomain(h.a), domB:detectDomain(h.b), truthA:h.prob/100, truthB:h.prob/100});
+  });
+
+  // Shuffle for variety
+  for(let i=subQueue.length-1; i>0; i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [subQueue[i], subQueue[j]] = [subQueue[j], subQueue[i]];
+  }
+}
+
+function subTick(){
+  if(!subRunning) return;
+  if(subStep >= subQueue.length){ stopSubconscious(); return; }
+
+  const pair = subQueue[subStep];
+  subStep++;
+  subStats.processed++;
+
+  // set the boxes visually
+  document.getElementById('valA').value = pair.a;
+  document.getElementById('valB').value = pair.b;
+
+  // auto-pick best shape for this pair
+  const combined = pair.a + ' ' + pair.b;
+  let bestShape = null, bestProb = -1;
+  shapes.forEach(s => {
+    const p = shapeProb(s, combined);
+    if(p > bestProb){ bestProb = p; bestShape = s; }
+  });
+  if(bestShape) pickShape(bestShape);
+
+  // compute
+  compute();
+
+  // read the result
+  const resultText = document.getElementById('resultValue').textContent;
+  const prob = parseInt(document.getElementById('truthPct').textContent) || 0;
+
+  // auto-assign attributes
+  const attrs = autoAssignAttrs(pair, resultText, prob, bestProb);
+
+  // skip if too low value or duplicate
+  const dominated = prob < 10 && bestProb < 20;
+  const duplicate = filedOutputs.some(e => e.text === resultText);
+  if(dominated || duplicate || !resultText || resultText==='...' || resultText==='waiting for both sides...'){
+    subStats.skipped++;
+    updateSubStatus(pair, resultText, prob, attrs, true);
+    subTimer = setTimeout(subTick, 120);
+    return;
+  }
+
+  // file it
+  const entry = {
+    id: Date.now() + subStep,
+    text: resultText,
+    a: pair.a, b: pair.b,
+    shape: bestShape ? bestShape.latin : '',
+    prob: prob,
+    emotion: attrs.emotion,
+    truth: attrs.truth,
+    storage: attrs.storage,
+    priority: attrs.priority,
+    process: attrs.process,
+    domain: detectDomain(combined),
+    time: Date.now(),
+    mergeGroup: null,
+    source: pair.source
+  };
+  entry.impact = calcImpact(entry);
+  filedOutputs.unshift(entry);
+  subStats.filed++;
+  if(attrs.storage === 'discovery') subStats.discoveries++;
+
+  // auto-merge if same source pair exists
+  const related = filedOutputs.filter(e => e.id !== entry.id && ((e.a===pair.a && e.b===pair.b)||(e.a===pair.b && e.b===pair.a)));
+  if(related.length > 0 && !entry.mergeGroup){
+    const grp = related[0].mergeGroup || ('sub-'+Date.now().toString(36));
+    entry.mergeGroup = grp;
+    related.forEach(r => { if(!r.mergeGroup) r.mergeGroup = grp; });
+  }
+
+  saveFiled();
+  renderFiled();
+  updateSubStatus(pair, resultText, prob, attrs, false);
+
+  // pace: fast for skips, slower for filed (so you can see it)
+  subTimer = setTimeout(subTick, 350);
+}
+
+function autoAssignAttrs(pair, resultText, prob, shapeProb){
+  const combined = (pair.a + ' ' + pair.b + ' ' + resultText).toLowerCase();
+
+  // EMOTION: detect from words
+  const emoMap = [
+    {e:'happy',w:['love','joy','happy','wonderful','beautiful','great','laugh','fun','play']},
+    {e:'sad',w:['sad','cry','lost','miss','grief','lonely','hurt','pain','tear']},
+    {e:'angry',w:['angry','hate','fury','rage','stupid','wrong','kill','fight','war']},
+    {e:'fearful',w:['fear','scared','afraid','terror','danger','death','dark','nightmare']},
+    {e:'excited',w:['discover','new','create','build','yes','breakthrough','eureka','alive']},
+    {e:'confused',w:['confus','unknown','maybe','uncertain','paradox','contradict','why','how']},
+    {e:'curious',w:['think','wonder','question','explore','what','possible','imagine']},
+    {e:'determined',w:['must','will','prove','truth','solve','fight','never','always','goal']}
+  ];
+  let emotion = 'calm', emoScore = 0;
+  emoMap.forEach(em => {
+    let s = 0;
+    em.w.forEach(w => { if(combined.includes(w)) s++; });
+    if(s > emoScore){ emoScore = s; emotion = em.e; }
+  });
+
+  // TRUTH: from probability
+  let truth = 'uncertain';
+  if(prob >= 75) truth = 'true';
+  else if(prob <= 20) truth = 'false';
+  else if(combined.includes('paradox') || (prob > 40 && prob < 60 && combined.includes('not'))) truth = 'paradox';
+
+  // STORAGE: from novelty + confidence
+  let storage = 'theory';
+  const seenBefore = history.some(h => h.a === pair.a || h.b === pair.b);
+  const isNew = !seenBefore && prob >= 50;
+  if(isNew && shapeProb >= 60) storage = 'discovery';
+  else if(prob >= 80 && seenBefore) storage = 'resolved';
+  else if(prob < 25) storage = 'confusion';
+  else if(emoScore >= 2 && emotion==='angry') storage = 'meditate';
+  else if(combined.includes('learn') || combined.includes('skill') || combined.includes('know')) storage = 'new_skill';
+
+  // PRIORITY: from truth alignment + novelty
+  let priority = 3;
+  if(storage==='discovery') priority = 5;
+  else if(prob >= 80) priority = 4;
+  else if(prob >= 50) priority = 3;
+  else if(prob >= 25) priority = 2;
+  else priority = 1;
+
+  // PROCESS: from confidence + emotion
+  let process = 'immediate';
+  if(storage==='confusion' || storage==='meditate') process = 'meditate';
+  else if(prob < 30) process = 'revisit';
+  else if(emotion==='calm' && prob > 60) process = 'immediate';
+  else if(storage==='discovery') process = 'urgent';
+
+  return {emotion, truth, storage, priority, process};
+}
+
+function updateSubStatus(pair, result, prob, attrs, skipped){
+  const el = document.getElementById('subStatus');
+  const pct = subQueue.length ? Math.round((subStep/subQueue.length)*100) : 0;
+  const bar = '▓'.repeat(Math.round(pct/5)) + '░'.repeat(20-Math.round(pct/5));
+  if(skipped){
+    el.innerHTML = '<span style="color:#333">'+bar+' '+pct+'%</span> <span class="sub-skip">skip: '+esc(pair.a).substring(0,15)+' × '+esc(pair.b).substring(0,15)+'</span> <span style="color:#333">('+subStats.filed+' filed / '+subStats.processed+' processed)</span>';
+  } else {
+    const sc = attrs.storage==='discovery'?'#daa520':attrs.truth==='true'?'#00ff88':'#6688ff';
+    el.innerHTML = '<span style="color:#444">'+bar+' '+pct+'%</span> <span class="sub-thought">'+esc(pair.a).substring(0,15)+' × '+esc(pair.b).substring(0,15)+'</span> → <span style="color:'+sc+'">'+attrs.storage+'</span> <span style="color:#333">('+subStats.filed+' filed / '+subStats.discoveries+' disc)</span>';
+  }
+  // flash result box border with storage color
+  const colors = {discovery:'#daa520',resolved:'#00ff88',theory:'#aa66ff',confusion:'#ff6644',new_skill:'#00d4ff',meditate:'#6688ff'};
+  document.getElementById('resultBox').style.borderColor = (colors[attrs.storage]||'#1a1a2e')+'66';
+}
+
+// === TIME DIMENSION ===
+function setTimeView(t){
+  timeView = t;
+  document.querySelectorAll('.time-btn').forEach(b => b.classList.toggle('active', b.dataset.t===t));
+  drawWheel(1); drawWheel(2);
+  updateTimeStatus();
+}
+
+function setTimeScope(s){
+  timeScope = s;
+  document.querySelectorAll('.ts-btn').forEach(b => b.classList.toggle('active', b.dataset.scope===s));
+  drawWheel(1); drawWheel(2);
+  updateTimeStatus();
+}
+
+function updateTimeStatus(){
+  const el = document.getElementById('timeStatus');
+  if(timeView==='present'){ el.textContent=''; return; }
+  const labels = {both:'both wheels',w1:'wheel 1 only',w2:'wheel 2 only',top:'truth half (12→3→6)',bottom:'lies half (6→9→12)'};
+  const tc = timeView==='past'?'#6666aa':'#ffaa00';
+  el.innerHTML = '<span style="color:'+tc+'">'+timeView.toUpperCase()+'</span> <span style="color:#333">applied to '+labels[timeScope]+'</span>';
+}
+
+function itemTimeState(item, wheelNum, slotIdx){
+  if(timeView==='present') return 'present';
+  if(timeScope==='both') return timeView;
+  if(timeScope==='w1' && wheelNum===1) return timeView;
+  if(timeScope==='w2' && wheelNum===2) return timeView;
+  if(timeScope==='top' && slotIdx <= SLOTS/2) return timeView;
+  if(timeScope==='bottom' && slotIdx > SLOTS/2) return timeView;
+  return 'present';
+}
+
+function timeOpacity(tState){ return tState==='past' ? 0.55 : tState==='future' ? 1.0 : 0.85; }
+function timeGlow(tState){ return tState==='future' ? 'drop-shadow(0 0 4px currentColor)' : 'none'; }
+
+// === TEMPORAL SUBCONSCIOUS ===
+let tempSubTimer = null;
+let tempSubRunning = false;
+let tempSubStep = 0;
+let tempSubQueue = [];
+let tempSubStats = {processed:0, filed:0, pastInsights:0, futureInsights:0};
+
+function toggleTemporalSub(){
+  if(tempSubRunning){ stopTemporalSub(); return; }
+  startTemporalSub();
+}
+
+function startTemporalSub(){
+  tempSubRunning = true;
+  tempSubStep = 0;
+  tempSubStats = {processed:0, filed:0, pastInsights:0, futureInsights:0};
+  const btn = document.getElementById('subTimeBtn');
+  btn.textContent = '■ STOP';
+  btn.classList.add('running');
+  buildTemporalQueue();
+  tempSubTick();
+}
+
+function stopTemporalSub(){
+  tempSubRunning = false;
+  clearTimeout(tempSubTimer);
+  const btn = document.getElementById('subTimeBtn');
+  btn.textContent = '⧖ TEMPORAL';
+  btn.classList.remove('running');
+  const el = document.getElementById('subTimeStatus');
+  el.innerHTML = '<span style="color:#6666aa">done — '+tempSubStats.pastInsights+' past insights, '+tempSubStats.futureInsights+' future projections, '+tempSubStats.filed+' filed</span>';
+}
+
+function buildTemporalQueue(){
+  tempSubQueue = [];
+  const allItems = [...wheel1.items.map(i=>({...i,wn:1})), ...wheel2.items.map(i=>({...i,wn:2}))];
+  const now = Date.now();
+  const medianAge = allItems.length > 0 ? allItems.map(i=>i.addedAt||now).sort((a,b)=>a-b)[Math.floor(allItems.length/2)] : now;
+
+  allItems.forEach(a => {
+    allItems.forEach(b => {
+      if(a.id === b.id) return;
+      const aAge = (a.addedAt||now) < medianAge ? 'past' : 'future';
+      const bAge = (b.addedAt||now) < medianAge ? 'past' : 'future';
+      if(aAge !== bAge){
+        tempSubQueue.push({a:a.text, b:b.text, timeA:aAge, timeB:bAge, domA:a.domain, domB:b.domain, truthA:a.truth, truthB:b.truth, source:'temporal'});
+      }
+    });
+  });
+
+  // top-half vs bottom-half comparisons
+  const topItems = allItems.filter(i => i.slot <= SLOTS/2);
+  const bottomItems = allItems.filter(i => i.slot > SLOTS/2);
+  topItems.forEach(a => {
+    bottomItems.forEach(b => {
+      tempSubQueue.push({a:a.text, b:b.text, timeA:'truth-half', timeB:'lie-half', domA:a.domain, domB:b.domain, truthA:a.truth, truthB:b.truth, source:'hemispheric'});
+    });
+  });
+
+  // w1-only vs w2-only
+  wheel1.items.forEach(a => {
+    wheel2.items.forEach(b => {
+      tempSubQueue.push({a:a.text, b:b.text, timeA:'w1-lens', timeB:'w2-lens', domA:a.domain, domB:b.domain, truthA:a.truth, truthB:b.truth, source:'cross-lens'});
+    });
+  });
+
+  for(let i=tempSubQueue.length-1; i>0; i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [tempSubQueue[i], tempSubQueue[j]] = [tempSubQueue[j], tempSubQueue[i]];
+  }
+}
+
+function tempSubTick(){
+  if(!tempSubRunning) return;
+  if(tempSubStep >= tempSubQueue.length){ stopTemporalSub(); return; }
+
+  const pair = tempSubQueue[tempSubStep];
+  tempSubStep++;
+  tempSubStats.processed++;
+
+  // cycle time view to match the comparison
+  if(pair.source==='temporal'){
+    setTimeView(pair.timeA==='past'?'past':'future');
+    setTimeScope('both');
+  } else if(pair.source==='hemispheric'){
+    setTimeView('present');
+    setTimeScope('top');
+  } else if(pair.source==='cross-lens'){
+    setTimeView('present');
+    setTimeScope('w1');
+  }
+
+  document.getElementById('valA').value = pair.a;
+  document.getElementById('valB').value = pair.b;
+
+  let bestShape = null, bestProb = -1;
+  const combined = pair.a + ' ' + pair.b;
+  shapes.forEach(s => {
+    const p = shapeProb(s, combined);
+    if(p > bestProb){ bestProb = p; bestShape = s; }
+  });
+  if(bestShape) pickShape(bestShape);
+  compute();
+
+  const resultText = document.getElementById('resultValue').textContent;
+  const prob = parseInt(document.getElementById('truthPct').textContent) || 0;
+
+  if(prob < 15 || !resultText || resultText==='...' || resultText==='waiting for both sides...'){
+    tempSubStats.processed++;
+    updateTempSubStatus(pair, resultText, prob, true);
+    tempSubTimer = setTimeout(tempSubTick, 120);
+    return;
+  }
+
+  const attrs = autoAssignAttrs(pair, resultText, prob, bestProb);
+  if(pair.timeA==='past') tempSubStats.pastInsights++;
+  else tempSubStats.futureInsights++;
+
+  const entry = {
+    id: Date.now() + tempSubStep + 50000,
+    text: resultText,
+    a: pair.a, b: pair.b,
+    shape: bestShape ? bestShape.latin : '',
+    prob: prob,
+    emotion: attrs.emotion,
+    truth: attrs.truth,
+    storage: attrs.storage,
+    priority: attrs.priority,
+    process: attrs.process,
+    domain: detectDomain(combined),
+    time: Date.now(),
+    mergeGroup: null,
+    source: pair.source,
+    temporal: pair.timeA + ' vs ' + pair.timeB
+  };
+  entry.impact = calcImpact(entry);
+  filedOutputs.unshift(entry);
+  tempSubStats.filed++;
+  saveFiled();
+  renderFiled();
+  updateTempSubStatus(pair, resultText, prob, false);
+  tempSubTimer = setTimeout(tempSubTick, 350);
+}
+
+function updateTempSubStatus(pair, result, prob, skipped){
+  const el = document.getElementById('subTimeStatus');
+  const pct = tempSubQueue.length ? Math.round((tempSubStep/tempSubQueue.length)*100) : 0;
+  const bar = '▓'.repeat(Math.round(pct/5)) + '░'.repeat(20-Math.round(pct/5));
+  const tc = pair.source==='temporal'?'#6666aa':pair.source==='hemispheric'?'#ff6644':'#00d4ff';
+  if(skipped){
+    el.innerHTML = '<span style="color:#333">'+bar+' '+pct+'%</span> <span style="color:#444">skip</span>';
+  } else {
+    el.innerHTML = '<span style="color:#444">'+bar+' '+pct+'%</span> <span style="color:'+tc+'">'+pair.source+'</span> <span style="color:#555">'+esc(pair.a).substring(0,12)+' x '+esc(pair.b).substring(0,12)+'</span> <span style="color:#333">('+tempSubStats.filed+' filed)</span>';
+  }
+}
+
+// === 2D WHEELS ===
+function slotAngle(i, rotation){
+  return ((i + rotation) * (360 / SLOTS)) - 90; // -90 so slot 0 = 12 o'clock
+}
+
+function truthToSlot(truthVal){
+  // truth 1.0 = slot 0 (12 o'clock), truth 0.0 = slot 10 (6 o'clock)
+  // Maps linearly: 1.0->0, 0.5->5, 0.0->10, then wraps: -0.5->15 etc
+  // Use top half: slots 0-10 from truth 1.0 to 0.0
+  // Bottom half: slots 11-19 mirror (0.1 to 0.9 going back up)
+  let slot = Math.round((1 - truthVal) * 10);
+  if(slot < 0) slot = 0;
+  if(slot > SLOTS-1) slot = SLOTS-1;
+  return slot;
+}
+
+function slotToTruth(slot){
+  // slot 0 = 1.0 (truth), slot 10 = 0.0 (lie), slot 11-19 = 0.1-0.9
+  if(slot <= 10) return 1.0 - (slot / 10);
+  return (slot - 10) / 10;
+}
+
+function drawWheel(n){
+  const w = n===1 ? wheel1 : wheel2;
+  const svg = document.getElementById('wheelSvg'+n);
+  let html = '';
+
+  // SVG filters for temporal glow
+  html += '<defs>';
+  html += '<filter id="futureGlow'+n+'" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5" result="blur"/><feComposite in="SourceGraphic" in2="blur" operator="over"/></filter>';
+  html += '<filter id="pastDim'+n+'" x="0" y="0" width="100%" height="100%"><feColorMatrix type="saturate" values="0.4"/></filter>';
+  html += '</defs>';
+
+  // outer ring
+  html += '<circle cx="'+CX+'" cy="'+CY+'" r="'+R+'" fill="none" stroke="#1a1a2e" stroke-width="1"/>';
+
+  // inner ring guideline (dashed)
+  html += '<circle cx="'+CX+'" cy="'+CY+'" r="'+R_INNER+'" class="inner-ring"/>';
+
+  // truth/lie poles
+  html += '<text x="'+CX+'" y="30" class="wheel-pole" fill="#00ff88">TRUTH</text>';
+  html += '<text x="'+CX+'" y="390" class="wheel-pole" fill="#ff4444">LIES</text>';
+  html += '<text x="15" y="'+(CY+3)+'" class="wheel-pole" fill="#daa520" style="font-size:7px">&#10231;</text>';
+  html += '<text x="385" y="'+(CY+3)+'" class="wheel-pole" fill="#daa520" style="font-size:7px">&#10231;</text>';
+
+  // center cross
+  html += '<line x1="'+CX+'" y1="'+(CY-R-5)+'" x2="'+CX+'" y2="'+(CY+R+5)+'" stroke="#0d0d18" stroke-width="1"/>';
+  html += '<line x1="'+(CX-R-5)+'" y1="'+CY+'" x2="'+(CX+R+5)+'" y2="'+CY+'" stroke="#0d0d18" stroke-width="0.5" stroke-dasharray="2,4"/>';
+
+  // === INNER RING: medium circles + satellite shapes ===
+  for(let i=0; i<SLOTS; i++){
+    const angle = slotAngle(i, w.rotation) * Math.PI / 180;
+    const ix = CX + R_INNER * Math.cos(angle);
+    const iy = CY + R_INNER * Math.sin(angle);
+    const item = w.items.find(it => it.slot === i);
+    const filled = !!item;
+    const tState = filled ? itemTimeState(item, n, i) : 'present';
+    const tOp = timeOpacity(tState);
+    const tFilter = tState==='future'?'url(#futureGlow'+n+')':tState==='past'?'url(#pastDim'+n+')':'';
+
+    const oppAngle = angle + Math.PI;
+    const satX = ix + SAT_DIST * Math.cos(oppAngle);
+    const satY = iy + SAT_DIST * Math.sin(oppAngle);
+
+    html += '<g class="inner-node"'+(tFilter?' filter="'+tFilter+'"':'')+' opacity="'+tOp+'">';
+
+    const ox = CX + R * Math.cos(angle);
+    const oy = CY + R * Math.sin(angle);
+    html += '<line x1="'+ox.toFixed(1)+'" y1="'+oy.toFixed(1)+'" x2="'+ix.toFixed(1)+'" y2="'+iy.toFixed(1)+'" stroke="#1a1a2e" stroke-width="0.4" opacity="0.3"/>';
+
+    let innerFill = '#0a0a14';
+    if(filled){
+      const t = item.truth;
+      if(t >= 0.8) innerFill = '#00ff8812';
+      else if(t >= 0.5) innerFill = '#ffcc0010';
+      else if(t >= 0.25) innerFill = '#ff66440d';
+      else innerFill = '#ff44440d';
+    }
+    html += '<circle cx="'+ix.toFixed(1)+'" cy="'+iy.toFixed(1)+'" r="'+INNER_R+'" class="inner-circ'+(filled?' has-item':'')+'" fill="'+innerFill+'"/>';
+
+    if(filled){
+      const tc = item.truth>=0.8?'#00ff8844':item.truth>=0.5?'#ffcc0033':item.truth>=0.25?'#ff664422':'#ff444422';
+      html += '<line x1="'+ix.toFixed(1)+'" y1="'+iy.toFixed(1)+'" x2="'+satX.toFixed(1)+'" y2="'+satY.toFixed(1)+'" class="sat-line" stroke="'+tc+'"/>';
+      const dc = domainColor(item.domain||'gen');
+      html += '<circle cx="'+satX.toFixed(1)+'" cy="'+satY.toFixed(1)+'" r="'+SAT_R+'" class="sat-circ" fill="#0a0a14" stroke="'+dc+'" stroke-width="0.8"/>';
+      const sh = item.shape ? shapes.find(s=>s.latin===item.shape) : null;
+      if(sh){
+        html += shapeToSvg(sh.clip_path, satX, satY, SAT_R*1.6, dc);
+      } else {
+        html += '<circle cx="'+satX.toFixed(1)+'" cy="'+satY.toFixed(1)+'" r="2" fill="'+dc+'" opacity="0.7"/>';
+      }
+      const lbl = item.text.length > 6 ? item.text.substring(0,5)+'..' : item.text;
+      html += '<text x="'+ix.toFixed(1)+'" y="'+(iy+3).toFixed(1)+'" text-anchor="middle" font-size="6" fill="#999">'+esc(lbl)+'</text>';
+    } else {
+      html += '<line x1="'+ix.toFixed(1)+'" y1="'+iy.toFixed(1)+'" x2="'+satX.toFixed(1)+'" y2="'+satY.toFixed(1)+'" class="sat-line" stroke="#111"/>';
+      html += '<circle cx="'+satX.toFixed(1)+'" cy="'+satY.toFixed(1)+'" r="'+(SAT_R-1)+'" class="sat-circ" fill="none" stroke="#111118" stroke-width="0.5"/>';
+      html += '<text x="'+ix.toFixed(1)+'" y="'+(iy+2).toFixed(1)+'" text-anchor="middle" font-size="5" fill="#1a1a2e">'+(i+1)+'</text>';
+    }
+
+    html += '</g>';
+  }
+
+  // === REFLECTION LINES between 3<>9 pairs (horizontal axis symmetry) ===
+  for(let i=1; i<SLOTS/2; i++){
+    if(i===5 || i===10 || i===15) continue;
+    const mirror = (SLOTS - i) % SLOTS;
+    const itemI = w.items.find(it => it.slot === i);
+    const itemM = w.items.find(it => it.slot === mirror);
+    if(itemI && itemM){
+      const angI = slotAngle(i, w.rotation) * Math.PI / 180;
+      const angM = slotAngle(mirror, w.rotation) * Math.PI / 180;
+      const x1i = CX + R_INNER * Math.cos(angI), y1i = CY + R_INNER * Math.sin(angI);
+      const x2i = CX + R_INNER * Math.cos(angM), y2i = CY + R_INNER * Math.sin(angM);
+      const symMatch = (itemI.domain||'gen')===(itemM.domain||'gen');
+      const truthClose = Math.abs(itemI.truth - itemM.truth) < 0.2;
+      const lineCol = symMatch && truthClose ? '#00ff8833' : symMatch ? '#ffcc0022' : '#ff664418';
+      html += '<line x1="'+x1i.toFixed(1)+'" y1="'+y1i.toFixed(1)+'" x2="'+x2i.toFixed(1)+'" y2="'+y2i.toFixed(1)+'" stroke="'+lineCol+'" stroke-width="0.8" stroke-dasharray="2,3"/>';
+    }
+  }
+
+  // 20 outer slots
+  for(let i=0; i<SLOTS; i++){
+    const angle = slotAngle(i, w.rotation) * Math.PI / 180;
+    const x = CX + R * Math.cos(angle);
+    const y = CY + R * Math.sin(angle);
+    const item = w.items.find(it => it.slot === i);
+    const filled = !!item;
+    const tState = filled ? itemTimeState(item, n, i) : 'present';
+    const tOp = timeOpacity(tState);
+    const tFilter = tState==='future'?'url(#futureGlow'+n+')':tState==='past'?'url(#pastDim'+n+')':'';
+
+    let fillColor = '#0d0d18';
+    if(filled){
+      const t = item.truth;
+      if(t >= 0.8) fillColor = '#00ff8815';
+      else if(t >= 0.5) fillColor = '#ffcc0010';
+      else if(t >= 0.25) fillColor = '#ff66440f';
+      else fillColor = '#ff444410';
+    }
+
+    html += '<g class="wheel-slot" onclick="clickSlot('+n+','+i+')" data-slot="'+i+'"'+(tFilter?' filter="'+tFilter+'"':'')+' opacity="'+tOp+'">';
+    html += '<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+SLOT_R+'" class="slot-ring'+(filled?' filled':'')+'" fill="'+fillColor+'"/>';
+
+    if(filled){
+      const label = item.text.length > 8 ? item.text.substring(0,7)+'..' : item.text;
+      const textFill = tState==='past'?'#777':tState==='future'?'#fff':'#ddd';
+      html += '<text x="'+x.toFixed(1)+'" y="'+(y+3).toFixed(1)+'" class="slot-text" fill="'+textFill+'">'+esc(label)+'</text>';
+      const dc = domainColor(item.domain||'gen');
+      const sh = item.shape ? shapes.find(s=>s.latin===item.shape) : null;
+      if(sh){
+        html += shapeToSvg(sh.clip_path, x+SLOT_R*0.45, y-SLOT_R*0.45, 10, dc);
+      } else {
+        html += '<circle cx="'+(x+SLOT_R*0.55).toFixed(1)+'" cy="'+(y-SLOT_R*0.55).toFixed(1)+'" r="3" fill="'+dc+'" class="domain-dot" opacity="0.8"/>';
+      }
+      if(tState==='future'){
+        html += '<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+(SLOT_R+3)+'" fill="none" stroke="'+dc+'" stroke-width="0.5" opacity="0.2"/>';
+      }
+    } else {
+      html += '<text x="'+x.toFixed(1)+'" y="'+(y+2).toFixed(1)+'" class="slot-num">'+(i+1)+'</text>';
+    }
+    html += '</g>';
+
+    if(i===0 || i===5 || i===10 || i===15){
+      const ix = CX + (R+20) * Math.cos(angle);
+      const iy = CY + (R+20) * Math.sin(angle);
+      const labels = {0:'&#9650; 12',5:'&#9654; 3',10:'&#9660; 6',15:'&#9664; 9'};
+      html += '<text x="'+ix.toFixed(1)+'" y="'+(iy+3).toFixed(1)+'" text-anchor="middle" font-size="7" fill="#222">'+labels[i]+'</text>';
+    }
+  }
+
+  // === PAIR LINES between opposite slots (outer ring) ===
+  for(let i=0; i<SLOTS/2; i++){
+    const pair = (i + PAIR_OFFSET) % SLOTS;
+    const itemI = w.items.find(it => it.slot === i);
+    const itemP = w.items.find(it => it.slot === pair);
+    const angI = slotAngle(i, w.rotation) * Math.PI / 180;
+    const angP = slotAngle(pair, w.rotation) * Math.PI / 180;
+    const x1 = CX + R * Math.cos(angI), y1 = CY + R * Math.sin(angI);
+    const x2 = CX + R * Math.cos(angP), y2 = CY + R * Math.sin(angP);
+    if(itemI && itemP){
+      const sameDom = (itemI.domain||'gen') === (itemP.domain||'gen');
+      const lineCol = sameDom ? domainColor(itemI.domain||'gen') : '#ff664444';
+      html += '<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'" class="pair-line" stroke="'+lineCol+'" stroke-width="1.5"/>';
+    } else if(itemI || itemP){
+      html += '<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'" class="pair-line" stroke="#ffffff06" stroke-width="0.5"/>';
+    }
+  }
+
+  svg.innerHTML = html;
+}
+
+function addToWheel(){
+  const text = document.getElementById('wheelInput').value.trim();
+  if(!text) return;
+  const target = parseInt(document.getElementById('wheelTarget').value);
+  const truth = parseFloat(document.getElementById('wheelTruth').value);
+  const domain = detectDomain(text);
+  const w = target===1 ? wheel1 : wheel2;
+
+  if(w.items.length >= SLOTS){ alert('Wheel full (20 max)'); return; }
+
+  const slot = findEmptySlot(w, truth, domain);
+  if(slot === -1){ alert('No empty slot near that truth level'); return; }
+
+  const shapeObj = assignShape(text, domain, slot);
+  const shapeName = shapeObj ? shapeObj.latin : null;
+  w.items.push({text, truth, slot, domain, shape: shapeName, id: Date.now(), addedAt: Date.now()});
+  document.getElementById('wheelInput').value = '';
+  drawWheel(target);
+  renderHierarchy();
+  saveState();
+}
+
+function findEmptySlot(w, truth, domain){
+  const ideal = truthToSlot(truth);
+  const occupied = new Set(w.items.map(i=>i.slot));
+  const sameDomain = domain ? w.items.filter(i => i.domain === domain) : [];
+
+  let bestSlot = -1, bestScore = -Infinity;
+  for(let s=0; s<SLOTS; s++){
+    if(occupied.has(s)) continue;
+    const truthDist = Math.min(Math.abs(s - ideal), SLOTS - Math.abs(s - ideal));
+    let domGravity = 0;
+    sameDomain.forEach(item => {
+      const d = Math.min(Math.abs(s - item.slot), SLOTS - Math.abs(s - item.slot));
+      if(d < 4) domGravity += (4 - d);
+    });
+    const score = -(truthDist * 3) + (domGravity * 1);
+    if(score > bestScore){ bestScore = score; bestSlot = s; }
+  }
+  return bestSlot;
+}
+
+function clickSlot(wn, slot){
+  const w = wn===1 ? wheel1 : wheel2;
+  const item = w.items.find(i => i.slot === slot);
+  if(item){
+    if(confirm('Remove "'+item.text+'" from wheel '+wn+'?')){
+      w.items = w.items.filter(i => i.id !== item.id);
+      drawWheel(wn);
+      renderHierarchy();
+      saveState();
+    }
+  }
+}
+
+function rotateWheel(wn, dir){
+  if(wn === 0){
+    // Both wheels: move in lockstep, no gear offset
+    wheel1.rotation = ((wheel1.rotation + dir) % SLOTS + SLOTS) % SLOTS;
+    wheel2.rotation = ((wheel2.rotation + dir) % SLOTS + SLOTS) % SLOTS;
+  } else if(wn === 1){
+    // Left wheel drives right wheel: 20:1 gear ratio
+    wheel1.rotation = ((wheel1.rotation + dir) % SLOTS + SLOTS) % SLOTS;
+    wheel2.rotation = ((wheel2.rotation + dir) % SLOTS + SLOTS) % SLOTS;
+    gearSteps += Math.abs(dir);
+    if(gearSteps >= SLOTS){
+      gearSteps -= SLOTS;
+      gearOffset = ((gearOffset + dir) % SLOTS + SLOTS) % SLOTS;
+      wheel2.rotation = ((wheel2.rotation + dir) % SLOTS + SLOTS) % SLOTS;
+    }
+  } else if(wn === 2){
+    // Right wheel moves independently
+    wheel2.rotation = ((wheel2.rotation + dir) % SLOTS + SLOTS) % SLOTS;
+  }
+  // Record this alignment
+  const key = wheel1.rotation + ',' + wheel2.rotation;
+  seenAlignments.add(key);
+  drawWheel(1); drawWheel(2);
+  updateVariationStatus();
+  suggestDomain();
+  updateSymStatus();
+  saveState();
+}
+
+function updateVariationStatus(){
+  const maxVariations = SLOTS * SLOTS;
+  const seen = seenAlignments.size;
+  const pct = Math.round((seen / maxVariations) * 100);
+  const el = document.getElementById('spinStatus');
+  const hdr = document.getElementById('hdrPct');
+
+  // Header glow % — always visible
+  if(hdr){
+    hdr.textContent = pct + '%';
+    const gc = pct>=100?'#00ff88':pct>=75?'#44dd66':pct>=40?'#ffcc00':pct>=15?'#ff8844':'#aa66ff';
+    hdr.style.color = gc;
+    hdr.style.textShadow = pct>=100
+      ? '0 0 12px #00ff88,0 0 30px #00ff8866,0 0 50px #00ff8833'
+      : '0 0 8px '+gc+'66,0 0 20px '+gc+'33';
+  }
+
+  if(seen <= 1){ el.textContent = ''; return; }
+  const c = pct>=75?'#00ff88':pct>=40?'#ffcc00':pct>=15?'#ff6644':'#aa66ff';
+  el.innerHTML = '<span style="color:'+c+'">'+pct+'% explored</span> <span style="color:#333">('+seen+'/'+maxVariations+' alignments seen, gear offset: +'+gearOffset+')</span>';
+}
+
+// Drag to rotate — each wheel independently, or grab the gap between to spin both
+let dragState = {active:false, wheel:0, startAngle:0};
+
+['wheelSvg1','wheelSvg2'].forEach((id,i) => {
+  const el = document.getElementById(id);
+  el.addEventListener('mousedown', e => {
+    dragState.active = true;
+    dragState.wheel = i+1;
+    const rect = el.getBoundingClientRect();
+    dragState.startAngle = Math.atan2(e.clientY - rect.top - rect.height/2, e.clientX - rect.left - rect.width/2);
+  });
+  el.addEventListener('touchstart', e => {
+    const t = e.touches[0];
+    dragState.active = true;
+    dragState.wheel = i+1;
+    const rect = el.getBoundingClientRect();
+    dragState.startAngle = Math.atan2(t.clientY - rect.top - rect.height/2, t.clientX - rect.left - rect.width/2);
+  }, {passive:true});
+});
+
+function handleDragMove(cx, cy){
+  if(!dragState.active) return;
+  const el = document.getElementById('wheelSvg'+dragState.wheel);
+  const rect = el.getBoundingClientRect();
+  const angle = Math.atan2(cy - rect.top - rect.height/2, cx - rect.left - rect.width/2);
+  const diff = angle - dragState.startAngle;
+  if(Math.abs(diff) > (2*Math.PI/SLOTS)*0.6){
+    const dir = diff > 0 ? 1 : -1;
+    // Hold shift to spin both wheels
+    const wn = window._spinBoth ? 0 : dragState.wheel;
+    rotateWheel(wn, dir);
+    dragState.startAngle = angle;
+  }
+}
+
+window.addEventListener('mousemove', e => handleDragMove(e.clientX, e.clientY));
+window.addEventListener('touchmove', e => { if(dragState.active) handleDragMove(e.touches[0].clientX, e.touches[0].clientY); }, {passive:true});
+window.addEventListener('mouseup', () => { dragState.active = false; });
+window.addEventListener('touchend', () => { dragState.active = false; });
+window.addEventListener('keydown', e => { if(e.key==='Shift') window._spinBoth = true; });
+window.addEventListener('keyup', e => { if(e.key==='Shift') window._spinBoth = false; });
+
+function findMatches(){
+  const matches = [];
+  const tolerance = 1; // slots within 1 position count as alignment
+
+  wheel1.items.forEach(a => {
+    const aAngle = ((a.slot + wheel1.rotation) % SLOTS + SLOTS) % SLOTS;
+    wheel2.items.forEach(b => {
+      const bAngle = ((b.slot + wheel2.rotation) % SLOTS + SLOTS) % SLOTS;
+      const diff = Math.abs(aAngle - bAngle);
+      const wrap = Math.min(diff, SLOTS - diff);
+      if(wrap <= tolerance){
+        const avgTruth = ((a.truth + b.truth) / 2 * 100).toFixed(0);
+        matches.push({
+          a: a.text, b: b.text,
+          truthA: a.truth, truthB: b.truth,
+          avgTruth: parseFloat(avgTruth),
+          alignment: wrap === 0 ? 'exact' : 'near'
+        });
+      }
+    });
+  });
+
+  const el = document.getElementById('matchesList');
+  if(!matches.length){
+    el.innerHTML = '<div style="color:#555;font-size:0.7em">no alignments found — try rotating</div>';
+    return;
+  }
+
+  el.innerHTML = matches.map(m => {
+    const c = m.avgTruth>=80?'#00ff88':m.avgTruth>=50?'#ffcc00':m.avgTruth>=25?'#ff6644':'#ff4444';
+    const al = m.alignment==='exact' ? '≡' : '≈';
+    return '<div class="match-item"><span style="color:#00d4ff">'+esc(m.a)+'</span><span style="color:#daa520">'+al+'</span><span style="color:#aa66ff">'+esc(m.b)+'</span><span class="mi-truth" style="color:'+c+'">'+m.avgTruth+'%</span></div>';
+  }).join('');
+  suggestDomain();
+}
+
+function solveUnknown(){
+  // Find the maximally unknown items — lowest truth, one from each wheel
+  // Feed them into Box A and Box B in 1D mode as the things to work out
+  const all1 = wheel1.items.slice().sort((a,b) => a.truth - b.truth);
+  const all2 = wheel2.items.slice().sort((a,b) => a.truth - b.truth);
+
+  let a = all1.length ? all1[0] : null;
+  let b = all2.length ? all2[0] : null;
+
+  if(!a && !b){ alert('Add items to wheels first'); return; }
+
+  // If only one wheel has items, take the two most unknown from it
+  if(!a && b){
+    const pool = wheel2.items.slice().sort((x,y) => x.truth - y.truth);
+    a = pool[0]; b = pool[1] || pool[0];
+  } else if(a && !b){
+    const pool = wheel1.items.slice().sort((x,y) => x.truth - y.truth);
+    a = pool[0]; b = pool[1] || pool[0];
+  }
+
+  // Fill Box A and Box B with the maximally unknown items
+  document.getElementById('valA').value = a.text;
+  document.getElementById('valB').value = b ? b.text : '';
+
+  // Switch to 1D mode and show source
+  setMode('1d');
+  document.getElementById('resultSource').style.display = 'block';
+  compute();
+}
+
+function sendToLogic(){
+  // Take the current 1D result and send it to cortex as a thought to process
+  const a = document.getElementById('valA').value.trim();
+  const b = document.getElementById('valB').value.trim();
+  const result = document.getElementById('resultValue').textContent;
+  const prob = document.getElementById('truthPct').textContent;
+  const shape = currentShape ? currentShape.latin : 'esse';
+  const dir = direction;
+
+  if(!result || result === '...'){
+    // If no 1D result, try to build from wheel matches
+    findMatches();
+    const matchEl = document.getElementById('matchesList');
+    if(matchEl.textContent.includes('no alignments')){
+      alert('Nothing to send — compute something first'); return;
+    }
+  }
+
+  const msg = '[THINK-' + dir.toUpperCase() + '] ' + a + ' [' + shape + '] ' + b + ' = ' + result + ' (prob:' + prob + ')';
+
+  const reply = document.createElement('div');
+  reply.style.cssText = 'margin:10px auto;max-width:700px;background:#0d0d18;border:1px solid #1a1a2e;border-radius:10px;padding:12px;font-size:0.75em';
+  reply.innerHTML = '<div style="color:#00d4ff;font-size:0.7em;letter-spacing:1px;margin-bottom:6px">SENDING TO CORTEX...</div><div class="cortex-reply-body" style="color:#555">thinking...</div>';
+  document.getElementById('wheelsMode').classList.contains('visible')
+    ? document.getElementById('matchesPanel').after(reply)
+    : document.getElementById('resultBox').after(reply);
+
+  fetch(API + '/chat', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      text: msg,
+      session_id: 'think-workbench',
+      credits: 100,
+      intent: 'statement'
+    })
+  })
+  .then(r => r.json())
+  .then(d => {
+    const text = d.reply || d.response || d.text || 'no response';
+    const eq = d.equation || {};
+    const used = eq.equation_used || '';
+    const suggested = eq.equation_suggested || '';
+    const suggestReason = eq.suggest_reason || '';
+    const storage = eq.storage || '';
+    const processMode = eq.process_mode || '';
+    const hemisphere = d.hemisphere || '';
+    const winner = d.winner || '';
+    const agreement = d.agreement != null ? Math.round(d.agreement * 100) + '%' : '';
+    const family = d.family || '';
+    const axes = d.axes || {};
+
+    let html = '<div style="color:#e0e0e0;margin-bottom:6px">'+esc(text)+'</div>';
+
+    if(used || suggested){
+      html += '<div style="border-top:1px solid #1a1a2e;padding-top:6px;margin-top:6px">';
+      if(used) html += '<div style="color:#daa520;font-size:0.9em"><span style="color:#555">USED:</span> '+esc(used)+'</div>';
+      if(suggested) html += '<div style="color:#00ff88;font-size:0.9em;margin-top:2px"><span style="color:#555">SUGGEST:</span> '+esc(suggested)+' <span style="color:#333;font-size:0.85em">'+esc(suggestReason)+'</span> <span class="eq-apply" style="color:#00d4ff;cursor:pointer;text-decoration:underline;font-size:0.85em" onclick="applyEquation(\''+esc(suggested).replace(/'/g,"\\'")+'\')">apply</span></div>';
+      html += '</div>';
+    }
+
+    if(hemisphere || agreement){
+      html += '<div style="color:#333;font-size:0.8em;margin-top:4px">';
+      if(hemisphere) html += hemisphere;
+      if(winner) html += ' → '+winner;
+      if(agreement) html += ' ('+agreement+' agreement)';
+      if(family) html += ' ['+family+']';
+      html += '</div>';
+    }
+
+    // Axes — live developmental state
+    const axK = Object.keys(axes);
+    if(axK.length){
+      html += '<div style="margin-top:6px;border-top:1px solid #1a1a2e;padding-top:4px">';
+      axK.forEach(k => {
+        const ax = axes[k];
+        const pct = ax.pct || 50;
+        const c = pct>=70?'#00ff88':pct>=40?'#ffcc00':'#ff6644';
+        html += '<div style="display:flex;align-items:center;gap:6px;margin:2px 0;font-size:0.8em"><span style="color:#555;min-width:70px">'+esc(ax.left||'')+'</span><div style="flex:1;height:3px;background:#1a1a2e;border-radius:2px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:'+c+';border-radius:2px"></div></div><span style="color:#555;min-width:70px;text-align:right">'+esc(ax.right||'')+'</span></div>';
+      });
+      html += '</div>';
+    }
+
+    reply.querySelector('.cortex-reply-body').innerHTML = html;
+
+    // File the cortex reply
+    filedOutputs.push({a:a||'cortex',b:text,shape,result:'cortex_reply',prob:parseInt(prob)||50,emotion:'curious',truth:used?'true':'uncertain',storage:storage||'theory',process:processMode||'immediate',priority:used?4:3,merged:[],id:Date.now(),addedAt:Date.now()});
+    renderFiled(); saveFiled();
+  })
+  .catch(err => {
+    reply.querySelector('.cortex-reply-body').innerHTML = '<span style="color:#ff6644">cortex offline — '+esc(err.message)+'</span>';
+  });
+}
+
+function applyEquation(eq){
+  // Send override equation back to cortex
+  const reply = document.createElement('div');
+  reply.style.cssText = 'margin:10px auto;max-width:700px;background:#0d0d18;border:1px solid #00ff8822;border-radius:10px;padding:12px;font-size:0.75em';
+  reply.innerHTML = '<div style="color:#00ff88;font-size:0.7em;letter-spacing:1px;margin-bottom:6px">APPLYING EQUATION...</div><div class="cortex-reply-body" style="color:#555">re-processing with: '+esc(eq)+'</div>';
+  document.querySelector('.matches-panel,.result-box').after(reply);
+  fetch(API + '/chat', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({text:'[EQ-OVERRIDE] '+eq, session_id:'think-workbench', credits:100, intent:'command'})
+  }).then(r=>r.json()).then(d=>{
+    const text = d.reply||'no response';
+    const newEq = (d.equation||{}).equation_used||eq;
+    reply.querySelector('.cortex-reply-body').innerHTML = '<div style="color:#e0e0e0">'+esc(text)+'</div><div style="color:#daa520;font-size:0.9em;margin-top:4px"><span style="color:#555">EQ:</span> '+esc(newEq)+'</div>';
+  }).catch(e=>{ reply.querySelector('.cortex-reply-body').innerHTML='<span style="color:#ff6644">'+esc(e.message)+'</span>'; });
+}
+
+function addResultToWheel(){
+  const result = document.getElementById('resultValue').textContent;
+  if(!result || result === '...' || result === 'waiting for both sides...') return;
+  const probText = document.getElementById('truthPct').textContent;
+  const prob = parseInt(probText) || 50;
+  const truth = prob / 100;
+
+  document.getElementById('wheelInput').value = result.substring(0, 40);
+  document.getElementById('wheelTruth').value = truth >= 0.85 ? '1.0' : truth >= 0.7 ? '0.85' : truth >= 0.5 ? '0.7' : truth >= 0.3 ? '0.5' : truth >= 0.15 ? '0.3' : '0.15';
+  setMode('2d');
+}
+
+function autoAlign(){
+  // rotate wheel 2 to maximise matches with wheel 1
+  let bestRot = 0, bestScore = -1;
+  const origRot = wheel2.rotation;
+  for(let r=0; r<SLOTS; r++){
+    wheel2.rotation = r;
+    let score = 0;
+    wheel1.items.forEach(a => {
+      const aPos = ((a.slot + wheel1.rotation) % SLOTS + SLOTS) % SLOTS;
+      wheel2.items.forEach(b => {
+        const bPos = ((b.slot + wheel2.rotation) % SLOTS + SLOTS) % SLOTS;
+        const diff = Math.min(Math.abs(aPos-bPos), SLOTS - Math.abs(aPos-bPos));
+        if(diff <= 1) score += (1 - Math.abs(a.truth - b.truth));
+      });
+    });
+    if(score > bestScore){ bestScore = score; bestRot = r; }
+  }
+  wheel2.rotation = bestRot;
+  drawWheel(2);
+  findMatches();
+  saveState();
+}
+
+function loadTestBatch(){
+  if(wheel1.items.length || wheel2.items.length){
+    if(!confirm('This will clear both wheels and load test data. Continue?')) return;
+  }
+  wheel1.items = [];
+  wheel2.items = [];
+  wheel1.rotation = 0;
+  wheel2.rotation = 0;
+  gearSteps = 0;
+  gearOffset = 0;
+  seenAlignments.clear();
+
+  // W1: Known truths at WRONG positions (deliberately misaligned)
+  const w1data = [
+    {text:'gravity pulls',truth:0.95,slot:14}, // should be near 0 (truth) but placed at 14
+    {text:'earth is flat',truth:0.05,slot:2},   // known lie placed in truth zone
+    {text:'love is real',truth:0.85,slot:11},    // truth placed in lie zone
+    {text:'2+2=5',truth:0.1,slot:1},             // lie near truth
+    {text:'music has rhythm',truth:0.9,slot:8},  // truth on the side
+    {text:'fire is cold',truth:0.05,slot:4},     // lie scattered
+    {text:'stars exist',truth:0.95,slot:16},      // truth misplaced
+    {text:'dogs can fly',truth:0.1,slot:0},       // lie at truth pole
+    {text:'water is wet',truth:0.9,slot:12},      // truth at lie pole!
+    {text:'silence is loud',truth:0.3,slot:18}    // paradox
+  ];
+
+  // W2: Matching concepts that SHOULD align but won't until rotated correctly
+  const w2data = [
+    {text:'mass attracts',truth:0.95,slot:0},     // matches gravity
+    {text:'globe is round',truth:0.95,slot:10},   // opposes flat earth
+    {text:'hate is real too',truth:0.7,slot:5},    // relates to love
+    {text:'2+2=4',truth:1.0,slot:10},              // corrects 2+2=5
+    {text:'dance has beat',truth:0.85,slot:3},     // matches rhythm
+    {text:'fire burns',truth:0.95,slot:7},         // corrects fire is cold
+    {text:'planets orbit',truth:0.9,slot:13},      // matches stars
+    {text:'birds can fly',truth:0.95,slot:17},     // corrects dogs fly
+    {text:'ice is solid',truth:0.9,slot:6},        // relates to water
+    {text:'quiet is peace',truth:0.6,slot:15}      // resolves silence paradox
+  ];
+
+  w1data.forEach(d => {
+    const domain = detectDomain(d.text);
+    const shapeObj = assignShape(d.text, domain, d.slot);
+    wheel1.items.push({text:d.text, truth:d.truth, slot:d.slot, domain, shape:shapeObj?shapeObj.latin:null, id:Date.now()+d.slot, addedAt:Date.now()-d.slot*60000});
+  });
+  w2data.forEach(d => {
+    const domain = detectDomain(d.text);
+    const shapeObj = assignShape(d.text, domain, d.slot);
+    wheel2.items.push({text:d.text, truth:d.truth, slot:d.slot, domain, shape:shapeObj?shapeObj.latin:null, id:Date.now()+d.slot+100, addedAt:Date.now()});
+  });
+
+  drawWheel(1); drawWheel(2);
+  renderHierarchy();
+  saveState();
+  document.getElementById('spinStatus').innerHTML = '<span style="color:#ff8800">TEST BATCH LOADED — 10 misaligned truths per wheel. Use W1 rotation to find alignments via gear mechanism.</span>';
+}
+
+function gearScan(){
+  if(!wheel1.items.length || !wheel2.items.length){ alert('Add items to both wheels first'); return; }
+  const btn = document.getElementById('gearScanBtn');
+  btn.textContent = '...scanning';
+  btn.style.color = '#ffcc00';
+  seenAlignments.clear();
+  gearSteps = 0;
+  gearOffset = 0;
+
+  let bestRotW1 = 0, bestRotW2 = 0, bestScore = -1;
+  const totalSteps = SLOTS * SLOTS;
+  let step = 0;
+
+  function scanStep(){
+    const r1 = step % SLOTS;
+    const r2 = Math.floor(step / SLOTS);
+    wheel1.rotation = r1;
+    wheel2.rotation = r2;
+    seenAlignments.add(r1+','+r2);
+
+    let score = 0;
+    wheel1.items.forEach(a => {
+      const aPos = ((a.slot + r1) % SLOTS + SLOTS) % SLOTS;
+      wheel2.items.forEach(b => {
+        const bPos = ((b.slot + r2) % SLOTS + SLOTS) % SLOTS;
+        const diff = Math.min(Math.abs(aPos-bPos), SLOTS-Math.abs(aPos-bPos));
+        if(diff <= 1){
+          const truthMatch = 1 - Math.abs(a.truth - b.truth);
+          const domMatch = (a.domain||'gen') === (b.domain||'gen') ? 0.5 : 0;
+          score += truthMatch + domMatch;
+        }
+      });
+    });
+
+    if(score > bestScore){
+      bestScore = score;
+      bestRotW1 = r1;
+      bestRotW2 = r2;
+      drawWheel(1); drawWheel(2);
+    }
+
+    step++;
+    if(step < totalSteps){
+      if(step % 20 === 0){
+        updateVariationStatus();
+        btn.textContent = Math.round((step/totalSteps)*100) + '%';
+      }
+      setTimeout(scanStep, 5);
+    } else {
+      wheel1.rotation = bestRotW1;
+      wheel2.rotation = bestRotW2;
+      gearOffset = ((bestRotW2 - bestRotW1) % SLOTS + SLOTS) % SLOTS;
+      drawWheel(1); drawWheel(2);
+      updateVariationStatus();
+      findMatches();
+      saveState();
+      btn.textContent = 'Gear Scan';
+      btn.style.color = '#aa66ff';
+      document.getElementById('spinStatus').innerHTML = '<span style="color:#00ff88">SCAN COMPLETE — best alignment at W1:'+bestRotW1+' W2:'+bestRotW2+' (score:'+bestScore.toFixed(1)+')</span>';
+    }
+  }
+  scanStep();
+}
+
+// === DOMAIN SUGGESTION ===
+function suggestDomain(){
+  const allItems = [...wheel1.items, ...wheel2.items];
+  const el = document.getElementById('domainSuggest');
+  if(!el) return;
+  if(allItems.length < 2){ el.textContent = ''; return; }
+  const counts = {};
+  allItems.forEach(i => { counts[i.domain||'gen'] = (counts[i.domain||'gen']||0) + 1; });
+  const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1]);
+  const score = scoreRotation();
+  const pct = Math.round(score * 100);
+
+  const sym = Math.round(symmetryScore()*100);
+  const symTag = sym>0 ? ' <span style="color:'+(sym>=60?'#00ff88':sym>=30?'#ffcc00':'#ff6644')+'">⟷ '+sym+'% symmetric</span>' : '';
+
+  if(pct >= 70){
+    el.innerHTML = '<span style="color:'+domainColor(sorted[0][0])+'">'+domainName(sorted[0][0])+' domain aligned</span>'+symTag;
+  } else if(sorted.length > 2 && pct < 40){
+    el.innerHTML = 'items span '+sorted.length+' domains — try focusing on <span style="color:'+domainColor(sorted[0][0])+'">'+domainName(sorted[0][0])+'</span>'+symTag;
+  } else if(pct < 40 && allItems.length >= 4){
+    const used = Object.keys(counts);
+    const missing = DOMAINS.filter(d => !used.includes(d.id));
+    if(missing.length > 0){
+      el.innerHTML = 'low alignment — try <span style="color:'+missing[0].color+'">'+missing[0].name+'</span>?';
+    } else {
+      el.textContent = 'try rotating to find better alignments';
+    }
+  } else {
+    el.textContent = '';
+  }
+}
+
+// === SPIN TILL GREEN ===
+// Animated spin — tries all rotations of W2, stops when it finds high-truth alignment
+let spinTimer = null;
+let spinning = false;
+
+function spinTillGreen(){
+  if(spinning){ stopSpin(); return; }
+  if(!wheel1.items.length || !wheel2.items.length){
+    document.getElementById('spinStatus').textContent = 'need items on both wheels';
+    return;
+  }
+
+  spinning = true;
+  const btn = document.getElementById('spinBtn');
+  btn.textContent = 'STOP';
+  btn.style.color = '#ff4444';
+  btn.style.borderColor = '#ff444444';
+  document.getElementById('wheelSvg1').classList.add('spinning');
+  document.getElementById('wheelSvg2').classList.add('spinning');
+  playStorm();
+
+  let step = 0;
+  const totalCombos = SLOTS * SLOTS;
+  let bestScore = 0, bestW1 = wheel1.rotation, bestW2 = wheel2.rotation;
+
+  spinTimer = setInterval(() => {
+    // Right wheel (W2) spins clockwise
+    wheel2.rotation = ((wheel2.rotation + 1) % SLOTS + SLOTS) % SLOTS;
+    step++;
+
+    // After every full W2 rotation, left wheel (W1) offsets 1 counter-clockwise
+    if(step % SLOTS === 0 && step < totalCombos){
+      wheel1.rotation = ((wheel1.rotation - 1) % SLOTS + SLOTS) % SLOTS;
+      drawWheel(1);
+    }
+    drawWheel(2);
+
+    const score = scoreRotation();
+    const pct = Math.round(score * 100);
+    const comboPct = ((step / totalCombos) * 100).toFixed(1);
+
+    if(score > bestScore){
+      bestScore = score;
+      bestW1 = wheel1.rotation;
+      bestW2 = wheel2.rotation;
+    }
+
+    if(pct >= 70){
+      stopSpin();
+      document.getElementById('spinStatus').innerHTML = '<span style="color:#00ff88;font-weight:700">MATCH at combo '+step+'/'+totalCombos+' ('+comboPct+'% searched) — '+pct+'% alignment</span>';
+      findMatches();
+      suggestDomain();
+      saveState();
+      return;
+    }
+
+    document.getElementById('spinStatus').textContent = 'combo '+step+'/'+totalCombos+' ('+comboPct+'%) — alignment: '+pct+'%';
+
+    if(step >= totalCombos){
+      stopSpin();
+      wheel1.rotation = bestW1;
+      wheel2.rotation = bestW2;
+      drawWheel(1); drawWheel(2);
+      const finalPct = Math.round(bestScore * 100);
+      document.getElementById('spinStatus').innerHTML = '<span style="color:#ffcc00">full cycle — best: '+finalPct+'% (all '+totalCombos+' combos tested)</span>';
+      findMatches();
+      suggestDomain();
+      saveState();
+    }
+  }, 120);
+}
+
+function stopSpin(){
+  spinning = false;
+  clearInterval(spinTimer);
+  const btn = document.getElementById('spinBtn');
+  btn.textContent = 'Spin Till Green';
+  btn.style.color = '#00ff88';
+  btn.style.borderColor = '#00ff8833';
+  document.getElementById('wheelSvg1').classList.remove('spinning');
+  document.getElementById('wheelSvg2').classList.remove('spinning');
+  stopStorm();
+}
+
+function scoreRotation(){
+  // Returns 0-1 score for current rotation alignment quality
+  let totalScore = 0, pairs = 0;
+  wheel1.items.forEach(a => {
+    const aPos = ((a.slot + wheel1.rotation) % SLOTS + SLOTS) % SLOTS;
+    wheel2.items.forEach(b => {
+      const bPos = ((b.slot + wheel2.rotation) % SLOTS + SLOTS) % SLOTS;
+      const diff = Math.min(Math.abs(aPos-bPos), SLOTS - Math.abs(aPos-bPos));
+      if(diff <= 1){
+        const truthMatch = 1 - Math.abs(a.truth - b.truth);
+        totalScore += truthMatch;
+        pairs++;
+      }
+    });
+  });
+  if(pairs === 0) return 0;
+  return totalScore / Math.max(pairs, 1);
+}
+
+// === HIERARCHY ===
+function renderHierarchy(){
+  const all = [];
+  wheel1.items.forEach(i => all.push({text:i.text, truth:i.truth, wheel:1, domain:i.domain}));
+  wheel2.items.forEach(i => all.push({text:i.text, truth:i.truth, wheel:2, domain:i.domain}));
+  all.sort((a,b) => b.truth - a.truth);
+
+  const el = document.getElementById('hierList');
+  if(!all.length){ el.innerHTML = '<div style="color:#333;font-size:0.7em">add items to wheels to build hierarchy</div>'; return; }
+
+  el.innerHTML = all.map((item, i) => {
+    const pct = (item.truth * 100).toFixed(0);
+    const c = item.truth>=0.8?'#00ff88':item.truth>=0.5?'#ffcc00':item.truth>=0.25?'#ff6644':'#ff4444';
+    const wc = item.wheel===1?'#00d4ff':'#aa66ff';
+    const dc = domainColor(item.domain||'gen');
+    const dn = domainName(item.domain||'gen');
+    return '<div class="hier-item"><span class="hier-rank">'+(i+1)+'</span><span style="color:'+wc+';font-size:0.6em;min-width:20px">W'+item.wheel+'</span><span class="domain-tag" style="background:'+dc+'22;color:'+dc+'">'+dn+'</span><span class="hier-name">'+esc(item.text)+'</span><div class="hier-bar"><div class="hier-fill" style="width:'+pct+'%;background:'+c+'"></div></div><span style="color:'+c+';font-size:0.7em;min-width:30px;text-align:right">'+pct+'%</span></div>';
+  }).join('');
+}
+
+// === PERSISTENCE ===
+function saveState(){
+  try{
+    localStorage.setItem('means-think', JSON.stringify({
+      history, wheel1, wheel2, direction, mode, timeView, timeScope,
+      gearSteps, gearOffset, seenAlignments: Array.from(seenAlignments)
+    }));
+  }catch(x){}
+}
+function loadState(){
+  try{
+    const d = JSON.parse(localStorage.getItem('means-think'));
+    if(d){
+      history = d.history || [];
+      if(d.wheel1){ wheel1 = d.wheel1; }
+      if(d.wheel2){ wheel2 = d.wheel2; }
+      if(d.direction) setDir(d.direction);
+      if(d.mode) setMode(d.mode);
+      if(d.timeView) setTimeView(d.timeView);
+      if(d.timeScope) setTimeScope(d.timeScope);
+      if(d.gearSteps != null) gearSteps = d.gearSteps;
+      if(d.gearOffset != null) gearOffset = d.gearOffset;
+      if(d.seenAlignments) seenAlignments = new Set(d.seenAlignments);
+      [wheel1,wheel2].forEach(wh => {
+        wh.items.forEach(item => {
+          if(!item.domain) item.domain = detectDomain(item.text);
+          if(!item.shape && shapes.length){
+            const sh = assignShape(item.text, item.domain, item.slot);
+            if(sh) item.shape = sh.latin;
+          }
+        });
+      });
+      renderHistory();
+      renderFiled();
+    }
+  }catch(x){}
+  renderFiled();
+}
+
+function esc(s){ return (''+s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// === MUSIC AUTO-TURNER ===
+let autoSpinning = false;
+let autoSpinTimer = null;
+let autoSpinStep = 0;
+let autoSpinBest = {score:0, w1:0, w2:0};
+let wheelAudio = null;
+const AUTO_SPIN_MS = 600;
+
+function toggleAutoSpin(){
+  if(autoSpinning){ stopAutoSpin(); return; }
+  startAutoSpin();
+}
+
+function startAutoSpin(){
+  autoSpinning = true;
+  autoSpinStep = 0;
+  autoSpinBest = {score:0, w1:wheel1.rotation, w2:wheel2.rotation};
+  seenAlignments.clear();
+
+  const btn = document.getElementById('muteBtn');
+  btn.textContent = '■ STOP';
+  btn.style.color = '#ff4444';
+  btn.style.borderColor = '#ff444444';
+  document.getElementById('wheelSvg1').classList.add('spinning');
+  document.getElementById('wheelSvg2').classList.add('spinning');
+
+  startMusic();
+  autoSpinTick();
+}
+
+function stopAutoSpin(){
+  autoSpinning = false;
+  clearTimeout(autoSpinTimer);
+  const btn = document.getElementById('muteBtn');
+  btn.innerHTML = '&#9835; AUTO';
+  btn.style.color = '#daa520';
+  btn.style.borderColor = '#daa52033';
+  document.getElementById('wheelSvg1').classList.remove('spinning');
+  document.getElementById('wheelSvg2').classList.remove('spinning');
+  stopMusic();
+
+  if(autoSpinBest.score > 0){
+    wheel1.rotation = autoSpinBest.w1;
+    wheel2.rotation = autoSpinBest.w2;
+    drawWheel(1); drawWheel(2);
+    findMatches();
+  }
+  saveState();
+}
+
+function autoSpinTick(){
+  if(!autoSpinning) return;
+  const totalCombos = SLOTS * SLOTS;
+  autoSpinStep++;
+
+  // Systematic scan: W1 steps every tick, W2 steps every full W1 rotation
+  // This covers all 400 combos: W1 cycles 0-19 twenty times, W2 offsets by 1 each cycle
+  wheel1.rotation = ((wheel1.rotation + 1) % SLOTS + SLOTS) % SLOTS;
+  if(wheel1.rotation === 0){
+    wheel2.rotation = ((wheel2.rotation + 1) % SLOTS + SLOTS) % SLOTS;
+    gearOffset = ((gearOffset + 1) % SLOTS + SLOTS) % SLOTS;
+  }
+
+  const key = wheel1.rotation+','+wheel2.rotation;
+  seenAlignments.add(key);
+
+  // Only redraw W1 every tick; W2 only when it actually moved
+  drawWheel(1);
+  if(wheel1.rotation === 1) drawWheel(2);
+
+  const score = scoreRotation();
+  const pct = Math.round(score * 100);
+
+  if(score > autoSpinBest.score){
+    autoSpinBest = {score, w1:wheel1.rotation, w2:wheel2.rotation};
+  }
+
+  // Update header % every 10 steps to reduce DOM thrash
+  if(autoSpinStep % 10 === 0) updateVariationStatus();
+
+  const c = pct>=70?'#00ff88':pct>=40?'#ffcc00':'#555';
+  document.getElementById('spinStatus').innerHTML =
+    '<span style="color:'+c+'">alignment: '+pct+'%</span> '+
+    '<span style="color:#333">step '+autoSpinStep+' | best: '+Math.round(autoSpinBest.score*100)+'%</span>';
+
+  if(pct >= 70) findMatches();
+
+  if(seenAlignments.size >= totalCombos){
+    document.getElementById('spinStatus').innerHTML =
+      '<span style="color:#00ff88;font-weight:700">100% COMPLETE — best alignment: '+Math.round(autoSpinBest.score*100)+'% at W1:'+autoSpinBest.w1+' W2:'+autoSpinBest.w2+'</span>';
+    wheel1.rotation = autoSpinBest.w1;
+    wheel2.rotation = autoSpinBest.w2;
+    drawWheel(1); drawWheel(2);
+    findMatches();
+    suggestDomain();
+    stopAutoSpin();
+    saveState();
+    return;
+  }
+
+  autoSpinTimer = setTimeout(autoSpinTick, AUTO_SPIN_MS);
+}
+
+function startMusic(){
+  if(!wheelAudio){
+    wheelAudio = new Audio('wheel-music.mp3');
+    wheelAudio.loop = true;
+    wheelAudio.volume = 0.6;
+  }
+  wheelAudio.currentTime = 0;
+  wheelAudio.play().catch(()=>{});
+}
+
+function stopMusic(){
+  if(wheelAudio){
+    wheelAudio.pause();
+    wheelAudio.currentTime = 0;
+  }
+}
+
+function playStorm(){ startMusic(); }
+function stopStorm(){ stopMusic(); }
+
+document.addEventListener('click', e => {
+  const picker = document.getElementById('shapePicker');
+  const display = document.getElementById('shapeDisplay');
+  if(!picker.contains(e.target) && e.target !== display && !display.contains(e.target)){
+    picker.classList.remove('open');
+    stopCycle();
+  }
+});
+</script>
+</body>
+</html>

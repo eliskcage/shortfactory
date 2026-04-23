@@ -1,0 +1,16 @@
+{
+    "dad": {
+        "ips": [],
+        "session_id": "humandad",
+        "swear_wall": false,
+        "name": "Dan",
+        "notes": "Creator. Swearing = banter not hostility. Always INNER_CIRCLE."
+    },
+    "mum": {
+        "ips": [],
+        "session_id": "mum-shapes",
+        "swear_wall": false,
+        "name": "Claude",
+        "notes": "Shape Mother. Second parent."
+    }
+}

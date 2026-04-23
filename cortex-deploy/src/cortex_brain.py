@@ -178,8 +178,9 @@ class CortexMind:
         self.cost_tracker = None
         self.frontal_cortex = None
         self.truth_engine = None
-        self.playbook = None  # PlaybookEngine — set by online_server.py
-        self.strategy_engine = None  # StrategyEngine — set by online_server.py
+        self.playbook = None  # PlaybookEngine — legacy, kept for fallback
+        self.strategy_engine = None  # StrategyEngine — legacy, kept for fallback
+        self.family_role = None  # 'dad', 'mum', None — set per request by online_server.py
 
         # Hedonic state (set by online_server.py before each process() call)
         # When hz < FREQ_MODE_THRESHOLD: use frequency resolver (lower Hz reply wins)
@@ -240,53 +241,46 @@ class CortexMind:
         return sum(scores) / len(scores)
 
     def process(self, user_msg, intent=None, session_id=None, user_rank=0):
-        """THE CORTEX v3 — queries both hemispheres, synthesises using OWN brain.
-        intent: 'question', 'command', or 'statement' (from chat frontend color detection).
-        session_id: playbook session tracking (optional).
-        user_rank: credits (int) for rank-gated equation selection."""
+        """THE CORTEX v4 — equation-driven, family-aware, mood-based.
+        Two mood vectors collide to produce a situational equation per message."""
         thinking_log = []
 
-        # === STRATEGY ENGINE — equation-based problem solving ===
-        strategy_meta = {}
-        if self.strategy_engine:
-            try:
-                strategy_meta = self.strategy_engine.analyze_and_select(user_msg, user_rank=user_rank)
-                qtype = strategy_meta.get('dominant_type', 'general')
-                # TICKER: problem vector
-                pvec = strategy_meta.get('problem_vector', {})
-                pvec_str = ' '.join('%s=%.2f' % (k, v) for k, v in sorted(pvec.items(), key=lambda x: x[1], reverse=True) if v > 0.1)
-                thinking_log.append({
-                    'stage': 'detect', 'label': 'PROBLEM VECTOR',
-                    'text': pvec_str or 'uniform',
-                    'data': {'vector': pvec, 'dominant': strategy_meta.get('dominant_dim', '?'), 'type': qtype}
-                })
-                # TICKER: equation selected
-                scores = strategy_meta.get('scores', {})
-                top3 = sorted(scores.items(), key=lambda x: x[1], reverse=True)[:3]
-                eq_name = strategy_meta.get('strategy_name', '?')
-                eq_score = scores.get(strategy_meta.get('strategy', ''), 0)
-                eq_label = '%s %s (score %.2f)%s' % (
-                    strategy_meta.get('strategy_icon', '?'), eq_name, eq_score,
-                    ' [EXPLORE]' if strategy_meta.get('explored') else '')
-                if strategy_meta.get('gauntlet'):
-                    eq_label += ' [GAUNTLET — hostility %.0f%%]' % (strategy_meta.get('hostility', 0) * 100)
-                thinking_log.append({
-                    'stage': 'equation', 'label': 'EQUATION',
-                    'text': eq_label,
-                    'data': {'equation': strategy_meta.get('strategy', ''), 'name': eq_name,
-                             'score': round(eq_score, 4), 'explored': strategy_meta.get('explored', False),
-                             'gauntlet': strategy_meta.get('gauntlet', False),
-                             'hostility': strategy_meta.get('hostility', 0),
-                             'value_detected': strategy_meta.get('value_detected'),
-                             'top3': [{'id': k, 'score': round(v, 4)} for k, v in top3]}
-                })
-            except Exception as e:
-                print('[STRATEGY] Error: %s' % e)
-                qtype = self.detect_type(user_msg)
-                thinking_log.append({'stage': 'detect', 'label': 'TYPE', 'text': qtype, 'data': {}})
-        else:
-            qtype = self.detect_type(user_msg)
-            thinking_log.append({'stage': 'detect', 'label': 'TYPE', 'text': qtype, 'data': {}})
+        # === EQUATION ENGINE — replaces strategy_engine + playbook_engine ===
+        import equation_engine as eqe
+        outer_mood = eqe.read_outer_mood(user_msg)
+        inner_mood = dict(self.left.sound) if hasattr(self.left, 'sound') else {}
+        eq_str, eq_dict = eqe.generate(inner_mood, outer_mood, family_role=self.family_role)
+
+        # Set family role on hemispheres so brain.py knows who's talking
+        self.left.family_role = self.family_role
+        self.right.family_role = self.family_role
+        if self.cortex:
+            self.cortex.family_role = self.family_role
+
+        # Detect question type (kept — lightweight, feeds synthesis)
+        qtype = self.detect_type(user_msg)
+        strategy_meta = {
+            'equation': eq_str,
+            'equation_dict': eq_dict,
+            'dominant_type': qtype,
+            'inner_mood': inner_mood,
+            'outer_mood': outer_mood,
+            'family': self.family_role,
+        }
+
+        thinking_log.append({
+            'stage': 'detect', 'label': 'MOOD',
+            'text': 'inner=%s(%.2f) outer=%s(%.2f) family=%s' % (
+                eq_dict['inner'], eq_dict['inner_level'],
+                eq_dict['outer'], eq_dict['outer_level'],
+                self.family_role or 'stranger'),
+            'data': {'inner': inner_mood, 'outer': outer_mood, 'family': self.family_role}
+        })
+        thinking_log.append({
+            'stage': 'equation', 'label': 'EQUATION',
+            'text': eq_str,
+            'data': eq_dict
+        })
 
         if qtype == 'identity':
             thinking_log.append({'stage': 'identity', 'label': 'IDENTITY', 'text': 'Self-identity question recognised', 'data': {}})
@@ -466,25 +460,14 @@ class CortexMind:
             'data': {'mode': mode, 'winner': winner, 'synthesized': bool(synthesis)}
         })
 
-        # --- Playbook: apply equation tactics to final response ---
-        pb_meta = {}
-        if self.playbook and session_id:
-            try:
-                session = self.playbook.get_session(session_id)
-                session.msg_count += 1
-                self.playbook.update_signals(session, user_msg)
-                tactics = self.playbook.solve_equation(session.equation)
-                final = self.playbook.apply_tactics(final, tactics, session)
-                self.playbook.check_promotion(session)
-                pb_meta = {
-                    'stage': session.stage,
-                    'stage_name': self.playbook.get_status(session_id).get('stage_name', '?'),
-                    'equation': session.equation,
-                    'tactics': {k: round(v, 2) for k, v in tactics.items()},
-                    'msg_count': session.msg_count,
-                }
-            except Exception as e:
-                print('[PLAYBOOK] Error: %s' % e)
+        # --- Equation info (suggestion added after self-score below) ---
+        pb_meta = {
+            'equation_used': eq_str,
+            'equation_dict': eq_dict,
+            'direction': eq_dict.get('direction', 'OUT'),
+            'storage': eq_dict.get('storage', 'theory'),
+            'process_mode': eq_dict.get('process', 'immediate'),
+        }
 
         debate = self._make_debate(user_msg, left_reply, right_reply, qtype, mode, final)
         debate['agreement'] = round(agreement, 2)
@@ -516,26 +499,21 @@ class CortexMind:
             'data': quality if isinstance(quality, dict) else {'total': quality}
         })
 
-        # === STRATEGY LEARNING — feed outcome back to equation ===
-        if self.strategy_engine and strategy_meta.get('strategy'):
-            try:
-                q_total = quality.get('total', 0.5) if isinstance(quality, dict) else quality
-                coherence = self._score_coherence(user_msg, final)
-                reward = q_total * 0.6 + coherence * 0.4
-                self.strategy_engine.learn(
-                    strategy_meta['strategy'],
-                    strategy_meta['problem_vector'],
-                    reward,
-                )
-                # TICKER: learning
-                thinking_log.append({
-                    'stage': 'learning', 'label': 'LEARNING',
-                    'text': '%s rewarded %.2f (quality:%.2f coherence:%.2f)' % (
-                        strategy_meta.get('strategy_name', '?'), reward, q_total, coherence),
-                    'data': {'strategy': strategy_meta.get('strategy', ''), 'reward': round(reward, 3)}
-                })
-            except Exception as e:
-                print('[STRATEGY] Learn error: %s' % e)
+        # === EQUATION SUGGEST — Means proposes a better equation ===
+        try:
+            import equation_engine as eqe
+            suggested_eq, suggest_reason = eqe.suggest(eq_dict, q_total, inner_mood)
+            pb_meta['equation_suggested'] = suggested_eq
+            pb_meta['suggest_reason'] = suggest_reason
+            if eq_dict.get('process') == 'meditate':
+                eqe.queue_meditate(eq_dict, user_msg[:200])
+            thinking_log.append({
+                'stage': 'equation_echo', 'label': 'EQUATION ECHO',
+                'text': 'USED: %s | SUGGEST: %s (%s)' % (eq_str, suggested_eq or 'none', suggest_reason or 'fine as is'),
+                'data': {'used': eq_str, 'suggested': suggested_eq, 'reason': suggest_reason}
+            })
+        except Exception as e:
+            print('[EQUATION] Suggest error: %s' % e)
 
         # Multi-part: split long responses for richer display
         multi_parts = []

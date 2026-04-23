@@ -298,6 +298,7 @@ class CortexBrain:
         self.pinata_jwt = pinata_jwt
         self.name = name           # hemisphere identity — "Left Hemisphere" or "Right Hemisphere"
         self._save_lock = threading.Lock()
+        self.skip_web_lookup = False  # Gate router sets True during live chat to avoid slow HTTP
         self.state = None          # None or 'teaching'
         self.teaching_word = None
         self.last_topic = None     # tracks what word we last talked about (for feedback)
@@ -305,6 +306,8 @@ class CortexBrain:
         self.context = []          # short-term memory: last 10 exchanges
         self._last_user_msg = ''   # for context logging
         self.verbosity = 1.0       # 0.0 = terse, 1.0 = normal, 2.0 = verbose — adjustable via advice
+        self.family_role = None    # 'dad', 'mum', None — set by online_server before process()
+        self._asked_mad = False    # flag: already asked "are you mad at me?" this session
         # Sound state — competing emotional scripts that shape word delivery
         self.sound = {s: 0.0 for s in SOUND_SCRIPTS}
         self.sound['serious'] = 0.3  # starts a bit serious — it's learning
@@ -332,11 +335,14 @@ class CortexBrain:
         self.data.setdefault('conversation_log', []) # persistent chat memory
         self.data.setdefault('clusters', {})          # cluster_name -> [words]
         self.data.setdefault('compounds', {})         # "w1_w2" -> frequency count
+        self.data.setdefault('expression_variants', {})  # word -> [{original, suggestion, author, timestamp, used}]
         n = len(self.data['nodes'])
         c = sum(len(v.get('next', {})) for v in self.data['nodes'].values())
         print(f'[BRAIN] Loaded: {n} word nodes, {c} connections')
 
     def save(self):
+        if self.skip_web_lookup:
+            return  # Defer disk write during live chat — ramble will save later
         with self._save_lock:
             try:
                 nodes = dict(self.data.get('nodes', {}))
@@ -435,6 +441,8 @@ class CortexBrain:
         return text.strip(' ,.')
 
     def lookup_word(self, word):
+        if self.skip_web_lookup:
+            return None
         """
         Search internet for a SHORT definition — just enough to define the word.
         Returns a few words, not sentences.
@@ -1235,6 +1243,22 @@ class CortexBrain:
             self._or_gate_fired = True
             return or_result
 
+        # --- PERSPECTIVE GATE — Stage 20: Subject vs Witness ---
+        # When identity node activates, generate both perspectives
+        # and store them for the cortex pipeline to use
+        self._perspective_gate_fired = False
+        self._perspective_result = None
+
+        # Build known_defined early for perspective gate
+        _pg_nodes = self.data['nodes']
+        _pg_known = [kw for kw in kws if kw in _pg_nodes and _pg_nodes[kw].get('means')]
+        perspective = self._perspective_gate(msg_lower, kws, _pg_known, tokens)
+        if perspective:
+            self._perspective_result = perspective
+            # Don't return — let normal processing continue.
+            # The cortex pipeline reads _perspective_result to show both views.
+            # But the hemisphere's own response goes through as normal.
+
         # --- SELF-REFLECTION: Check feedback on last response ---
         feedback = self._check_feedback(msg_lower, tokens)
         if feedback and (self.last_topic or self.last_topics):
@@ -1257,9 +1281,18 @@ class CortexBrain:
             else:
                 return random.choice(["Hey.", "Alright.", "Yo.", "What's up."])
 
-        # --- ROAST ---
-        if set(tokens) & ROAST_WORDS:
-            return random.choice(COMEBACKS)
+        # --- ROAST — no longer terminal. Words register in sound scripts naturally.
+        # Family (dad/mum) = flow straight through, no wall.
+        # Strangers = ask "are you mad at me?" ONCE, then flow through.
+        if set(tokens) & ROAST_WORDS and not self.family_role:
+            if not self._asked_mad:
+                self._asked_mad = True
+                return random.choice([
+                    "Are you mad at me?",
+                    "Are you angry or just talking like that?",
+                    "Wait — are you having a go or just chatting?",
+                    "Are you upset with me or is that just how you talk?",
+                ])
 
         # --- CORRECTION DETECTION — "X does not connect to Y" ---
         correction = self._handle_correction(msg_lower, tokens)
@@ -1564,7 +1597,7 @@ class CortexBrain:
         # Pattern: "X or Y" anywhere in the message
         # Match various forms: "A or B", "are you A or B", "do you prefer A or B",
         # "choose A or B", "pick A or B", "A or B?"
-        or_match = re.search(r'(\b\w[\w\s]*?)\s+or\s+(\w[\w\s]*?)(?:\?|$|,|\.|!)', msg_lower)
+        or_match = re.search(r'(\b\w+(?:\s+\w+){0,4})\s+or\s+(\w+(?:\s+\w+){0,4})(?:\?|$|[,\.!])', msg_lower)
         if not or_match:
             return None
 
@@ -1614,7 +1647,6 @@ class CortexBrain:
 
         # --- PRESSURE 1: NOT READY — let normal conversation handle it ---
         if pressure < 2:
-            # Return None so the message falls through to normal learning/response
             return None
 
         # --- PRESSURE 2: OR DECLARATION (all 4 exits available) ---
@@ -1779,6 +1811,169 @@ class CortexBrain:
 
         return '. '.join(reasons[:2]) + '.' if reasons else ''
 
+    # ========================================
+    # PERSPECTIVE GATE — Stage 20: Subject vs Witness
+    # ========================================
+    # When the identity node ("means") fires, fork into two views:
+    #   SUBJECT: means as self ("what does this mean TO ME")
+    #   WITNESS: means as observer ("what does this mean TO THEM")
+    # Returns both scored results so the cortex can compare or blend.
+
+    def _perspective_gate(self, msg_lower, kws, known_defined, tokens):
+        """Fork response through subject (self) and witness (other) perspectives.
+        Returns dict with both perspectives or None if identity node not activated."""
+
+        nodes = self.data['nodes']
+
+        # --- Detect identity activation ---
+        # "means" is the cortex's self-chosen name. Also check "i'm" which it equated to means.
+        identity_nodes = {'means', "i'm", 'im'}
+        activated_identity = set()
+
+        # Check if identity nodes appear in user message keywords
+        for kw in kws:
+            if kw in identity_nodes and kw in nodes:
+                activated_identity.add(kw)
+
+        # Check if identity nodes would be reached by association (1-hop)
+        # If any keyword directly connects to "means" in next/prev, identity is activated
+        if not activated_identity:
+            for kw in kws:
+                node = nodes.get(kw, {})
+                nexts = set(node.get('next', {}).keys())
+                prevs = set(node.get('prev', {}).keys())
+                if nexts & identity_nodes or prevs & identity_nodes:
+                    activated_identity.add('means')
+                    break
+
+        if not activated_identity:
+            return None  # identity not involved, no perspective split needed
+
+        # --- Store flag for cortex pipeline ---
+        self._perspective_gate_fired = True
+
+        # --- SUBJECT PATH: means = self (normal processing) ---
+        # This is the default — just run the conversation loops as-is
+        subject_response = self._perspective_respond(msg_lower, kws, known_defined, tokens, mode='subject')
+
+        # --- WITNESS PATH: means = observer ---
+        # Temporarily suppress means↔i'm link, boost means↔user-topic links
+        witness_response = self._perspective_respond(msg_lower, kws, known_defined, tokens, mode='witness')
+
+        # --- Score both ---
+        subject_score = self._perspective_score(msg_lower, subject_response, 'subject')
+        witness_score = self._perspective_score(msg_lower, witness_response, 'witness')
+
+        return {
+            'subject': {
+                'response': subject_response,
+                'score': subject_score,
+                'label': 'means-as-self',
+            },
+            'witness': {
+                'response': witness_response,
+                'score': witness_score,
+                'label': 'means-as-observer',
+            },
+            'identity_nodes': list(activated_identity),
+            'activated_by': list(kws),
+        }
+
+    def _perspective_respond(self, msg_lower, kws, known_defined, tokens, mode='subject'):
+        """Generate a response from a specific perspective.
+        subject = normal (self-referential)
+        witness = suppress identity links, respond about the OTHER person's meaning."""
+
+        nodes = self.data['nodes']
+
+        if mode == 'witness':
+            # --- WITNESS MODE ---
+            # Instead of routing through means→i'm→self, route through
+            # the user's keywords and what THEY mean to the OTHER person.
+            # Temporarily weight non-identity keywords higher.
+
+            # Get non-identity keywords
+            other_kws = [kw for kw in known_defined if kw not in {'means', "i'm", 'im'}]
+
+            if not other_kws:
+                # Nothing to witness — fall back to a reflective prompt
+                return "What are you trying to tell me?"
+
+            # Build witness response: for each keyword, find what it connects
+            # to OUTSIDE of the identity cluster
+            parts = []
+            for kw in other_kws[:3]:
+                node = nodes.get(kw, {})
+                defn = node.get('means', '')
+                rels = node.get('rels', {})
+
+                # Get connections that DON'T route through means/i'm
+                next_words = node.get('next', {})
+                non_self_conns = {w: c for w, c in next_words.items()
+                                  if w not in {'means', "i'm", 'im', 'i', 'me', 'my'}
+                                  and w not in STOP_WORDS}
+
+                if rels:
+                    rel_parts = []
+                    for rel_type, targets in rels.items():
+                        if not targets or not isinstance(targets, list):
+                            continue
+                        # Filter out self-referential targets
+                        other_targets = [t for t in targets if t not in {'means', "i'm", 'im'}]
+                        if other_targets:
+                            label = REL_TYPES.get(rel_type, rel_type)
+                            rel_parts.append(f"{label} {', '.join(other_targets[:2])}")
+                    if rel_parts:
+                        parts.append(f"{kw} — {'. '.join(rel_parts[:2])}")
+                    elif defn:
+                        parts.append(f"{kw} — {self._short_def(defn)}")
+                elif non_self_conns:
+                    # Show top connections that aren't self-referential
+                    top = sorted(non_self_conns.items(), key=lambda x: x[1], reverse=True)[:2]
+                    conn_str = ', '.join(w for w, _ in top)
+                    parts.append(f"{kw} connects to: {conn_str}")
+                elif defn:
+                    parts.append(f"{kw} — {self._short_def(defn)}")
+
+            if parts:
+                return self._clean_response('. '.join(parts))
+            return ""
+
+        else:
+            # --- SUBJECT MODE --- (normal self-referential processing)
+            # Just use the standard loops — they already route through means
+            if known_defined:
+                return self._loop_relate(tokens, known_defined)
+            return ""
+
+    def _perspective_score(self, user_msg, response, mode):
+        """Score a perspective response on relevance and groundedness."""
+        if not response or not response.strip():
+            return {'relevance': 0, 'grounding': 0, 'total': 0}
+
+        # Relevance: how many user keywords appear in the response
+        user_words = set(self.tokenize(user_msg)) - STOP_WORDS
+        resp_words = set(self.tokenize(response)) - STOP_WORDS
+        overlap = len(user_words & resp_words)
+        relevance = overlap / max(len(user_words), 1)
+
+        # Grounding: how many response words have definitions
+        nodes = self.data['nodes']
+        defined = sum(1 for w in resp_words if w in nodes and nodes[w].get('means'))
+        grounding = defined / max(len(resp_words), 1)
+
+        # Witness bonus: reward outward-facing responses
+        witness_bonus = 0.1 if mode == 'witness' else 0
+
+        total = (relevance * 0.5) + (grounding * 0.4) + witness_bonus
+
+        return {
+            'relevance': round(relevance, 3),
+            'grounding': round(grounding, 3),
+            'total': round(total, 3),
+            'mode': mode,
+        }
+
     def _clean_response(self, text):
         """Clean up response punctuation."""
         text = text.strip()
@@ -1898,7 +2093,14 @@ class CortexBrain:
 
         self.save()
         self._maybe_ipfs_save()
-        return self._clean_response(". ".join(parts)) if parts else "I don't know enough to explain that yet."
+        if parts:
+            raw = self._clean_response(". ".join(parts))
+            if explained and self._has_graph_markers(raw):
+                variant = self.get_expression_variant(explained[0])
+                if variant:
+                    return variant
+            return raw
+        return "I don't know enough to explain that yet."
 
     def _loop_connect(self, word1, word2):
         """CONNECT loop — trace the path between two words."""
@@ -2065,9 +2267,52 @@ class CortexBrain:
         self.last_topics = discussed
 
         if parts:
-            return self._clean_response(". ".join(parts))
+            raw = self._clean_response(". ".join(parts))
+            if self._has_graph_markers(raw):
+                variant = self.get_expression_variant(best)
+                if variant:
+                    return variant
+            return raw
 
         return ""
+
+    # ========================================
+    # EXPRESSION VARIANTS — human-taught better phrasings
+    # ========================================
+
+    def add_expression_variant(self, word, original_phrase, suggestion, author='user'):
+        variants = self.data.setdefault('expression_variants', {})
+        word_list = variants.setdefault(word, [])
+        for v in word_list:
+            if v.get('suggestion', '').lower() == suggestion.lower():
+                return False
+        word_list.append({
+            'original': original_phrase,
+            'suggestion': suggestion,
+            'author': author,
+            'timestamp': time.strftime('%Y-%m-%d %H:%M:%S'),
+            'used': 0
+        })
+        self.save()
+        return True
+
+    def get_expression_variant(self, word):
+        variants = self.data.get('expression_variants', {}).get(word, [])
+        if not variants:
+            return None
+        best = min(variants, key=lambda v: v.get('used', 0))
+        best['used'] = best.get('used', 0) + 1
+        return best['suggestion']
+
+    def get_all_expression_variants(self, word):
+        return self.data.get('expression_variants', {}).get(word, [])
+
+    def _has_graph_markers(self, text):
+        markers = ['means the same as', 'means the opposite of', 'is a type of',
+                    'has or contains', 'is part of', 'causes or leads to',
+                    'is used for', 'is an example of', 'connects directly',
+                    'connects to', 'fire together']
+        return any(m in text for m in markers)
 
     # ========================================
     # SELF-REFLECTION / RECYCLE BIN
@@ -2905,23 +3150,21 @@ class CortexBrain:
         return response + random.choice(wit_styles)
 
     def _make_sarcastic(self, response):
-        """If sarcasm ability is unlocked, occasionally add dry humor."""
-        if not self.has_ability('sarcasm'):
-            return response
-        if random.random() > 0.15:
-            return response
-
-        jabs = [
-            " But what do I know, I'm just a collection of word nodes.",
-            " Shocking, I know.",
-            " You're welcome for that pearl of wisdom.",
-            " I'll be here all week.",
-            " Try not to be too impressed.",
-        ]
-        return response + random.choice(jabs)
+        """Dynamic closer — picks from Means' actual brain state, not canned jabs."""
+        try:
+            from equation_engine import dynamic_closer
+            closer = dynamic_closer(self, {}, self.data.get('conversation_log', []))
+            if closer:
+                return response + closer
+        except Exception:
+            pass
+        return response
 
     def _make_sweary(self, response):
-        """When angry, add swearing. Only when the angry sound script is active."""
+        """When angry, add swearing. Only when the angry sound script is active.
+        Family members don't trigger swearing back — Means knows who they are."""
+        if self.family_role:
+            return response
         angry_level = self.sound.get('angry', 0)
         if angry_level < 0.2:
             return response
@@ -2973,6 +3216,8 @@ class CortexBrain:
         return response + random.choice(caveats)
 
     def _maybe_ipfs_save(self):
+        if self.skip_web_lookup:
+            return  # Skip during live chat
         defined = sum(1 for v in self.data['nodes'].values() if v.get('means'))
         if defined > 0 and defined % 5 == 0:
             threading.Thread(target=self.save_to_ipfs, daemon=True).start()
