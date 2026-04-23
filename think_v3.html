@@ -364,6 +364,7 @@ body{background:#0a0a0f;color:#e0e0e0;font-family:'Segoe UI',sans-serif;min-heig
       <div class="wc-btn" onclick="sendToLogic()" style="color:#00d4ff;border-color:#00d4ff33">Send to Cortex</div>
       <div class="wc-btn" id="testBtn" onclick="loadTestBatch()" style="color:#ff8800;border-color:#ff880033">Test Batch</div>
       <div class="wc-btn" id="gearScanBtn" onclick="gearScan()" style="color:#aa66ff;border-color:#aa66ff33">Gear Scan</div>
+      <div class="wc-btn" id="loadBrainBtn" onclick="loadFromBrain()" style="color:#ff66aa;border-color:#ff66aa33;font-weight:700">Load Brain</div>
     </div>
     <div id="spinStatus" style="text-align:center;font-size:0.6em;color:#333;min-height:16px;margin-bottom:4px"></div>
     <div id="symStatus" style="text-align:center;font-size:0.6em;color:#333;min-height:16px;margin-bottom:2px"></div>
@@ -2152,6 +2153,86 @@ function addResultToWheel(){
   document.getElementById('wheelInput').value = result.substring(0, 40);
   document.getElementById('wheelTruth').value = truth >= 0.85 ? '1.0' : truth >= 0.7 ? '0.85' : truth >= 0.5 ? '0.7' : truth >= 0.3 ? '0.5' : truth >= 0.15 ? '0.3' : '0.15';
   setMode('2d');
+}
+
+function loadFromBrain(){
+  const btn = document.getElementById('loadBrainBtn');
+  btn.textContent = 'Loading...';
+  btn.style.color = '#555';
+  const statusEl = document.getElementById('spinStatus');
+  statusEl.textContent = 'pulling real data from cortex...';
+
+  Promise.all([
+    fetch(API+'/memory-golden',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}' }).then(r=>r.json()),
+    fetch(API+'/brain-knowledge',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}).then(r=>r.json()),
+    fetch(API+'/brain-stats',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}).then(r=>r.json())
+  ]).then(([memData, knowledge, stats]) => {
+    wheel1 = {items:[], rotation:0};
+    wheel2 = {items:[], rotation:0};
+    seenAlignments = new Set();
+    gearSteps = 0; gearOffset = 0;
+
+    const mems = (memData.memories||[]).filter(m=>m.quality>0.3);
+    const now = Date.now();
+
+    // W1: golden memories — highest quality brain outputs (what Means KNOWS)
+    const w1src = mems.slice(0,20);
+    w1src.forEach((m,i) => {
+      const truth = Math.min(Math.max(m.quality||0.5, 0.05), 0.95);
+      const slot = truthToSlot(truth);
+      const usedSlot = findEmptySlot(wheel1, truth, detectDomain(m.response||''));
+      if(usedSlot===-1) return;
+      const domain = detectDomain(m.response||m.user_input||'');
+      const label = (m.response||'').substring(0,40).replace(/[<>"]/g,'');
+      const shapeObj = assignShape(label, domain, usedSlot);
+      wheel1.items.push({
+        text:label, truth, slot:usedSlot, domain,
+        shape:shapeObj?shapeObj.latin:null,
+        id:now+i, addedAt:new Date(m.created_at||now).getTime(),
+        emotion:m.emotion||'calm', hemisphere:m.hemisphere||'',
+        agreement:m.agreement||0
+      });
+    });
+
+    // W2: knowledge definitions — what Means has been TAUGHT (word meanings)
+    const knowledgeKeys = Object.keys(knowledge).filter(k=>knowledge[k]&&knowledge[k].length>5);
+    const w2src = knowledgeKeys.slice(0,20);
+    w2src.forEach((word,i) => {
+      const def = knowledge[word];
+      const defLen = (def||'').length;
+      const truth = Math.min(0.95, Math.max(0.1, defLen > 100 ? 0.85 : defLen > 40 ? 0.65 : 0.4));
+      const usedSlot = findEmptySlot(wheel2, truth, detectDomain(word+' '+def));
+      if(usedSlot===-1) return;
+      const domain = detectDomain(word+' '+def);
+      const label = word;
+      const shapeObj = assignShape(label, domain, usedSlot);
+      wheel2.items.push({
+        text:label, truth, slot:usedSlot, domain,
+        shape:shapeObj?shapeObj.latin:null,
+        id:now+i+500, addedAt:now,
+        definition:def.substring(0,100)
+      });
+    });
+
+    seenAlignments.add('0,0');
+    setMode('2d');
+    drawWheel(1); drawWheel(2);
+    renderHierarchy();
+    updateVariationStatus();
+    updateSymStatus();
+    suggestDomain();
+    saveState();
+
+    const leftNodes = stats.left?stats.left.total_nodes:0;
+    const rightNodes = stats.right?stats.right.total_nodes:0;
+    btn.textContent = 'Load Brain';
+    btn.style.color = '#ff66aa';
+    statusEl.innerHTML = '<span style="color:#ff66aa">loaded '+wheel1.items.length+' memories + '+wheel2.items.length+' definitions from cortex ('+leftNodes+'L / '+rightNodes+'R nodes)</span>';
+  }).catch(err => {
+    btn.textContent = 'Load Brain';
+    btn.style.color = '#ff66aa';
+    statusEl.innerHTML = '<span style="color:#ff6644">brain load failed: '+esc(err.message)+'</span>';
+  });
 }
 
 function autoAlign(){
