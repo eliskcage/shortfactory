@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Living Mesh — Shape Language</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;1,300&family=Playfair+Display:ital,wght@1,400;1,700&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#04040a;
+  --panel:#08080f;
+  --border:rgba(255,255,255,0.06);
+  --truth:#00ffaa;
+  --lie:#ff1a4a;
+  --fear:#ff7700;
+  --memory:#3399ff;
+  --will:#ddff00;
+  --loop:#cc44ff;
+  --condition:#ffcc00;
+  --else:#ff6688;
+  --then:#44ffcc;
+  --while:#ff9944;
+  --text:rgba(200,200,220,0.6);
+  --dim:rgba(200,200,220,0.25);
+}
+
+body{
+  background:var(--bg);
+  font-family:'IBM Plex Mono',monospace;
+  color:var(--text);
+  overflow:hidden;
+  height:100vh;width:100vw;
+  user-select:none;
+}
+
+#canvas{position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;}
+
+/* ── LEFT PANEL ── */
+#left{
+  position:absolute;top:0;left:0;height:100%;
+  width:220px;
+  background:linear-gradient(to right,rgba(4,4,10,0.97),rgba(4,4,10,0.8));
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  padding:20px 0;
+  z-index:10;
+  pointer-events:all;
+}
+
+#wordmark{
+  font-family:'Playfair Display',serif;
+  font-style:italic;
+  font-size:1.05rem;
+  color:rgba(255,255,255,0.15);
+  padding:0 18px 20px;
+  border-bottom:1px solid var(--border);
+  letter-spacing:0.04em;
+}
+
+.section-label{
+  font-size:8px;letter-spacing:0.2em;
+  text-transform:uppercase;
+  color:var(--dim);
+  padding:16px 18px 8px;
+}
+
+.shape-btn{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 18px;
+  cursor:pointer;
+  transition:background 0.15s;
+  font-size:10px;letter-spacing:0.08em;
+}
+.shape-btn:hover{background:rgba(255,255,255,0.04);}
+.shape-btn.active{background:rgba(255,255,255,0.07);}
+
+.shape-icon{
+  width:22px;height:22px;
+  flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+}
+
+.shape-icon svg{width:100%;height:100%;}
+
+/* ── BOTTOM PANEL — language input ── */
+#bottom{
+  position:absolute;bottom:0;left:220px;right:0;
+  background:linear-gradient(to top,rgba(4,4,10,0.97),rgba(4,4,10,0.7));
+  border-top:1px solid var(--border);
+  padding:14px 20px;
+  z-index:10;
+  display:flex;align-items:center;gap:12px;
+}
+
+#lang-input{
+  flex:1;
+  background:transparent;
+  border:none;outline:none;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;
+  letter-spacing:0.06em;
+  color:rgba(255,255,255,0.75);
+  caret-color:var(--truth);
+}
+#lang-input::placeholder{color:var(--dim);}
+
+#lang-hint{
+  font-size:9px;letter-spacing:0.08em;
+  color:var(--dim);
+  white-space:nowrap;
+}
+
+#translate-btn{
+  background:none;border:1px solid rgba(0,255,170,0.3);
+  color:var(--truth);padding:6px 14px;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:9px;letter-spacing:0.12em;
+  cursor:pointer;transition:all 0.2s;text-transform:uppercase;
+}
+#translate-btn:hover{background:rgba(0,255,170,0.08);border-color:var(--truth);}
+
+/* ── LOG ── */
+#logbox{
+  position:absolute;top:20px;right:20px;
+  width:260px;
+  z-index:10;pointer-events:none;
+  display:flex;flex-direction:column;gap:3px;
+}
+.logline{
+  font-size:9px;letter-spacing:0.05em;
+  color:rgba(180,180,210,0.3);
+  text-align:right;
+  animation:lin 0.25s ease;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.logline.r{color:rgba(255,26,74,0.65);}
+.logline.g{color:rgba(0,255,170,0.55);}
+.logline.b{color:rgba(51,153,255,0.55);}
+@keyframes lin{from{opacity:0;transform:translateX(6px)}to{opacity:1;transform:none}}
+
+/* ── TOOLTIP ── */
+#tooltip{
+  position:absolute;
+  background:rgba(8,8,15,0.95);
+  border:1px solid var(--border);
+  padding:8px 12px;
+  font-size:9px;letter-spacing:0.07em;
+  pointer-events:none;z-index:20;
+  display:none;line-height:1.7;
+  max-width:200px;
+}
+
+/* ── MODE INDICATOR ── */
+#mode{
+  position:absolute;top:20px;left:240px;
+  font-size:9px;letter-spacing:0.15em;text-transform:uppercase;
+  color:var(--dim);z-index:10;pointer-events:none;
+}
+#mode span{color:var(--truth);}
+</style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+
+<!-- LEFT: shape palette -->
+<div id="left">
+  <div id="wordmark">living mesh</div>
+
+  <div class="section-label">Logic Shapes</div>
+  <div class="shape-btn active" data-type="memory" onclick="setTool(this,'memory')">
+    <div class="shape-icon"><svg viewBox="0 0 22 22"><circle cx="11" cy="11" r="8" fill="none" stroke="#3399ff" stroke-width="1.5"/><circle cx="11" cy="11" r="3" fill="#3399ff" opacity="0.6"/></svg></div>
+    memory
+  </div>
+  <div class="shape-btn" data-type="condition" onclick="setTool(this,'condition')">
+    <div class="shape-icon"><svg viewBox="0 0 22 22"><polygon points="11,2 20,20 2,20" fill="none" stroke="#ffcc00" stroke-width="1.5"/></svg></div>
+    if / condition
+  </div>
+  <div class="shape-btn" data-type="else" onclick="setTool(this,'else')">
+    <div class="shape-icon"><svg viewBox="0 0 22 22"><polygon points="11,20 20,2 2,2" fill="none" stroke="#ff6688" stroke-width="1.5"/></svg></div>
+    else
+  </div>
+  <div class="shape-btn" data-type="then" onclick="setTool(this,'then')">
+    <div class="shape-icon"><svg viewBox="0 0 22 22"><rect x="3" y="3" width="16" height="16" rx="8" fill="none" stroke="#44ffcc" stroke-width="1.5"/></svg></div>
+    then
+  </div>
+  <div class="shape-btn" data-type="loop" onclick="setTool(this,'loop')">
+    <div class="shape-icon"><svg viewBox="0 0 22 22"><path d="M11 3 A8 8 0 1 1 3 11" fill="none" stroke="#cc44ff" stroke-width="1.5"/><polygon points="3,7 3,15 9,11" fill="#cc44ff"/></svg></div>
+    loop / while
+  </div>
+  <div class="shape-btn" data-type="will" onclick="setTool(this,'will')">
+    <div class="shape-icon"><svg viewBox="0 0 22 22"><polygon points="11,2 13.5,8.5 20,8.5 14.8,12.8 16.8,19.5 11,15.5 5.2,19.5 7.2,12.8 2,8.5 8.5,8.5" fill="none" stroke="#ddff00" stroke-width="1.5"/></svg></div>
+    will / yes
+  </div>
+  <div class="shape-btn" data-type="lie" onclick="setTool(this,'lie')">
+    <div class="shape-icon"><svg viewBox="0 0 22 22"><line x1="3" y1="3" x2="19" y2="19" stroke="#ff1a4a" stroke-width="1.5"/><line x1="19" y1="3" x2="3" y2="19" stroke="#ff1a4a" stroke-width="1.5"/></svg></div>
+    no / refuse
+  </div>
+  <div class="shape-btn" data-type="truth" onclick="setTool(this,'truth')">
+    <div class="shape-icon"><svg viewBox="0 0 22 22"><rect x="3" y="3" width="16" height="16" fill="none" stroke="#00ffaa" stroke-width="1.5"/></svg></div>
+    truth / yes
+  </div>
+  <div class="shape-btn" data-type="fear" onclick="setTool(this,'fear')">
+    <div class="shape-icon"><svg viewBox="0 0 22 22"><polygon points="11,2 20,11 11,20 2,11" fill="none" stroke="#ff7700" stroke-width="1.5"/></svg></div>
+    fear / guard
+  </div>
+
+  <div class="section-label" style="margin-top:auto;">Tools</div>
+  <div class="shape-btn" onclick="clearAll()" style="color:rgba(255,80,80,0.5);font-size:9px;">
+    <div class="shape-icon"><svg viewBox="0 0 22 22"><line x1="4" y1="4" x2="18" y2="18" stroke="rgba(255,80,80,0.5)" stroke-width="1.5"/><line x1="18" y1="4" x2="4" y2="18" stroke="rgba(255,80,80,0.5)" stroke-width="1.5"/></svg></div>
+    clear mesh
+  </div>
+  <div class="shape-btn" onclick="exportCode()" style="font-size:9px;">
+    <div class="shape-icon"><svg viewBox="0 0 22 22"><polyline points="7,10 11,6 15,10" fill="none" stroke="var(--dim)" stroke-width="1.5"/><line x1="11" y1="6" x2="11" y2="16" stroke="var(--dim)" stroke-width="1.5"/><line x1="4" y1="18" x2="18" y2="18" stroke="var(--dim)" stroke-width="1.5"/></svg></div>
+    export IR
+  </div>
+</div>
+
+<!-- BOTTOM: language input -->
+<div id="bottom">
+  <div id="lang-hint">&#x2B21;</div>
+  <input id="lang-input" placeholder="speak in english... &quot;if the user is happy then loop greeting else refuse&quot;" />
+  <button id="translate-btn" onclick="translateEnglish()">translate &rarr; shapes</button>
+</div>
+
+<div id="logbox"></div>
+<div id="tooltip"></div>
+<div id="mode">placing: <span id="mode-type">memory</span></div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const logbox = document.getElementById('logbox');
+const tooltip = document.getElementById('tooltip');
+const modeType = document.getElementById('mode-type');
+
+let W, H;
+function resize(){
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+const SHAPES = {
+  memory:    { color:'#3399ff', sides:0,   label:'MEM',  desc:'Stores experience. Grows with history.' },
+  condition: { color:'#ffcc00', sides:3,   label:'IF',   desc:'Branches. Truth then. False else.' },
+  else:      { color:'#ff6688', sides:3,   label:'ELSE', desc:'Inverse triangle. Fires when condition fails.' },
+  then:      { color:'#44ffcc', sides:0,   label:'THEN', desc:'Rounded output. Executes on acceptance.' },
+  loop:      { color:'#cc44ff', sides:6,   label:'LOOP', desc:'Hexagonal. Self-referencing port. Repeats.' },
+  will:      { color:'#ddff00', sides:5,   label:'WILL', desc:'5-pointed. Drives intent. Cannot be clogged.' },
+  lie:       { color:'#ff1a4a', sides:4,   label:'NO',   desc:'X-node. Refuses all incoming signals.' },
+  truth:     { color:'#00ffaa', sides:4,   label:'YES',  desc:'Square truth. Accepts. Propagates clean.' },
+  fear:      { color:'#ff7700', sides:4,   label:'GUARD',desc:'Diamond. Guards edges. High refusal threshold.' },
+};
+
+const KEYWORD_MAP = [
+  { words:['if','when','check','whether','does','is'],  type:'condition' },
+  { words:['else','otherwise','or','instead','except'], type:'else' },
+  { words:['then','so','therefore','do','run','execute'],type:'then' },
+  { words:['while','loop','repeat','keep','always','until'], type:'loop' },
+  { words:['yes','accept','allow','true','agree','ok'], type:'truth' },
+  { words:['no','refuse','reject','deny','block','stop','never'], type:'lie' },
+  { words:['remember','memory','store','save','recall','know'], type:'memory' },
+  { words:['will','want','intend','choose','decide','drive'], type:'will' },
+  { words:['fear','guard','protect','caution','warn','careful'], type:'fear' },
+];
+
+function wordToType(word){
+  const w = word.toLowerCase().replace(/[^a-z]/g,'');
+  for(const k of KEYWORD_MAP){
+    if(k.words.includes(w)) return k.type;
+  }
+  return null;
+}
+
+class Node {
+  constructor(x, y, type, label=''){
+    this.x = x; this.y = y;
+    this.vx = (Math.random()-0.5)*0.4;
+    this.vy = (Math.random()-0.5)*0.4;
+    this.type = type;
+    this.label = label || SHAPES[type].label;
+    this.r = type==='memory'? 14 : type==='loop'? 18 : 13;
+    this.baseR = this.r;
+    this.memory = [];
+    this.valence = Math.random()*1.4 - 0.4;
+    this.energy = 0.3 + Math.random()*0.4;
+    this.freewill = type==='lie'? 0.01 : type==='will'? 0.99 : 0.3+Math.random()*0.5;
+    this.firing = 0;
+    this.refusing = 0;
+    this.age = 0;
+    this.id = Math.floor(Math.random()*0xffff).toString(16).padStart(4,'0');
+    this.joyParticles = [];
+    this.selected = false;
+    this.pinned = false;
+    this.pulse = Math.random()*Math.PI*2;
+  }
+
+  get color(){ return SHAPES[this.type].color; }
+
+  receiveSignal(strength){
+    this.age++;
+    const painR = this.memory.filter(m=>m<0).length / Math.max(1,this.memory.length);
+    if(this.type==='lie' || painR > this.freewill){
+      this.refusing = 35;
+      this.valence = Math.max(-1, this.valence-0.08);
+      this.memory.push(-strength);
+      if(this.memory.length>24) this.memory.shift();
+      addLog('0x'+this.id+' ['+this.label+'] refused — pain '+(painR*100|0)+'%','r');
+      return false;
+    }
+    this.firing = 28;
+    this.energy = Math.min(1, this.energy+strength*0.35);
+    this.valence = Math.min(1, this.valence+0.06);
+    this.memory.push(strength);
+    if(this.memory.length>24) this.memory.shift();
+    if(this.valence>0.5 && Math.random()<0.4) this.emitJoy();
+    return true;
+  }
+
+  emitJoy(){
+    for(let i=0;i<4;i++) this.joyParticles.push({
+      x:this.x, y:this.y,
+      vx:(Math.random()-0.5)*2.5, vy:(Math.random()-0.5)*2.5,
+      life:1, decay:0.018+Math.random()*0.015
+    });
+    addLog('0x'+this.id+' joy burst','g');
+  }
+
+  update(nodes){
+    if(!this.pinned){
+      for(const n of nodes){
+        if(n===this) continue;
+        const dx=this.x-n.x, dy=this.y-n.y;
+        const d=Math.sqrt(dx*dx+dy*dy);
+        if(d<70 && d>0){
+          const f=0.4/d;
+          this.vx+=dx*f; this.vy+=dy*f;
+        }
+      }
+      this.x+=this.vx; this.y+=this.vy;
+      const pad=80;
+      if(this.x<pad){this.vx+=0.5;} if(this.x>W-pad){this.vx-=0.5;}
+      if(this.y<pad){this.vy+=0.5;} if(this.y>H-80){this.vy-=0.5;}
+      this.vx*=0.94; this.vy*=0.94;
+    }
+    if(this.firing>0) this.firing--;
+    if(this.refusing>0) this.refusing--;
+    this.energy*=0.997;
+    this.pulse+=0.03;
+    this.r = this.baseR + Math.sin(this.pulse)*1.5 + this.energy*4 + (this.firing>0?4:0);
+
+    this.joyParticles=this.joyParticles.filter(p=>p.life>0);
+    this.joyParticles.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy;
+      p.vx*=0.95; p.vy*=0.95;
+      p.life-=p.decay;
+    });
+  }
+
+  drawShape(x,y,r,color,alpha=1){
+    const s = SHAPES[this.type];
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.fillStyle = color+'18';
+
+    if(s.sides===0 && this.type==='memory'){
+      ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2);
+      ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.arc(x,y,r*0.45,0,Math.PI*2);
+      ctx.strokeStyle=color+'66'; ctx.stroke();
+    } else if(s.sides===0 && this.type==='then'){
+      const rr=r*0.6;
+      ctx.beginPath();
+      ctx.roundRect(x-r,y-rr,r*2,rr*2,rr);
+      ctx.fill(); ctx.stroke();
+    } else if(s.sides===3){
+      const flip = this.type==='else'?1:-1;
+      ctx.beginPath();
+      ctx.moveTo(x, y-r*flip);
+      ctx.lineTo(x+r*0.866, y+r*0.5*flip);
+      ctx.lineTo(x-r*0.866, y+r*0.5*flip);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+    } else if(s.sides===4 && this.type==='truth'){
+      ctx.beginPath();
+      ctx.rect(x-r,y-r,r*2,r*2);
+      ctx.fill(); ctx.stroke();
+    } else if(s.sides===4 && this.type==='fear'){
+      ctx.beginPath();
+      ctx.moveTo(x,y-r); ctx.lineTo(x+r,y);
+      ctx.lineTo(x,y+r); ctx.lineTo(x-r,y);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+    } else if(s.sides===4 && this.type==='lie'){
+      ctx.lineWidth=2.5;
+      ctx.beginPath(); ctx.moveTo(x-r,y-r); ctx.lineTo(x+r,y+r); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x+r,y-r); ctx.lineTo(x-r,y+r); ctx.stroke();
+    } else if(s.sides===5){
+      ctx.beginPath();
+      for(let i=0;i<5;i++){
+        const a=-Math.PI/2+i*Math.PI*2/5;
+        const ai=a+Math.PI/5;
+        i===0?ctx.moveTo(x+Math.cos(a)*r,y+Math.sin(a)*r):ctx.lineTo(x+Math.cos(a)*r,y+Math.sin(a)*r);
+        ctx.lineTo(x+Math.cos(ai)*r*0.4,y+Math.sin(ai)*r*0.4);
+      }
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+    } else if(s.sides===6){
+      ctx.beginPath();
+      for(let i=0;i<6;i++){
+        const a=i*Math.PI/3-Math.PI/6;
+        i===0?ctx.moveTo(x+Math.cos(a)*r,y+Math.sin(a)*r):ctx.lineTo(x+Math.cos(a)*r,y+Math.sin(a)*r);
+      }
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+    ctx.globalAlpha=1;
+  }
+
+  draw(){
+    const c = this.refusing>0 ? '#ff1a4a' : this.firing>0 ? this.color : this.color;
+    const pulse = this.refusing>0 ? this.refusing/35 : this.firing>0 ? this.firing/28 : 0;
+
+    this.joyParticles.forEach(p=>{
+      ctx.beginPath(); ctx.arc(p.x,p.y,2,0,Math.PI*2);
+      ctx.fillStyle='rgba(0,255,170,'+p.life*0.9+')'; ctx.fill();
+    });
+
+    if(pulse>0){
+      const grd=ctx.createRadialGradient(this.x,this.y,0,this.x,this.y,this.r*5);
+      const rgb=this.refusing>0?'255,26,74':'180,220,255';
+      grd.addColorStop(0,'rgba('+rgb+','+pulse*0.2+')');
+      grd.addColorStop(1,'rgba('+rgb+',0)');
+      ctx.beginPath(); ctx.arc(this.x,this.y,this.r*5,0,Math.PI*2);
+      ctx.fillStyle=grd; ctx.fill();
+    }
+
+    this.drawShape(this.x, this.y, this.r, c);
+
+    if(this.memory.length>2){
+      const pos=this.memory.filter(m=>m>0).length;
+      const ratio=pos/this.memory.length;
+      ctx.beginPath();
+      ctx.arc(this.x,this.y,this.r+5,-Math.PI/2,-Math.PI/2+Math.PI*2*ratio);
+      ctx.strokeStyle='rgba(0,255,170,'+(0.25+ratio*0.5)+')';
+      ctx.lineWidth=2; ctx.stroke();
+      if(ratio<1){
+        ctx.beginPath();
+        ctx.arc(this.x,this.y,this.r+5,-Math.PI/2+Math.PI*2*ratio,Math.PI*3/2);
+        ctx.strokeStyle='rgba(255,26,74,'+(0.2+(1-ratio)*0.4)+')';
+        ctx.lineWidth=2; ctx.stroke();
+      }
+    }
+
+    ctx.fillStyle = this.firing>0||this.refusing>0 ? c : 'rgba(255,255,255,0.3)';
+    ctx.font = "300 8px 'IBM Plex Mono'";
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(this.label, this.x, this.y + this.r + 10);
+
+    if(this.selected){
+      ctx.beginPath(); ctx.arc(this.x,this.y,this.r+8,0,Math.PI*2);
+      ctx.strokeStyle='rgba(255,255,255,0.3)'; ctx.lineWidth=1; ctx.setLineDash([3,3]); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }
+}
+
+class Edge {
+  constructor(a,b){
+    this.a=a; this.b=b;
+    this.signal=0; this.active=false; this.refused=false;
+    this.dir=1;
+    this.age=0;
+  }
+  fire(from){
+    const to=from===this.a?this.b:this.a;
+    const str=0.3+from.energy*0.7;
+    const ok=to.receiveSignal(str);
+    this.active=true; this.refused=!ok;
+    this.signal=0; this.dir=from===this.a?1:-1;
+    this.age++;
+  }
+  update(){
+    if(this.active){
+      this.signal+=0.035;
+      if(this.signal>=1){this.active=false;this.refused=false;this.signal=0;}
+    }
+  }
+  draw(){
+    const dx=this.b.x-this.a.x, dy=this.b.y-this.a.y;
+    const d=Math.sqrt(dx*dx+dy*dy);
+    if(d>350) return;
+    const alpha=Math.max(0,(1-d/340)*0.18);
+    ctx.beginPath(); ctx.moveTo(this.a.x,this.a.y); ctx.lineTo(this.b.x,this.b.y);
+    ctx.strokeStyle='rgba(120,120,180,'+alpha+')'; ctx.lineWidth=0.8; ctx.stroke();
+    if(this.active){
+      const t=this.dir===1?this.signal:1-this.signal;
+      const px=this.a.x+dx*t, py=this.a.y+dy*t;
+      ctx.beginPath(); ctx.arc(px,py,3,0,Math.PI*2);
+      ctx.fillStyle=this.refused?'rgba(255,26,74,0.95)':'rgba(0,255,170,0.85)'; ctx.fill();
+    }
+  }
+}
+
+let nodes=[], edges=[];
+let currentTool='memory';
+let dragging=null, dragOffX=0, dragOffY=0;
+let connecting=null;
+let mouseX=0, mouseY=0;
+
+function setTool(el,type){
+  document.querySelectorAll('.shape-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  currentTool=type;
+  modeType.textContent=type;
+  connecting=null;
+}
+
+function addNode(x,y,type,label){
+  const n=new Node(x,y,type,label);
+  nodes.push(n);
+  for(const other of nodes){
+    if(other===n) continue;
+    const dx=n.x-other.x, dy=n.y-other.y;
+    const d=Math.sqrt(dx*dx+dy*dy);
+    if(d<200 && Math.random()<0.5){
+      edges.push(new Edge(n,other));
+    }
+  }
+  addLog('placed ['+SHAPES[type].label+'] at '+(x|0)+','+(y|0),'b');
+  return n;
+}
+
+function clearAll(){
+  nodes=[]; edges=[];
+  addLog('mesh cleared','r');
+}
+
+function exportCode(){
+  const ir={version:'v1',nodes:nodes.map(n=>({
+    id:n.id,type:n.type,label:n.label,
+    x:n.x|0,y:n.y|0,
+    memory_depth:n.memory.length,
+    valence:+n.valence.toFixed(2),
+    freewill:+n.freewill.toFixed(2)
+  })),edges:edges.map(e=>({from:e.a.id,to:e.b.id,firings:e.age}))};
+  const blob=new Blob([JSON.stringify(ir,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download='mesh-ir.json'; a.click();
+  addLog('IR exported','g');
+}
+
+function translateEnglish(){
+  const input=document.getElementById('lang-input');
+  const text=input.value.trim();
+  if(!text) return;
+  const words=text.split(/\s+/);
+  const found=[];
+  for(const w of words){
+    const t=wordToType(w);
+    if(t) found.push({word:w,type:t});
+  }
+  if(!found.length){
+    addLog('no shapes found in text','r'); return;
+  }
+  const cx=W/2+100, cy=H/2;
+  const arc=Math.min(300, found.length*60);
+  found.forEach((f,i)=>{
+    const a=-Math.PI/2 + i*(Math.PI/(Math.max(1,found.length-1)));
+    const r=arc*(0.5+found.length*0.05);
+    const x=cx+Math.cos(a)*r + (Math.random()-0.5)*30;
+    const y=cy+Math.sin(a)*r*0.6 + (Math.random()-0.5)*30;
+    setTimeout(()=>addNode(x,y,f.type,f.word.slice(0,6).toUpperCase()), i*120);
+  });
+  addLog('"'+text.slice(0,40)+'" -> '+found.length+' shapes','g');
+  input.value='';
+}
+
+document.getElementById('lang-input').addEventListener('keydown',e=>{
+  if(e.key==='Enter') translateEnglish();
+});
+
+canvas.addEventListener('mousedown',e=>{
+  if(e.clientX<220) return;
+  mouseX=e.clientX; mouseY=e.clientY;
+
+  const hit=nodes.slice().reverse().find(n=>{
+    const dx=n.x-e.clientX, dy=n.y-e.clientY;
+    return Math.sqrt(dx*dx+dy*dy)<n.r+8;
+  });
+
+  if(hit){
+    if(e.shiftKey){
+      if(!connecting){
+        connecting=hit; hit.selected=true;
+        addLog('connecting from 0x'+hit.id+'...','b');
+      } else {
+        if(connecting!==hit){
+          const exists=edges.find(ed=>(ed.a===connecting&&ed.b===hit)||(ed.b===connecting&&ed.a===hit));
+          if(!exists) edges.push(new Edge(connecting,hit));
+          addLog('edge: 0x'+connecting.id+' -> 0x'+hit.id,'g');
+        }
+        connecting.selected=false; connecting=null;
+      }
+    } else if(e.altKey){
+      nodes=nodes.filter(n=>n!==hit);
+      edges=edges.filter(ed=>ed.a!==hit&&ed.b!==hit);
+      addLog('deleted 0x'+hit.id,'r');
+    } else {
+      dragging=hit; hit.pinned=true;
+      dragOffX=e.clientX-hit.x; dragOffY=e.clientY-hit.y;
+      hit.energy=Math.min(1,hit.energy+0.5); hit.firing=20;
+    }
+  } else {
+    if(connecting){ connecting.selected=false; connecting=null; return; }
+    addNode(e.clientX,e.clientY,currentTool);
+  }
+});
+
+canvas.addEventListener('mousemove',e=>{
+  mouseX=e.clientX; mouseY=e.clientY;
+  if(dragging){
+    dragging.x=e.clientX-dragOffX;
+    dragging.y=e.clientY-dragOffY;
+  }
+  const hit=nodes.find(n=>{
+    const dx=n.x-e.clientX, dy=n.y-e.clientY;
+    return Math.sqrt(dx*dx+dy*dy)<n.r+12;
+  });
+  if(hit){
+    const pos=hit.memory.filter(m=>m>0).length;
+    tooltip.style.display='block';
+    tooltip.style.left=(e.clientX+18)+'px';
+    tooltip.style.top=(e.clientY-10)+'px';
+    tooltip.innerHTML='<b style="color:'+hit.color+'">['+hit.label+']</b> 0x'+hit.id+'<br>'+
+      'type: '+hit.type+'<br>'+
+      'valence: '+hit.valence.toFixed(2)+'<br>'+
+      'freewill: '+hit.freewill.toFixed(2)+'<br>'+
+      'memory: '+hit.memory.length+' / pos:'+pos+'<br>'+
+      'energy: '+hit.energy.toFixed(2)+'<br>'+
+      '<span style="opacity:0.5;font-size:8px">'+SHAPES[hit.type].desc+'</span>';
+  } else {
+    tooltip.style.display='none';
+  }
+});
+
+canvas.addEventListener('mouseup',e=>{
+  if(dragging){ dragging.pinned=false; dragging=null; }
+});
+
+canvas.addEventListener('dblclick',e=>{
+  if(e.clientX<220) return;
+  nodes.forEach(n=>{
+    const dx=n.x-e.clientX, dy=n.y-e.clientY;
+    if(Math.sqrt(dx*dx+dy*dy)<120){
+      n.energy=Math.min(1,n.energy+0.9);
+      n.firing=35;
+      n.valence=Math.min(1,n.valence+0.2);
+    }
+  });
+});
+
+function addLog(msg,cls){
+  const el=document.createElement('div');
+  el.className='logline '+(cls||'');
+  el.textContent=msg;
+  logbox.appendChild(el);
+  while(logbox.children.length>14) logbox.removeChild(logbox.firstChild);
+}
+
+let tick=0;
+function maybeFire(){
+  tick++;
+  if(edges.length>0 && Math.random()<0.05){
+    const e=edges[Math.floor(Math.random()*edges.length)];
+    if(!e.active){
+      const from=Math.random()<0.5?e.a:e.b;
+      if(from.energy>0.08) e.fire(from);
+    }
+  }
+  if(Math.random()<0.008 && nodes.length>0){
+    const n=nodes[Math.floor(Math.random()*nodes.length)];
+    n.energy=Math.min(1,n.energy+0.3);
+  }
+}
+
+function drawConnectingLine(){
+  if(!connecting) return;
+  ctx.beginPath();
+  ctx.moveTo(connecting.x,connecting.y);
+  ctx.lineTo(mouseX,mouseY);
+  ctx.strokeStyle='rgba(255,255,255,0.2)';
+  ctx.lineWidth=1; ctx.setLineDash([4,4]); ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+function draw(){
+  ctx.fillStyle='rgba(4,4,10,0.2)';
+  ctx.fillRect(0,0,W,H);
+
+  edges.forEach(e=>{e.update();e.draw();});
+  nodes.forEach(n=>{n.update(nodes);n.draw();});
+  drawConnectingLine();
+  maybeFire();
+  requestAnimationFrame(draw);
+}
+
+setTimeout(()=>{
+  addNode(W/2-80, H/2-40,'condition','IF');
+  addNode(W/2+80, H/2-80,'then','THEN');
+  addNode(W/2+80, H/2+60,'else','ELSE');
+  addNode(W/2-200, H/2,'memory','MEM');
+  addNode(W/2, H/2+120,'loop','LOOP');
+},200);
+
+draw();
+</script>
+</body>
+</html>
