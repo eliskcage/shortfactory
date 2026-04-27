@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Digital Heart — Mesh-Shape Entanglement</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0f;color:#e0e0e0;font-family:'Courier New',monospace;overflow:hidden}
+canvas{display:block;position:absolute;top:0;left:0}
+#ui{position:absolute;top:10px;left:10px;z-index:10;font-size:12px;pointer-events:none}
+#ui div{margin:4px 0}
+#controls{position:absolute;bottom:10px;left:10px;z-index:10;font-size:12px}
+#controls label{display:block;margin:4px 0;color:#888}
+#controls input[type=range]{width:160px;vertical-align:middle}
+#readout{position:absolute;top:10px;right:10px;z-index:10;font-size:11px;
+  background:rgba(0,0,0,0.7);padding:12px;border:1px solid #333;max-width:320px;max-height:90vh;overflow-y:auto}
+#readout h3{color:#f00;margin-bottom:6px;font-size:13px}
+.hit{color:#0f0}.miss{color:#333}
+#signal{position:absolute;bottom:10px;right:10px;z-index:10;width:320px;height:120px;
+  background:rgba(0,0,0,0.7);border:1px solid #500}
+#groove-readout{position:absolute;bottom:135px;right:10px;z-index:10;font-size:11px;
+  color:#ff0;background:rgba(0,0,0,0.7);padding:6px;border:1px solid #333;width:320px}
+#bpm{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:10;
+  font-size:28px;font-weight:bold;color:#f00;pointer-events:none;text-shadow:0 0 20px #f00}
+#click-start{position:absolute;top:0;left:0;width:100%;height:100%;z-index:100;
+  background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;
+  font-size:24px;color:#f44;cursor:pointer;text-align:center;line-height:1.6}
+</style>
+</head>
+<body>
+<div id="click-start">CLICK TO START HEART<br><span style="font-size:14px;color:#888">audio requires user interaction</span></div>
+<canvas id="c"></canvas>
+<div id="ui">
+  <div style="color:#f00;font-size:14px;font-weight:bold">&#x2764; DIGITAL HEART</div>
+  <div id="stats"></div>
+</div>
+<div id="bpm">-- BPM</div>
+<div id="controls">
+  <label>Heart Rate <input type="range" id="bpmCtrl" min="30" max="180" step="1" value="72"> <span id="bpmV">72</span> BPM</label>
+  <label>Strength <input type="range" id="strength" min="0.1" max="0.6" step="0.01" value="0.35"> <span id="strengthV">0.35</span></label>
+  <label>Wander <input type="range" id="wander" min="0" max="1" step="0.01" value="0.5"> <span id="wanderV">0.5</span></label>
+  <label style="color:#0ff"><input type="checkbox" id="showGrooves" checked> Show grooves</label>
+  <label style="color:#f44"><input type="checkbox" id="muteAudio"> Mute</label>
+</div>
+<div id="readout"><h3>&#x2764; ENTANGLED NODES</h3><div id="entList"></div></div>
+<canvas id="signal"></canvas>
+<div id="groove-readout">Heart starting...</div>
+<script>
+const C = document.getElementById('c');
+const ctx = C.getContext('2d');
+const SC = document.getElementById('signal');
+const sctx = SC.getContext('2d');
+
+let W, H;
+function resize() {
+  W = C.width = window.innerWidth;
+  H = C.height = window.innerHeight;
+  SC.width = 320; SC.height = 120;
+}
+resize();
+window.addEventListener('resize', resize);
+
+// ═══════════════════════════════════════════
+// WEB AUDIO — SYNTHESISED HEARTBEAT
+// ═══════════════════════════════════════════
+let audioCtx = null;
+let muted = false;
+
+function initAudio() {
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+function playHeartbeat(intensity) {
+  if (!audioCtx || muted) return;
+  const now = audioCtx.currentTime;
+  const vol = Math.min(1, intensity * 1.5);
+
+  // LUB (S1) — lower, longer
+  const lub = audioCtx.createOscillator();
+  const lubGain = audioCtx.createGain();
+  const lubFilter = audioCtx.createBiquadFilter();
+  lub.type = 'sine';
+  lub.frequency.setValueAtTime(55, now);
+  lub.frequency.exponentialRampToValueAtTime(35, now + 0.12);
+  lubFilter.type = 'lowpass';
+  lubFilter.frequency.value = 120;
+  lubGain.gain.setValueAtTime(vol * 0.8, now);
+  lubGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+  lub.connect(lubFilter);
+  lubFilter.connect(lubGain);
+  lubGain.connect(audioCtx.destination);
+  lub.start(now);
+  lub.stop(now + 0.15);
+
+  // DUB (S2) — higher, shorter, slightly delayed
+  const dub = audioCtx.createOscillator();
+  const dubGain = audioCtx.createGain();
+  const dubFilter = audioCtx.createBiquadFilter();
+  dub.type = 'sine';
+  dub.frequency.setValueAtTime(70, now + 0.12);
+  dub.frequency.exponentialRampToValueAtTime(40, now + 0.22);
+  dubFilter.type = 'lowpass';
+  dubFilter.frequency.value = 150;
+  dubGain.gain.setValueAtTime(0.001, now);
+  dubGain.gain.setValueAtTime(vol * 0.5, now + 0.12);
+  dubGain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+  dub.connect(dubFilter);
+  dubFilter.connect(dubGain);
+  dubGain.connect(audioCtx.destination);
+  dub.start(now + 0.12);
+  dub.stop(now + 0.25);
+
+  // thump — noise burst for the chest-hit feel
+  const bufSize = audioCtx.sampleRate * 0.08;
+  const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < bufSize; i++) {
+    data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufSize * 0.15));
+  }
+  const noise = audioCtx.createBufferSource();
+  const noiseGain = audioCtx.createGain();
+  const noiseFilter = audioCtx.createBiquadFilter();
+  noise.buffer = buf;
+  noiseFilter.type = 'lowpass';
+  noiseFilter.frequency.value = 80;
+  noiseGain.gain.setValueAtTime(vol * 0.4, now);
+  noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+  noise.connect(noiseFilter);
+  noiseFilter.connect(noiseGain);
+  noiseGain.connect(audioCtx.destination);
+  noise.start(now);
+}
+
+// ═══════════════════════════════════════════
+// 3D MATH
+// ═══════════════════════════════════════════
+function rotX(p, a) {
+  const c = Math.cos(a), s = Math.sin(a);
+  return [p[0], p[1]*c - p[2]*s, p[1]*s + p[2]*c];
+}
+function rotY(p, a) {
+  const c = Math.cos(a), s = Math.sin(a);
+  return [p[0]*c + p[2]*s, p[1], -p[0]*s + p[2]*c];
+}
+function rotZ(p, a) {
+  const c = Math.cos(a), s = Math.sin(a);
+  return [p[0]*c - p[1]*s, p[0]*s + p[1]*c, p[2]];
+}
+function project(p) {
+  const fov = 400;
+  const z = p[2] + 5;
+  const s = fov / z;
+  return [p[0] * s + W/2, p[1] * s + H/2, z, s];
+}
+function dist3(a, b) {
+  const dx=a[0]-b[0], dy=a[1]-b[1], dz=a[2]-b[2];
+  return Math.sqrt(dx*dx + dy*dy + dz*dz);
+}
+
+// ═══════════════════════════════════════════
+// MESH SPHERE (the bubble/membrane)
+// ═══════════════════════════════════════════
+const MESH_R = 2.0;
+const MESH_RES = 16;
+const meshNodes = [];
+const meshEdges = [];
+
+for (let i = 0; i <= MESH_RES; i++) {
+  const phi = Math.PI * i / MESH_RES;
+  const rings = Math.max(1, Math.round(MESH_RES * Math.sin(phi)));
+  for (let j = 0; j < rings; j++) {
+    const theta = 2 * Math.PI * j / rings;
+    const x = MESH_R * Math.sin(phi) * Math.cos(theta);
+    const y = MESH_R * Math.sin(phi) * Math.sin(theta);
+    const z = MESH_R * Math.cos(phi);
+    meshNodes.push({
+      base: [x, y, z],
+      displaced: [x, y, z],
+      entangled: false,
+      entangleDepth: 0,
+      id: meshNodes.length,
+      ring: i,
+      sector: j,
+      nearestGroove: 0
+    });
+  }
+}
+
+for (let i = 0; i < meshNodes.length; i++) {
+  for (let j = i+1; j < meshNodes.length; j++) {
+    const d = dist3(meshNodes[i].base, meshNodes[j].base);
+    if (d < MESH_R * 0.55) meshEdges.push([i, j]);
+  }
+}
+
+// ═══════════════════════════════════════════
+// SHAPE WITH GROOVES (the record)
+// ═══════════════════════════════════════════
+const SHAPE_VERTS_BASE = [];
+const SHAPE_GROOVES = [];
+
+const t = (1 + Math.sqrt(5)) / 2;
+const icoVerts = [
+  [-1,t,0],[1,t,0],[-1,-t,0],[1,-t,0],
+  [0,-1,t],[0,1,t],[0,-1,-t],[0,1,-t],
+  [t,0,-1],[t,0,1],[-t,0,-1],[-t,0,1]
+];
+const icoFaces = [
+  [0,11,5],[0,5,1],[0,1,7],[0,7,10],[0,10,11],
+  [1,5,9],[5,11,4],[11,10,2],[10,7,6],[7,1,8],
+  [3,9,4],[3,4,2],[3,2,6],[3,6,8],[3,8,9],
+  [4,9,5],[2,4,11],[6,2,10],[8,6,7],[9,8,1]
+];
+const icoNorm = icoVerts.map(v => {
+  const l = Math.sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]);
+  return [v[0]/l, v[1]/l, v[2]/l];
+});
+
+const midCache = {};
+function getMid(a, b) {
+  const key = Math.min(a,b) + '_' + Math.max(a,b);
+  if (midCache[key] !== undefined) return midCache[key];
+  const m = [
+    (SHAPE_VERTS_BASE[a][0]+SHAPE_VERTS_BASE[b][0])/2,
+    (SHAPE_VERTS_BASE[a][1]+SHAPE_VERTS_BASE[b][1])/2,
+    (SHAPE_VERTS_BASE[a][2]+SHAPE_VERTS_BASE[b][2])/2
+  ];
+  const l = Math.sqrt(m[0]*m[0]+m[1]*m[1]+m[2]*m[2]);
+  m[0]/=l; m[1]/=l; m[2]/=l;
+  SHAPE_VERTS_BASE.push(m);
+  midCache[key] = SHAPE_VERTS_BASE.length - 1;
+  return midCache[key];
+}
+
+icoNorm.forEach(v => SHAPE_VERTS_BASE.push([...v]));
+const subFaces = [];
+icoFaces.forEach(f => {
+  const a = getMid(f[0],f[1]);
+  const b = getMid(f[1],f[2]);
+  const c = getMid(f[2],f[0]);
+  subFaces.push([f[0],a,c],[a,f[1],b],[c,b,f[2]],[a,b,c]);
+});
+
+// grooves — deterministic surface imperfections
+function seededRand(seed) {
+  let s = seed;
+  return function() { s = (s * 16807) % 2147483647; return s / 2147483647; };
+}
+const rng = seededRand(42);
+for (let i = 0; i < SHAPE_VERTS_BASE.length; i++) {
+  const v = SHAPE_VERTS_BASE[i];
+  const f1 = Math.sin(v[0]*7.3 + v[1]*11.1 + v[2]*5.7) * 0.08;
+  const f2 = Math.sin(v[0]*23.1 + v[1]*17.3 + v[2]*31.7) * 0.04;
+  const f3 = (rng() - 0.5) * 0.03;
+  SHAPE_GROOVES.push(f1 + f2 + f3);
+}
+
+const shapeEdgeSet = new Set();
+subFaces.forEach(f => {
+  for (let i = 0; i < 3; i++) {
+    const a = f[i], b = f[(i+1)%3];
+    shapeEdgeSet.add(Math.min(a,b) + '_' + Math.max(a,b));
+  }
+});
+const shapeEdges = [...shapeEdgeSet].map(k => k.split('_').map(Number));
+
+// ═══════════════════════════════════════════
+// HEART STATE
+// ═══════════════════════════════════════════
+let targetBPM = 72;
+let heartPhase = 0;       // 0-1 cardiac cycle
+let beatStrength = 0.35;  // how much the shape expands on beat
+let wanderAmount = 0.5;   // random rotation drift
+
+// organic random rotation state
+let yaw = 0, pitch = 0, tilt = 0;
+let yawVel = 0, pitchVel = 0, tiltVel = 0;
+let showGrooves = true;
+let time = 0;
+
+const signalHistory = [];
+const grooveSignalHistory = [];
+const COLLISION_THRESHOLD = 0.35;
+
+// beat detection for BPM display
+let lastBeatTime = 0;
+let beatTimes = [];
+let beatTriggered = false;
+let screenFlash = 0;
+
+// ═══════════════════════════════════════════
+// CONTROLS
+// ═══════════════════════════════════════════
+document.getElementById('bpmCtrl').addEventListener('input', e => {
+  targetBPM = parseInt(e.target.value);
+  document.getElementById('bpmV').textContent = targetBPM;
+});
+document.getElementById('strength').addEventListener('input', e => {
+  beatStrength = parseFloat(e.target.value);
+  document.getElementById('strengthV').textContent = beatStrength.toFixed(2);
+});
+document.getElementById('wander').addEventListener('input', e => {
+  wanderAmount = parseFloat(e.target.value);
+  document.getElementById('wanderV').textContent = wanderAmount.toFixed(2);
+});
+document.getElementById('showGrooves').addEventListener('change', e => showGrooves = e.target.checked);
+document.getElementById('muteAudio').addEventListener('change', e => muted = e.target.checked);
+
+// click to start (audio policy)
+document.getElementById('click-start').addEventListener('click', () => {
+  initAudio();
+  document.getElementById('click-start').style.display = 'none';
+});
+
+// ═══════════════════════════════════════════
+// CARDIAC CYCLE — the heartbeat
+// ═══════════════════════════════════════════
+function cardiacScale(phase) {
+  // real-ish cardiac waveform:
+  // systole (0-0.3): rapid expansion then contraction
+  // diastole (0.3-1.0): relaxed, slight refill expansion
+  if (phase < 0.08) {
+    // isovolumetric contraction → rapid expansion (S1 — lub)
+    return 1.0 + beatStrength * (phase / 0.08);
+  } else if (phase < 0.2) {
+    // ejection → peak then fall
+    const t = (phase - 0.08) / 0.12;
+    return 1.0 + beatStrength * (1.0 - t * 0.6);
+  } else if (phase < 0.3) {
+    // S2 — dub — small secondary bump
+    const t = (phase - 0.2) / 0.1;
+    const bump = Math.sin(t * Math.PI) * 0.3;
+    return 1.0 + beatStrength * (0.4 - t * 0.4 + bump * 0.4);
+  } else {
+    // diastole — gentle refill
+    const t = (phase - 0.3) / 0.7;
+    return 1.0 + beatStrength * 0.05 * Math.sin(t * Math.PI * 0.5);
+  }
+}
+
+// ═══════════════════════════════════════════
+// TRANSFORM + COLLISION
+// ═══════════════════════════════════════════
+function getTransformedShape(scale) {
+  return SHAPE_VERTS_BASE.map((v, i) => {
+    const groove = SHAPE_GROOVES[i];
+    const r = (1 + groove) * scale;
+    let p = [v[0]*r, v[1]*r, v[2]*r];
+    p = rotZ(p, tilt);
+    p = rotX(p, pitch);
+    p = rotY(p, yaw);
+    return p;
+  });
+}
+
+function detectCollisions(shapeVerts) {
+  let entangled = 0, totalDepth = 0, grooveSignal = 0, grooveCount = 0;
+
+  meshNodes.forEach(mn => {
+    mn.entangled = false;
+    mn.entangleDepth = 0;
+    mn.nearestGroove = 0;
+
+    let minDist = Infinity, nearestIdx = -1;
+    shapeVerts.forEach((sv, si) => {
+      const d = dist3(mn.base, sv);
+      if (d < minDist) { minDist = d; nearestIdx = si; }
+    });
+
+    if (minDist < COLLISION_THRESHOLD) {
+      mn.entangled = true;
+      mn.entangleDepth = 1 - (minDist / COLLISION_THRESHOLD);
+      mn.nearestGroove = SHAPE_GROOVES[nearestIdx];
+      entangled++;
+      totalDepth += mn.entangleDepth;
+      grooveSignal += SHAPE_GROOVES[nearestIdx] * mn.entangleDepth;
+      grooveCount++;
+
+      const norm = mn.base.map(v => v / MESH_R);
+      const push = mn.entangleDepth * 0.3;
+      mn.displaced = mn.base.map((v, j) => v + norm[j] * push);
+    } else {
+      mn.displaced = [...mn.base];
+    }
+  });
+
+  return { entangled, totalDepth, avgGroove: grooveCount > 0 ? grooveSignal / grooveCount : 0, grooveCount };
+}
+
+// ═══════════════════════════════════════════
+// RENDER LOOP
+// ═══════════════════════════════════════════
+function render() {
+  const dt = 0.016;
+  time += dt;
+
+  // ── cardiac cycle ──
+  const beatsPerSec = targetBPM / 60;
+  heartPhase += beatsPerSec * dt;
+
+  // beat trigger at phase wrap
+  if (heartPhase >= 1.0) {
+    heartPhase -= 1.0;
+    beatTriggered = true;
+    screenFlash = 1.0;
+    const now = performance.now();
+    beatTimes.push(now);
+    if (beatTimes.length > 10) beatTimes.shift();
+    lastBeatTime = now;
+  }
+
+  if (beatTriggered && heartPhase > 0.02) {
+    const intensity = beatStrength * 2;
+    playHeartbeat(intensity);
+    beatTriggered = false;
+  }
+
+  const currentScale = cardiacScale(heartPhase);
+
+  // ── organic random rotation (wander) ──
+  // perlin-ish drift: random impulses + damping
+  const impulseChance = 0.02 * wanderAmount;
+  if (Math.random() < impulseChance) yawVel += (Math.random() - 0.5) * 0.02 * wanderAmount;
+  if (Math.random() < impulseChance) pitchVel += (Math.random() - 0.5) * 0.015 * wanderAmount;
+  if (Math.random() < impulseChance) tiltVel += (Math.random() - 0.5) * 0.01 * wanderAmount;
+
+  // gentle constant drift so it never sits still
+  yawVel += Math.sin(time * 0.7) * 0.0003 * wanderAmount;
+  pitchVel += Math.cos(time * 0.5) * 0.0002 * wanderAmount;
+  tiltVel += Math.sin(time * 0.3) * 0.0001 * wanderAmount;
+
+  // damping
+  yawVel *= 0.995;
+  pitchVel *= 0.995;
+  tiltVel *= 0.995;
+
+  yaw += yawVel;
+  pitch += pitchVel;
+  tilt += tiltVel;
+
+  // clamp pitch gently
+  pitch = Math.max(-1.5, Math.min(1.5, pitch));
+
+  // ── physics ──
+  const shapeVerts = getTransformedShape(currentScale);
+  const collision = detectCollisions(shapeVerts);
+
+  signalHistory.push(collision.entangled);
+  if (signalHistory.length > 320) signalHistory.shift();
+  grooveSignalHistory.push(collision.avgGroove);
+  if (grooveSignalHistory.length > 320) grooveSignalHistory.shift();
+
+  // ── screen flash on beat ──
+  screenFlash *= 0.92;
+
+  // ── draw ──
+  ctx.fillStyle = screenFlash > 0.05
+    ? `rgba(${Math.floor(40*screenFlash)},0,0,1)`
+    : '#0a0a0f';
+  ctx.fillRect(0, 0, W, H);
+
+  const camAngle = 0.2;
+
+  // mesh edges
+  meshEdges.forEach(([a, b]) => {
+    const pa = project(rotY(meshNodes[a].displaced, camAngle));
+    const pb = project(rotY(meshNodes[b].displaced, camAngle));
+    if (pa[2] > 0 && pb[2] > 0) {
+      if (meshNodes[a].entangled || meshNodes[b].entangled) {
+        const d = Math.max(meshNodes[a].entangleDepth, meshNodes[b].entangleDepth);
+        ctx.strokeStyle = `rgba(${Math.floor(200*d)},${Math.floor(50+100*d)},${Math.floor(50+100*d)},${0.3+d*0.5})`;
+        ctx.lineWidth = 0.5 + d * 2.5;
+      } else {
+        ctx.strokeStyle = 'rgba(40,40,60,0.15)';
+        ctx.lineWidth = 0.5;
+      }
+      ctx.beginPath();
+      ctx.moveTo(pa[0], pa[1]);
+      ctx.lineTo(pb[0], pb[1]);
+      ctx.stroke();
+    }
+  });
+
+  // mesh nodes
+  meshNodes.forEach(mn => {
+    const pp = project(rotY(mn.displaced, camAngle));
+    if (pp[2] <= 0) return;
+    const r = Math.max(1, 3 * pp[3] / 80);
+
+    if (mn.entangled) {
+      const d = mn.entangleDepth;
+      const g = mn.nearestGroove;
+      const warm = Math.max(0, g) * 10;
+      const cool = Math.max(0, -g) * 10;
+      ctx.fillStyle = `rgba(${Math.floor(255*(0.3+warm+d*0.5))},${Math.floor(255*(0.15+d*0.2))},${Math.floor(255*(0.15+cool+d*0.1))},${0.6+d*0.4})`;
+      ctx.shadowColor = '#ff2200';
+      ctx.shadowBlur = d * 20;
+      ctx.beginPath();
+      ctx.arc(pp[0], pp[1], r * (1 + d * 1.5), 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    } else {
+      ctx.fillStyle = 'rgba(60,60,80,0.2)';
+      ctx.beginPath();
+      ctx.arc(pp[0], pp[1], r * 0.4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  });
+
+  // shape edges
+  ctx.lineWidth = 1;
+  shapeEdges.forEach(([a, b]) => {
+    const pa = project(rotY(shapeVerts[a], camAngle));
+    const pb = project(rotY(shapeVerts[b], camAngle));
+    if (pa[2] > 0 && pb[2] > 0) {
+      if (showGrooves) {
+        const avg = (SHAPE_GROOVES[a] + SHAPE_GROOVES[b]) / 2;
+        const rv = Math.floor(180 + avg * 500);
+        const gv = Math.floor(80 + avg * 200);
+        const bv = Math.floor(60 - avg * 300);
+        ctx.strokeStyle = `rgba(${Math.min(255,Math.max(0,rv))},${Math.min(255,Math.max(0,gv))},${Math.min(255,Math.max(0,bv))},0.5)`;
+      } else {
+        ctx.strokeStyle = 'rgba(200,100,80,0.3)';
+      }
+      ctx.beginPath();
+      ctx.moveTo(pa[0], pa[1]);
+      ctx.lineTo(pb[0], pb[1]);
+      ctx.stroke();
+    }
+  });
+
+  // shape verts (grooves)
+  if (showGrooves) {
+    shapeVerts.forEach((sv, i) => {
+      const pp = project(rotY(sv, camAngle));
+      if (pp[2] <= 0) return;
+      const g = SHAPE_GROOVES[i];
+      const depth = Math.abs(g);
+      const r = Math.max(1, (2 + depth * 20) * pp[3] / 80);
+      ctx.fillStyle = g > 0
+        ? `rgba(255,${Math.floor(100-depth*600)},50,${0.3+depth*3})`
+        : `rgba(80,${Math.floor(100-depth*600)},255,${0.3+depth*3})`;
+      ctx.beginPath();
+      ctx.arc(pp[0], pp[1], r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  }
+
+  // entanglement lines
+  meshNodes.forEach(mn => {
+    if (!mn.entangled) return;
+    const mp = project(rotY(mn.displaced, camAngle));
+    let minD = Infinity, nearest = null;
+    shapeVerts.forEach(sv => {
+      const d = dist3(mn.base, sv);
+      if (d < minD) { minD = d; nearest = sv; }
+    });
+    if (nearest) {
+      const sp = project(rotY(nearest, camAngle));
+      if (mp[2] > 0 && sp[2] > 0) {
+        ctx.strokeStyle = `rgba(255,80,80,${mn.entangleDepth * 0.25})`;
+        ctx.lineWidth = mn.entangleDepth * 1.5;
+        ctx.setLineDash([2, 4]);
+        ctx.beginPath();
+        ctx.moveTo(mp[0], mp[1]);
+        ctx.lineTo(sp[0], sp[1]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    }
+  });
+
+  // ── BPM display ──
+  let displayBPM = targetBPM;
+  if (beatTimes.length >= 2) {
+    const intervals = [];
+    for (let i = 1; i < beatTimes.length; i++) intervals.push(beatTimes[i] - beatTimes[i-1]);
+    const avgInterval = intervals.reduce((a,b) => a+b, 0) / intervals.length;
+    displayBPM = Math.round(60000 / avgInterval);
+  }
+  const bpmEl = document.getElementById('bpm');
+  bpmEl.textContent = displayBPM + ' BPM';
+  bpmEl.style.opacity = 0.5 + screenFlash * 0.5;
+  bpmEl.style.transform = `translateX(-50%) scale(${1 + screenFlash * 0.15})`;
+
+  // ── stats ──
+  const phase_name = heartPhase < 0.3 ? 'SYSTOLE' : 'DIASTOLE';
+  const phase_color = heartPhase < 0.3 ? '#f44' : '#88f';
+  document.getElementById('stats').innerHTML = `
+    <div>Mesh: ${meshNodes.length} nodes | Shape: ${SHAPE_VERTS_BASE.length} verts</div>
+    <div style="color:${phase_color}">Phase: <b>${phase_name}</b> (${(heartPhase*100).toFixed(0)}%) | Scale: ${currentScale.toFixed(3)}</div>
+    <div style="color:#f44">Entangled: <b>${collision.entangled}</b> / ${meshNodes.length} (${(100*collision.entangled/meshNodes.length).toFixed(1)}%)</div>
+    <div style="color:#ff0">Groove: <b>${collision.avgGroove.toFixed(4)}</b> | Depth: ${collision.totalDepth.toFixed(2)}</div>
+    <div style="color:#888">Yaw:${yaw.toFixed(2)} Pitch:${pitch.toFixed(2)} Tilt:${tilt.toFixed(2)}</div>
+  `;
+
+  // ── entangled node list ──
+  const entNodes = meshNodes.filter(n => n.entangled).sort((a,b) => b.entangleDepth - a.entangleDepth);
+  let html = '';
+  entNodes.slice(0, 20).forEach(n => {
+    const gColor = n.nearestGroove > 0 ? '#f80' : '#08f';
+    html += `<div class="hit">N${n.id} d=${n.entangleDepth.toFixed(2)} <span style="color:${gColor}">g=${n.nearestGroove.toFixed(3)}</span></div>`;
+  });
+  if (entNodes.length > 20) html += `<div class="miss">+${entNodes.length-20} more</div>`;
+  if (entNodes.length === 0) html = '<div class="miss">diastole — no contact</div>';
+  document.getElementById('entList').innerHTML = html;
+
+  // ── signal waveform (ECG style) ──
+  sctx.fillStyle = '#0a0008';
+  sctx.fillRect(0, 0, 320, 120);
+
+  // grid
+  sctx.strokeStyle = 'rgba(80,0,0,0.3)';
+  sctx.lineWidth = 0.5;
+  for (let y = 0; y < 120; y += 20) {
+    sctx.beginPath(); sctx.moveTo(0, y); sctx.lineTo(320, y); sctx.stroke();
+  }
+  for (let x = 0; x < 320; x += 20) {
+    sctx.beginPath(); sctx.moveTo(x, 0); sctx.lineTo(x, 120); sctx.stroke();
+  }
+
+  // entangled count (green)
+  sctx.strokeStyle = '#0f0';
+  sctx.lineWidth = 1.5;
+  sctx.beginPath();
+  const maxSig = meshNodes.length;
+  signalHistory.forEach((v, i) => {
+    const x = i * (320 / 320);
+    const y = 110 - (v / maxSig) * 100;
+    i === 0 ? sctx.moveTo(x, y) : sctx.lineTo(x, y);
+  });
+  sctx.stroke();
+
+  // groove signal (red, the actual heartbeat waveform)
+  sctx.strokeStyle = '#f00';
+  sctx.lineWidth = 2;
+  sctx.beginPath();
+  grooveSignalHistory.forEach((v, i) => {
+    const x = i;
+    const y = 60 - v * 400;
+    i === 0 ? sctx.moveTo(x, y) : sctx.lineTo(x, y);
+  });
+  sctx.stroke();
+
+  sctx.fillStyle = '#0f0';
+  sctx.font = '9px monospace';
+  sctx.fillText('collision (entangled)', 5, 10);
+  sctx.fillStyle = '#f00';
+  sctx.fillText('groove signal (heartbeat)', 5, 20);
+
+  // ── groove readout ──
+  const gr = document.getElementById('groove-readout');
+  if (collision.grooveCount > 0) {
+    const pattern = entNodes.slice(0, 12).map(n => n.nearestGroove > 0 ? '▲' : '▼').join('');
+    gr.innerHTML = `&#x2764; ${pattern} | ${collision.grooveCount} contacts | phase ${(heartPhase*100).toFixed(0)}%`;
+  } else {
+    gr.innerHTML = '&#x2764; <span style="color:#555">resting...</span>';
+  }
+
+  requestAnimationFrame(render);
+}
+
+render();
+</script>
+</body>
+</html>

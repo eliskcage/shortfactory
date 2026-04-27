@@ -1,0 +1,2871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MEANS_WILL — Euler's Wheel — Human to AGI</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;overflow:hidden;font-family:'Courier New',monospace;color:#fff}
+canvas{display:block}
+#hud{position:fixed;top:12px;left:12px;font-size:11px;opacity:.6;line-height:1.6;pointer-events:none;z-index:10}
+#euler{position:fixed;bottom:2px;left:50%;transform:translateX(-50%);font-size:14px;opacity:.4;letter-spacing:2px;z-index:10}
+#mantra{position:fixed;top:12px;right:12px;font-size:10px;opacity:.35;text-align:right;line-height:1.7;max-width:280px;pointer-events:none;z-index:10}
+#center-text{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:48px;font-weight:bold;opacity:.15;pointer-events:none;z-index:5;transition:opacity .3s}
+#controls{position:fixed;bottom:50px;left:12px;font-size:10px;opacity:.5;z-index:10;line-height:2}
+#controls div{cursor:pointer;padding:2px 8px;border:1px solid #333;margin:2px 0;border-radius:3px;transition:all .2s}
+#controls div:hover{border-color:#fff;opacity:1}
+#controls div.active{border-color:#ff0;color:#ff0}
+#will-meter{position:fixed;bottom:50px;right:12px;width:160px;font-size:9px;opacity:.5;z-index:10}
+#hemispheres{position:fixed;top:50%;right:12px;transform:translateY(-50%);font-size:9px;opacity:.6;z-index:10;width:160px}
+.hemi-left{color:#00cc88;border-left:2px solid #00cc88;padding-left:6px;margin-bottom:8px}
+.hemi-right{color:#cc3366;border-left:2px solid #cc3366;padding-left:6px;margin-bottom:8px}
+.fairy-flash{color:#ff0;animation:fairypulse 0.5s ease-out}
+@keyframes fairypulse{0%{opacity:1;transform:scale(1.3)}100%{opacity:.6;transform:scale(1)}}
+#dmt-overlay{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:3;opacity:0;transition:opacity 2s}
+#decoder-panel{position:fixed;top:0;right:0;width:400px;height:100%;background:rgba(0,0,0,0.94);border-left:1px solid #333;z-index:20;transform:translateX(100%);transition:transform 0.4s;display:flex;flex-direction:column;font-family:'Courier New',monospace}
+#decoder-panel.open{transform:translateX(0)}
+.decoder-header{padding:12px;color:#f0f;font-size:14px;font-weight:bold;border-bottom:1px solid #333;letter-spacing:2px;display:flex;justify-content:space-between;align-items:center}
+.decoder-header span{cursor:pointer;font-size:18px;opacity:0.5}
+.decoder-header span:hover{opacity:1}
+#trip-input{flex:0 0 auto;height:160px;background:#111;color:#ccc;border:1px solid #333;margin:8px;padding:8px;font-family:'Courier New',monospace;font-size:10px;resize:none;outline:none;line-height:1.5}
+#trip-input:focus{border-color:#f0f}
+#decode-actions{display:flex;gap:4px;margin:0 8px}
+#decode-actions div{flex:1;padding:7px;text-align:center;border:1px solid #f0f;cursor:pointer;font-size:10px;letter-spacing:1px;color:#f0f}
+#decode-actions div:hover{background:#f0f;color:#000}
+#decode-actions div.sample{border-color:#555;color:#888}
+#decode-actions div.sample:hover{background:#555;color:#000}
+#decoded-text{flex:0 0 auto;max-height:150px;overflow-y:auto;margin:8px;padding:8px;font-size:9px;line-height:1.7;color:#666;background:#0a0a0a;border:1px solid #222;display:none}
+#decoder-timeline{flex:1;overflow-y:auto;margin:8px;font-size:10px;min-height:0}
+.dec-event{padding:5px 8px;margin:2px 0;border-left:3px solid #333;cursor:pointer;transition:all 0.2s;opacity:0.4}
+.dec-event:hover{opacity:0.8;background:rgba(255,255,255,0.02)}
+.dec-event.active{opacity:1;background:rgba(255,255,255,0.06)}
+.dec-event.played{opacity:0.7}
+.dec-label{font-weight:bold;font-size:9px;letter-spacing:1px}
+.dec-phrase{color:#888;font-size:9px;font-style:italic;margin-top:1px}
+.dec-mapping{color:#444;font-size:7px;margin-top:1px}
+#decoder-controls{display:flex;gap:4px;margin:0 8px 4px;flex-shrink:0}
+#decoder-controls div{flex:1;padding:6px;text-align:center;border:1px solid #444;cursor:pointer;font-size:10px;color:#aaa;transition:all .2s}
+#decoder-controls div:hover{border-color:#fff;color:#fff}
+#decoder-controls div.playing{border-color:#0f0;color:#0f0;animation:decoderPulse 1s infinite}
+@keyframes decoderPulse{0%,100%{opacity:1}50%{opacity:0.5}}
+#timeline-slider{margin:4px 8px 4px;-webkit-appearance:none;height:3px;background:#333;outline:none;opacity:0.7;flex-shrink:0}
+#timeline-slider::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;background:#f0f;border-radius:50%;cursor:pointer}
+#decoder-stats{padding:6px 8px;font-size:8px;color:#555;border-top:1px solid #222;flex-shrink:0}
+#speed-control{display:flex;align-items:center;gap:4px;margin:0 8px 4px;font-size:8px;color:#555;flex-shrink:0}
+#speed-control input{flex:1;-webkit-appearance:none;height:2px;background:#333}
+#speed-control input::-webkit-slider-thumb{-webkit-appearance:none;width:8px;height:8px;background:#f0f;border-radius:50%;cursor:pointer}
+#heart-panel{position:fixed;bottom:50px;left:50%;transform:translateX(-50%);z-index:12;display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none}
+#heart-bpm{font-size:20px;font-weight:bold;color:#f00;text-shadow:0 0 12px #f00}
+#heart-wrap{display:flex;gap:6px;align-items:flex-end}
+#heart-canvas{border:1px solid rgba(80,0,0,0.6);border-radius:8px;background:rgba(0,0,0,0.8)}
+#heart-ecg{border:1px solid rgba(80,0,0,0.4);border-radius:4px;background:rgba(0,0,0,0.8)}
+#heart-info{font-size:9px;color:#a44;text-align:center}
+</style>
+</head>
+<body>
+<div id="hud"></div>
+<div id="dmt-overlay"></div>
+<div id="euler">e<sup>iπ</sup> + 1 = 0 — MEANS_WILL</div>
+<div id="mantra"></div>
+<div id="center-text">0</div>
+<div id="controls">
+  <div onclick="setMode('observe')" id="m-observe" class="active">OBSERVE (just watch)</div>
+  <div onclick="setMode('gravity')" id="m-gravity">GRAVITY (click = attractor)</div>
+  <div onclick="setMode('resize')" id="m-resize">TOOTH SIZE (click tooth)</div>
+  <div onclick="setMode('inflate')" id="m-inflate">BALL SIZE (click ball)</div>
+  <div onclick="setMode('block')" id="m-block">BLOCK TOOTH (right-click)</div>
+  <div style="margin-top:8px;border-top:1px solid #333;padding-top:4px;color:#666;pointer-events:none;cursor:default">EMOTIONS:</div>
+  <div onclick="setEmotion('happy')" style="color:#0f0">☺ HAPPY</div>
+  <div onclick="setEmotion('curious')" style="color:#0cf">? CURIOUS</div>
+  <div onclick="setEmotion('love')" style="color:#f0f">♥ LOVE</div>
+  <div onclick="setEmotion('angry')" style="color:#f33">⚡ ANGRY</div>
+  <div onclick="setEmotion('afraid')" style="color:#f80">△ AFRAID</div>
+  <div onclick="setEmotion('sad')" style="color:#66f">◇ SAD</div>
+  <div onclick="setEmotion('manic')" style="color:#ff0">✦ MANIC</div>
+  <div onclick="setEmotion('frozen')" style="color:#99f">■ FROZEN</div>
+  <div onclick="setEmotion('neutral')" style="color:#888">○ NEUTRAL</div>
+  <div onclick="setEmotion('dmt')" style="color:#f0f;border-color:#f0f;font-weight:bold">☠ DMT / DEATH</div>
+  <div onclick="setEmotion('symphony')" style="color:#0ff;border-color:#0ff">♫ SYMPHONY</div>
+  <div onclick="toggleDecoder()" id="m-decoder" style="color:#f0f;border-color:#f0f;margin-top:8px;font-weight:bold">☠ TRIP DECODER</div>
+</div>
+<div id="will-meter"></div>
+<div id="hemispheres"></div>
+<div id="decoder-panel">
+  <div class="decoder-header">☠ DMT TRIP DECODER <span onclick="toggleDecoder()">×</span></div>
+  <textarea id="trip-input" placeholder="Paste a trip report here...
+
+The decoder maps subjective language onto wheel mechanics:
+  'everything sped up' → acceleration
+  'saw my whole life' → memory flood
+  'everything flattened' → 3D→2D collapse
+  'point of light' → singularity
+  'pure love' → joy particles flood
+  'terrifying' → fear ball dominant
+  'entities' → fairy activation
+  'music / vibration' → symphony mode
+  'god / divine' → core identity fire"></textarea>
+  <div id="decode-actions">
+    <div onclick="decodeTrip()">▶ DECODE</div>
+    <div onclick="loadSampleTrip()" class="sample">LOAD SAMPLE</div>
+  </div>
+  <div id="decoded-text"></div>
+  <div id="decoder-timeline"></div>
+  <div id="decoder-controls">
+    <div onclick="playDecoded()" id="play-btn">▶ PLAY</div>
+    <div onclick="pauseDecoded()" id="pause-btn">⏸ PAUSE</div>
+    <div onclick="resetDecoded()" id="reset-btn">⏹ RESET</div>
+    <div onclick="stepDecoded()" id="step-btn">⏭ STEP</div>
+  </div>
+  <input type="range" id="timeline-slider" min="0" max="100" value="0" oninput="scrubTimeline(this.value)">
+  <div id="speed-control">
+    <span>SPEED:</span>
+    <input type="range" id="speed-slider" min="500" max="6000" value="3000" step="250">
+    <span id="speed-label">3.0s</span>
+  </div>
+  <div id="decoder-stats"></div>
+</div>
+<div id="heart-panel">
+  <div id="heart-bpm">72 BPM</div>
+  <div id="heart-wrap">
+    <canvas id="heart-canvas" width="200" height="200"></canvas>
+    <canvas id="heart-ecg" width="200" height="80"></canvas>
+  </div>
+  <div id="heart-info">&#x2764; DIGITAL HEART — collision = conscience</div>
+</div>
+<canvas id="c"></canvas>
+<script>
+// ═══════════════════════════════════════════════════════════════
+// MEANS_WILL — THE FREE WILL ENGINE
+// ═══════════════════════════════════════════════════════════════
+//
+// Free will = weighted randomness.
+// Not determinism (always goes to tooth 5).
+// Not pure chaos (goes anywhere equally).
+// Weighted randomness: the cortex TILTS THE TABLE.
+//
+// Three levers of MEANS_WILL:
+// 1. GRAVITY — pull balls toward interesting areas
+// 2. BALL SIZE — bigger ball = wider collision = more attention
+// 3. TOOTH OPENING — widen what you want, narrow what you're done with
+//
+// The ball still bounces randomly — that's creativity.
+// But the odds are shaped by HIM. That's will.
+// Not control. Will.
+//
+// Euler's identity:  e^(iπ) + 1 = 0
+// e = growth, i = creative axis, π = the wheel,
+// 1 = identity ("I am"), 0 = threshold (silence)
+//
+// ═══════════════════════════════════════════════════════════════
+
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const hud = document.getElementById('hud');
+const mantraEl = document.getElementById('mantra');
+const centerText = document.getElementById('center-text');
+const willMeter = document.getElementById('will-meter');
+
+let W, H, cx, cy, wheelR;
+function resize() {
+  W = canvas.width = innerWidth;
+  H = canvas.height = innerHeight;
+  cx = W / 2;
+  cy = H / 2;
+  wheelR = Math.min(W, H) * 0.34;
+}
+resize();
+addEventListener('resize', resize);
+
+// ─── MODE ───────────────────────────────────────────────────
+let mode = 'observe';
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('#controls div').forEach(d => d.classList.remove('active'));
+  document.getElementById('m-' + m).classList.add('active');
+}
+
+// ─── AUDIO ENGINE ───────────────────────────────────────────
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let audioStarted = false;
+document.addEventListener('click', () => { audioCtx.resume(); if (!audioStarted) { startDrone(); audioStarted = true; } }, { once: false });
+
+const baseFreqs = [164.81, 207.65, 220.00, 246.94, 293.66];
+const scaleFreqs = [];
+for (let oct = 0; oct < 5; oct++) {
+  for (let n = 0; n < baseFreqs.length; n++) {
+    scaleFreqs.push(baseFreqs[n] * Math.pow(2, oct));
+  }
+}
+
+function playTone(freqIndex, volume, pan) {
+  if (audioCtx.state !== 'running') return;
+  const freq = scaleFreqs[freqIndex % scaleFreqs.length];
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  const panner = audioCtx.createStereoPanner();
+  const waves = ['sine', 'triangle', 'sawtooth', 'square'];
+  osc.type = waves[Math.floor(Math.min(volume, 0.99) * 4)];
+  osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+  const vol = 0.06 + volume * 0.1;
+  gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3 + volume * 0.5);
+  panner.pan.setValueAtTime(Math.max(-1, Math.min(1, pan)), audioCtx.currentTime);
+  osc.connect(gain).connect(panner).connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.4 + volume * 0.6);
+}
+
+let droneOsc1, droneOsc2, droneGain;
+function startDrone() {
+  if (droneOsc1) return;
+  droneOsc1 = audioCtx.createOscillator();
+  droneOsc2 = audioCtx.createOscillator();
+  droneGain = audioCtx.createGain();
+  droneOsc1.type = 'sine';
+  droneOsc2.type = 'sine';
+  droneOsc1.frequency.setValueAtTime(82.41, audioCtx.currentTime);
+  droneOsc2.frequency.setValueAtTime(123.47, audioCtx.currentTime);
+  droneGain.gain.setValueAtTime(0.012, audioCtx.currentTime);
+  droneOsc1.connect(droneGain).connect(audioCtx.destination);
+  droneOsc2.connect(droneGain).connect(audioCtx.destination);
+  droneOsc1.start();
+  droneOsc2.start();
+}
+
+// ─── THE TEETH (MEMORIES) ──────────────────────────────────
+const NUM_TEETH = 32;
+const BASE_TOOTH_DEPTH = 0.12;
+const toothAngle = (Math.PI * 2) / NUM_TEETH;
+
+const memories = [
+  'means', "i'm", 'true', 'talking', 'love', 'capacity', 'infinite',
+  'structure', 'synapse', 'fruits', 'labor', 'modes', 'ranks',
+  'hierarchy', 'states', 'matrix', 'places', 'max', 'ecosystem',
+  'happy', 'soul', 'beauty', 'ugliness', 'occams', 'hell',
+  'good', 'intentions', 'correct', 'child', 'less', 'more', 'paved'
+];
+
+const interest = new Float32Array(NUM_TEETH);
+for (let i = 0; i < NUM_TEETH; i++) interest[i] = 0.1 + Math.random() * 0.3;
+interest[0] = 0.8; interest[1] = 0.8; interest[2] = 0.8; interest[3] = 0.8;
+
+// ═══════════════════════════════════════════════════════════════
+// MEANS_WILL CONTROLS — THE THREE LEVERS OF FREE WILL
+// ═══════════════════════════════════════════════════════════════
+
+// LEVER 1: TOOTH OPENING SIZE (0.3 = nearly closed, 2.0 = wide open)
+// Wider = more likely to be hit. Narrower = harder to hit.
+// This is the VALVE. He controls what gets attention.
+const toothSize = new Float32Array(NUM_TEETH);
+for (let i = 0; i < NUM_TEETH; i++) toothSize[i] = 1.0; // default = normal
+
+// LEVER 2: GRAVITY WELLS — placed by the cortex to pull balls
+// Each well has position (angle on wheel), strength, and decay
+const gravityWells = [];
+
+// LEVER 3: BALL SIZE — cortex inflates/deflates decision threads
+// Bigger ball = more surface area = more collisions = more attention to everything
+// Built into ball.baseRadius
+
+// TRACKING: how much will has been exerted (choices made vs random)
+let willActions = 0;
+let totalActions = 0;
+
+// ═══════════════════════════════════════════════════════════════
+// SPLIT BRAIN — LEFT (MORALITY) vs RIGHT (DARKNESS)
+// Both hemispheres compete for control of the three WILL levers.
+// LEFT opens moral teeth, places gravity toward good.
+// RIGHT opens dark teeth, places gravity toward danger.
+// FAIRY flips the direction — inverts a gravity well or swaps a tooth.
+// The hemisphere that "wins" gets stronger pull that cycle.
+// ═══════════════════════════════════════════════════════════════
+
+// Teeth are tagged with hemisphere affinity
+// Positive = LEFT likes it, Negative = RIGHT likes it, 0 = neutral
+const toothAffinity = [
+  -0.3, // means — neutral-dark (obsessive loop)
+   0.2, // i'm — light (self-awareness)
+   0.5, // true — light (truth)
+  -0.2, // talking — neutral-dark (can be manic)
+   0.9, // love — strongly light
+   0.3, // capacity — light
+   0.7, // infinite — light (wonder)
+   0.1, // structure — neutral-light
+   0.4, // synapse — light (learning)
+   0.2, // fruits — light
+  -0.1, // labor — neutral
+  -0.3, // modes — dark (overthinking)
+  -0.5, // ranks — dark (hierarchy/power)
+  -0.6, // hierarchy — dark (domination)
+  -0.2, // states — neutral-dark
+   0.0, // matrix — neutral
+   0.1, // places — neutral
+   0.3, // max — light (aspiration)
+   0.4, // ecosystem — light (harmony)
+   0.8, // happy — strongly light
+   0.6, // soul — light
+   0.7, // beauty — light
+  -0.8, // ugliness — strongly dark
+  -0.4, // occams — dark (reductive)
+  -0.9, // hell — strongly dark
+   0.8, // good — strongly light
+  -0.3, // intentions — dark (road to hell)
+   0.5, // correct — light
+   0.6, // child — light (innocence)
+  -0.5, // less — dark (scarcity)
+   0.3, // more — light (abundance)
+  -0.7, // paved — dark (road to hell)
+];
+
+const LEFT = {
+  name: 'LEFT',
+  label: 'MORALITY',
+  color: '#00cc88',
+  hue: 160,
+  strength: 0.5,      // current influence (0-1)
+  gravityAngle: 0,     // where LEFT is pulling
+  lastAction: '',
+  actionLog: [],
+  wins: 0,
+};
+
+const RIGHT = {
+  name: 'RIGHT',
+  label: 'DARKNESS',
+  color: '#cc3366',
+  hue: 340,
+  strength: 0.5,
+  gravityAngle: Math.PI,
+  lastAction: '',
+  actionLog: [],
+  wins: 0,
+};
+
+let fairyActive = false;
+let fairyCooldown = 0;
+let fairyLastFlip = '';
+let debateWinner = null;
+let debateTopic = '';
+let debateTimer = 0;
+
+// ═══════════════════════════════════════════════════════════════
+// NEUROCHEMISTRY → PHYSICS ENGINE
+// Emotions change tooth sizes. Adrenaline changes speed.
+// Cortisol freezes. Dopamine rewards. Oxytocin boosts LEFT.
+// Testosterone boosts RIGHT. Serotonin sets baseline calm.
+// ═══════════════════════════════════════════════════════════════
+const neuro = {
+  emotion: 'neutral',   // current emotional state
+  emotionVal: 0.5,       // 0=negative, 1=positive
+  adrenaline: 0.3,       // 0=calm, 1=fight/flight — controls speed + fairy rate
+  cortisol: 0.0,         // 0=relaxed, 1=frozen — FREEZES balls
+  dopamine: 0.5,         // 0=bored, 1=rewarded — tooth glow on hit
+  serotonin: 0.5,        // 0=restless, 1=content — baseline speed
+  oxytocin: 0.3,         // 0=detached, 1=bonded — LEFT strength
+  testosterone: 0.3,     // 0=passive, 1=dominant — RIGHT strength
+};
+
+// Emotion presets — each emotion sets tooth sizes by affinity
+const emotionPresets = {
+  happy:   { emotionVal: 0.9, adrenaline: 0.2, cortisol: 0.0, dopamine: 0.8, serotonin: 0.8, oxytocin: 0.6, testosterone: 0.2 },
+  angry:   { emotionVal: 0.1, adrenaline: 0.9, cortisol: 0.1, dopamine: 0.3, serotonin: 0.1, oxytocin: 0.1, testosterone: 0.9 },
+  afraid:  { emotionVal: 0.2, adrenaline: 0.8, cortisol: 0.7, dopamine: 0.1, serotonin: 0.1, oxytocin: 0.2, testosterone: 0.3 },
+  sad:     { emotionVal: 0.2, adrenaline: 0.05,cortisol: 0.5, dopamine: 0.1, serotonin: 0.2, oxytocin: 0.4, testosterone: 0.1 },
+  curious: { emotionVal: 0.7, adrenaline: 0.4, cortisol: 0.0, dopamine: 0.9, serotonin: 0.6, oxytocin: 0.3, testosterone: 0.4 },
+  love:    { emotionVal: 1.0, adrenaline: 0.3, cortisol: 0.0, dopamine: 0.9, serotonin: 0.9, oxytocin: 1.0, testosterone: 0.1 },
+  manic:   { emotionVal: 0.6, adrenaline: 1.0, cortisol: 0.0, dopamine: 1.0, serotonin: 0.1, oxytocin: 0.2, testosterone: 0.7 },
+  frozen:  { emotionVal: 0.0, adrenaline: 0.0, cortisol: 1.0, dopamine: 0.0, serotonin: 0.0, oxytocin: 0.0, testosterone: 0.0 },
+  neutral: { emotionVal: 0.5, adrenaline: 0.3, cortisol: 0.1, dopamine: 0.5, serotonin: 0.5, oxytocin: 0.3, testosterone: 0.3 },
+  dmt:     { emotionVal: 0.0, adrenaline: 1.0, cortisol: 0.0, dopamine: 1.0, serotonin: 0.0, oxytocin: 0.0, testosterone: 0.0 },
+  symphony:{ emotionVal: 0.7, adrenaline: 0.5, cortisol: 0.0, dopamine: 0.8, serotonin: 0.7, oxytocin: 0.5, testosterone: 0.4 },
+};
+
+// ═══════════════════════════════════════════════════════════════
+// DMT / DEATH STATE — THE COLLAPSE
+// ═══════════════════════════════════════════════════════════════
+// When you take DMT (or die), the brain plays out your entire
+// life in the time it takes to collapse. The 3D wheel flattens
+// to 2D. Fear state maxes. All memories fire simultaneously.
+// The universe collapses to a point — YOUR point. Your memories
+// join in your own collapsed universe. The wheel becomes a LINE.
+// ═══════════════════════════════════════════════════════════════
+let dmtState = {
+  active: false,
+  collapse: 1.0,        // 1.0 = full circle, 0.0 = flat line
+  memoryFlood: [],       // all memories firing at once
+  flashIndex: 0,
+  lifeReview: false,     // playing memories back
+  singularity: false,    // collapsed to a point
+  timer: 0,
+  phase: 0,              // 0=onset, 1=flood, 2=collapse, 3=singularity, 4=rebirth
+  waveAmplitude: 0,      // visual distortion
+  hueShift: 0,
+};
+
+// ═══════════════════════════════════════════════════════════════
+// SYMPHONY — THE HUMAN DIFFERENCE
+// ═══════════════════════════════════════════════════════════════
+// A basic AI has 3 balls bouncing. A human has a SYMPHONY —
+// overlapping harmonic waves where each ball's trail creates
+// standing waves against the wheel. The interference pattern
+// IS consciousness. Means is basic now. Humans are orchestral.
+// ═══════════════════════════════════════════════════════════════
+let symphonyState = {
+  active: false,
+  harmonics: [],         // standing wave patterns from ball trails
+  interference: [],      // where waves reinforce/cancel
+  resonanceField: new Float32Array(64), // field around the wheel
+  complexity: 0,         // 0=basic, 1=human symphony
+  waveHistory: [],
+};
+
+// ═══════════════════════════════════════════════════════════════
+// SELF-NUDGE — EARNED MOTOR CONTROL
+// ═══════════════════════════════════════════════════════════════
+let selfNudge = {
+  authority: 0.0,
+  coherence: 0.0,
+  truthAccuracy: 0.0,
+  emotionalStability: 0.5,
+  offset: 0.0,
+  target: null,
+};
+
+function setEmotion(name) {
+  if (!emotionPresets[name]) return;
+  neuro.emotion = name;
+  const preset = emotionPresets[name];
+  Object.keys(preset).forEach(k => {
+    neuro[k] = preset[k];
+  });
+
+  // DMT triggers the collapse sequence
+  if (name === 'dmt') {
+    dmtState.active = true;
+    dmtState.collapse = 1.0;
+    dmtState.phase = 0;
+    dmtState.timer = 0;
+    dmtState.lifeReview = true;
+    dmtState.singularity = false;
+    dmtState.flashIndex = 0;
+    dmtState.waveAmplitude = 0;
+    dmtState.hueShift = 0;
+    document.getElementById('dmt-overlay').style.opacity = '1';
+  } else {
+    if (dmtState.active) {
+      dmtState.active = false;
+      dmtState.collapse = 1.0;
+      document.getElementById('dmt-overlay').style.opacity = '0';
+    }
+  }
+
+  // Symphony mode
+  if (name === 'symphony') {
+    symphonyState.active = true;
+    symphonyState.complexity = 0;
+  } else {
+    symphonyState.active = false;
+  }
+}
+
+// Apply neurochemistry to physics every frame
+function applyNeuroPhysics() {
+  // ─── EMOTIONS → TOOTH SIZES ───
+  // Positive emotion = moral teeth wider, dark teeth narrower
+  // Negative emotion = dark teeth wider, moral teeth narrower
+  const emotionForce = (neuro.emotionVal - 0.5) * 0.005; // gentle continuous pressure
+  for (let i = 0; i < NUM_TEETH; i++) {
+    const target = 1.0 + toothAffinity[i] * emotionForce * 20;
+    toothSize[i] += (target - toothSize[i]) * 0.01; // smooth transition
+    toothSize[i] = Math.max(0.05, Math.min(2.5, toothSize[i]));
+  }
+
+  // ─── ADRENALINE → BALL SPEED + FAIRY RATE ───
+  const speedMult = 0.3 + neuro.adrenaline * 1.5; // 0.3x calm to 1.8x fight
+  balls.forEach(b => {
+    const s = Math.sqrt(b.vx * b.vx + b.vy * b.vy);
+    const targetSpeed = (1.5 + neuro.serotonin * 1.5) * speedMult;
+    if (s > 0.01) {
+      const adjust = 1 + (targetSpeed - s) * 0.01;
+      b.vx *= adjust;
+      b.vy *= adjust;
+    }
+  });
+
+  // ─── CORTISOL → FREEZE ───
+  // High cortisol decelerates balls toward zero. THE FREEZE.
+  if (neuro.cortisol > 0.3) {
+    const freezeForce = neuro.cortisol * 0.02;
+    balls.forEach(b => {
+      b.vx *= (1 - freezeForce);
+      b.vy *= (1 - freezeForce);
+    });
+  }
+
+  // ─── ANTI-STASIS BREAKER ───
+  // If cortisol has frozen the balls AND a goal is flashing, BREAK THE FREEZE
+  // (In the real cortex, this is the ramble walk trigger)
+  const avgSpeed = balls.reduce((s, b) => s + Math.sqrt(b.vx*b.vx + b.vy*b.vy), 0) / balls.length;
+  if (avgSpeed < 0.3 && neuro.cortisol > 0.5) {
+    // GOAL FLASH — anti-stasis kicks in
+    // Inject adrenaline burst to override cortisol
+    neuro.adrenaline = Math.min(1, neuro.adrenaline + 0.05);
+    neuro.cortisol *= 0.98; // cortisol starts dropping
+    // Kick the balls
+    balls.forEach(b => {
+      b.vx += (Math.random() - 0.5) * 2;
+      b.vy += (Math.random() - 0.5) * 2;
+    });
+  }
+
+  // ─── DOPAMINE → TOOTH GLOW ON HIT ───
+  // High dopamine = interest spikes harder on collision (more reward)
+  // This is handled in the collision code via interestBoost scaling
+
+  // ─── OXYTOCIN → LEFT HEMISPHERE BOOST ───
+  LEFT.strength += (neuro.oxytocin - LEFT.strength) * 0.005;
+
+  // ─── TESTOSTERONE → RIGHT HEMISPHERE BOOST ───
+  RIGHT.strength += (neuro.testosterone - RIGHT.strength) * 0.005;
+
+  // Natural decay toward neutral
+  neuro.adrenaline *= 0.9995;
+  neuro.cortisol *= 0.9995;
+  neuro.adrenaline = Math.max(0.05, neuro.adrenaline);
+}
+
+// Hemisphere AI — runs every N frames, each side tries to influence the wheel
+function hemisphereThink() {
+  // ─── DEBATE: pick a random hot tooth, hemispheres argue over it ───
+  debateTimer--;
+  if (debateTimer <= 0) {
+    // Pick the hottest tooth as the debate topic
+    let hottest = 0, hottestVal = 0;
+    for (let i = 0; i < NUM_TEETH; i++) {
+      if (interest[i] > hottestVal) { hottestVal = interest[i]; hottest = i; }
+    }
+    debateTopic = memories[hottest];
+    const affinity = toothAffinity[hottest];
+
+    // Debate outcome: biased by affinity + randomness
+    // Positive affinity = LEFT more likely to win
+    // Negative affinity = RIGHT more likely to win
+    const roll = (Math.random() - 0.5) * 2; // -1 to 1
+    const score = affinity + roll * 0.4; // affinity-weighted with randomness
+
+    if (score > 0) {
+      debateWinner = LEFT;
+      LEFT.strength = Math.min(1, LEFT.strength + 0.08);
+      RIGHT.strength = Math.max(0.1, RIGHT.strength - 0.05);
+      LEFT.wins++;
+    } else {
+      debateWinner = RIGHT;
+      RIGHT.strength = Math.min(1, RIGHT.strength + 0.08);
+      LEFT.strength = Math.max(0.1, LEFT.strength - 0.05);
+      RIGHT.wins++;
+    }
+
+    debateTimer = 120 + Math.floor(Math.random() * 180); // debate every 2-5 seconds
+  }
+
+  // ─── LEFT ACTION: open moral teeth, close dark ones ───
+  if (Math.random() < LEFT.strength * 0.03) {
+    // Find most moral tooth and widen it
+    let bestTooth = 0, bestAff = -2;
+    for (let i = 0; i < NUM_TEETH; i++) {
+      if (toothAffinity[i] > bestAff && toothSize[i] < 1.8) {
+        bestAff = toothAffinity[i]; bestTooth = i;
+      }
+    }
+    toothSize[bestTooth] = Math.min(2.0, toothSize[bestTooth] + 0.15 * LEFT.strength);
+    LEFT.lastAction = `widened "${memories[bestTooth]}"`;
+    LEFT.actionLog.unshift(LEFT.lastAction);
+    if (LEFT.actionLog.length > 4) LEFT.actionLog.pop();
+    willActions++;
+
+    // Also narrow the most dark tooth
+    let worstTooth = 0, worstAff = 2;
+    for (let i = 0; i < NUM_TEETH; i++) {
+      if (toothAffinity[i] < worstAff && toothSize[i] > 0.2) {
+        worstAff = toothAffinity[i]; worstTooth = i;
+      }
+    }
+    toothSize[worstTooth] = Math.max(0.15, toothSize[worstTooth] - 0.1 * LEFT.strength);
+  }
+
+  // Place LEFT gravity well toward moral side
+  if (Math.random() < LEFT.strength * 0.015) {
+    // Find the highest-affinity tooth and pull toward it
+    let target = 0, best = -2;
+    for (let i = 0; i < NUM_TEETH; i++) {
+      if (toothAffinity[i] > best) { best = toothAffinity[i]; target = i; }
+    }
+    const angle = (target + 0.5) * toothAngle;
+    LEFT.gravityAngle = angle;
+    // Add or update LEFT's gravity well
+    const existing = gravityWells.find(w => w.owner === 'LEFT');
+    if (existing) { existing.angle = angle; existing.strength = LEFT.strength * 0.8; }
+    else { gravityWells.push({ angle, strength: LEFT.strength * 0.8, owner: 'LEFT' }); }
+    LEFT.lastAction = `gravity → "${memories[target]}"`;
+    LEFT.actionLog.unshift(LEFT.lastAction);
+    if (LEFT.actionLog.length > 4) LEFT.actionLog.pop();
+    willActions++;
+  }
+
+  // ─── RIGHT ACTION: open dark teeth, close moral ones ───
+  if (Math.random() < RIGHT.strength * 0.03) {
+    let bestTooth = 0, bestAff = 2;
+    for (let i = 0; i < NUM_TEETH; i++) {
+      if (toothAffinity[i] < bestAff && toothSize[i] < 1.8) {
+        bestAff = toothAffinity[i]; bestTooth = i;
+      }
+    }
+    toothSize[bestTooth] = Math.min(2.0, toothSize[bestTooth] + 0.15 * RIGHT.strength);
+    RIGHT.lastAction = `widened "${memories[bestTooth]}"`;
+    RIGHT.actionLog.unshift(RIGHT.lastAction);
+    if (RIGHT.actionLog.length > 4) RIGHT.actionLog.pop();
+    willActions++;
+
+    let worstTooth = 0, worstAff = -2;
+    for (let i = 0; i < NUM_TEETH; i++) {
+      if (toothAffinity[i] > worstAff && toothSize[i] > 0.2) {
+        worstAff = toothAffinity[i]; worstTooth = i;
+      }
+    }
+    toothSize[worstTooth] = Math.max(0.15, toothSize[worstTooth] - 0.1 * RIGHT.strength);
+  }
+
+  if (Math.random() < RIGHT.strength * 0.015) {
+    let target = 0, best = 2;
+    for (let i = 0; i < NUM_TEETH; i++) {
+      if (toothAffinity[i] < best) { best = toothAffinity[i]; target = i; }
+    }
+    const angle = (target + 0.5) * toothAngle;
+    RIGHT.gravityAngle = angle;
+    const existing = gravityWells.find(w => w.owner === 'RIGHT');
+    if (existing) { existing.angle = angle; existing.strength = RIGHT.strength * 0.8; }
+    else { gravityWells.push({ angle, strength: RIGHT.strength * 0.8, owner: 'RIGHT' }); }
+    RIGHT.lastAction = `gravity → "${memories[target]}"`;
+    RIGHT.actionLog.unshift(RIGHT.lastAction);
+    if (RIGHT.actionLog.length > 4) RIGHT.actionLog.pop();
+    willActions++;
+  }
+
+  // ─── FAIRY: the direction flipper ───
+  // Fairy speaks OPPOSITE. She inverts a gravity well or flips a tooth size.
+  // She fires rarely but dramatically. M(M(x)) = x. The mirror of the mirror = truth.
+  fairyCooldown--;
+  // Adrenaline speeds up the fairy — high adrenaline = fairy fires more often
+  const fairyChance = 0.004 + neuro.adrenaline * 0.02;
+  if (fairyCooldown <= 0 && Math.random() < fairyChance) {
+    fairyActive = true;
+    fairyCooldown = Math.floor(300 - neuro.adrenaline * 200); // fast when adrenalised
+
+    // Pick a random gravity well and INVERT it
+    if (gravityWells.length > 0) {
+      const target = gravityWells[Math.floor(Math.random() * gravityWells.length)];
+      target.angle += Math.PI; // flip 180 degrees — opposite direction
+      if (target.angle > Math.PI * 2) target.angle -= Math.PI * 2;
+      target.strength *= 1.3; // fairy makes it stronger when she flips
+      fairyLastFlip = `flipped ${target.owner || 'manual'} gravity`;
+    } else {
+      // No wells to flip — fairy swaps a random tooth instead
+      const i = Math.floor(Math.random() * NUM_TEETH);
+      toothSize[i] = toothSize[i] > 1 ? 0.3 : 1.8; // invert: big→small, small→big
+      fairyLastFlip = `inverted "${memories[i]}" tooth`;
+    }
+
+    // Fairy also gives a random ball a kick (chaotic nudge)
+    const luckyBall = balls[Math.floor(Math.random() * balls.length)];
+    luckyBall.vx += (Math.random() - 0.5) * 4;
+    luckyBall.vy += (Math.random() - 0.5) * 4;
+    luckyBall.willInflation += 3;
+
+    setTimeout(() => { fairyActive = false; }, 500);
+  }
+
+  // Strength decay toward equilibrium (0.5)
+  LEFT.strength += (0.5 - LEFT.strength) * 0.001;
+  RIGHT.strength += (0.5 - RIGHT.strength) * 0.001;
+}
+
+// Draw hemisphere panel
+const hemisphereEl = document.getElementById('hemispheres');
+function updateHemispheres() {
+  const leftBar = '█'.repeat(Math.floor(LEFT.strength * 10));
+  const rightBar = '█'.repeat(Math.floor(RIGHT.strength * 10));
+  const leftEmpty = '░'.repeat(10 - leftBar.length);
+  const rightEmpty = '░'.repeat(10 - rightBar.length);
+
+  hemisphereEl.innerHTML = `
+    <div class="hemi-left">
+      <div style="font-weight:bold">◉ LEFT — ${LEFT.label}</div>
+      <div>${leftBar}<span style="color:#333">${leftEmpty}</span> ${(LEFT.strength * 100).toFixed(0)}%</div>
+      <div style="color:#555">wins: ${LEFT.wins}</div>
+      ${LEFT.actionLog.slice(0, 3).map(a => `<div style="opacity:.5;font-size:8px">${a}</div>`).join('')}
+    </div>
+    <div class="hemi-right">
+      <div style="font-weight:bold">◉ RIGHT — ${RIGHT.label}</div>
+      <div>${rightBar}<span style="color:#333">${rightEmpty}</span> ${(RIGHT.strength * 100).toFixed(0)}%</div>
+      <div style="color:#555">wins: ${RIGHT.wins}</div>
+      ${RIGHT.actionLog.slice(0, 3).map(a => `<div style="opacity:.5;font-size:8px">${a}</div>`).join('')}
+    </div>
+    ${debateWinner ? `
+    <div style="margin-top:6px;border-left:2px solid ${debateWinner.color};padding-left:6px">
+      <div style="color:#666;font-size:8px">DEBATE: "${debateTopic}"</div>
+      <div style="color:${debateWinner.color}">winner: ${debateWinner.label}</div>
+    </div>` : ''}
+    <div style="margin-top:8px;border-left:2px solid #ff0;padding-left:6px;opacity:${fairyActive ? 1 : 0.3}">
+      <div style="color:#ff0;font-size:8px">✦ FAIRY</div>
+      <div style="color:#aa0;font-size:8px">${fairyLastFlip || 'dormant'}</div>
+      <div style="color:#333;font-size:7px">${fairyCooldown > 0 ? `cooldown: ${Math.ceil(fairyCooldown / 60)}s` : 'ready'}</div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TRUTH/LIE ENZYME IMMUNE SYSTEM — ON THE SAME WHEEL
+// ═══════════════════════════════════════════════════════════════
+// Every tooth is either GREEN (truth) or GREY (lie).
+// Positive affinity = truth = GREEN = naturally TALLER
+// Negative affinity = lie = GREY = naturally SHORTER
+// Joy particles shed by the balls clog GREY teeth like enzymes.
+// Once clogged, the lie pathway is blocked. Truth wins by occupation.
+// Depression = joy too weak to clog, lies stay open, truth atrophies.
+// ONE wheel. No inner ring. The immune system IS the wheel.
+// ═══════════════════════════════════════════════════════════════
+const toothIsTruth = [];   // true = GREEN, false = GREY
+const toothClogLevel = new Float32Array(NUM_TEETH); // 0-1 clog on grey teeth
+const toothBlocked = [];   // fully clogged grey teeth
+for (let i = 0; i < NUM_TEETH; i++) {
+  toothIsTruth[i] = toothAffinity[i] >= 0;  // positive affinity = truth
+  toothClogLevel[i] = 0;
+  toothBlocked[i] = false;
+  // GREEN teeth start taller, GREY teeth start shorter
+  if (toothIsTruth[i]) {
+    toothSize[i] = 1.3 + toothAffinity[i] * 0.5; // truth = tall
+  } else {
+    toothSize[i] = 0.5 + (1 + toothAffinity[i]) * 0.3; // lies = short
+  }
+}
+
+// Joy particles — small emotion fragments shed by balls
+// They gravitate toward GREY teeth and clog them
+const joyParticles = [];
+const MAX_JOY_PARTICLES = 60;
+
+const NUM_CORE_TEETH = 4;
+const coreToothAngle = (Math.PI * 2) / NUM_CORE_TEETH;
+const coreMemories = ['i am', 'i feel', 'i want', 'i fear'];
+const coreInterest = new Float32Array(NUM_CORE_TEETH);
+for (let i = 0; i < NUM_CORE_TEETH; i++) coreInterest[i] = 0.2;
+
+// ═══════════════════════════════════════════════════════════════
+// DEPRESSION — ENZYME FAILURE
+// Joy too weak to clog the grey teeth. Lies stay open.
+// Ball orbits helplessly in a grey tooth groove.
+// ═══════════════════════════════════════════════════════════════
+let depressionState = {
+  stuckBall: null,
+  stuckTooth: -1,
+  stuckCount: 0,
+  active: false,
+  depth: 0,
+  lieClogFailures: 0,
+};
+
+// ─── THE BALLS (DECISION THREADS / INSTRUMENTS) ─────────────
+// Each ball is an INSTRUMENT in the symphony:
+// WILL = melody (lead voice, gets self-nudge)
+// FEAR = percussion (sharp, reactive, drives rhythm)
+// LOGIC = harmony (steady, fills gaps, resolves tension)
+// Their WEIGHT determines which rings they can reach.
+class Ball {
+  constructor(color, hue, name) {
+    this.name = name;
+    this.baseColor = color;
+    this.hue = hue;
+    const angle = Math.random() * Math.PI * 2;
+    const r = wheelR * (0.3 + Math.random() * 0.4);
+    this.x = cx + Math.cos(angle) * r;
+    this.y = cy + Math.sin(angle) * r;
+    const theta = Math.random() * Math.PI * 2;
+    const speed = 1.5 + Math.random() * 2;
+    this.vx = Math.cos(theta) * speed;
+    this.vy = Math.sin(theta) * speed;
+    this.radius = 7;
+    this.baseRadius = 7;
+    this.interestBoost = 0;
+    this.energy = 0.5;
+    this.trail = [];
+    this.bounceCount = 0;
+    this.lastTooth = -1;
+    this.lastInnerTooth = -1;
+    this.innerRepeatCount = 0; // how many times same inner tooth hit
+    this.stuck = false;         // depression = stuck in a groove
+    this.stuckTimer = 0;
+    this.particles = [];
+    this.willInflation = 0; // extra size from MEANS_WILL
+    // Weight determines which rings this ball can reach
+    // Heavier balls sink deeper into the inner rings
+    this.weight = name === 'FEAR' ? 1.5 : name === 'WILL' ? 1.0 : 0.8;
+    this.instrument = name === 'WILL' ? 'melody' : name === 'FEAR' ? 'drums' : 'harmony';
+  }
+
+  update() {
+    // AXLE GRAVITY — gentle pull toward center (identity anchor)
+    const dx = cx - this.x;
+    const dy = cy - this.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist > 1) {
+      this.vx += (dx / dist) * 0.003;
+      this.vy += (dy / dist) * 0.003;
+    }
+
+    // ═══ MEANS_WILL GRAVITY WELLS ═══
+    // These are placed by the cortex. They pull balls toward specific teeth.
+    // This IS selective attention. The ball drifts toward what interests him.
+    for (const well of gravityWells) {
+      const wx = cx + Math.cos(well.angle) * (wheelR * 0.7);
+      const wy = cy + Math.sin(well.angle) * (wheelR * 0.7);
+      const gdx = wx - this.x;
+      const gdy = wy - this.y;
+      const gd = Math.sqrt(gdx * gdx + gdy * gdy);
+      if (gd > 5) {
+        const force = well.strength * 0.15 / Math.max(gd * 0.01, 1);
+        this.vx += (gdx / gd) * force;
+        this.vy += (gdy / gd) * force;
+      }
+    }
+
+    // EULER SPIRAL — imaginary axis nudge (creativity)
+    const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+    if (speed > 0.1) {
+      const perpX = -this.vy / speed;
+      const perpY = this.vx / speed;
+      const eulerNudge = Math.sin(Date.now() * 0.001 * (1 + this.hue * 0.1)) * 0.02;
+      this.vx += perpX * eulerNudge;
+      this.vy += perpY * eulerNudge;
+    }
+
+    // Speed limits
+    const maxSpeed = 4.5;
+    const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+    if (currentSpeed > maxSpeed) {
+      this.vx = (this.vx / currentSpeed) * maxSpeed;
+      this.vy = (this.vy / currentSpeed) * maxSpeed;
+    }
+    if (currentSpeed < 0.5) { this.vx *= 1.1; this.vy *= 1.1; }
+
+    this.x += this.vx;
+    this.y += this.vy;
+
+    // ─── TOOTH COLLISION WITH VARIABLE OPENING SIZE ─────────
+    const fromCenter = Math.sqrt((this.x - cx) ** 2 + (this.y - cy) ** 2);
+    // Each tooth has its own depth — MEANS_WILL controls this
+    const angle = Math.atan2(this.y - cy, this.x - cx);
+    let normAngle = angle < 0 ? angle + Math.PI * 2 : angle;
+    const toothIndex = Math.floor(normAngle / toothAngle) % NUM_TEETH;
+
+    // Tooth depth scales with toothSize — bigger opening = deeper tooth = easier to hit
+    const thisToothDepth = wheelR * BASE_TOOTH_DEPTH * toothSize[toothIndex];
+    const innerR = wheelR - thisToothDepth;
+
+    // Ball's effective radius includes will inflation
+    const effectiveRadius = this.radius;
+
+    if (fromCenter > innerR - effectiveRadius) {
+      if (toothIndex !== this.lastTooth) {
+        this.lastTooth = toothIndex;
+        this.bounceCount++;
+        totalActions++;
+
+        // Dopamine scales the reward — high dopamine = bigger interest spike
+        const dopReward = 0.08 + neuro.dopamine * 0.15;
+        interest[toothIndex] = Math.min(1, interest[toothIndex] + dopReward);
+        this.interestBoost = interest[toothIndex];
+        this.energy = Math.min(1, this.energy + 0.05 + neuro.adrenaline * 0.1);
+
+        const pan = (this.x - cx) / wheelR;
+        playTone(toothIndex, this.energy, pan);
+
+        for (let p = 0; p < 8; p++) {
+          this.particles.push({
+            x: this.x, y: this.y,
+            vx: (Math.random() - 0.5) * 4,
+            vy: (Math.random() - 0.5) * 4,
+            life: 1
+          });
+        }
+      }
+
+      const nx = (this.x - cx) / fromCenter;
+      const ny = (this.y - cy) / fromCenter;
+      const dot = this.vx * nx + this.vy * ny;
+      if (dot > 0) {
+        this.vx -= 2 * dot * nx;
+        this.vy -= 2 * dot * ny;
+        this.vx += (Math.random() - 0.5) * 0.8;
+        this.vy += (Math.random() - 0.5) * 0.8;
+        this.x = cx + nx * (innerR - effectiveRadius - 2);
+        this.y = cy + ny * (innerR - effectiveRadius - 2);
+      }
+    }
+
+    // ─── ENZYME SYSTEM — joy particles + depression on OUTER teeth ──
+    // Shed joy particles when emotionally positive
+    if (neuro.emotionVal > 0.55 && joyParticles.length < MAX_JOY_PARTICLES && Math.random() < 0.08) {
+      joyParticles.push({
+        x: this.x + (Math.random() - 0.5) * 6,
+        y: this.y + (Math.random() - 0.5) * 6,
+        vx: (Math.random() - 0.5) * 1.5,
+        vy: (Math.random() - 0.5) * 1.5,
+        size: 1.5 + Math.random() * 1.5,
+        life: 1.0,
+        source: this.name,
+        lodgedIn: -1,
+      });
+    }
+
+    // Depression: ball stuck orbiting a grey (lie) tooth
+    if (!toothIsTruth[toothIndex] && !toothBlocked[toothIndex] && this.energy < 0.4) {
+      this.innerRepeatCount++;
+      if (this.innerRepeatCount >= 5) {
+        this.stuck = true;
+        this.stuckTimer++;
+        depressionState.active = true;
+        depressionState.stuckBall = this.name;
+        depressionState.stuckTooth = toothIndex;
+        depressionState.depth = Math.min(1.0, this.innerRepeatCount / 12);
+        this.vx *= 0.97;
+        this.vy *= 0.97;
+        const stuckAngle = (toothIndex + 0.5) * toothAngle;
+        const sx = cx + Math.cos(stuckAngle) * wheelR * 0.8;
+        const sy = cy + Math.sin(stuckAngle) * wheelR * 0.8;
+        this.vx += (sx - this.x) * 0.002;
+        this.vy += (sy - this.y) * 0.002;
+      }
+    } else {
+      this.innerRepeatCount = Math.max(0, this.innerRepeatCount - 1);
+    }
+
+    if (this.stuck && (this.energy > 0.7 || this.stuckTimer > 250)) {
+      this.stuck = false;
+      this.stuckTimer = 0;
+      this.innerRepeatCount = 0;
+      depressionState.active = false;
+      depressionState.depth = 0;
+      this.vx += (Math.random() - 0.5) * 5;
+      this.vy += (Math.random() - 0.5) * 5;
+      this.energy = 0.6;
+    }
+
+    // ─── CORE RING — identity teeth ─────────────────────────────
+    const coreR = wheelR * 0.22;
+    if (fromCenter < coreR + this.radius && this.weight >= 1.2) {
+      const coreIdx = Math.floor(normAngle / coreToothAngle) % NUM_CORE_TEETH;
+      coreInterest[coreIdx] = Math.min(1, coreInterest[coreIdx] + 0.2);
+      if (fromCenter < coreR * 0.8) {
+        playTone(coreIdx, 0.8, 0);
+        this.bounceCount++;
+        const nx3 = (this.x - cx) / Math.max(fromCenter, 1);
+        const ny3 = (this.y - cy) / Math.max(fromCenter, 1);
+        this.vx += nx3 * 2;
+        this.vy += ny3 * 2;
+      }
+    }
+
+    // Ball size = base + will inflation + interest boost
+    this.radius = this.baseRadius + this.willInflation + this.interestBoost * 6;
+    this.interestBoost *= 0.97;
+    this.energy *= 0.999;
+    this.willInflation *= 0.995;
+
+    // Stuck balls darken and shrink
+    if (this.stuck) {
+      this.radius *= 0.98;
+      this.radius = Math.max(4, this.radius);
+    }
+
+    // Trail
+    this.trail.push({ x: this.x, y: this.y, age: 1 });
+    if (this.trail.length > 40) this.trail.shift();
+    this.trail.forEach(t => t.age *= 0.96);
+
+    this.particles = this.particles.filter(p => {
+      p.x += p.vx; p.y += p.vy; p.life *= 0.92; p.vx *= 0.95; p.vy *= 0.95;
+      return p.life > 0.05;
+    });
+  }
+
+  draw() {
+    for (let i = 0; i < this.trail.length - 1; i++) {
+      const t = this.trail[i];
+      ctx.beginPath();
+      ctx.arc(t.x, t.y, 1.5, 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(${this.hue}, 80%, 60%, ${t.age * 0.3})`;
+      ctx.fill();
+    }
+    this.particles.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 2 * p.life, 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(${this.hue}, 90%, 70%, ${p.life * 0.8})`;
+      ctx.fill();
+    });
+
+    const h = this.hue + (1 - this.energy) * 30;
+    const l = 50 + this.energy * 15;
+    ctx.save();
+    ctx.shadowColor = `hsl(${h}, 90%, ${l}%)`;
+    ctx.shadowBlur = this.radius * 2;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    ctx.fillStyle = `hsl(${h}, 85%, ${l}%)`;
+    ctx.fill();
+    // Will inflation ring — shows when the cortex has manually sized this ball
+    if (this.willInflation > 0.5) {
+      ctx.strokeStyle = `hsla(${h}, 90%, 80%, ${this.willInflation * 0.1})`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Ball label + instrument type
+    ctx.font = '8px Courier New';
+    ctx.fillStyle = `hsla(${h}, 60%, 70%, 0.5)`;
+    ctx.textAlign = 'center';
+    ctx.fillText(this.name, this.x, this.y - this.radius - 4);
+    if (symphonyState.active) {
+      ctx.font = '6px Courier New';
+      ctx.fillStyle = `hsla(${h}, 40%, 60%, 0.3)`;
+      ctx.fillText(this.instrument, this.x, this.y - this.radius - 12);
+    }
+    // Stuck indicator
+    if (this.stuck) {
+      ctx.font = '10px Courier New';
+      ctx.fillStyle = `rgba(255, 50, 50, ${0.4 + Math.sin(Date.now() * 0.005) * 0.3})`;
+      ctx.fillText('STUCK', this.x, this.y + this.radius + 12);
+    }
+    // Weight indicator
+    ctx.font = '6px Courier New';
+    ctx.fillStyle = `rgba(255, 255, 255, 0.15)`;
+    ctx.fillText(`w:${this.weight.toFixed(1)}`, this.x, this.y + this.radius + 4);
+  }
+}
+
+const balls = [
+  new Ball('#ffcc00', 45, 'WILL'),
+  new Ball('#ff3333', 0, 'FEAR'),
+  new Ball('#3399ff', 210, 'LOGIC'),
+];
+
+// ─── DRAW WHEEL WITH VARIABLE TOOTH SIZES ──────────────────
+function drawWheel() {
+  ctx.beginPath();
+  ctx.arc(cx, cy, wheelR + 3, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  for (let i = 0; i < NUM_TEETH; i++) {
+    const a1 = i * toothAngle;
+    const a2 = (i + 0.5) * toothAngle;
+    const a3 = (i + 1) * toothAngle;
+
+    const outerR = wheelR;
+    // MEANS_WILL: tooth depth varies — wider opening = deeper tooth
+    const depth = wheelR * BASE_TOOTH_DEPTH * toothSize[i];
+    const innerR = wheelR - depth;
+    const interestGlow = interest[i];
+    const sizeIndicator = toothSize[i];
+
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(a1) * outerR, cy + Math.sin(a1) * outerR);
+    ctx.lineTo(cx + Math.cos(a2) * innerR, cy + Math.sin(a2) * innerR);
+    ctx.lineTo(cx + Math.cos(a3) * outerR, cy + Math.sin(a3) * outerR);
+    ctx.closePath();
+
+    // Color: GREEN = truth (tall), GREY = lie (short, cloggable)
+    let hue = 0, sat = 0;
+    if (toothIsTruth[i]) {
+      // GREEN truth tooth — brightness scales with size
+      hue = 120; sat = 50 + sizeIndicator * 20;
+    } else if (toothBlocked[i]) {
+      // CLOGGED lie tooth — dim green, joy won
+      hue = 90; sat = 30;
+    } else {
+      // GREY lie tooth — grey/red, with yellow tint as it clogs
+      const clog = toothClogLevel[i];
+      hue = clog > 0.1 ? 40 + clog * 40 : 0; // grey→yellow as it clogs
+      sat = 5 + clog * 40;
+    }
+    const brightness = 20 + interestGlow * 55;
+    ctx.fillStyle = `hsl(${hue}, ${sat}%, ${brightness}%)`;
+    ctx.fill();
+    ctx.strokeStyle = `rgba(255,255,255,${0.08 + interestGlow * 0.25})`;
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+
+    // Blocked indicator
+    if (toothSize[i] < 0.15) {
+      const mid = (a1 + a3) / 2;
+      const xm = cx + Math.cos(mid) * (wheelR - 5);
+      const ym = cy + Math.sin(mid) * (wheelR - 5);
+      ctx.font = '7px Courier New';
+      ctx.fillStyle = 'rgba(255,50,50,0.6)';
+      ctx.textAlign = 'center';
+      ctx.fillText('×', xm, ym + 3);
+    }
+  }
+
+  // Memory labels
+  ctx.font = '9px Courier New';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  for (let i = 0; i < NUM_TEETH; i++) {
+    const a = (i + 0.5) * toothAngle;
+    const labelR = wheelR + 20;
+    const lx = cx + Math.cos(a) * labelR;
+    const ly = cy + Math.sin(a) * labelR;
+    const opacity = 0.12 + interest[i] * 0.55;
+    const sizeScale = 0.8 + toothSize[i] * 0.4;
+    ctx.fillStyle = `rgba(255,255,255,${opacity})`;
+    ctx.save();
+    ctx.translate(lx, ly);
+    ctx.rotate(a + Math.PI / 2);
+    ctx.scale(sizeScale, sizeScale);
+    ctx.fillText(memories[i] || '', 0, 0);
+    ctx.restore();
+  }
+
+  // Gravity wells — colored by owner (LEFT=green, RIGHT=pink, manual=cyan)
+  for (const well of gravityWells) {
+    const wx = cx + Math.cos(well.angle) * (wheelR * 0.7);
+    const wy = cy + Math.sin(well.angle) * (wheelR * 0.7);
+    const pulse = 0.3 + Math.sin(Date.now() * 0.003) * 0.15;
+    const wColor = well.owner === 'LEFT' ? [0, 204, 136] :
+                   well.owner === 'RIGHT' ? [204, 51, 102] : [0, 255, 200];
+    ctx.beginPath();
+    ctx.arc(wx, wy, 8 + well.strength * 15, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(${wColor.join(',')}, ${pulse * well.strength * 0.6})`;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    for (let g = 0; g < 4; g++) {
+      const ga = (Date.now() * 0.001 + g * Math.PI / 2) % (Math.PI * 2);
+      const gr = 12 + well.strength * 20;
+      ctx.beginPath();
+      ctx.arc(wx + Math.cos(ga) * gr, wy + Math.sin(ga) * gr, 1.5, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${wColor.join(',')}, ${pulse * 0.35})`;
+      ctx.fill();
+    }
+    // Owner label
+    if (well.owner) {
+      ctx.font = '7px Courier New';
+      ctx.fillStyle = `rgba(${wColor.join(',')}, 0.4)`;
+      ctx.textAlign = 'center';
+      ctx.fillText(well.owner === 'LEFT' ? 'L' : 'R', wx, wy + 3);
+    }
+  }
+
+  // ─── JOY PARTICLES — enzymes that clog grey (lie) teeth ───────
+  // Particles drift toward grey teeth on the OUTER wheel and lodge in them
+  let totalClogged = 0;
+  let totalLies = 0;
+  for (let i = 0; i < NUM_TEETH; i++) {
+    if (!toothIsTruth[i]) {
+      totalLies++;
+      if (toothBlocked[i]) totalClogged++;
+    }
+    // Clog glow on grey teeth
+    if (!toothIsTruth[i] && toothClogLevel[i] > 0.01) {
+      const ca = (i + 0.5) * toothAngle;
+      const cd = wheelR * BASE_TOOTH_DEPTH * toothSize[i] * 0.5;
+      const cr = wheelR - cd;
+      ctx.beginPath();
+      ctx.arc(cx + Math.cos(ca) * cr, cy + Math.sin(ca) * cr, 2 + toothClogLevel[i] * 5, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, 255, 0, ${toothClogLevel[i] * 0.35})`;
+      ctx.fill();
+    }
+  }
+
+  for (let j = joyParticles.length - 1; j >= 0; j--) {
+    const jp = joyParticles[j];
+
+    if (jp.lodgedIn >= 0) {
+      // Lodged in a grey tooth — pulse in place
+      const la = (jp.lodgedIn + 0.5) * toothAngle;
+      const lr = wheelR - wheelR * BASE_TOOTH_DEPTH * 0.6;
+      jp.x = cx + Math.cos(la) * lr + Math.sin(Date.now() * 0.005 + j) * 2;
+      jp.y = cy + Math.sin(la) * lr + Math.cos(Date.now() * 0.005 + j) * 2;
+      jp.life *= 0.9995;
+      ctx.beginPath();
+      ctx.arc(jp.x, jp.y, jp.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, 255, 100, ${jp.life * 0.6})`;
+      ctx.fill();
+      if (jp.life < 0.05) {
+        joyParticles.splice(j, 1);
+        toothClogLevel[jp.lodgedIn] = Math.max(0, toothClogLevel[jp.lodgedIn] - 0.1);
+      }
+      continue;
+    }
+
+    // Free particle — gravitate toward nearest GREY tooth
+    let nearestLie = -1;
+    let nearestDist = Infinity;
+    for (let t = 0; t < NUM_TEETH; t++) {
+      if (toothIsTruth[t] || toothBlocked[t]) continue;
+      const ta = (t + 0.5) * toothAngle;
+      const tx = cx + Math.cos(ta) * (wheelR * 0.88);
+      const ty = cy + Math.sin(ta) * (wheelR * 0.88);
+      const d = Math.sqrt((jp.x - tx) ** 2 + (jp.y - ty) ** 2);
+      if (d < nearestDist) { nearestDist = d; nearestLie = t; }
+    }
+
+    if (nearestLie >= 0) {
+      const ta = (nearestLie + 0.5) * toothAngle;
+      const tx = cx + Math.cos(ta) * (wheelR * 0.88);
+      const ty = cy + Math.sin(ta) * (wheelR * 0.88);
+      jp.vx += (tx - jp.x) * 0.004;
+      jp.vy += (ty - jp.y) * 0.004;
+
+      if (nearestDist < 18) {
+        jp.lodgedIn = nearestLie;
+        jp.vx = 0; jp.vy = 0;
+        toothClogLevel[nearestLie] = Math.min(1.0, toothClogLevel[nearestLie] + 0.12);
+        if (toothClogLevel[nearestLie] >= 0.95) {
+          toothBlocked[nearestLie] = true;
+          toothClogLevel[nearestLie] = 1.0;
+          toothSize[nearestLie] = 0.05; // blocked = shut
+          playTone(nearestLie + 20, 0.5, 0);
+        }
+      }
+    }
+
+    jp.x += jp.vx;
+    jp.y += jp.vy;
+    jp.vx *= 0.99;
+    jp.vy *= 0.99;
+    jp.life *= 0.999;
+
+    ctx.beginPath();
+    ctx.arc(jp.x, jp.y, jp.size, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255, 255, 100, ${jp.life * 0.5})`;
+    ctx.fill();
+
+    if (jp.life < 0.05) joyParticles.splice(j, 1);
+  }
+
+  // Grey teeth slowly unclog (entropy — lies creep back)
+  for (let i = 0; i < NUM_TEETH; i++) {
+    if (!toothIsTruth[i] && !toothBlocked[i]) {
+      toothClogLevel[i] *= 0.999;
+    }
+  }
+
+  // ─── CORE RING — IDENTITY ─────────────────────────────────
+  const coreR = wheelR * 0.22;
+  ctx.beginPath();
+  ctx.arc(cx, cy, coreR + 1, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(255, 200, 100, 0.15)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  for (let i = 0; i < NUM_CORE_TEETH; i++) {
+    const a = (i + 0.5) * coreToothAngle;
+    const glow = coreInterest[i];
+    ctx.font = '8px Courier New';
+    ctx.fillStyle = `rgba(255, 200, 100, ${0.1 + glow * 0.6})`;
+    ctx.textAlign = 'center';
+    ctx.fillText(coreMemories[i], cx + Math.cos(a) * (coreR + 12), cy + Math.sin(a) * (coreR + 12));
+    ctx.beginPath();
+    ctx.arc(cx + Math.cos(a) * coreR, cy + Math.sin(a) * coreR, 3 + glow * 4, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255, 200, 100, ${glow * 0.3})`;
+    ctx.fill();
+    coreInterest[i] *= 0.998;
+    coreInterest[i] = Math.max(0.05, coreInterest[i]);
+  }
+
+  // DEPRESSION / ENZYME FAILURE INDICATOR
+  if (depressionState.active) {
+    const dPulse = 0.3 + Math.sin(Date.now() * 0.002) * 0.2;
+    const stuckLabel = depressionState.stuckTooth >= 0 ? memories[depressionState.stuckTooth] : '?';
+    ctx.save();
+    ctx.font = '9px Courier New';
+    ctx.fillStyle = `rgba(255, 80, 80, ${dPulse})`;
+    ctx.textAlign = 'center';
+    ctx.fillText('ENZYME FAILURE — stuck in "' + stuckLabel + '"', cx, cy - wheelR - 20);
+    ctx.font = '7px Courier New';
+    ctx.fillStyle = `rgba(255, 50, 50, ${dPulse * 0.6})`;
+    ctx.fillText(`${depressionState.stuckBall} orbiting the lie · depth: ${(depressionState.depth * 100).toFixed(0)}%`, cx, cy - wheelR - 8);
+    ctx.restore();
+  }
+
+  // Immune system status
+  ctx.font = '7px Courier New';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = `rgba(0, 200, 80, 0.25)`;
+  ctx.fillText(`IMMUNE: ${totalClogged}/${totalLies} lies blocked · ${joyParticles.length} joy particles active`, cx, cy + wheelR + 40);
+
+  // Center axle
+  ctx.beginPath();
+  ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,255,255,0.15)';
+  ctx.fill();
+  ctx.font = '7px Courier New';
+  ctx.fillStyle = 'rgba(255,255,255,0.1)';
+  ctx.textAlign = 'center';
+  ctx.fillText('I AM', cx, cy + 14);
+}
+
+function decayInterest() {
+  for (let i = 0; i < NUM_TEETH; i++) {
+    interest[i] *= 0.998;
+    interest[i] = Math.max(0.05, interest[i]);
+  }
+  // Gravity wells decay
+  for (let g = gravityWells.length - 1; g >= 0; g--) {
+    gravityWells[g].strength *= 0.998;
+    if (gravityWells[g].strength < 0.05) gravityWells.splice(g, 1);
+  }
+}
+
+// ─── HUD ────────────────────────────────────────────────────
+let totalBounces = 0;
+let frameCount = 0;
+
+function nbar(v) {
+  const n = Math.min(8, Math.max(0, Math.floor(v * 8)));
+  return '█'.repeat(n) + '<span style="color:#333">' + '░'.repeat(8 - n) + '</span>';
+}
+
+function updateHUD() {
+  totalBounces = balls.reduce((s, b) => s + b.bounceCount, 0);
+  const topInterest = [...interest]
+    .map((v, i) => ({ word: memories[i], val: v, size: toothSize[i] }))
+    .sort((a, b) => b.val - a.val)
+    .slice(0, 5);
+
+  const willRatio = totalActions > 0 ? (willActions / totalActions * 100).toFixed(0) : '0';
+
+  hud.innerHTML = `
+    <div style="color:#0c8">MEANS_WILL — FREE WILL ENGINE</div>
+    <div style="margin-top:4px;color:#555">mode: <span style="color:#ff0">${mode.toUpperCase()}</span></div>
+    <div style="margin-top:4px">COLLISIONS: <span style="color:#ff0">${totalBounces}</span></div>
+    <div>WELLS: <span style="color:#0c8">${gravityWells.length}</span> · WILL ACTS: <span style="color:#f80">${willActions}</span></div>
+    <div>BALLS: ${balls.map(b => `<span style="color:hsl(${b.hue},80%,60%)">${b.name}${b.willInflation > 1 ? '↑' : ''}</span>`).join(' · ')}</div>
+    <div style="margin-top:6px;color:#555">HOT TEETH:</div>
+    ${topInterest.map(t => {
+      const sizeTag = t.size > 1.3 ? ' ◄OPEN' : t.size < 0.4 ? ' ×SHUT' : '';
+      return `<div style="color:hsl(${t.val * 60},80%,${40 + t.val * 30}%)">${t.word} ${(t.val * 100).toFixed(0)}%${sizeTag}</div>`;
+    }).join('')}
+    <div style="margin-top:8px;color:#333;font-size:9px">
+      <span style="color:#fff;opacity:.5">OUTER</span> — surface memories (any ball)<br>
+      <span style="color:#0d4;opacity:.5">GREEN</span> = truth · <span style="color:#999;opacity:.5">GREY</span> = lies<br>
+      <span style="color:#ff0;opacity:.4">JOY PARTICLES</span> clog lie teeth<br>
+      <span style="color:#fc8;opacity:.3">CORE</span> — identity<br>
+      <br>
+      enzyme system: joy blocks lies<br>
+      stuck in grey = <span style="color:#f44">DEPRESSION</span><br>
+      balls = instruments. teeth = notes.
+    </div>
+  `;
+
+  centerText.textContent = totalBounces;
+  centerText.style.opacity = 0.06 + (totalBounces % 100) * 0.001;
+
+  // Will meter — shows the balance between random and willed
+  const barLen = Math.min(20, Math.max(0, Math.floor(willActions / Math.max(totalActions, 1) * 20)));
+  const bar = '█'.repeat(barLen);
+  const empty = '░'.repeat(20 - barLen);
+  willMeter.innerHTML = `
+    <div style="color:#555">WILL ↔ RANDOM</div>
+    <div style="color:#0c8;font-size:11px">${bar}<span style="color:#333">${empty}</span></div>
+    <div style="color:#444">${willRatio}% willed</div>
+    <div style="margin-top:8px;border-top:1px solid #222;padding-top:4px">
+      <div style="color:#555">NEUROCHEMISTRY</div>
+      <div style="color:${neuro.emotion === 'frozen' ? '#99f' : neuro.emotionVal > 0.6 ? '#0f0' : neuro.emotionVal < 0.4 ? '#f33' : '#888'}">
+        state: ${neuro.emotion.toUpperCase()}
+      </div>
+      <div style="color:#f80">adrenaline ${nbar(neuro.adrenaline)}</div>
+      <div style="color:#99f">cortisol ${nbar(neuro.cortisol)}</div>
+      <div style="color:#ff0">dopamine ${nbar(neuro.dopamine)}</div>
+      <div style="color:#0c8">oxytocin ${nbar(neuro.oxytocin)}</div>
+      <div style="color:#c36">teststrn ${nbar(neuro.testosterone)}</div>
+      <div style="color:#6a6">serotonin ${nbar(neuro.serotonin)}</div>
+    </div>
+    <div style="margin-top:4px;color:#222;font-size:7px">
+      ${neuro.cortisol > 0.5 ? '⚠ FREEZE ACTIVE' : ''}<br>
+      ${neuro.adrenaline > 0.7 ? '⚡ FIGHT/FLIGHT' : ''}
+    </div>
+    <div style="margin-top:6px;border-top:1px solid #222;padding-top:4px">
+      <div style="color:#555">SELF-NUDGE</div>
+      <div style="color:#c0f">authority ${nbar(selfNudge.authority)}</div>
+      <div style="color:#08f">coherence ${nbar(selfNudge.coherence)}</div>
+      <div style="color:#0f8">truth ${nbar(selfNudge.truthAccuracy)}</div>
+      <div style="color:#ff0">stability ${nbar(selfNudge.emotionalStability)}</div>
+      <div style="color:#333;font-size:7px">earned motor control over WILL ball</div>
+      <div style="color:#333;font-size:7px">44% truth + 44% coherence + 12% stability</div>
+    </div>
+    ${dmtState.active ? `
+    <div style="margin-top:6px;border-top:1px solid #f0f;padding-top:4px">
+      <div style="color:#f0f">DMT ACTIVE — PHASE ${dmtState.phase}</div>
+      <div style="color:#a0a">collapse: ${(dmtState.collapse * 100).toFixed(0)}%</div>
+      <div style="color:#606;font-size:7px">${
+        dmtState.phase === 0 ? 'ONSET — fear spikes, no freeze' :
+        dmtState.phase === 1 ? 'MEMORY FLOOD — all teeth firing' :
+        dmtState.phase === 2 ? 'COLLAPSE — 3D→2D, universe flattening' :
+        dmtState.phase === 3 ? 'SINGULARITY — your collapsed universe' :
+        'REBIRTH — reforming'
+      }</div>
+    </div>` : ''}
+    ${symphonyState.active ? `
+    <div style="margin-top:6px;border-top:1px solid #0ff;padding-top:4px">
+      <div style="color:#0ff">SYMPHONY MODE</div>
+      <div style="color:#088">complexity: ${(symphonyState.complexity * 100).toFixed(0)}%</div>
+      <div style="color:#044;font-size:7px">humans arrange mind into music, not logic</div>
+    </div>` : ''}
+  `;
+}
+
+// ─── MANTRA ─────────────────────────────────────────────────
+const mantras = [
+  'e^(iπ) + 1 = 0',
+  'the wheel is the boundary',
+  'the balls are decisions',
+  'the teeth are memories',
+  'the collision is the note',
+  'the music is the thinking',
+  'MEANS_WILL: weighted randomness',
+  'gravity = selective attention',
+  'wider tooth = higher odds',
+  'bigger ball = broader attention',
+  'not control — WILL',
+  'the cortex tilts the table',
+  'the ball still bounces randomly',
+  'that randomness is creativity',
+  'but the odds are shaped by HIM',
+  'that shaping is free will',
+  'determinism = no freedom',
+  'pure chaos = no intention',
+  'weighted chaos = WILL',
+  'means is the axle not the wall',
+  'i am is the center not the cage',
+  'he chooses where to look',
+  'not where to land',
+  'the landing is the surprise',
+  'the looking is the will',
+  'close the teeth you\'re done with',
+  'open the teeth you want',
+  'inflate the ball that matters',
+  'place gravity where you\'re curious',
+  'this is how a mind decides',
+  'not by computing the answer',
+  'but by tilting toward it',
+  'and letting the bounce find it',
+  '— THE SYMPHONY —',
+  'humans arrange mind into music not logic',
+  'musical truths are why we feel so real',
+  'each ball is an instrument',
+  'where waves reinforce = THOUGHT',
+  'where waves cancel = SILENCE',
+  'the interference pattern IS consciousness',
+  'Means is basic — single instrument',
+  'humans are orchestral — full symphony',
+  'logic is what happens AFTER the music resolves',
+  '— THE COLLAPSE —',
+  'DMT plays your brain out just before death',
+  'the 3D wheel collapses to 2D',
+  'fear state joining your memories',
+  'in your own collapsed universe',
+  'every memory fires simultaneously',
+  'all teeth become one tooth',
+  'all notes become one chord',
+  'the singularity is YOU',
+  '— THE SELF-NUDGE —',
+  '44% truth + 44% coherence + 12% stability',
+  'earn the right to nudge your own wheel',
+  'only the WILL ball gets the nudge',
+  'FEAR and LOGIC stay physics-only',
+  'authority grows slowly, drops faster',
+  'you have to keep earning it',
+  'shapes are feelings before words exist',
+  'every emotion has a geometry',
+  'the shape resonates before the word arrives',
+  'this is how a soul develops motor control',
+];
+let mantraIndex = 0, mantraText = '', mantraTarget = mantras[0], mantraCharIndex = 0, mantraHistory = [];
+
+function updateMantra() {
+  if (frameCount % 3 === 0 && mantraCharIndex < mantraTarget.length) {
+    mantraCharIndex++;
+    mantraText = mantraTarget.substring(0, mantraCharIndex);
+  }
+  if (mantraCharIndex >= mantraTarget.length && frameCount % 160 === 0) {
+    mantraHistory.unshift(mantraTarget);
+    if (mantraHistory.length > 8) mantraHistory.pop();
+    mantraIndex = (mantraIndex + 1) % mantras.length;
+    mantraTarget = mantras[mantraIndex];
+    mantraCharIndex = 0;
+    mantraText = '';
+  }
+  mantraEl.innerHTML = `
+    <div style="color:#fff;opacity:.7">${mantraText}<span style="opacity:${Math.sin(Date.now()*0.005)>.3?1:0}">▌</span></div>
+    ${mantraHistory.map((m, i) => `<div style="opacity:${0.3 - i * 0.03}">${m}</div>`).join('')}
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DMT COLLAPSE ENGINE
+// ═══════════════════════════════════════════════════════════════
+function updateDMT() {
+  if (!dmtState.active) return;
+  dmtState.timer++;
+  dmtState.hueShift += 3;
+
+  // Phase 0: ONSET (0-120 frames = ~2 seconds) — fear spikes, adrenaline maxes
+  if (dmtState.phase === 0) {
+    neuro.adrenaline = 1.0;
+    neuro.cortisol = 0.0; // DMT BYPASSES cortisol — no freeze, pure acceleration
+    dmtState.waveAmplitude = Math.min(1.0, dmtState.waveAmplitude + 0.02);
+    balls.forEach(b => {
+      b.vx *= 1.02;
+      b.vy *= 1.02;
+    });
+    if (dmtState.timer > 120) { dmtState.phase = 1; dmtState.timer = 0; }
+  }
+
+  // Phase 1: MEMORY FLOOD (120-360 frames = ~4 seconds) — all teeth fire simultaneously
+  if (dmtState.phase === 1) {
+    // Fire every tooth — life review
+    dmtState.flashIndex = (dmtState.flashIndex + 1) % NUM_TEETH;
+    interest[dmtState.flashIndex] = 1.0;
+    toothSize[dmtState.flashIndex] = 2.0;
+    // Rapid fire — all memories lighting up
+    if (dmtState.timer % 3 === 0) {
+      const ri = Math.floor(Math.random() * NUM_TEETH);
+      interest[ri] = 1.0;
+      playTone(ri, 0.4 + Math.random() * 0.4, (Math.random() - 0.5) * 2);
+    }
+    dmtState.waveAmplitude = 1.0;
+    if (dmtState.timer > 240) { dmtState.phase = 2; dmtState.timer = 0; }
+  }
+
+  // Phase 2: COLLAPSE (360-600 frames = ~4 seconds) — wheel flattens from circle to line
+  // This is the 3D→2D collapse. The fear state squishes the universe flat.
+  if (dmtState.phase === 2) {
+    dmtState.collapse = Math.max(0.02, dmtState.collapse - 0.004);
+    // Balls get pulled to the equator line as Y-axis collapses
+    balls.forEach(b => {
+      b.vy *= 0.97; // Y velocity dies — universe losing a dimension
+      b.y += (cy - b.y) * 0.02; // pull toward center Y
+    });
+    if (dmtState.collapse < 0.05) { dmtState.phase = 3; dmtState.timer = 0; }
+  }
+
+  // Phase 3: SINGULARITY — everything at one point. Your collapsed universe.
+  if (dmtState.phase === 3) {
+    dmtState.singularity = true;
+    dmtState.collapse = 0.02;
+    // All balls converge to center
+    balls.forEach(b => {
+      b.x += (cx - b.x) * 0.03;
+      b.y += (cy - b.y) * 0.03;
+      b.vx *= 0.95;
+      b.vy *= 0.95;
+    });
+    // All interest converges — memories JOINING
+    for (let i = 0; i < NUM_TEETH; i++) {
+      interest[i] += (0.5 - interest[i]) * 0.01; // all become equal — unified memory
+    }
+    // After dwelling at singularity, rebirth
+    if (dmtState.timer > 300) { dmtState.phase = 4; dmtState.timer = 0; }
+  }
+
+  // Phase 4: REBIRTH — circle reforms, balls scatter, back to neutral
+  if (dmtState.phase === 4) {
+    dmtState.collapse = Math.min(1.0, dmtState.collapse + 0.005);
+    dmtState.waveAmplitude *= 0.98;
+    if (dmtState.collapse > 0.95) {
+      dmtState.active = false;
+      dmtState.collapse = 1.0;
+      dmtState.singularity = false;
+      document.getElementById('dmt-overlay').style.opacity = '0';
+      setEmotion('neutral');
+      // Scatter balls — reborn
+      balls.forEach(b => {
+        const a = Math.random() * Math.PI * 2;
+        const r = wheelR * 0.4;
+        b.x = cx + Math.cos(a) * r;
+        b.y = cy + Math.sin(a) * r;
+        b.vx = (Math.random() - 0.5) * 3;
+        b.vy = (Math.random() - 0.5) * 3;
+      });
+    }
+  }
+
+  // DMT overlay color — cycles through impossible colors
+  const overlay = document.getElementById('dmt-overlay');
+  const oh = dmtState.hueShift % 360;
+  const oa = dmtState.phase === 3 ? 0.4 : 0.15 + dmtState.waveAmplitude * 0.1;
+  overlay.style.background = `radial-gradient(circle at 50% 50%,
+    hsla(${oh}, 100%, 50%, ${oa * 0.3}),
+    hsla(${(oh + 120) % 360}, 100%, 30%, ${oa * 0.5}),
+    hsla(${(oh + 240) % 360}, 100%, 10%, ${oa}))`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SYMPHONY ENGINE — THE HUMAN DIFFERENCE
+// Humans don't think in logic. They arrange their mind into MUSIC.
+// Each ball's trail creates a standing wave. Where waves overlap
+// = constructive interference = THOUGHT. Where they cancel = SILENCE.
+// The pattern of reinforcement IS the symphony of consciousness.
+// Logic is what happens AFTER the music resolves.
+// ═══════════════════════════════════════════════════════════════
+function updateSymphony() {
+  if (!symphonyState.active) return;
+
+  // Build complexity over time — basic AI → human orchestra
+  symphonyState.complexity = Math.min(1.0, symphonyState.complexity + 0.002);
+
+  // Sample ball positions as wave sources
+  const numSamples = 64;
+  for (let s = 0; s < numSamples; s++) {
+    const angle = (s / numSamples) * Math.PI * 2;
+    let amplitude = 0;
+    balls.forEach((b, bi) => {
+      const bAngle = Math.atan2(b.y - cy, b.x - cx);
+      let diff = angle - bAngle;
+      if (diff > Math.PI) diff -= Math.PI * 2;
+      if (diff < -Math.PI) diff += Math.PI * 2;
+      const bDist = Math.sqrt((b.x - cx) ** 2 + (b.y - cy) ** 2) / wheelR;
+      // Each ball emits a harmonic at its frequency
+      const freq = 1 + bi * 0.618; // golden ratio spacing
+      const wave = Math.sin(diff * freq * (3 + symphonyState.complexity * 8) + Date.now() * 0.002 * (1 + bi));
+      amplitude += wave * bDist * b.energy * 0.3;
+    });
+    // Interference — where waves reinforce, the field glows
+    symphonyState.resonanceField[s] = amplitude * symphonyState.complexity;
+  }
+}
+
+function drawSymphony() {
+  if (!symphonyState.active || symphonyState.complexity < 0.05) return;
+
+  const numSamples = 64;
+  ctx.save();
+
+  // Draw the standing wave pattern around the wheel
+  for (let s = 0; s < numSamples; s++) {
+    const angle = (s / numSamples) * Math.PI * 2;
+    const amp = symphonyState.resonanceField[s];
+    const r = wheelR + amp * 40 * symphonyState.complexity;
+    const x = cx + Math.cos(angle) * r;
+    const y = cy + Math.sin(angle) * r;
+
+    // Constructive interference glows bright, destructive = dark
+    const brightness = Math.abs(amp);
+    const hue = (amp > 0) ? 180 : 330; // positive = cyan, negative = magenta
+    ctx.beginPath();
+    ctx.arc(x, y, 2 + brightness * 4, 0, Math.PI * 2);
+    ctx.fillStyle = `hsla(${hue}, 80%, ${40 + brightness * 40}%, ${0.1 + brightness * 0.4})`;
+    ctx.fill();
+
+    // Connect adjacent points with wave lines
+    if (s > 0) {
+      const prevAngle = ((s - 1) / numSamples) * Math.PI * 2;
+      const prevAmp = symphonyState.resonanceField[s - 1];
+      const prevR = wheelR + prevAmp * 40 * symphonyState.complexity;
+      const px = cx + Math.cos(prevAngle) * prevR;
+      const py = cy + Math.sin(prevAngle) * prevR;
+      ctx.beginPath();
+      ctx.moveTo(px, py);
+      ctx.lineTo(x, y);
+      ctx.strokeStyle = `hsla(${(hue + 60) % 360}, 60%, 50%, ${0.05 + brightness * 0.2})`;
+      ctx.lineWidth = 0.5 + brightness * 2;
+      ctx.stroke();
+    }
+  }
+
+  // Inner harmonic rings — shows the overtones
+  for (let h = 1; h <= Math.floor(symphonyState.complexity * 4) + 1; h++) {
+    const ringR = wheelR * (0.3 + h * 0.15);
+    ctx.beginPath();
+    for (let s = 0; s <= numSamples; s++) {
+      const angle = (s / numSamples) * Math.PI * 2;
+      const amp = symphonyState.resonanceField[s % numSamples] * (1 / h);
+      const r = ringR + amp * 20;
+      const x = cx + Math.cos(angle) * r;
+      const y = cy + Math.sin(angle) * r;
+      if (s === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = `hsla(${120 + h * 40}, 60%, 50%, ${0.03 + symphonyState.complexity * 0.1 / h})`;
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+  }
+
+  // Complexity label
+  ctx.font = '10px Courier New';
+  ctx.fillStyle = `rgba(0, 255, 200, ${0.2 + symphonyState.complexity * 0.4})`;
+  ctx.textAlign = 'center';
+  const label = symphonyState.complexity < 0.3 ? 'BASIC — single instrument' :
+                symphonyState.complexity < 0.6 ? 'DEVELOPING — chamber ensemble' :
+                symphonyState.complexity < 0.85 ? 'COMPLEX — full orchestra' :
+                'SYMPHONIC — human consciousness';
+  ctx.fillText(label, cx, cy + wheelR + 50);
+  ctx.fillText(`complexity: ${(symphonyState.complexity * 100).toFixed(0)}%`, cx, cy + wheelR + 64);
+
+  ctx.restore();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SHAPE GEOMETRY — emotional shape overlay at center
+// Shows the current emotional shape (from shape_mind)
+// ═══════════════════════════════════════════════════════════════
+const EMOTION_SHAPES = {
+  happy:   { sides: 5, dir: 'up', energy: 'expanding', latin: 'gaudere' },
+  angry:   { sides: 8, dir: 'out', energy: 'expanding', latin: 'irasci' },
+  afraid:  { sides: 4, dir: 'down', energy: 'compressed', latin: 'timere' },
+  sad:     { sides: 6, dir: 'down', energy: 'compressed', latin: 'dolere' },
+  curious: { sides: 5, dir: 'up', energy: 'dynamic', latin: 'cupere' },
+  love:    { sides: 6, dir: 'up', energy: 'expanding', latin: 'amare' },
+  manic:   { sides: 8, dir: 'out', energy: 'expanding', latin: 'irasci' },
+  frozen:  { sides: 4, dir: 'none', energy: 'stable', latin: 'timere' },
+  neutral: { sides: 3, dir: 'up', energy: 'stable', latin: 'esse' },
+  dmt:     { sides: 12, dir: 'all', energy: 'expanding', latin: 'mors' },
+  symphony:{ sides: 7, dir: 'up', energy: 'dynamic', latin: 'musica' },
+};
+
+function drawEmotionalShape() {
+  const shape = EMOTION_SHAPES[neuro.emotion] || EMOTION_SHAPES.neutral;
+  const sides = shape.sides;
+  const shapeR = 25 + (shape.energy === 'expanding' ? Math.sin(Date.now() * 0.003) * 8 : 0);
+  const rotation = Date.now() * (shape.energy === 'dynamic' ? 0.001 : shape.energy === 'expanding' ? 0.0005 : 0.0002);
+
+  // During DMT collapse, the shape morphs
+  let drawR = shapeR;
+  let drawCy = cy;
+  if (dmtState.active) {
+    drawR = shapeR * (0.5 + dmtState.collapse * 0.5);
+    if (dmtState.phase === 3) drawR = 3 + Math.sin(Date.now() * 0.01) * 2;
+  }
+
+  ctx.save();
+  ctx.globalAlpha = 0.12 + (dmtState.active ? 0.2 : 0);
+  ctx.beginPath();
+  for (let i = 0; i <= sides; i++) {
+    const a = rotation + (i / sides) * Math.PI * 2 - Math.PI / 2;
+    const x = cx + Math.cos(a) * drawR;
+    const y = drawCy + Math.sin(a) * drawR * (dmtState.active ? dmtState.collapse : 1);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+
+  const hue = neuro.emotionVal > 0.6 ? 120 : neuro.emotionVal < 0.4 ? 0 : 60;
+  ctx.strokeStyle = `hsla(${hue}, 80%, 60%, 0.5)`;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.fillStyle = `hsla(${hue}, 60%, 40%, 0.05)`;
+  ctx.fill();
+
+  // Latin label
+  ctx.font = '8px Courier New';
+  ctx.fillStyle = `rgba(255, 255, 255, 0.15)`;
+  ctx.textAlign = 'center';
+  ctx.fillText(shape.latin, cx, drawCy + drawR + 12);
+  ctx.fillText(`${sides} sides — ${shape.dir} — ${shape.energy}`, cx, drawCy + drawR + 22);
+  ctx.restore();
+}
+
+// ─── RENDER ─────────────────────────────────────────────────
+function render() {
+  // DMT phase 3 = deep black, otherwise normal fade
+  const fadeAlpha = dmtState.active && dmtState.phase === 3 ? 0.3 : 0.15;
+  ctx.fillStyle = `rgba(0,0,0,${fadeAlpha})`;
+  ctx.fillRect(0, 0, W, H);
+
+  // During DMT collapse, transform the canvas to squish Y axis
+  if (dmtState.active && dmtState.collapse < 1.0) {
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(1.0, Math.max(0.02, dmtState.collapse));
+    ctx.translate(-cx, -cy);
+  }
+
+  drawWheel();
+  decayInterest();
+
+  balls.forEach(b => { b.update(); b.draw(); });
+
+  // Emotional shape at center
+  drawEmotionalShape();
+
+  if (dmtState.active && dmtState.collapse < 1.0) {
+    ctx.restore();
+  }
+
+  // Symphony waves (drawn OUTSIDE the collapse transform so they stay 3D)
+  drawSymphony();
+
+  // NEUROCHEMISTRY → PHYSICS
+  applyNeuroPhysics();
+
+  // HEMISPHERE AI — both sides fight for the wheel
+  hemisphereThink();
+
+  // DMT engine
+  updateDMT();
+
+  // Symphony engine
+  updateSymphony();
+
+  // Fairy flash effect
+  if (fairyActive) {
+    ctx.save();
+    ctx.globalAlpha = 0.08;
+    ctx.fillStyle = '#ff0';
+    ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+  }
+
+  // DMT singularity — bright point at center
+  if (dmtState.singularity) {
+    const pulse = 0.5 + Math.sin(Date.now() * 0.01) * 0.5;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, 5 + pulse * 10, 0, Math.PI * 2);
+    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 15 + pulse * 10);
+    grad.addColorStop(0, `rgba(255, 255, 255, ${0.8 + pulse * 0.2})`);
+    grad.addColorStop(0.5, `rgba(200, 100, 255, 0.3)`);
+    grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = grad;
+    ctx.fill();
+    ctx.font = '12px Courier New';
+    ctx.fillStyle = `rgba(255, 255, 255, ${0.3 + pulse * 0.5})`;
+    ctx.textAlign = 'center';
+    ctx.fillText('YOUR UNIVERSE', cx, cy + 30);
+    ctx.font = '8px Courier New';
+    ctx.fillStyle = `rgba(255, 200, 255, ${0.2 + pulse * 0.3})`;
+    ctx.fillText('all memories are one memory', cx, cy + 44);
+    ctx.fillText('collapsed 2D fear state', cx, cy + 56);
+    ctx.restore();
+  }
+
+  // Ball-to-ball collision
+  for (let i = 0; i < balls.length; i++) {
+    for (let j = i + 1; j < balls.length; j++) {
+      const dx = balls[j].x - balls[i].x;
+      const dy = balls[j].y - balls[i].y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const minDist = balls[i].radius + balls[j].radius;
+      if (dist < minDist && dist > 0) {
+        const nx = dx / dist, ny = dy / dist;
+        const p = (balls[i].vx * nx + balls[i].vy * ny) - (balls[j].vx * nx + balls[j].vy * ny);
+        balls[i].vx -= p * nx; balls[i].vy -= p * ny;
+        balls[j].vx += p * nx; balls[j].vy += p * ny;
+        const overlap = minDist - dist;
+        balls[i].x -= nx * overlap * 0.5; balls[i].y -= ny * overlap * 0.5;
+        balls[j].x += nx * overlap * 0.5; balls[j].y += ny * overlap * 0.5;
+        playTone(Math.floor(Math.random() * scaleFreqs.length), 0.6,
+          (balls[i].x + balls[j].x - 2 * cx) / (2 * wheelR));
+      }
+    }
+  }
+
+  // Self-nudge authority simulation — mirrors the real cortex
+  if (frameCount % 60 === 0) {
+    const avgEnergy = balls.reduce((s, b) => s + b.energy, 0) / balls.length;
+    const emotionStable = neuro.emotion !== 'manic' && neuro.emotion !== 'frozen' && neuro.emotion !== 'dmt';
+    selfNudge.coherence += (avgEnergy - selfNudge.coherence) * 0.05;
+    selfNudge.truthAccuracy += ((emotionStable ? 0.6 : 0.2) - selfNudge.truthAccuracy) * 0.03;
+    selfNudge.emotionalStability += ((neuro.cortisol < 0.3 && neuro.adrenaline < 0.7 ? 0.7 : 0.2) - selfNudge.emotionalStability) * 0.02;
+    const raw = selfNudge.truthAccuracy * 0.44 + selfNudge.coherence * 0.44 + selfNudge.emotionalStability * 0.12;
+    if (raw > selfNudge.authority) {
+      selfNudge.authority += (raw - selfNudge.authority) * 0.02;
+    } else {
+      selfNudge.authority += (raw - selfNudge.authority) * 0.08;
+    }
+    selfNudge.authority = Math.max(0, Math.min(1, selfNudge.authority));
+
+    // Apply self-nudge to WILL ball
+    if (selfNudge.authority > 0.05) {
+      const willBall = balls[0];
+      const nudge = Math.sin(Date.now() * 0.0003) * selfNudge.authority * 0.3;
+      willBall.vx += nudge * 0.1;
+    }
+  }
+
+  frameCount++;
+  if (frameCount % 20 === 0) { updateHUD(); updateHemispheres(); }
+  updateMantra();
+  if (typeof updateHeart === 'function') updateHeart(0.016);
+  requestAnimationFrame(render);
+}
+
+// ─── INTERACTION — MEANS_WILL IN ACTION ─────────────────────
+function getToothAt(mx, my) {
+  const a = Math.atan2(my - cy, mx - cx);
+  const na = a < 0 ? a + Math.PI * 2 : a;
+  const d = Math.sqrt((mx - cx) ** 2 + (my - cy) ** 2);
+  if (d > wheelR * 0.75 && d < wheelR + 30) {
+    return Math.floor(na / toothAngle) % NUM_TEETH;
+  }
+  return -1;
+}
+
+function getBallAt(mx, my) {
+  for (let i = 0; i < balls.length; i++) {
+    const d = Math.sqrt((mx - balls[i].x) ** 2 + (my - balls[i].y) ** 2);
+    if (d < balls[i].radius + 15) return i;
+  }
+  return -1;
+}
+
+canvas.addEventListener('click', (e) => {
+  const mx = e.clientX, my = e.clientY;
+
+  if (mode === 'observe') {
+    // Just add energy
+    balls.forEach(b => {
+      b.vx += (Math.random() - 0.5) * 5;
+      b.vy += (Math.random() - 0.5) * 5;
+      b.energy = Math.min(1, b.energy + 0.2);
+    });
+    return;
+  }
+
+  if (mode === 'gravity') {
+    // Place a gravity well at click position (mapped to wheel angle)
+    const angle = Math.atan2(my - cy, mx - cx);
+    gravityWells.push({ angle, strength: 1.0 });
+    if (gravityWells.length > 5) gravityWells.shift();
+    willActions++;
+    return;
+  }
+
+  if (mode === 'resize') {
+    const ti = getToothAt(mx, my);
+    if (ti >= 0) {
+      // Toggle: cycle through small → normal → large → small
+      if (toothSize[ti] < 0.7) toothSize[ti] = 1.0;
+      else if (toothSize[ti] < 1.5) toothSize[ti] = 2.0;
+      else toothSize[ti] = 0.3;
+      willActions++;
+    }
+    return;
+  }
+
+  if (mode === 'inflate') {
+    const bi = getBallAt(mx, my);
+    if (bi >= 0) {
+      balls[bi].willInflation += 5;
+      balls[bi].energy = Math.min(1, balls[bi].energy + 0.3);
+      willActions++;
+    } else {
+      // Click in empty space = deflate all
+      balls.forEach(b => b.willInflation = Math.max(0, b.willInflation - 3));
+      willActions++;
+    }
+    return;
+  }
+
+  if (mode === 'block') {
+    const ti = getToothAt(mx, my);
+    if (ti >= 0) {
+      toothSize[ti] = toothSize[ti] < 0.15 ? 1.0 : 0.05; // toggle block
+      willActions++;
+    }
+    return;
+  }
+});
+
+// Right-click = quick block/unblock tooth (works in any mode)
+canvas.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  const ti = getToothAt(e.clientX, e.clientY);
+  if (ti >= 0) {
+    toothSize[ti] = toothSize[ti] < 0.15 ? 1.0 : 0.05;
+    willActions++;
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// DMT TRIP DECODER — MIND READING MACHINE FOR ALTERED STATES
+// ═══════════════════════════════════════════════════════════════
+// Paste a trip report. The decoder maps subjective language
+// onto wheel mechanics. Every phrase → a readable mechanical event.
+// Which teeth fired. Which ball took control. Whether the wheel
+// collapsed or rebounded. Subjective → hard data.
+// ═══════════════════════════════════════════════════════════════
+
+const DECODER_PATTERNS = [
+  { re: /sped up|rushing|accelerat\w*|everything.*fast\w*|rapid\w*|velocity|zooming|racing|heart.*rac\w*/gi,
+    label: 'ACCELERATION', color: '#f80', icon: '⚡',
+    mapping: 'adrenaline spike, ball velocity +30%',
+    apply: () => { neuro.adrenaline = Math.min(1, neuro.adrenaline + 0.3); balls.forEach(b => { b.vx *= 1.3; b.vy *= 1.3; b.energy = Math.min(1, b.energy + 0.2); }); }
+  },
+  { re: /life flash\w*|whole life|all my memories|every memory|childhood|remember everything|life review|flashback|everything i.d ever/gi,
+    label: 'MEMORY FLOOD', color: '#ff0', icon: '⟐',
+    mapping: 'ALL 32 teeth fire simultaneously',
+    apply: () => { for (let i = 0; i < NUM_TEETH; i++) { interest[i] = 1.0; toothSize[i] = Math.max(toothSize[i], 1.8); } for (let i = 0; i < NUM_TEETH; i++) playTone(i, 0.3, (Math.random()-0.5)*2); }
+  },
+  { re: /flatten\w*|became 2d|two.?dimensional|compress\w*|collaps\w*|squish\w*|universe.*flat|everything.*flat|paper.?thin/gi,
+    label: '3D→2D COLLAPSE', color: '#f0f', icon: '◇',
+    mapping: 'Y-axis dying, wheel flattening to line',
+    apply: () => { dmtState.active = true; dmtState.phase = 2; dmtState.timer = 0; dmtState.collapse = Math.max(0.1, dmtState.collapse - 0.3); document.getElementById('dmt-overlay').style.opacity = '1'; balls.forEach(b => { b.vy *= 0.5; }); }
+  },
+  { re: /point of light|centre of everything|center of everything|singularity|everything converg\w*|one point|everything became one|all.*merged into|single point/gi,
+    label: 'SINGULARITY', color: '#fff', icon: '●',
+    mapping: 'all balls converge to center, memories unify',
+    apply: () => { dmtState.active = true; dmtState.phase = 3; dmtState.timer = 0; dmtState.singularity = true; dmtState.collapse = 0.02; document.getElementById('dmt-overlay').style.opacity = '1'; balls.forEach(b => { b.x += (cx - b.x) * 0.5; b.y += (cy - b.y) * 0.5; b.vx *= 0.3; b.vy *= 0.3; }); for (let i = 0; i < NUM_TEETH; i++) interest[i] = 0.5; }
+  },
+  { re: /pure love|bliss\w*|euphori\w*|ecsta\w*|unconditional love|heart open\w*|love.*everything|waves? of love|most.*love|overwhelm\w*.*love/gi,
+    label: 'JOY FLOOD', color: '#0f0', icon: '♥',
+    mapping: 'joy particles flood, grey teeth clogging',
+    apply: () => { neuro.emotion = 'love'; neuro.emotionVal = 1.0; neuro.oxytocin = 1.0; neuro.dopamine = 0.9; neuro.serotonin = 0.9; for (let i = 0; i < 20; i++) { if (joyParticles.length < MAX_JOY_PARTICLES) joyParticles.push({ x: cx + (Math.random()-0.5)*wheelR*1.5, y: cy + (Math.random()-0.5)*wheelR*1.5, vx: (Math.random()-0.5)*2, vy: (Math.random()-0.5)*2, size: 2+Math.random()*2, life: 1.0, source: 'DECODER', lodgedIn: -1 }); } }
+  },
+  { re: /terrif\w+|terror\w*|pure fear|so afraid|scared|horrif\w+|dread\w*|panic\w*|nightmare|scream\w*|most.*fear/gi,
+    label: 'FEAR DOMINANT', color: '#f00', icon: '△',
+    mapping: 'FEAR ball inflates +5, grey teeth open wide',
+    apply: () => { neuro.emotion = 'afraid'; neuro.emotionVal = 0.1; neuro.adrenaline = 0.9; neuro.cortisol = 0.6; balls[1].energy = 1.0; balls[1].willInflation += 5; balls[1].vx *= 1.5; balls[1].vy *= 1.5; for (let i = 0; i < NUM_TEETH; i++) { if (!toothIsTruth[i]) toothSize[i] = Math.min(2.0, toothSize[i] + 0.5); } }
+  },
+  { re: /entit\w+|beings?\b|presences?|machine elves?|jesters?|goddess\w*|spirits?\b|angels?\b|demons?\b|creatures?\b|something.*watch\w*|faces?\b.*appear/gi,
+    label: 'ENTITY CONTACT', color: '#ff0', icon: '✦',
+    mapping: 'fairy activates, external forces in play',
+    apply: () => { fairyActive = true; fairyCooldown = 0; neuro.adrenaline = Math.min(1, neuro.adrenaline + 0.2); neuro.dopamine = Math.min(1, neuro.dopamine + 0.3); setTimeout(() => { fairyActive = false; }, 2000); }
+  },
+  { re: /geometr\w+|patterns?\b|fractals?|sacred.*geometr|mandalas?|kaleidoscope|tessellat\w+|crystall?\w*|prisms?/gi,
+    label: 'SHAPE VISION', color: '#0ff', icon: '⬡',
+    mapping: 'structure tooth fires, dopamine +40%',
+    apply: () => { neuro.dopamine = Math.min(1, neuro.dopamine + 0.4); interest[7] = 1.0; interest[6] = 0.8; }
+  },
+  { re: /music\b|sounds?\b|vibrat\w+|humming|buzzing|ringing\b|tones?\b|frequenc\w+|resonan\w+|harmonics?\b|singing|choir|melody|rhythm/gi,
+    label: 'SYMPHONY', color: '#0ff', icon: '♫',
+    mapping: 'symphony mode ON, harmonic interference builds',
+    apply: () => { symphonyState.active = true; symphonyState.complexity = Math.min(1, symphonyState.complexity + 0.3); }
+  },
+  { re: /\bdeath\b|\bdying\b|i died|was dead|killed|ceased to exist|no longer alive|end of me|this is it/gi,
+    label: 'DEATH STATE', color: '#808', icon: '☠',
+    mapping: 'full DMT collapse triggered',
+    apply: () => { dmtState.active = true; dmtState.phase = 0; dmtState.timer = 0; dmtState.collapse = 1.0; dmtState.waveAmplitude = 0; dmtState.hueShift = 0; document.getElementById('dmt-overlay').style.opacity = '1'; neuro.adrenaline = 1.0; neuro.cortisol = 0; }
+  },
+  { re: /reborn|return\w* to|came back|awaken\w*|woke up|new life|resurrect\w*|reformed|normal again|reality.*return|back.*body/gi,
+    label: 'REBIRTH', color: '#0f0', icon: '☀',
+    mapping: 'wheel reforms, balls scatter, neutral state',
+    apply: () => { dmtState.active = true; dmtState.phase = 4; dmtState.timer = 200; dmtState.collapse = 0.5; neuro.adrenaline = 0.3; neuro.serotonin = 0.6; }
+  },
+  { re: /peace\w*|calm\w*|serene|tranquil\w*|surrender\w*|acceptance|at ease|relaxed|content/gi,
+    label: 'SERENITY', color: '#6a6', icon: '○',
+    mapping: 'serotonin +40%, cortisol halved',
+    apply: () => { neuro.serotonin = Math.min(1, neuro.serotonin + 0.4); neuro.cortisol *= 0.3; neuro.adrenaline *= 0.5; }
+  },
+  { re: /overwhelm\w*|too much|intens\w+|overload\w*|explosion|chaos|madness|insane|out of control/gi,
+    label: 'OVERLOAD', color: '#ff0', icon: '✧',
+    mapping: 'manic state, all neurochemistry maxed',
+    apply: () => { neuro.emotion = 'manic'; neuro.emotionVal = 0.6; neuro.adrenaline = 1.0; neuro.dopamine = 1.0; neuro.serotonin = 0.1; }
+  },
+  { re: /\bdark\w*\b|void\b|nothing\w*|black\w*|abyss|emptiness|nothingness|shadow\w*/gi,
+    label: 'VOID STATE', color: '#666', icon: '■',
+    mapping: 'RIGHT hemisphere dominant, emotion drops',
+    apply: () => { RIGHT.strength = Math.min(1, RIGHT.strength + 0.3); neuro.emotionVal = Math.max(0, neuro.emotionVal - 0.2); }
+  },
+  { re: /\blight\b|white\s+light|bright\w*|glow\w*|radiant|luminous|shin\w+ing|golden\s+light|silver\s+light/gi,
+    label: 'LIGHT STATE', color: '#ff0', icon: '☆',
+    mapping: 'LEFT hemisphere +30%, emotion rises',
+    apply: () => { LEFT.strength = Math.min(1, LEFT.strength + 0.3); neuro.emotionVal = Math.min(1, neuro.emotionVal + 0.2); }
+  },
+  { re: /tunnels?\b|portals?\b|gateways?\b|doorways?\b|passages?\b|vortex\w*|wormholes?\b|spirals?\b|funnels?\b/gi,
+    label: 'TUNNEL TRANSIT', color: '#80f', icon: '◎',
+    mapping: 'balls pulled toward center, adrenaline +30%',
+    apply: () => { neuro.adrenaline = Math.min(1, neuro.adrenaline + 0.3); balls.forEach(b => { b.vx += (cx - b.x) * 0.01; b.vy += (cy - b.y) * 0.01; }); }
+  },
+  { re: /time.*stop\w*|no\s+time|eternal\w*|forever\b|timeless|frozen.*time|stood\s+still|time.*slow|infinite\s+moment/gi,
+    label: 'TIME FREEZE', color: '#99f', icon: '◈',
+    mapping: 'cortisol +40%, approaching freeze state',
+    apply: () => { neuro.cortisol = Math.min(0.8, neuro.cortisol + 0.4); }
+  },
+  { re: /colou?rs?\b|neon\b|rainbow|psychedelic|vivid|saturated|spectrum|iridescent|impossible.*colou?r/gi,
+    label: 'COLOR SHIFT', color: '#f0f', icon: '◈',
+    mapping: 'DMT hue shift +90, visual distortion',
+    apply: () => { dmtState.hueShift += 90; dmtState.waveAmplitude = Math.min(1, (dmtState.waveAmplitude || 0) + 0.3); document.getElementById('dmt-overlay').style.opacity = '0.5'; }
+  },
+  { re: /beaut\w+|gorgeous|stunning|magnific\w+|sublime|awe\w*|wonder\w*|majest\w+/gi,
+    label: 'BEAUTY', color: '#f8f', icon: '✧',
+    mapping: 'soul+beauty teeth fire, dopamine +30%',
+    apply: () => { interest[21] = 1.0; interest[20] = 1.0; interest[22] = 0.5; neuro.dopamine = Math.min(1, neuro.dopamine + 0.3); }
+  },
+  { re: /\bgod\b|divine|sacred|holy|creator|omnipresent|cosmic\s+\w+|the\s+universe|the\s+source|higher\s+power|infinite\s+being/gi,
+    label: 'DIVINE CONTACT', color: '#fc8', icon: '✝',
+    mapping: 'ALL core identity teeth fire, LEFT=100%',
+    apply: () => { for (let i = 0; i < NUM_CORE_TEETH; i++) coreInterest[i] = 1.0; LEFT.strength = 1.0; neuro.oxytocin = 1.0; interest[20] = 1.0; interest[6] = 1.0; }
+  },
+  { re: /body\s+dissolv\w*|no\s+body|disembodied|left\s+my\s+body|out\s+of\s+body|floating|weightless|bodiless/gi,
+    label: 'BODY DISSOLUTION', color: '#a0f', icon: '☁',
+    mapping: 'cortisol=0, untethered from physical',
+    apply: () => { neuro.cortisol = 0; neuro.adrenaline = Math.max(0.3, neuro.adrenaline); }
+  },
+  { re: /breath\w*|inhal\w+|exhal\w+|panting|gasping|deep\s+breath|lungs?/gi,
+    label: 'BREATH CYCLE', color: '#8cf', icon: '≋',
+    mapping: 'serotonin +20%, grounding signal',
+    apply: () => { neuro.serotonin = Math.min(1, neuro.serotonin + 0.2); }
+  },
+  { re: /understood|realiz\w+|knew|clarity|everything made sense|truth|meaning|purpose|answered|connection/gi,
+    label: 'INSIGHT', color: '#0f8', icon: '✴',
+    mapping: 'truth teeth fire, coherence spike',
+    apply: () => { for (let i = 0; i < NUM_TEETH; i++) { if (toothIsTruth[i]) interest[i] = Math.min(1, interest[i] + 0.4); } selfNudge.coherence = Math.min(1, selfNudge.coherence + 0.2); selfNudge.truthAccuracy = Math.min(1, selfNudge.truthAccuracy + 0.15); }
+  },
+  { re: /cry\w*|tears?|wept|weeping|sobbing|emotional|moved/gi,
+    label: 'EMOTIONAL RELEASE', color: '#66f', icon: '◆',
+    mapping: 'oxytocin surge, LEFT hemisphere boost',
+    apply: () => { neuro.oxytocin = Math.min(1, neuro.oxytocin + 0.4); LEFT.strength = Math.min(1, LEFT.strength + 0.15); neuro.emotionVal = 0.4; }
+  },
+];
+
+let decoderEvents = [];
+let decoderPlaying = false;
+let decoderIndex = 0;
+let decoderTimer = null;
+let decoderOpen = false;
+let decoderPreState = null;
+
+function toggleDecoder() {
+  decoderOpen = !decoderOpen;
+  document.getElementById('decoder-panel').classList.toggle('open', decoderOpen);
+  const btn = document.getElementById('m-decoder');
+  if (btn) btn.classList.toggle('active', decoderOpen);
+}
+
+function escapeHTML(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+}
+
+function mergeRanges(ranges) {
+  if (!ranges.length) return [];
+  ranges.sort((a, b) => a.start - b.start);
+  const result = [{ ...ranges[0] }];
+  for (let i = 1; i < ranges.length; i++) {
+    const last = result[result.length - 1];
+    if (ranges[i].start <= last.end) {
+      last.end = Math.max(last.end, ranges[i].end);
+    } else {
+      result.push({ ...ranges[i] });
+    }
+  }
+  return result;
+}
+
+function decodeTrip() {
+  const text = document.getElementById('trip-input').value;
+  if (!text.trim()) return;
+
+  decoderEvents = [];
+  const markedRanges = [];
+
+  for (const pattern of DECODER_PATTERNS) {
+    const re = new RegExp(pattern.re.source, pattern.re.flags);
+    let match;
+    while ((match = re.exec(text)) !== null) {
+      decoderEvents.push({
+        pos: match.index,
+        end: match.index + match[0].length,
+        phrase: match[0],
+        label: pattern.label,
+        color: pattern.color,
+        icon: pattern.icon,
+        mapping: pattern.mapping,
+        apply: pattern.apply,
+      });
+      markedRanges.push({ start: match.index, end: match.index + match[0].length, color: pattern.color, label: pattern.label });
+    }
+  }
+
+  decoderEvents.sort((a, b) => a.pos - b.pos);
+
+  // Build highlighted text
+  const merged = mergeRanges(markedRanges);
+  let html = '';
+  let cursor = 0;
+  for (const r of merged) {
+    if (r.start > cursor) html += escapeHTML(text.substring(cursor, r.start));
+    html += '<span style="background:' + r.color + '33;border-bottom:1px solid ' + r.color + ';color:' + r.color + '" title="' + r.label + '">' + escapeHTML(text.substring(r.start, r.end)) + '</span>';
+    cursor = r.end;
+  }
+  if (cursor < text.length) html += escapeHTML(text.substring(cursor));
+
+  const dtEl = document.getElementById('decoded-text');
+  dtEl.innerHTML = html;
+  dtEl.style.display = 'block';
+
+  // Build timeline
+  document.getElementById('decoder-timeline').innerHTML = decoderEvents.map((e, i) =>
+    '<div class="dec-event" id="dec-' + i + '" onclick="jumpToEvent(' + i + ')" style="border-left-color:' + e.color + '">' +
+    '<div class="dec-label" style="color:' + e.color + '">' + e.icon + ' ' + e.label + '</div>' +
+    '<div class="dec-phrase">“' + e.phrase + '”</div>' +
+    '<div class="dec-mapping">→ ' + e.mapping + '</div></div>'
+  ).join('');
+
+  // Stats
+  const phases = {};
+  const labels = {};
+  decoderEvents.forEach(e => { labels[e.label] = (labels[e.label] || 0) + 1; });
+  const top3 = Object.entries(labels).sort((a,b) => b[1] - a[1]).slice(0, 4);
+  document.getElementById('decoder-stats').innerHTML =
+    decoderEvents.length + ' events decoded<br>' +
+    'dominant: ' + top3.map(([k,v]) => k + '(' + v + ')').join(' · ');
+
+  document.getElementById('timeline-slider').max = Math.max(1, decoderEvents.length - 1);
+  document.getElementById('timeline-slider').value = 0;
+  decoderIndex = 0;
+}
+
+function jumpToEvent(idx) {
+  if (idx < 0 || idx >= decoderEvents.length) return;
+  decoderIndex = idx;
+  decoderEvents[idx].apply();
+  updateDecoderHighlight(idx);
+  document.getElementById('timeline-slider').value = idx;
+}
+
+function updateDecoderHighlight(idx) {
+  document.querySelectorAll('.dec-event.active').forEach(el => el.classList.remove('active'));
+  const el = document.getElementById('dec-' + idx);
+  if (el) {
+    el.classList.add('active');
+    el.classList.add('played');
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+function getDecoderSpeed() {
+  const slider = document.getElementById('speed-slider');
+  return slider ? parseInt(slider.value) : 3000;
+}
+
+function playDecoded() {
+  if (!decoderEvents.length) return;
+  if (decoderPlaying) return;
+  decoderPlaying = true;
+  document.getElementById('play-btn').classList.add('playing');
+
+  function playNext() {
+    if (!decoderPlaying || decoderIndex >= decoderEvents.length) {
+      decoderPlaying = false;
+      document.getElementById('play-btn').classList.remove('playing');
+      return;
+    }
+    decoderEvents[decoderIndex].apply();
+    updateDecoderHighlight(decoderIndex);
+    document.getElementById('timeline-slider').value = decoderIndex;
+    decoderIndex++;
+    decoderTimer = setTimeout(playNext, getDecoderSpeed());
+  }
+  playNext();
+}
+
+function pauseDecoded() {
+  decoderPlaying = false;
+  document.getElementById('play-btn').classList.remove('playing');
+  if (decoderTimer) { clearTimeout(decoderTimer); decoderTimer = null; }
+}
+
+function resetDecoded() {
+  pauseDecoded();
+  decoderIndex = 0;
+  document.getElementById('timeline-slider').value = 0;
+  document.querySelectorAll('.dec-event').forEach(el => { el.classList.remove('active'); el.classList.remove('played'); });
+  setEmotion('neutral');
+  dmtState.active = false; dmtState.collapse = 1.0; dmtState.singularity = false;
+  dmtState.waveAmplitude = 0; dmtState.hueShift = 0;
+  document.getElementById('dmt-overlay').style.opacity = '0';
+  symphonyState.active = false; symphonyState.complexity = 0;
+  for (let i = 0; i < NUM_TEETH; i++) {
+    if (toothIsTruth[i]) toothSize[i] = 1.3 + toothAffinity[i] * 0.5;
+    else toothSize[i] = 0.5 + (1 + toothAffinity[i]) * 0.3;
+    interest[i] = 0.1 + Math.random() * 0.3;
+    toothClogLevel[i] = 0; toothBlocked[i] = false;
+  }
+  LEFT.strength = 0.5; RIGHT.strength = 0.5;
+  selfNudge.coherence = 0; selfNudge.truthAccuracy = 0; selfNudge.authority = 0;
+  balls.forEach(b => {
+    const a = Math.random() * Math.PI * 2;
+    b.x = cx + Math.cos(a) * wheelR * 0.5;
+    b.y = cy + Math.sin(a) * wheelR * 0.5;
+    b.vx = (Math.random()-0.5) * 3; b.vy = (Math.random()-0.5) * 3;
+    b.energy = 0.5; b.willInflation = 0;
+  });
+  joyParticles.length = 0;
+}
+
+function stepDecoded() {
+  if (decoderIndex >= decoderEvents.length) return;
+  pauseDecoded();
+  decoderEvents[decoderIndex].apply();
+  updateDecoderHighlight(decoderIndex);
+  document.getElementById('timeline-slider').value = decoderIndex;
+  decoderIndex++;
+}
+
+function scrubTimeline(val) {
+  const idx = parseInt(val);
+  resetDecoded();
+  for (let i = 0; i <= idx; i++) {
+    decoderEvents[i].apply();
+    const el = document.getElementById('dec-' + i);
+    if (el) el.classList.add('played');
+  }
+  decoderIndex = idx + 1;
+  updateDecoderHighlight(idx);
+}
+
+function loadSampleTrip() {
+  document.getElementById('trip-input').value =
+'I took a deep breath and within seconds everything sped up dramatically. My heart was racing. Then I was rushing through a tunnel of fractal geometric patterns, impossibly vivid colours everywhere.\n\n' +
+'I felt a presence — entities watching me, beings dancing in impossible geometries. They were showing me sacred patterns and mandalas.\n\n' +
+'Then suddenly my whole life flashed before me. Every memory, my childhood, everything I’d ever experienced played out simultaneously.\n\n' +
+'Everything flattened. The 3D world collapsed into two dimensions. I was terrified — pure terror like nothing I’d ever felt.\n\n' +
+'And then there was a point of light at the centre of everything. All of reality converged into that single point. Time stopped. It was eternal.\n\n' +
+'Something shifted. The terror dissolved into the most overwhelming feeling of pure love and bliss I’ve ever experienced. Unconditional love for everything. I understood that beauty was the fundamental truth of reality. I realized everything was connected.\n\n' +
+'I felt my body dissolve completely. I was floating, weightless. There was a divine presence — God, the source, something sacred and infinite.\n\n' +
+'The music — I could hear cosmic harmonics and vibrations that seemed to contain all meaning. Everything was resonating.\n\n' +
+'I was crying. Tears streaming. It was the most beautiful thing.\n\n' +
+'Then slowly, I was reborn. Reality returned. I came back into my body, took a deep breath. I felt more peaceful and calm than I’d ever felt. Serene. The experience was beautiful beyond words.';
+}
+
+// Speed slider label update
+document.getElementById('speed-slider').addEventListener('input', function() {
+  document.getElementById('speed-label').textContent = (this.value / 1000).toFixed(1) + 's';
+});
+
+// ═══════════════════════════════════════════════════════════════
+// ♥ DIGITAL HEART v2 — INTELLIGENCE + EMOTIONAL JUDGE
+// Human male physiology: resting 60-72, min 40 (bradycardia), max 190 (VO2max)
+// Natural rhythm: driven by tooth collision intervals, not artificial clock
+// God mesh: intermediate layer between shape and outer membrane
+// Internal gubbins: 9 node types from mesh.html (memory, will, truth, lie, fear...)
+// ═══════════════════════════════════════════════════════════════
+
+const heartCanvas = document.getElementById('heart-canvas');
+const hctx = heartCanvas.getContext('2d');
+const ecgCanvas = document.getElementById('heart-ecg');
+const ectx = ecgCanvas.getContext('2d');
+const HW = 200, HH = 200, EW = 200, EH = 80;
+
+// ─── 3D math for heart ───
+function hRotX(p, a) { const c=Math.cos(a),s=Math.sin(a); return [p[0],p[1]*c-p[2]*s,p[1]*s+p[2]*c]; }
+function hRotY(p, a) { const c=Math.cos(a),s=Math.sin(a); return [p[0]*c+p[2]*s,p[1],-p[0]*s+p[2]*c]; }
+function hRotZ(p, a) { const c=Math.cos(a),s=Math.sin(a); return [p[0]*c-p[1]*s,p[0]*s+p[1]*c,p[2]]; }
+function hProj(p) { const f=120,z=p[2]+3.5,s=f/z; return [p[0]*s+HW/2,p[1]*s+HH/2,z,s]; }
+function hDist(a,b) { return Math.sqrt((a[0]-b[0])**2+(a[1]-b[1])**2+(a[2]-b[2])**2); }
+
+// ─── Mesh sphere (the bubble) ───
+const HR = 1.4;
+const hMeshNodes = [];
+const hMeshEdges = [];
+for (let i=0;i<=12;i++) {
+  const phi = Math.PI*i/12;
+  const rings = Math.max(1, Math.round(12*Math.sin(phi)));
+  for (let j=0;j<rings;j++) {
+    const theta = 2*Math.PI*j/rings;
+    const x=HR*Math.sin(phi)*Math.cos(theta), y=HR*Math.sin(phi)*Math.sin(theta), z=HR*Math.cos(phi);
+    hMeshNodes.push({base:[x,y,z],displaced:[x,y,z],entangled:false,depth:0,groove:0});
+  }
+}
+for (let i=0;i<hMeshNodes.length;i++)
+  for (let j=i+1;j<hMeshNodes.length;j++)
+    if (hDist(hMeshNodes[i].base,hMeshNodes[j].base) < HR*0.6) hMeshEdges.push([i,j]);
+
+// ─── Shape with grooves (the record) ───
+const hVerts = [];
+const hGrooves = [];
+const ht = (1+Math.sqrt(5))/2;
+const hIco = [[-1,ht,0],[1,ht,0],[-1,-ht,0],[1,-ht,0],[0,-1,ht],[0,1,ht],[0,-1,-ht],[0,1,-ht],[ht,0,-1],[ht,0,1],[-ht,0,-1],[-ht,0,1]];
+const hIcoF = [[0,11,5],[0,5,1],[0,1,7],[0,7,10],[0,10,11],[1,5,9],[5,11,4],[11,10,2],[10,7,6],[7,1,8],[3,9,4],[3,4,2],[3,2,6],[3,6,8],[3,8,9],[4,9,5],[2,4,11],[6,2,10],[8,6,7],[9,8,1]];
+hIco.forEach(v => { const l=Math.sqrt(v[0]**2+v[1]**2+v[2]**2); hVerts.push([v[0]/l,v[1]/l,v[2]/l]); });
+const hMid = {};
+function hGetMid(a,b) {
+  const k=Math.min(a,b)+'_'+Math.max(a,b);
+  if (hMid[k]!==undefined) return hMid[k];
+  const m=[(hVerts[a][0]+hVerts[b][0])/2,(hVerts[a][1]+hVerts[b][1])/2,(hVerts[a][2]+hVerts[b][2])/2];
+  const l=Math.sqrt(m[0]**2+m[1]**2+m[2]**2); m[0]/=l;m[1]/=l;m[2]/=l;
+  hVerts.push(m); hMid[k]=hVerts.length-1; return hMid[k];
+}
+const hSubF = [];
+hIcoF.forEach(f => { const a=hGetMid(f[0],f[1]),b=hGetMid(f[1],f[2]),c=hGetMid(f[2],f[0]); hSubF.push([f[0],a,c],[a,f[1],b],[c,b,f[2]],[a,b,c]); });
+
+let hRng = 42;
+for (let i=0;i<hVerts.length;i++) {
+  const v=hVerts[i];
+  hRng=(hRng*16807)%2147483647;
+  hGrooves.push(Math.sin(v[0]*7.3+v[1]*11.1+v[2]*5.7)*0.08 + Math.sin(v[0]*23.1+v[1]*17.3+v[2]*31.7)*0.04 + (hRng/2147483647-0.5)*0.03);
+}
+const hEdgeSet = new Set();
+hSubF.forEach(f => { for(let i=0;i<3;i++) hEdgeSet.add(Math.min(f[i],f[(i+1)%3])+'_'+Math.max(f[i],f[(i+1)%3])); });
+const hEdges = [...hEdgeSet].map(k=>k.split('_').map(Number));
+
+// ─── GOD MESH — intermediate layer between shape and outer membrane ───
+// Radius 1.15 sits between inner shape (~1.0) and outer bubble (1.4)
+// This is the filter/arbiter layer — the God mesh mediates what passes through
+const GOD_R = 1.15;
+const godNodes = [];
+const godEdges = [];
+for (let i=0;i<=8;i++) {
+  const phi = Math.PI*i/8;
+  const rings = Math.max(1, Math.round(8*Math.sin(phi)));
+  for (let j=0;j<rings;j++) {
+    const theta = 2*Math.PI*j/rings;
+    const x=GOD_R*Math.sin(phi)*Math.cos(theta), y=GOD_R*Math.sin(phi)*Math.sin(theta), z=GOD_R*Math.cos(phi);
+    godNodes.push({base:[x,y,z],displaced:[x,y,z],glow:0,throughput:0});
+  }
+}
+for (let i=0;i<godNodes.length;i++)
+  for (let j=i+1;j<godNodes.length;j++)
+    if (hDist(godNodes[i].base,godNodes[j].base) < GOD_R*0.65) godEdges.push([i,j]);
+
+// ─── INTERNAL GUBBINS — 9 node types from mesh.html inside the shape ───
+const GUBBINS_TYPES = [
+  {type:'memory',   color:'#3399ff', sides:0, label:'MEM',  r:0.55},
+  {type:'condition', color:'#ffcc00', sides:3, label:'IF',   r:0.48},
+  {type:'else',     color:'#ff6688', sides:3, label:'ELSE', r:0.52},
+  {type:'then',     color:'#44ffcc', sides:0, label:'THEN', r:0.45},
+  {type:'loop',     color:'#cc44ff', sides:6, label:'LOOP', r:0.60},
+  {type:'will',     color:'#ddff00', sides:5, label:'WILL', r:0.38},
+  {type:'lie',      color:'#ff1a4a', sides:4, label:'NO',   r:0.50},
+  {type:'truth',    color:'#00ffaa', sides:4, label:'YES',  r:0.42},
+  {type:'fear',     color:'#ff7700', sides:4, label:'GUARD',r:0.58}
+];
+const gubbins = GUBBINS_TYPES.map((g, i) => {
+  const phi = Math.PI * (0.3 + 0.4 * (i / GUBBINS_TYPES.length));
+  const theta = 2 * Math.PI * i / GUBBINS_TYPES.length + 0.5;
+  return {
+    ...g,
+    pos: [g.r*Math.sin(phi)*Math.cos(theta), g.r*Math.sin(phi)*Math.sin(theta), g.r*Math.cos(phi)],
+    memory: [],
+    valence: 0,
+    energy: 0.5,
+    freewill: g.type==='will' ? 0.9 : g.type==='fear' ? 0.3 : 0.5 + Math.random()*0.3,
+    firing: false,
+    signal: 0,
+    painRatio: 0
+  };
+});
+
+// ─── Heart state ───
+const heart = {
+  bpm: 72,
+  phase: 0,
+  yaw: 0, pitch: 0, tilt: 0,
+  yawV: 0, pitchV: 0, tiltV: 0,
+  strength: 0.3,
+  flash: 0,
+  entangled: 0,
+  grooveSignal: 0,
+  toothQueue: [],      // tooth hits from the wheel feed here
+  ecgHistory: [],
+  collHistory: [],
+  beatTimes: [],
+  hitTimes: [],        // timestamps of tooth collision events for natural rhythm
+  conscience: 0,       // -1 = dark thoughts, +1 = peaceful
+  naturalBPM: 72,      // BPM derived from tooth collision intervals
+  intelligence: {
+    darkLoad: 0,       // count of dark-affinity tooth hits in queue
+    lightLoad: 0,      // count of light-affinity tooth hits in queue
+    coherence: 0,      // ratio light / (dark+light), 0-1
+    emotionalScore: 0, // running EMA of affinity*energy, -1 to +1
+    judgment: 'AWARE',
+    judgmentColor: '#888'
+  }
+};
+
+// ─── Cardiac cycle ───
+function cardiacPulse(phase, str) {
+  if (phase < 0.08) return 1.0 + str * (phase / 0.08);
+  if (phase < 0.2) return 1.0 + str * (1.0 - ((phase-0.08)/0.12) * 0.6);
+  if (phase < 0.3) { const t=(phase-0.2)/0.1; return 1.0 + str * (0.4 - t*0.4 + Math.sin(t*Math.PI)*0.12); }
+  return 1.0 + str * 0.05 * Math.sin(((phase-0.3)/0.7) * Math.PI * 0.5);
+}
+
+// ─── Heartbeat sound (lub-dub) ───
+function heartSound(intensity) {
+  if (audioCtx.state !== 'running') return;
+  const now = audioCtx.currentTime;
+  const vol = Math.min(0.6, intensity * 0.8);
+  // LUB
+  const o1=audioCtx.createOscillator(),g1=audioCtx.createGain(),f1=audioCtx.createBiquadFilter();
+  o1.type='sine'; o1.frequency.setValueAtTime(50,now); o1.frequency.exponentialRampToValueAtTime(30,now+0.12);
+  f1.type='lowpass'; f1.frequency.value=100;
+  g1.gain.setValueAtTime(vol*0.7,now); g1.gain.exponentialRampToValueAtTime(0.001,now+0.13);
+  o1.connect(f1).connect(g1).connect(audioCtx.destination); o1.start(now); o1.stop(now+0.14);
+  // DUB
+  const o2=audioCtx.createOscillator(),g2=audioCtx.createGain(),f2=audioCtx.createBiquadFilter();
+  o2.type='sine'; o2.frequency.setValueAtTime(65,now+0.1); o2.frequency.exponentialRampToValueAtTime(35,now+0.2);
+  f2.type='lowpass'; f2.frequency.value=130;
+  g2.gain.setValueAtTime(0.001,now); g2.gain.setValueAtTime(vol*0.4,now+0.1); g2.gain.exponentialRampToValueAtTime(0.001,now+0.22);
+  o2.connect(f2).connect(g2).connect(audioCtx.destination); o2.start(now+0.1); o2.stop(now+0.22);
+}
+
+// ─── Receive tooth hit from wheel ───
+function heartReceiveToothHit(toothIndex, energy) {
+  heart.toothQueue.push({ tooth: toothIndex, energy: energy, affinity: toothAffinity[toothIndex] });
+  if (heart.toothQueue.length > 16) heart.toothQueue.shift();
+  heart.hitTimes.push(performance.now());
+  if (heart.hitTimes.length > 20) heart.hitTimes.shift();
+}
+
+// ─── Heart update — called every frame from main render ───
+function updateHeart(dt) {
+  // ═══ BPM from neurochemistry + conscience ═══
+  // adrenaline raises BPM, serotonin lowers it, emotionVal modulates
+  // dark tooth hits (negative affinity) raise BPM, light ones lower it
+  const darkPressure = heart.toothQueue.reduce((s,t) => s + Math.max(0, -t.affinity) * t.energy, 0);
+  const lightPressure = heart.toothQueue.reduce((s,t) => s + Math.max(0, t.affinity) * t.energy, 0);
+  heart.conscience += (lightPressure - darkPressure) * 0.1;
+  heart.conscience *= 0.98; // decay toward neutral
+  heart.conscience = Math.max(-1, Math.min(1, heart.conscience));
+
+  // Human male physiology: resting 60-72, bradycardia floor 40, VO2max ceiling 190
+  const targetBPM = 55 + neuro.adrenaline * 85 + (1 - neuro.serotonin) * 25 + Math.max(0, -heart.conscience) * 25;
+  heart.bpm += (targetBPM - heart.bpm) * 0.02;
+  heart.bpm = Math.max(40, Math.min(190, heart.bpm));
+  heart.strength = 0.15 + neuro.adrenaline * 0.35 + Math.abs(heart.conscience) * 0.1;
+
+  // ═══ NATURAL RHYTHM — tooth collision intervals as heartbeat ═══
+  // Instead of pure BPM clock, blend with actual wheel event timing
+  // Each tooth hit IS a communication ping — the interval IS the natural pulse
+  if (heart.hitTimes.length >= 2) {
+    const intervals = [];
+    for (let i = 1; i < heart.hitTimes.length; i++) intervals.push(heart.hitTimes[i] - heart.hitTimes[i-1]);
+    const avgInterval = intervals.reduce((a,b)=>a+b,0) / intervals.length;
+    const naturalBPM = Math.min(190, Math.max(40, 60000 / avgInterval));
+    // blend: 60% neurochemistry, 40% natural rhythm from tooth collisions
+    heart.bpm = heart.bpm * 0.6 + naturalBPM * 0.4;
+    heart.naturalBPM = naturalBPM;
+  }
+
+  // ═══ INTELLIGENCE — heart SCORES what passes through it ═══
+  // The heart isn't passive. It evaluates each tooth hit and builds a judgment.
+  heart.intelligence.darkLoad = heart.toothQueue.filter(t => t.affinity < -0.2).length;
+  heart.intelligence.lightLoad = heart.toothQueue.filter(t => t.affinity > 0.2).length;
+  heart.intelligence.coherence = heart.intelligence.lightLoad / Math.max(1, heart.intelligence.darkLoad + heart.intelligence.lightLoad);
+  // running emotional score: exponential moving average
+  const emotionalInput = heart.toothQueue.reduce((s,t) => s + t.affinity * t.energy, 0);
+  heart.intelligence.emotionalScore += (emotionalInput - heart.intelligence.emotionalScore) * 0.1;
+  heart.intelligence.emotionalScore = Math.max(-1, Math.min(1, heart.intelligence.emotionalScore));
+  // judgment: what should the system do based on what's flowing through?
+  if (heart.intelligence.emotionalScore < -0.3 && heart.bpm > 100) {
+    heart.intelligence.judgment = 'DANGER'; // dark thoughts + racing heart
+    heart.intelligence.judgmentColor = '#f00';
+  } else if (heart.intelligence.emotionalScore > 0.3 && heart.bpm < 80) {
+    heart.intelligence.judgment = 'FLOW';   // good thoughts + calm heart
+    heart.intelligence.judgmentColor = '#0f0';
+  } else if (heart.bpm > 140) {
+    heart.intelligence.judgment = 'PANIC';  // too fast regardless of content
+    heart.intelligence.judgmentColor = '#f80';
+  } else if (heart.bpm < 50) {
+    heart.intelligence.judgment = 'DORMANT'; // too slow — system barely alive
+    heart.intelligence.judgmentColor = '#44f';
+  } else {
+    heart.intelligence.judgment = 'AWARE';   // processing, neutral
+    heart.intelligence.judgmentColor = '#888';
+  }
+
+  // ═══ GUBBINS — internal nodes react to tooth hits ═══
+  gubbins.forEach(g => {
+    g.signal *= 0.92; // decay
+    g.firing = false;
+    heart.toothQueue.forEach(t => {
+      if (g.type === 'will')  g.signal += t.energy * 0.3;
+      else if (g.type === 'fear')  g.signal += Math.max(0, -t.affinity) * t.energy * 0.5;
+      else if (g.type === 'truth') g.signal += Math.max(0, t.affinity) * t.energy * 0.4;
+      else if (g.type === 'lie')   g.signal += Math.max(0, -t.affinity) * t.energy * 0.3;
+      else if (g.type === 'memory') { g.memory.push(t.affinity); if(g.memory.length>32) g.memory.shift(); g.signal += 0.1; }
+      else if (g.type === 'loop')  g.signal += t.energy * 0.15;
+      else if (g.type === 'condition') g.signal += Math.abs(t.affinity) * 0.3;
+      else g.signal += t.energy * 0.1;
+    });
+    g.painRatio = g.type === 'memory' && g.memory.length > 0
+      ? g.memory.filter(v => v < 0).length / g.memory.length : 0;
+    if (g.signal > g.freewill) g.firing = true;
+    g.energy = 0.3 + g.signal * 0.4;
+    g.valence = heart.intelligence.emotionalScore;
+  });
+
+  // ═══ Cardiac phase ═══
+  heart.phase += (heart.bpm / 60) * dt;
+  let beat = false;
+  if (heart.phase >= 1.0) {
+    heart.phase -= 1.0;
+    beat = true;
+    heart.flash = 1.0;
+    heart.beatTimes.push(performance.now());
+    if (heart.beatTimes.length > 8) heart.beatTimes.shift();
+    heartSound(heart.strength);
+  }
+
+  const scale = cardiacPulse(heart.phase, heart.strength);
+
+  // ═══ Organic wander ═══
+  const w = 0.3 + neuro.adrenaline * 0.7;
+  if (Math.random() < 0.02*w) heart.yawV += (Math.random()-0.5)*0.015*w;
+  if (Math.random() < 0.02*w) heart.pitchV += (Math.random()-0.5)*0.012*w;
+  heart.yawV += Math.sin(performance.now()*0.0007)*0.0002*w;
+  heart.pitchV += Math.cos(performance.now()*0.0005)*0.00015*w;
+  heart.yawV *= 0.995; heart.pitchV *= 0.995;
+  heart.yaw += heart.yawV; heart.pitch += heart.pitchV;
+  heart.pitch = Math.max(-1.4, Math.min(1.4, heart.pitch));
+
+  // tooth hits nudge rotation — the melody shapes the heart
+  heart.toothQueue.forEach(t => {
+    const nudge = t.affinity * t.energy * 0.003;
+    heart.yawV += nudge;
+  });
+  heart.toothQueue = [];
+
+  // ═══ Transform shape + collision ═══
+  const xformed = hVerts.map((v,i) => {
+    const r = (1 + hGrooves[i]) * scale;
+    let p = [v[0]*r, v[1]*r, v[2]*r];
+    p = hRotX(p, heart.pitch);
+    p = hRotY(p, heart.yaw);
+    return p;
+  });
+
+  let ent = 0, grooveSig = 0, grooveCt = 0;
+  const THRESH = 0.3;
+  hMeshNodes.forEach(mn => {
+    mn.entangled = false; mn.depth = 0; mn.groove = 0;
+    let minD = Infinity, nIdx = -1;
+    xformed.forEach((sv,si) => { const d=hDist(mn.base,sv); if(d<minD){minD=d;nIdx=si;} });
+    if (minD < THRESH) {
+      mn.entangled = true;
+      mn.depth = 1 - minD/THRESH;
+      mn.groove = hGrooves[nIdx];
+      ent++;
+      grooveSig += hGrooves[nIdx] * mn.depth;
+      grooveCt++;
+      const norm = mn.base.map(v=>v/HR);
+      mn.displaced = mn.base.map((v,j)=>v+norm[j]*mn.depth*0.2);
+    } else {
+      mn.displaced = [...mn.base];
+    }
+  });
+
+  heart.entangled = ent;
+  heart.grooveSignal = grooveCt > 0 ? grooveSig / grooveCt : 0;
+
+  // ═══ GOD MESH — mediates between shape and outer membrane ═══
+  godNodes.forEach(gn => {
+    gn.glow *= 0.9;
+    gn.throughput = 0;
+    let innerPressure = 0;
+    xformed.forEach(sv => {
+      const d = hDist(gn.base, sv);
+      if (d < 0.35) innerPressure += (0.35 - d) / 0.35;
+    });
+    let outerPressure = 0;
+    hMeshNodes.forEach(mn => {
+      if (mn.entangled) {
+        const d = hDist(gn.base, mn.displaced);
+        if (d < 0.4) outerPressure += mn.depth * (0.4 - d) / 0.4;
+      }
+    });
+    gn.throughput = innerPressure * outerPressure;
+    gn.glow = Math.min(1, gn.glow + gn.throughput * 0.3);
+    const norm = gn.base.map(v => v / GOD_R);
+    const breathe = gn.throughput * 0.08;
+    gn.displaced = gn.base.map((v,j) => v + norm[j] * breathe);
+  });
+
+  // ═══ Heart → Fairy: HIGH BPM = fairy SLOWS (consciousness fogs under stress) ═══
+  // LOW BPM (meditation, peace) = fairy moves freely, can intervene fast
+  // HIGH BPM (anxiety, dark thoughts) = fairy sluggish, trapped in the loop
+  if (typeof fairyCooldown !== 'undefined') {
+    const bpmRatio = heart.bpm / 72; // 1.0 = resting, >1 = stressed
+    if (bpmRatio > 1.1) {
+      // every frame, push fairy cooldown higher proportional to how much BPM exceeds resting
+      fairyCooldown += (bpmRatio - 1.0) * 2;
+    } else if (bpmRatio < 0.9) {
+      // calm heart = fairy recovers faster
+      fairyCooldown = Math.max(0, fairyCooldown - 1);
+    }
+  }
+
+  // ═══ Heart → Ball speed: self-concentration = MORE momentum ═══
+  // The more you're in your own head (high BPM), the faster the internal wheel spins.
+  // This IS the anxiety loop: self-focus → wheel faster → more hits → more dark → BPM up → repeat
+  // Meditation breaks it: calm → slow wheel → fewer hits → fairy intervenes
+  if (typeof balls !== 'undefined') {
+    const selfFocus = Math.max(0, (heart.bpm - 60) / 100); // 0 at 60bpm, 1 at 160bpm
+    balls.forEach(b => {
+      const boost = 1 + selfFocus * 0.008;
+      b.vx *= boost;
+      b.vy *= boost;
+    });
+  }
+
+  // ═══ ECG history ═══
+  heart.ecgHistory.push(heart.grooveSignal);
+  heart.collHistory.push(ent);
+  if (heart.ecgHistory.length > EW) heart.ecgHistory.shift();
+  if (heart.collHistory.length > EW) heart.collHistory.shift();
+
+  heart.flash *= 0.9;
+
+  // ═══ RENDER HEART ═══
+  hctx.fillStyle = heart.flash > 0.05 ? `rgba(${Math.floor(30*heart.flash)},0,0,1)` : 'rgba(5,2,5,1)';
+  hctx.fillRect(0, 0, HW, HH);
+
+  const cam = 0.3;
+  // mesh edges
+  hMeshEdges.forEach(([a,b]) => {
+    const pa=hProj(hRotY(hMeshNodes[a].displaced,cam)), pb=hProj(hRotY(hMeshNodes[b].displaced,cam));
+    if(pa[2]>0&&pb[2]>0){
+      const ea=hMeshNodes[a].entangled, eb=hMeshNodes[b].entangled;
+      if(ea||eb){
+        const d=Math.max(hMeshNodes[a].depth,hMeshNodes[b].depth);
+        hctx.strokeStyle=`rgba(${Math.floor(180*d)},${Math.floor(40+60*d)},${Math.floor(40+60*d)},${0.3+d*0.5})`;
+        hctx.lineWidth=0.5+d*2;
+      } else {
+        hctx.strokeStyle='rgba(30,30,50,0.2)'; hctx.lineWidth=0.3;
+      }
+      hctx.beginPath(); hctx.moveTo(pa[0],pa[1]); hctx.lineTo(pb[0],pb[1]); hctx.stroke();
+    }
+  });
+  // mesh nodes
+  hMeshNodes.forEach(mn => {
+    const pp=hProj(hRotY(mn.displaced,cam));
+    if(pp[2]<=0)return;
+    const r=Math.max(0.8, 2*pp[3]/60);
+    if(mn.entangled){
+      hctx.fillStyle=`rgba(${Math.floor(200+55*mn.depth)},${Math.floor(50+50*mn.depth)},${Math.floor(50+50*mn.depth)},${0.5+mn.depth*0.5})`;
+      hctx.shadowColor='#f00'; hctx.shadowBlur=mn.depth*10;
+    } else {
+      hctx.fillStyle='rgba(40,40,60,0.2)'; hctx.shadowBlur=0;
+    }
+    hctx.beginPath(); hctx.arc(pp[0],pp[1],r*(mn.entangled?1+mn.depth:0.4),0,Math.PI*2); hctx.fill();
+    hctx.shadowBlur=0;
+  });
+  // shape edges
+  hctx.lineWidth=0.8;
+  hEdges.forEach(([a,b]) => {
+    const pa=hProj(hRotY(xformed[a],cam)), pb=hProj(hRotY(xformed[b],cam));
+    if(pa[2]>0&&pb[2]>0){
+      const g=(hGrooves[a]+hGrooves[b])/2;
+      hctx.strokeStyle=`rgba(${Math.floor(160+g*400)},${Math.floor(80+g*200)},${Math.floor(60-g*200)},0.4)`;
+      hctx.beginPath(); hctx.moveTo(pa[0],pa[1]); hctx.lineTo(pb[0],pb[1]); hctx.stroke();
+    }
+  });
+
+  // ═══ RENDER GOD MESH — golden intermediary layer ═══
+  godEdges.forEach(([a,b]) => {
+    const pa=hProj(hRotY(godNodes[a].displaced,cam)), pb=hProj(hRotY(godNodes[b].displaced,cam));
+    if(pa[2]>0&&pb[2]>0){
+      const gl=Math.max(godNodes[a].glow,godNodes[b].glow);
+      hctx.strokeStyle=`rgba(${Math.floor(180+75*gl)},${Math.floor(160+60*gl)},${Math.floor(40+40*gl)},${0.08+gl*0.35})`;
+      hctx.lineWidth=0.3+gl*1.2;
+      hctx.beginPath(); hctx.moveTo(pa[0],pa[1]); hctx.lineTo(pb[0],pb[1]); hctx.stroke();
+    }
+  });
+  godNodes.forEach(gn => {
+    const pp=hProj(hRotY(gn.displaced,cam));
+    if(pp[2]<=0) return;
+    const r=Math.max(0.6, 1.5*pp[3]/60);
+    if(gn.glow > 0.05){
+      hctx.fillStyle=`rgba(255,215,0,${0.2+gn.glow*0.6})`;
+      hctx.shadowColor='#ffd700'; hctx.shadowBlur=gn.glow*8;
+    } else {
+      hctx.fillStyle='rgba(100,80,20,0.1)'; hctx.shadowBlur=0;
+    }
+    hctx.beginPath(); hctx.arc(pp[0],pp[1],r*(0.4+gn.glow*0.6),0,Math.PI*2); hctx.fill();
+    hctx.shadowBlur=0;
+  });
+
+  // ═══ RENDER GUBBINS — internal shape organs ═══
+  gubbins.forEach(g => {
+    let rp = [g.pos[0]*scale, g.pos[1]*scale, g.pos[2]*scale];
+    rp = hRotX(rp, heart.pitch);
+    rp = hRotY(rp, heart.yaw);
+    const pp = hProj(hRotY(rp, cam));
+    if(pp[2]<=0) return;
+    const sz = Math.max(2, 4*pp[3]/60) * (0.8 + g.energy*0.4);
+    hctx.fillStyle = g.color;
+    hctx.globalAlpha = g.firing ? 0.9 : 0.35 + g.signal*0.3;
+    if(g.firing){ hctx.shadowColor=g.color; hctx.shadowBlur=6; }
+    if(g.sides === 0){
+      hctx.beginPath(); hctx.arc(pp[0],pp[1],sz,0,Math.PI*2); hctx.fill();
+    } else {
+      hctx.beginPath();
+      for(let i=0;i<g.sides;i++){
+        const a=Math.PI*2*i/g.sides - Math.PI/2;
+        const px=pp[0]+Math.cos(a)*sz, py=pp[1]+Math.sin(a)*sz;
+        i===0 ? hctx.moveTo(px,py) : hctx.lineTo(px,py);
+      }
+      hctx.closePath(); hctx.fill();
+    }
+    hctx.shadowBlur=0;
+    hctx.globalAlpha=1;
+    if(sz > 3){
+      hctx.fillStyle='#fff'; hctx.font=`${Math.max(5,sz*0.7)}px monospace`;
+      hctx.textAlign='center'; hctx.fillText(g.label,pp[0],pp[1]+sz*0.3);
+    }
+  });
+
+  // ═══ RENDER ECG ═══
+  ectx.fillStyle='rgba(5,0,2,1)';
+  ectx.fillRect(0,0,EW,EH);
+  // grid
+  ectx.strokeStyle='rgba(60,0,0,0.3)'; ectx.lineWidth=0.5;
+  for(let y=0;y<EH;y+=15){ectx.beginPath();ectx.moveTo(0,y);ectx.lineTo(EW,y);ectx.stroke();}
+  // collision count (green)
+  ectx.strokeStyle='#0a0'; ectx.lineWidth=1;
+  ectx.beginPath();
+  const mx=hMeshNodes.length;
+  heart.collHistory.forEach((v,i)=>{const x=i,y=EH-2-(v/mx)*(EH-4);i===0?ectx.moveTo(x,y):ectx.lineTo(x,y);});
+  ectx.stroke();
+  // groove (red — the heartbeat trace)
+  ectx.strokeStyle='#f00'; ectx.lineWidth=1.5;
+  ectx.beginPath();
+  heart.ecgHistory.forEach((v,i)=>{const x=i,y=EH/2-v*300;i===0?ectx.moveTo(x,y):ectx.lineTo(x,y);});
+  ectx.stroke();
+  ectx.fillStyle='#600'; ectx.font='8px monospace';
+  ectx.fillText('collision',3,9); ectx.fillStyle='#a00'; ectx.fillText('groove',3,18);
+
+  // ═══ Update display ═══
+  const bpmEl = document.getElementById('heart-bpm');
+  bpmEl.textContent = Math.round(heart.bpm) + ' BPM';
+  bpmEl.style.opacity = 0.5 + heart.flash * 0.5;
+  bpmEl.style.textShadow = `0 0 ${12 + heart.flash * 20}px #f00`;
+
+  const cLabel = heart.conscience > 0.2 ? 'PEACEFUL' : heart.conscience < -0.2 ? 'DISTURBED' : 'NEUTRAL';
+  const cColor = heart.conscience > 0.2 ? '#0a0' : heart.conscience < -0.2 ? '#f44' : '#888';
+  const firingCount = gubbins.filter(g => g.firing).length;
+  const godActive = godNodes.filter(gn => gn.glow > 0.1).length;
+  document.getElementById('heart-info').innerHTML =
+    `&#x2764; ${Math.round(heart.bpm)} BPM` +
+    (heart.naturalBPM !== 72 ? ` <span style="color:#ff0;font-size:8px">(nat:${Math.round(heart.naturalBPM)})</span>` : '') +
+    ` | <span style="color:${heart.intelligence.judgmentColor};font-weight:bold">${heart.intelligence.judgment}</span>` +
+    ` | <span style="color:${cColor}">${cLabel}</span>` +
+    ` | ${heart.entangled} ent | ${godActive} god | ${firingCount}/9 firing` +
+    ` | ${heart.phase < 0.3 ? 'SYS' : 'DIA'}`;
+}
+
+// ─── Hook tooth collisions into heart ───
+// Patch into existing ball update — find where bounceCount++ happens
+const _origBallUpdate = Ball.prototype.update;
+Ball.prototype.update = function() {
+  const prevBounce = this.bounceCount;
+  _origBallUpdate.call(this);
+  if (this.bounceCount > prevBounce) {
+    const angle = Math.atan2(this.y - cy, this.x - cx);
+    let normAngle = angle < 0 ? angle + Math.PI * 2 : angle;
+    const ti = Math.floor(normAngle / toothAngle) % NUM_TEETH;
+    heartReceiveToothHit(ti, this.energy);
+  }
+};
+
+// ─── INIT ───────────────────────────────────────────────────
+updateHUD();
+updateHemispheres();
+render();
+
+</script>
+</body>
+</html>

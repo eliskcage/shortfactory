@@ -505,3 +505,61 @@ This is 414 lines AHEAD of the server (3457). Contains unreleased features:
 ### alive/boy/boy-live3.html (DELETED — ~108K)
 - Unknown if it contained features not in server version
 - NEVER READ BEFORE DELETING
+
+---
+
+## 27 Apr 2026 — Session: mesh.html deploy + cortex v4 hemisphere dialogue
+
+### mesh.html (NEW — 24,517 bytes)
+- **What:** Interactive living mesh visualization / shape programming IDE
+- **Where:** MAIN + MIRROR + GitHub + GitLab (commit 876aeb5)
+- **URL:** cortex.shortfactory.shop/mesh.html / shortfactory.shop/mesh.html
+- **Features:**
+  - Canvas-based node editor with 9 shape types: memory, condition, else, then, loop, will, lie, truth, fear
+  - Each node has: memory array, valence (-1 to 1), energy, freewill threshold
+  - Signal propagation between connected nodes
+  - Joy particles visual effect
+  - English-to-shapes translation engine
+  - IR (intermediate representation) export
+  - Dan built the core concept; deployed by Claude
+
+### cortex_brain.py v4 — hemisphere dialogue
+- **What:** Added `_hemisphere_dialogue()` method to CortexMind class
+- **Where:** /var/www/shortfactory.shop/alive/studio/cortex_brain.py (line ~2103)
+- **How:** Every 7th ramble cycle, LEFT speaks → RIGHT listens → swap → both learn
+- **Fix:** Service path was /var/www/shortfactory.shop/ NOT /var/www/vhosts/shortfactory.shop/httpdocs/. Had to copy file to correct path.
+- **Status:** Ramble v4 confirmed started, first cycle completed with COH:0.61/0.59
+
+### trainer.py — left hemisphere (SELF/outward only)
+- **What:** Added SELF_DIARY (40 narcissist entries), FLOW_VOCAB (12 outward words), FLOW_RELATIONSHIPS (14 mirror pairs)
+- **Where:** /var/www/shortfactory.shop/alive/studio/trainer.py
+- **Change:** Removed user_addressing from activity choices (angel = 100% outward)
+- **Logs showing:** [FLOW-REL] my <-> your, [FLOW] boast = self
+
+### trainer_right.py — right hemisphere (USER/inward only)
+- **What:** Added USER_ADDRESSING_DARK (10 entries), FLOW_VOCAB_DARK (10 inward words)
+- **Where:** /var/www/shortfactory.shop/alive/studio/trainer_right.py
+- **Change:** Removed self_diary_dark from activity choices (demon = 100% inward)
+- **Logs showing:** [USER-DARK] "can you feel what I am feeling right now"
+
+### shape_flow.py (NEW)
+- **What:** Flow direction tagging module: SELF_PRONOUNS, SELF_VERBS, USER_PRONOUNS, USER_VERBS
+- **Where:** /var/www/shortfactory.shop/alive/studio/shape_flow.py
+- **Functions:** tag_flow(), flow_score(), detect_phrase_flow(), coherence_check()
+
+### latin-shapes-reception.json (NEW — 92KB)
+- **What:** 200 Latin reception shapes across 20 families, all polygons open LEFT/concave
+- **Where:** /var/www/vhosts/shortfactory.shop/httpdocs/alive/studio/latin-shapes-reception.json
+- **Purpose:** Mirror the 500 outward Great Escape shapes. "The Ears" — inward reception language.
+
+### will-heart.html → will.html — HEART v2 UPGRADE (120K → 130K)
+- **What:** Complete heart v2 with intelligence, god mesh, internal gubbins, natural rhythm
+- **Where:** cortex.shortfactory.shop/will.html (MAIN) + MIRROR /trump/will.html
+- **Five requirements fulfilled:**
+  1. **Human male BPM range**: clamped 40 (bradycardia) to 190 (VO2max). Resting target ~55-72.
+  2. **Heart as intelligence + emotional judge**: darkLoad/lightLoad/coherence/emotionalScore scoring. 5 judgment states: DANGER (dark+racing), FLOW (good+calm), PANIC (>140), DORMANT (<50), AWARE (neutral).
+  3. **God mesh layer**: 49-node golden mesh at R=1.15, between inner shape (~1.0) and outer membrane (1.4). Detects pressure from both sides — glows gold where shape pushes against membrane through it. The arbiter layer.
+  4. **Internal gubbins**: All 9 node types from mesh.html placed inside the heart shape: MEM (circle/blue), IF (triangle/yellow), ELSE (inv-tri/pink), THEN (circle/cyan), LOOP (hex/purple), WILL (pentagon/yellow-green), NO (square/red), YES (square/green), GUARD (diamond/orange). Each has memory[], valence, energy, freewill. They react to tooth hits — FEAR fires on dark affinity, TRUTH on light, WILL on any energy, MEMORY accumulates history.
+  5. **Natural rhythm**: 60% neurochemistry + 40% tooth collision intervals. hitTimes[] records last 20 collision timestamps, calculates natural BPM from avg interval. Display shows both target and natural BPM.
+- **Display updated**: Shows BPM + natural BPM + judgment state (colored) + conscience + entangled count + god mesh active nodes + firing gubbins count + cardiac phase
+- **Lines:** 2330 → 2871. Size: 120K → 130K.
