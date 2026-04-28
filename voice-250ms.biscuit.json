@@ -1,0 +1,14 @@
+{
+  "v": 1,
+  "type": "audio_crumb",
+  "codec": "crumb_v3",
+  "sr": 22050,
+  "duration_ms": 250,
+  "size_bytes": 730,
+  "cid": "sha256:82ca3b25163f07b3",
+  "created": "2026-04-28",
+  "transcript": "quick",
+  "wav_url": "voice-250ms.crumb.v3.wav",
+  "crumb_url": "voice-250ms.crumb.v3",
+  "payload_b64": "Q1JNQgUiVgAAAAgAAAACAABQBgYKBQsAAAA7AgAAfQAAAHjadZJBaxNRFIXPZF5ri7WZtNM2YipZDF1ViJhCAjOQkQwYcNpM22cbMWBrslDsokoCLoTQQpDW2DSlrsSNon9AdBuMIkKbpCYkRRSFKXQrJAuX3sneu7lvcTjfOZcH4efWval8DLjh34pdzEo49yRVmpjMQeSnLx+f/oYwstaeXP8LXPmeOf31qI6+qReZ9q3bgJFNrH25CYym3/xY+wD0Xbj71rdexuBYO/1++T5cZv78StYLeKzsEs+UwXgyP8EDEPr2E3l5EdDSx0k+ToJEprWSBcRmcr+ViEAY44lU7Tqgp/d5dAFwW4vNBKdQz5PRpkXsz0ucjy8DYd7ivAUM8VTDMiJwHZnRhhkHmqOWPE/7klyKySVgUFf2YsEyXMWYsmv4gdcLhliMAJeVI515gGEzWDINwLWjK00zALwbUbt714AZZTcmW4TQ5G+G41AIs7jj8HDOYPNRQOnOG4wEA0G7brAchEONSRqAV3W1U3MEjaIuHpFghsVDnTKEaqRTDf0hhKSLVRXwd909QX+YeXRGLdw6k3TJQWgsTiG9J3HVLlILjbnVLh2oSs4RcrgzG+rUyMHbqIXsuR5iOGRThqdqp6o5DnGducnBV9kJ2QVCzIjVoE0t5nSxplPIzSKxKKTvRNKcO/QH7J5AOCBnp8XqoWo/I4RUKQQbswBTKmawQhm2pytnA2Xg6vb0xwM6GKyvygb9JEirA74N2v3eB2f8OXp8ki0mw4EN+TfRGyZF8J/5B4YDs3F42mNgYGBgZoAABRARoMLJ5NAgIsjCEACUcbwQIMjSKGDAzdTAwKDMyXigQoqZISGCH6jQQ4S5MaFGnrXxQg5QYYCFMpdTQIYcZxNDC+MLJ4H2hRx6UbxlH9QEjshGrKoXUfTRurE8ZoUj/+oP71YGtE/rnnHeyAEAF1Ye5w=="
+}

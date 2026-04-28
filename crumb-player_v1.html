@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRUMB — The DNA of Sound</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;color:#fff;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px}
+
+h1{font-size:clamp(32px,6vw,56px);font-weight:700;margin-bottom:8px;text-align:center}
+h1 em{font-style:normal;color:rgba(218,165,32,0.85)}
+.sub{color:#666;font-size:15px;margin-bottom:48px;text-align:center}
+
+.players{display:flex;gap:32px;flex-wrap:wrap;justify-content:center;margin-bottom:48px;width:100%;max-width:900px}
+
+.card{
+  flex:1;min-width:300px;max-width:420px;
+  background:#111;border:1px solid rgba(255,255,255,0.04);
+  border-radius:16px;padding:32px;
+  display:flex;flex-direction:column;align-items:center;gap:16px;
+  transition:all .3s;
+}
+.card:hover{border-color:rgba(218,165,32,0.15)}
+.card.original{border-top:3px solid rgba(0,255,200,0.4)}
+.card.crumb{border-top:3px solid rgba(218,165,32,0.6)}
+
+.card-label{font-size:11px;text-transform:uppercase;letter-spacing:3px;color:#555}
+.card-title{font-size:22px;font-weight:700}
+.card.original .card-title{color:rgba(0,255,200,0.8)}
+.card.crumb .card-title{color:rgba(218,165,32,0.85)}
+
+.card-stats{display:flex;gap:20px;flex-wrap:wrap;justify-content:center}
+.stat{text-align:center}
+.stat-val{font-size:18px;font-weight:600;color:#fff}
+.stat-key{font-size:10px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+
+audio{width:100%;border-radius:8px;outline:none}
+audio::-webkit-media-controls-panel{background:#1a1a1a}
+
+.verdict{
+  text-align:center;padding:24px 40px;
+  background:rgba(218,165,32,0.04);border:1px solid rgba(218,165,32,0.1);
+  border-radius:12px;max-width:600px;
+}
+.verdict h3{color:rgba(218,165,32,0.85);font-size:18px;margin-bottom:8px}
+.verdict p{color:#888;font-size:14px;line-height:1.6}
+.verdict .big{font-size:48px;font-weight:700;color:rgba(218,165,32,0.9);margin:12px 0}
+
+.wave-viz{width:100%;height:60px;border-radius:8px;background:#0a0a0a}
+
+.footer{margin-top:40px;color:#333;font-size:11px;text-align:center}
+</style>
+</head>
+<body>
+
+<h1>The <em>Crumb</em></h1>
+<p class="sub">The DNA of sound — a wisp that remembers everything</p>
+
+<div class="players">
+  <div class="card original">
+    <div class="card-label">Source</div>
+    <div class="card-title">observer-bed.mp3</div>
+    <canvas class="wave-viz" id="viz-orig"></canvas>
+    <audio id="audio-orig" controls preload="auto">
+      <source src="observer-bed.mp3" type="audio/mpeg">
+    </audio>
+    <div class="card-stats">
+      <div class="stat"><div class="stat-val">2.13 MB</div><div class="stat-key">Size</div></div>
+      <div class="stat"><div class="stat-val">136s</div><div class="stat-key">Duration</div></div>
+      <div class="stat"><div class="stat-val">128 kbps</div><div class="stat-key">MP3</div></div>
+    </div>
+  </div>
+
+  <div class="card crumb">
+    <div class="card-label">Reborn from Crumb</div>
+    <div class="card-title">observer-bed.crumb</div>
+    <canvas class="wave-viz" id="viz-crumb"></canvas>
+    <audio id="audio-crumb" controls preload="auto">
+      <source src="observer-bed.crumb.wav" type="audio/wav">
+    </audio>
+    <div class="card-stats">
+      <div class="stat"><div class="stat-val">186 KB</div><div class="stat-key">Crumb size</div></div>
+      <div class="stat"><div class="stat-val">11.4x</div><div class="stat-key">vs MP3</div></div>
+      <div class="stat"><div class="stat-val">31.5x</div><div class="stat-key">vs PCM</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="verdict">
+  <h3>The seed remembers the song</h3>
+  <div class="big">11.4x</div>
+  <p>2.13 MB of MP3 compressed to <b>186 KB</b> of mel-band DNA &mdash; 31.5&times; smaller than raw PCM.<br>
+  The crumb stores only the cochlea&rsquo;s view; phase is regrown by Griffin&ndash;Lim on playback.<br>
+  Spectral similarity to source: <b>0.80</b>. The song is the song; the texture is whispery.</p>
+</div>
+
+<div class="footer">ShortFactory &middot; CRUMB codec &middot; fractal biscuit audio DNA &middot; 2026</div>
+
+<script>
+function drawWaveform(canvasId, audioId, color) {
+  var canvas = document.getElementById(canvasId);
+  var audio = document.getElementById(audioId);
+  var ctx = canvas.getContext('2d');
+
+  var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  var analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 256;
+  var bufferLength = analyser.frequencyBinCount;
+  var dataArray = new Uint8Array(bufferLength);
+
+  var source = audioCtx.createMediaElementSource(audio);
+  source.connect(analyser);
+  analyser.connect(audioCtx.destination);
+
+  canvas.width = canvas.offsetWidth * 2;
+  canvas.height = canvas.offsetHeight * 2;
+
+  function draw() {
+    requestAnimationFrame(draw);
+    analyser.getByteFrequencyData(dataArray);
+
+    ctx.fillStyle = '#0a0a0a';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    var barW = (canvas.width / bufferLength) * 2;
+    var x = 0;
+
+    for (var i = 0; i < bufferLength; i++) {
+      var v = dataArray[i] / 255;
+      var h = v * canvas.height * 0.9;
+      var alpha = 0.3 + v * 0.7;
+      ctx.fillStyle = color.replace('ALPHA', alpha.toFixed(2));
+      ctx.fillRect(x, canvas.height - h, barW - 1, h);
+      x += barW;
+    }
+  }
+
+  audio.addEventListener('play', function() {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  });
+
+  draw();
+}
+
+drawWaveform('viz-orig', 'audio-orig', 'rgba(0,255,200,ALPHA)');
+drawWaveform('viz-crumb', 'audio-crumb', 'rgba(218,165,32,ALPHA)');
+</script>
+</body>
+</html>

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRUMB v2 — Phase-Aware Hybrid</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;color:#fff;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:40px 20px}
+
+h1{font-size:clamp(28px,5vw,48px);font-weight:700;margin-bottom:8px;text-align:center}
+h1 em{font-style:normal;color:rgba(218,165,32,0.85)}
+.sub{color:#666;font-size:15px;margin-bottom:8px;text-align:center}
+.tagline{color:rgba(218,165,32,0.6);font-size:13px;margin-bottom:48px;letter-spacing:2px;text-transform:uppercase}
+
+.players{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;margin-bottom:48px;width:100%;max-width:1200px}
+
+.card{
+  flex:1;min-width:280px;max-width:380px;
+  background:#111;border:1px solid rgba(255,255,255,0.04);
+  border-radius:16px;padding:28px;
+  display:flex;flex-direction:column;align-items:center;gap:14px;
+  transition:all .3s;
+}
+.card:hover{border-color:rgba(218,165,32,0.2)}
+.card.source{border-top:3px solid rgba(0,255,200,0.4)}
+.card.v1{border-top:3px solid rgba(150,150,150,0.45)}
+.card.v2{border-top:3px solid rgba(218,165,32,0.65)}
+
+.card-label{font-size:11px;text-transform:uppercase;letter-spacing:3px;color:#555}
+.card-title{font-size:18px;font-weight:700}
+.card.source .card-title{color:rgba(0,255,200,0.85)}
+.card.v1 .card-title{color:rgba(180,180,180,0.85)}
+.card.v2 .card-title{color:rgba(218,165,32,0.9)}
+.card-note{font-size:11px;color:#555;text-align:center;font-style:italic;line-height:1.4}
+
+.card-stats{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+.stat{text-align:center}
+.stat-val{font-size:16px;font-weight:600;color:#fff}
+.stat-key{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+
+audio{width:100%;border-radius:8px;outline:none}
+audio::-webkit-media-controls-panel{background:#1a1a1a}
+
+.wave-viz{width:100%;height:56px;border-radius:8px;background:#0a0a0a}
+
+.verdict{
+  text-align:center;padding:24px 36px;
+  background:rgba(218,165,32,0.04);border:1px solid rgba(218,165,32,0.1);
+  border-radius:12px;max-width:680px;
+}
+.verdict h3{color:rgba(218,165,32,0.9);font-size:18px;margin-bottom:8px}
+.verdict p{color:#888;font-size:14px;line-height:1.6}
+.verdict .big{font-size:48px;font-weight:700;color:rgba(218,165,32,0.9);margin:12px 0}
+.verdict .delta{font-size:13px;color:rgba(0,255,200,0.7);margin-top:6px;letter-spacing:1px}
+
+.diff-table{margin-top:32px;font-size:12px;color:#555;text-align:center}
+.diff-table b{color:#888}
+
+.footer{margin-top:40px;color:#333;font-size:11px;text-align:center}
+.footer a{color:#555;text-decoration:none;border-bottom:1px dotted #333}
+</style>
+</head>
+<body>
+
+<h1>The <em>Crumb</em> &mdash; v2</h1>
+<p class="sub">Phase-aware hybrid &middot; mel DNA + harmonic skeleton</p>
+<p class="tagline">DNA &middot; Skeleton &middot; Cochlea</p>
+
+<div class="players">
+
+  <div class="card source">
+    <div class="card-label">Source</div>
+    <div class="card-title">observer-bed.mp3</div>
+    <canvas class="wave-viz" id="viz-orig"></canvas>
+    <audio id="audio-orig" controls preload="auto">
+      <source src="observer-bed.mp3" type="audio/mpeg">
+    </audio>
+    <div class="card-stats">
+      <div class="stat"><div class="stat-val">2.13 MB</div><div class="stat-key">Size</div></div>
+      <div class="stat"><div class="stat-val">136s</div><div class="stat-key">Duration</div></div>
+      <div class="stat"><div class="stat-val">128 kbps</div><div class="stat-key">MP3</div></div>
+    </div>
+    <div class="card-note">The truth.</div>
+  </div>
+
+  <div class="card v1">
+    <div class="card-label">v1 baseline</div>
+    <div class="card-title">crumb v1 &middot; mel only</div>
+    <canvas class="wave-viz" id="viz-v1"></canvas>
+    <audio id="audio-v1" controls preload="auto">
+      <source src="observer-bed.crumb.v1.wav" type="audio/wav">
+    </audio>
+    <div class="card-stats">
+      <div class="stat"><div class="stat-val">186 KB</div><div class="stat-key">Size</div></div>
+      <div class="stat"><div class="stat-val">11.4&times;</div><div class="stat-key">vs MP3</div></div>
+      <div class="stat"><div class="stat-val">0.80</div><div class="stat-key">Spec sim</div></div>
+    </div>
+    <div class="card-note">Mel + random-phase Griffin&ndash;Lim.<br>Whispery, Vangelis-ambient.</div>
+  </div>
+
+  <div class="card v2">
+    <div class="card-label">v2 hybrid</div>
+    <div class="card-title">crumb v2 &middot; mel + peaks</div>
+    <canvas class="wave-viz" id="viz-v2"></canvas>
+    <audio id="audio-v2" controls preload="auto">
+      <source src="observer-bed.crumb.v2.wav" type="audio/wav">
+    </audio>
+    <div class="card-stats">
+      <div class="stat"><div class="stat-val">229 KB</div><div class="stat-key">Size</div></div>
+      <div class="stat"><div class="stat-val">9.3&times;</div><div class="stat-key">vs MP3</div></div>
+      <div class="stat"><div class="stat-val">0.91</div><div class="stat-key">Spec sim</div></div>
+    </div>
+    <div class="card-note">Mel + 6-peak phase fingerprint.<br>Partials lock; whisper recedes.</div>
+  </div>
+
+</div>
+
+<div class="verdict">
+  <h3>v1 &rarr; v2 &middot; the partials lock</h3>
+  <div class="big">+0.11</div>
+  <p>v2 stores a tiny <b>phase fingerprint</b> (6 spectral peaks per frame, with quantised phase) on top of v1's mel DNA. Cost: <b>+43 KB</b>. Reward: spectral similarity climbs from <b>0.80 to 0.91</b> and the whispery Griffin&ndash;Lim character recedes &mdash; pitched content sings instead of breathes.</p>
+  <p class="delta">Mel = the cochlea. Peaks = the harmonic skeleton.</p>
+</div>
+
+<div class="diff-table">
+  <b>What changed:</b> v1 = magnitude only, random phase init &mdash; v2 = magnitude + sparse phase fingerprint, carrier-seeded Griffin&ndash;Lim, peak-sharpened mag.<br>
+  <b>What stayed:</b> 22.05 kHz, 80 mel bands, 23 ms hop, 6-bit mel quantisation, zlib payload.<br>
+  <b>Next (v3):</b> neural vocoder (Vocos / HiFi&ndash;GAN) reads the same crumb. Path to transparent.
+</div>
+
+<div class="footer">
+  ShortFactory &middot; CRUMB codec &middot; fractal biscuit audio DNA &middot; 2026<br>
+  <a href="crumb-player_v1.html">&larr; v1 page</a>
+</div>
+
+<script>
+function drawWaveform(canvasId, audioId, color) {
+  var canvas = document.getElementById(canvasId);
+  var audio = document.getElementById(audioId);
+  var ctx = canvas.getContext('2d');
+
+  var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  var analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 256;
+  var bufferLength = analyser.frequencyBinCount;
+  var dataArray = new Uint8Array(bufferLength);
+
+  var source = audioCtx.createMediaElementSource(audio);
+  source.connect(analyser);
+  analyser.connect(audioCtx.destination);
+
+  function resize() {
+    canvas.width = canvas.offsetWidth * 2;
+    canvas.height = canvas.offsetHeight * 2;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function draw() {
+    requestAnimationFrame(draw);
+    analyser.getByteFrequencyData(dataArray);
+    ctx.fillStyle = '#0a0a0a';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    var barW = (canvas.width / bufferLength) * 2;
+    var x = 0;
+    for (var i = 0; i < bufferLength; i++) {
+      var v = dataArray[i] / 255;
+      var h = v * canvas.height * 0.9;
+      var alpha = 0.3 + v * 0.7;
+      ctx.fillStyle = color.replace('ALPHA', alpha.toFixed(2));
+      ctx.fillRect(x, canvas.height - h, barW - 1, h);
+      x += barW;
+    }
+  }
+  audio.addEventListener('play', function() {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  });
+  draw();
+}
+
+drawWaveform('viz-orig', 'audio-orig', 'rgba(0,255,200,ALPHA)');
+drawWaveform('viz-v1',   'audio-v1',   'rgba(180,180,180,ALPHA)');
+drawWaveform('viz-v2',   'audio-v2',   'rgba(218,165,32,ALPHA)');
+
+// only one card can play at a time
+var audios = [document.getElementById('audio-orig'), document.getElementById('audio-v1'), document.getElementById('audio-v2')];
+audios.forEach(function(a){
+  a.addEventListener('play', function(){ audios.forEach(function(b){ if(b!==a) b.pause(); }); });
+});
+</script>
+</body>
+</html>

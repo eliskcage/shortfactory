@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRUMB v3 — Studio</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:#0a0a0a;color:#eee;
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  min-height:100vh;padding:24px 16px 60px;
+  display:flex;flex-direction:column;align-items:center;gap:24px;
+}
+
+h1{font-size:clamp(24px,4vw,36px);font-weight:700;text-align:center}
+h1 em{font-style:normal;color:rgba(218,165,32,0.85)}
+.sub{color:#666;font-size:13px;text-align:center;margin-top:-12px;letter-spacing:2px;text-transform:uppercase}
+.headphone-hint{color:rgba(0,255,200,0.6);font-size:12px;text-align:center;margin-top:-8px}
+
+.studio{
+  width:100%;max-width:980px;
+  background:#111;border:1px solid rgba(255,255,255,0.05);
+  border-radius:16px;padding:28px;
+  display:flex;flex-direction:column;gap:24px;
+}
+
+.section-title{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#666;margin-bottom:8px}
+
+/* ── version selector ─────────────────────────────────────── */
+.versions{display:flex;gap:8px;flex-wrap:wrap}
+.ver-btn{
+  flex:1;min-width:170px;
+  background:#1a1a1a;border:1px solid rgba(255,255,255,0.06);
+  color:#888;padding:12px 14px;border-radius:10px;cursor:pointer;
+  text-align:left;transition:all .15s;
+}
+.ver-btn:hover{border-color:rgba(218,165,32,0.3);color:#ccc}
+.ver-btn.active{
+  background:rgba(218,165,32,0.10);border-color:rgba(218,165,32,0.5);
+  color:rgba(218,165,32,0.95);
+}
+.ver-tag{display:block;font-size:11px;font-weight:700;letter-spacing:1px;margin-bottom:4px}
+.ver-desc{display:block;font-size:11px;color:#666;line-height:1.4}
+.ver-btn.active .ver-desc{color:rgba(218,165,32,0.65)}
+
+/* ── transport ────────────────────────────────────────────── */
+.transport{
+  display:flex;align-items:center;gap:16px;
+  background:#0a0a0a;border:1px solid rgba(255,255,255,0.04);
+  border-radius:12px;padding:14px 18px;
+}
+.btn-play{
+  width:54px;height:54px;border-radius:50%;
+  background:rgba(218,165,32,0.15);border:1px solid rgba(218,165,32,0.4);
+  color:rgba(218,165,32,0.95);font-size:22px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;flex-shrink:0;
+}
+.btn-play:hover{background:rgba(218,165,32,0.25)}
+.btn-play:active{transform:scale(0.95)}
+
+.scrubber-wrap{flex:1;display:flex;flex-direction:column;gap:4px}
+.scrubber{
+  -webkit-appearance:none;appearance:none;width:100%;height:6px;
+  background:#222;border-radius:3px;outline:none;cursor:pointer;
+}
+.scrubber::-webkit-slider-thumb{
+  -webkit-appearance:none;width:14px;height:14px;border-radius:50%;
+  background:rgba(218,165,32,0.9);cursor:pointer;
+}
+.scrubber::-moz-range-thumb{
+  width:14px;height:14px;border-radius:50%;border:none;
+  background:rgba(218,165,32,0.9);cursor:pointer;
+}
+.time-row{display:flex;justify-content:space-between;font-size:11px;color:#666;font-variant-numeric:tabular-nums}
+
+/* ── routing ──────────────────────────────────────────────── */
+.modes{display:flex;gap:8px;flex-wrap:wrap}
+.mode-btn{
+  background:#1a1a1a;border:1px solid rgba(255,255,255,0.06);
+  color:#888;padding:8px 14px;border-radius:8px;cursor:pointer;
+  font-size:12px;letter-spacing:.5px;transition:all .15s;
+}
+.mode-btn:hover{border-color:rgba(218,165,32,0.3);color:#ccc}
+.mode-btn.active{
+  background:rgba(218,165,32,0.12);border-color:rgba(218,165,32,0.5);
+  color:rgba(218,165,32,0.95);
+}
+.mode-key{display:inline-block;font-size:9px;color:#444;margin-left:6px;
+  border:1px solid #333;padding:1px 4px;border-radius:3px}
+.mode-btn.active .mode-key{color:rgba(218,165,32,0.6);border-color:rgba(218,165,32,0.4)}
+
+/* ── trim ────────────────────────────────────────────────── */
+.trim{display:flex;align-items:center;gap:14px}
+.trim label{font-size:12px;color:#888;min-width:130px}
+.trim-slider{
+  flex:1;-webkit-appearance:none;appearance:none;height:4px;
+  background:#222;border-radius:2px;outline:none;cursor:pointer;
+}
+.trim-slider::-webkit-slider-thumb{
+  -webkit-appearance:none;width:14px;height:14px;border-radius:50%;
+  background:rgba(0,255,200,0.7);cursor:pointer;
+}
+.trim-slider::-moz-range-thumb{
+  width:14px;height:14px;border-radius:50%;border:none;
+  background:rgba(0,255,200,0.7);cursor:pointer;
+}
+.trim-val{font-size:12px;color:#ccc;font-variant-numeric:tabular-nums;min-width:60px;text-align:right}
+
+/* ── eq ──────────────────────────────────────────────────── */
+.eq-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.eq-presets{display:flex;gap:6px;flex-wrap:wrap}
+.preset-btn{
+  background:#1a1a1a;border:1px solid rgba(255,255,255,0.06);
+  color:#888;padding:5px 10px;border-radius:6px;cursor:pointer;
+  font-size:11px;transition:all .15s;
+}
+.preset-btn:hover{border-color:rgba(218,165,32,0.3);color:#ccc}
+.preset-btn.bypass.active{
+  background:rgba(255,80,80,0.15);border-color:rgba(255,80,80,0.5);color:rgba(255,80,80,0.95);
+}
+
+.eq-bands{display:flex;gap:8px;justify-content:space-between;align-items:stretch}
+.band{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.band-vis{
+  position:relative;height:160px;width:100%;max-width:48px;
+  background:#0a0a0a;border:1px solid rgba(255,255,255,0.04);border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
+}
+.band-slider{
+  -webkit-appearance:none;appearance:none;
+  height:140px;width:4px;background:#222;border-radius:2px;outline:none;cursor:pointer;
+  writing-mode:bt-lr;-webkit-writing-mode:bt-lr;
+  transform:rotate(-90deg);
+}
+.band-slider::-webkit-slider-thumb{
+  -webkit-appearance:none;width:18px;height:18px;border-radius:50%;
+  background:rgba(218,165,32,0.85);cursor:pointer;
+  border:1px solid rgba(218,165,32,1);
+}
+.band-slider::-moz-range-thumb{
+  width:18px;height:18px;border-radius:50%;border:none;
+  background:rgba(218,165,32,0.85);cursor:pointer;
+}
+.band-zero{
+  position:absolute;left:8px;right:8px;top:50%;height:1px;
+  background:rgba(255,255,255,0.06);pointer-events:none;
+}
+.band-freq{font-size:11px;color:#888;font-weight:600}
+.band-gain{font-size:10px;color:#666;font-variant-numeric:tabular-nums;min-height:14px}
+.band.active .band-gain{color:rgba(218,165,32,0.9)}
+
+.tip{font-size:11px;color:#444;text-align:center;margin-top:4px;font-style:italic}
+audio{display:none}
+</style>
+</head>
+<body>
+
+<h1>CRUMB <em>v3</em> &middot; Studio</h1>
+<p class="sub">left ear: source &middot; right ear: crumb</p>
+<p class="headphone-hint">🎧 headphones recommended &middot; A/B all three versions to hear the development arc</p>
+
+<div class="studio">
+
+  <!-- VERSION SELECTOR -->
+  <div>
+    <div class="section-title">Crumb version &middot; the dev arc</div>
+    <div class="versions" id="versions">
+      <button class="ver-btn" data-ver="v1">
+        <span class="ver-tag">v1 &middot; baseline</span>
+        <span class="ver-desc">Mel + random-phase Griffin&ndash;Lim. Whispery, Vangelis-ambient. 0.80 sim.</span>
+      </button>
+      <button class="ver-btn" data-ver="v2">
+        <span class="ver-tag">v2 &middot; phase-aware hybrid</span>
+        <span class="ver-desc">Adds 6-peak phase fingerprint + 1k notch. Partials lock. 0.90 sim.</span>
+      </button>
+      <button class="ver-btn" data-ver="v3">
+        <span class="ver-tag">v3 &middot; smear-the-teeth</span>
+        <span class="ver-desc">2&times; time-upsample, 5-frame mag smear, hop/2. Smoother playback. Tonality 8.8.</span>
+      </button>
+      <button class="ver-btn active" data-ver="v4">
+        <span class="ver-tag">v4 &middot; japanese garden</span>
+        <span class="ver-desc">4-pass dither + median + rake-back + baked Cipher. Tonality 6.2 (noise-like).</span>
+      </button>
+      <button class="ver-btn" data-ver="art">
+        <span class="ver-tag">artifact only &middot; +14 dB</span>
+        <span class="ver-desc">Audible difference (recon - source). Listen for structure: tonality 6.2 / 10 (v4), 88% in 200-600 Hz.</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- TRANSPORT -->
+  <div class="transport">
+    <button class="btn-play" id="btn-play" title="Play / Pause (space)">▶</button>
+    <div class="scrubber-wrap">
+      <input type="range" class="scrubber" id="scrubber" min="0" max="1000" value="0" step="1">
+      <div class="time-row"><span id="time-cur">0:00</span><span id="time-dur">0:00</span></div>
+    </div>
+  </div>
+
+  <!-- ROUTING -->
+  <div>
+    <div class="section-title">Routing</div>
+    <div class="modes" id="modes">
+      <button class="mode-btn active" data-mode="L_src_R_v">L source &middot; R crumb<span class="mode-key">1</span></button>
+      <button class="mode-btn" data-mode="L_v_R_src">L crumb &middot; R source<span class="mode-key">2</span></button>
+      <button class="mode-btn" data-mode="centered">Both centered<span class="mode-key">3</span></button>
+      <button class="mode-btn" data-mode="solo_src">Solo source<span class="mode-key">4</span></button>
+      <button class="mode-btn" data-mode="solo_v">Solo crumb<span class="mode-key">5</span></button>
+    </div>
+  </div>
+
+  <!-- TRIM -->
+  <div>
+    <div class="section-title">Crumb gain trim &middot; level-match before EQ</div>
+    <div class="trim">
+      <label>crumb gain</label>
+      <input type="range" class="trim-slider" id="trim" min="-12" max="12" step="0.5" value="0">
+      <span class="trim-val" id="trim-val">+0.0 dB</span>
+    </div>
+  </div>
+
+  <!-- EQ -->
+  <div>
+    <div class="eq-header">
+      <div class="section-title">EQ on the crumb &middot; ±12 dB</div>
+      <div class="eq-presets">
+        <button class="preset-btn" data-preset="flat">Flat</button>
+        <button class="preset-btn" data-preset="cipher" title="Dan's mid-cut for biscuit voice packets">Cipher</button>
+        <button class="preset-btn" data-preset="warm">Warm</button>
+        <button class="preset-btn" data-preset="bright">Bright</button>
+        <button class="preset-btn" data-preset="airy">Airy</button>
+        <button class="preset-btn" data-preset="bass">Bass</button>
+        <button class="preset-btn" data-preset="reset">Reset</button>
+        <button class="preset-btn bypass" id="bypass">Bypass</button>
+      </div>
+    </div>
+    <div class="eq-bands" id="eq-bands"></div>
+    <div class="tip">drag the dot up/down on each band &middot; double-click any band to reset to 0</div>
+  </div>
+
+</div>
+
+<!-- hidden audio sources — all three versions plus source -->
+<audio id="audio-src" preload="auto"><source src="observer-bed.mp3" type="audio/mpeg"></audio>
+<audio id="audio-v1"  preload="auto"><source src="observer-bed.crumb.v1.wav" type="audio/wav"></audio>
+<audio id="audio-v2"  preload="auto"><source src="observer-bed.crumb.v2.wav" type="audio/wav"></audio>
+<audio id="audio-v3"  preload="auto"><source src="observer-bed.crumb.v3.wav" type="audio/wav"></audio>
+<audio id="audio-v4"  preload="auto"><source src="observer-bed.crumb.v4.wav" type="audio/wav"></audio>
+<audio id="audio-art" preload="auto"><source src="observer-bed.artifact.v4.wav" type="audio/wav"></audio>
+
+<script>
+//──────────────────────────────────────────────────────────────────────────
+var BANDS = [
+  {f:60,    label:'60'},
+  {f:170,   label:'170'},
+  {f:310,   label:'310'},
+  {f:600,   label:'600'},
+  {f:1000,  label:'1k'},
+  {f:3000,  label:'3k'},
+  {f:6000,  label:'6k'},
+  {f:12000, label:'12k'},
+];
+var PRESETS = {
+  flat:   [0,0,0,0,  0,  0,  0, 0],
+  cipher: [0,0,0,0,-12,-12,-12, 0],   // Dan's mid-cut for biscuit voice packets
+  warm:   [+3,+2,+1, 0, -1, -2, -1, 0],
+  bright: [-2,-1, 0, 0, +1, +3, +4,+4],
+  airy:   [-3,-2,-1, 0,  0, +1, +3,+5],
+  bass:   [+5,+4,+2, 0,  0,  0,  0, 0],
+  reset:  [0,0,0,0,  0,  0,  0, 0],
+};
+
+//──────────────────────────────────────────────────────────────────────────
+// Web Audio
+//──────────────────────────────────────────────────────────────────────────
+var ctx, srcNode, srcGain, srcPan;
+var vNodes = {}, vGains = {}, eqInputs = [];   // per-version chain
+var v2Pan, eqChain = [];
+var activeVer = 'v4';
+
+var els = {
+  src: document.getElementById('audio-src'),
+  v1:  document.getElementById('audio-v1'),
+  v2:  document.getElementById('audio-v2'),
+  v3:  document.getElementById('audio-v3'),
+  v4:  document.getElementById('audio-v4'),
+  art: document.getElementById('audio-art'),
+};
+
+function buildGraph() {
+  if (ctx) return;
+  ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+  // EQ chain on crumb path (shared across versions)
+  for (var i = 0; i < BANDS.length; i++) {
+    var f = ctx.createBiquadFilter();
+    f.type = 'peaking';
+    f.frequency.value = BANDS[i].f;
+    f.Q.value = 1.4;
+    f.gain.value = 0;
+    eqChain.push(f);
+  }
+  for (var j = 0; j < eqChain.length - 1; j++) eqChain[j].connect(eqChain[j+1]);
+
+  v2Pan = ctx.createStereoPanner(); v2Pan.pan.value = +1;   // crumb → R
+  // crumb master gain (trim/solo applied here)
+  var crumbMaster = ctx.createGain(); crumbMaster.gain.value = 1.0;
+  vGains.master = crumbMaster;
+
+  // each version → its own gain (selector mute) → eq[0]
+  ['v1', 'v2', 'v3', 'v4', 'art'].forEach(function(v){
+    var node = ctx.createMediaElementSource(els[v]);
+    var g = ctx.createGain();
+    g.gain.value = (v === activeVer) ? 1.0 : 0.0;
+    node.connect(g).connect(eqChain[0]);
+    vNodes[v] = node;
+    vGains[v] = g;
+  });
+  eqChain[eqChain.length - 1].connect(crumbMaster).connect(v2Pan).connect(ctx.destination);
+
+  // source → its own gain → pan(L) → destination
+  srcNode = ctx.createMediaElementSource(els.src);
+  srcGain = ctx.createGain(); srcGain.gain.value = 1.0;
+  srcPan  = ctx.createStereoPanner(); srcPan.pan.value = -1;
+  srcNode.connect(srcGain).connect(srcPan).connect(ctx.destination);
+}
+
+//──────────────────────────────────────────────────────────────────────────
+// Transport — sync'd play / pause / scrub across ALL audio elements
+//──────────────────────────────────────────────────────────────────────────
+var btnPlay = document.getElementById('btn-play');
+var scrubber = document.getElementById('scrubber');
+var timeCur = document.getElementById('time-cur');
+var timeDur = document.getElementById('time-dur');
+var playing = false, scrubbing = false;
+
+function fmt(t){ if(!isFinite(t))return '0:00'; var m=Math.floor(t/60),s=Math.floor(t%60); return m+':'+(s<10?'0':'')+s; }
+function getDuration(){
+  var d=0; ['src','v1','v2','v3','v4','art'].forEach(function(k){
+    if (isFinite(els[k].duration)) d = Math.max(d, els[k].duration);
+  });
+  return d;
+}
+function syncTime() {
+  // resync all crumb versions to source if drift > 80 ms
+  var t = els.src.currentTime;
+  ['v1','v2','v3','v4','art'].forEach(function(v){
+    if (Math.abs(els[v].currentTime - t) > 0.08) els[v].currentTime = t;
+  });
+}
+function play() {
+  buildGraph();
+  if (ctx.state === 'suspended') ctx.resume();
+  // hard sync first
+  var t = els.src.currentTime;
+  ['v1','v2','v3','v4','art'].forEach(function(v){ els[v].currentTime = t; });
+  Promise.all([els.src.play(), els.v1.play(), els.v2.play(), els.v3.play(), els.v4.play(), els.art.play()])
+    .catch(function(e){console.warn(e);});
+  playing = true; btnPlay.textContent = '⏸';
+}
+function pause() {
+  ['src','v1','v2','v3','v4','art'].forEach(function(k){ els[k].pause(); });
+  playing = false; btnPlay.textContent = '▶';
+}
+btnPlay.addEventListener('click', function(){ playing ? pause() : play(); });
+document.addEventListener('keydown', function(e){
+  if (e.code === 'Space' && document.activeElement.tagName !== 'INPUT') {
+    e.preventDefault(); playing ? pause() : play();
+  }
+  if (e.code.startsWith('Digit')) {
+    var n = parseInt(e.code.slice(5));
+    var btns = document.querySelectorAll('.mode-btn');
+    if (n >= 1 && n <= btns.length) btns[n-1].click();
+  }
+  // V1/V2/V3 keys: shift+1, shift+2, shift+3 to switch version
+  if (e.shiftKey && e.code.startsWith('Digit')) {
+    var n = parseInt(e.code.slice(5));
+    var verBtns = document.querySelectorAll('.ver-btn');
+    if (n >= 1 && n <= verBtns.length) verBtns[n-1].click();
+  }
+});
+
+['src','v1','v2','v3','v4','art'].forEach(function(k){
+  els[k].addEventListener('loadedmetadata', function(){ timeDur.textContent = fmt(getDuration()); });
+});
+
+setInterval(function(){
+  if (!playing || scrubbing) return;
+  var dur = getDuration();
+  if (dur <= 0) return;
+  scrubber.value = (els.src.currentTime / dur) * 1000;
+  timeCur.textContent = fmt(els.src.currentTime);
+  syncTime();
+}, 200);
+
+scrubber.addEventListener('input', function(){
+  scrubbing = true;
+  var dur = getDuration();
+  var t = (scrubber.value / 1000) * dur;
+  ['src','v1','v2','v3','v4','art'].forEach(function(k){ els[k].currentTime = t; });
+  timeCur.textContent = fmt(t);
+});
+scrubber.addEventListener('change', function(){ scrubbing = false; });
+els.src.addEventListener('ended', pause);
+
+//──────────────────────────────────────────────────────────────────────────
+// Version selector — mute non-active versions via gain
+//──────────────────────────────────────────────────────────────────────────
+function setVersion(v) {
+  buildGraph();
+  activeVer = v;
+  ['v1','v2','v3','v4','art'].forEach(function(x){
+    if (vGains[x]) vGains[x].gain.value = (x === v) ? 1.0 : 0.0;
+  });
+  document.querySelectorAll('.ver-btn').forEach(function(b){
+    b.classList.toggle('active', b.dataset.ver === v);
+  });
+}
+document.querySelectorAll('.ver-btn').forEach(function(b){
+  b.addEventListener('click', function(){ setVersion(b.dataset.ver); });
+});
+
+//──────────────────────────────────────────────────────────────────────────
+// Routing modes
+//──────────────────────────────────────────────────────────────────────────
+function setMode(mode) {
+  buildGraph();
+  switch (mode) {
+    case 'L_src_R_v': srcPan.pan.value=-1; v2Pan.pan.value=+1; srcGain.gain.value=1; vGains.master.gain.value=1; break;
+    case 'L_v_R_src': srcPan.pan.value=+1; v2Pan.pan.value=-1; srcGain.gain.value=1; vGains.master.gain.value=1; break;
+    case 'centered':  srcPan.pan.value= 0; v2Pan.pan.value= 0; srcGain.gain.value=1; vGains.master.gain.value=1; break;
+    case 'solo_src':  srcPan.pan.value= 0; v2Pan.pan.value= 0; srcGain.gain.value=1; vGains.master.gain.value=0; break;
+    case 'solo_v':    srcPan.pan.value= 0; v2Pan.pan.value= 0; srcGain.gain.value=0; vGains.master.gain.value=1; break;
+  }
+  applyTrim();
+}
+document.querySelectorAll('.mode-btn').forEach(function(b){
+  b.addEventListener('click', function(){
+    document.querySelectorAll('.mode-btn').forEach(function(x){x.classList.remove('active');});
+    b.classList.add('active');
+    setMode(b.dataset.mode);
+  });
+});
+
+//──────────────────────────────────────────────────────────────────────────
+// Trim
+//──────────────────────────────────────────────────────────────────────────
+var trim = document.getElementById('trim');
+var trimVal = document.getElementById('trim-val');
+function applyTrim() {
+  buildGraph();
+  var db = parseFloat(trim.value);
+  var amp = Math.pow(10, db/20);
+  var current = document.querySelector('.mode-btn.active').dataset.mode;
+  vGains.master.gain.value = (current === 'solo_src') ? 0 : amp;
+  trimVal.textContent = (db>=0?'+':'') + db.toFixed(1) + ' dB';
+}
+trim.addEventListener('input', applyTrim);
+
+//──────────────────────────────────────────────────────────────────────────
+// EQ
+//──────────────────────────────────────────────────────────────────────────
+var eqContainer = document.getElementById('eq-bands');
+var bandSliders = [], bandGainLabels = [];
+var bypassed = false;
+
+BANDS.forEach(function(b, i){
+  var div = document.createElement('div');
+  div.className = 'band';
+  div.innerHTML =
+    '<div class="band-vis"><div class="band-zero"></div>' +
+    '<input type="range" class="band-slider" min="-12" max="12" step="0.5" value="0"></div>' +
+    '<div class="band-freq">' + b.label + '</div>' +
+    '<div class="band-gain">+0.0</div>';
+  eqContainer.appendChild(div);
+  var slider = div.querySelector('.band-slider');
+  var label  = div.querySelector('.band-gain');
+  bandSliders.push(slider); bandGainLabels.push(label);
+  slider.addEventListener('input', function(){
+    var g = parseFloat(slider.value);
+    if (!bypassed && eqChain[i]) eqChain[i].gain.value = g;
+    label.textContent = (g>=0?'+':'') + g.toFixed(1);
+    div.classList.toggle('active', Math.abs(g) > 0.01);
+  });
+  div.addEventListener('dblclick', function(){
+    slider.value = 0; slider.dispatchEvent(new Event('input'));
+  });
+});
+function applyPreset(name) {
+  var values = PRESETS[name] || PRESETS.flat;
+  for (var i = 0; i < bandSliders.length; i++) {
+    bandSliders[i].value = values[i];
+    bandSliders[i].dispatchEvent(new Event('input'));
+  }
+}
+document.querySelectorAll('.preset-btn[data-preset]').forEach(function(b){
+  b.addEventListener('click', function(){ applyPreset(b.dataset.preset); });
+});
+var bypassBtn = document.getElementById('bypass');
+bypassBtn.addEventListener('click', function(){
+  bypassed = !bypassed;
+  bypassBtn.classList.toggle('active', bypassed);
+  bypassBtn.textContent = bypassed ? 'Bypassed' : 'Bypass';
+  for (var i = 0; i < eqChain.length; i++) {
+    eqChain[i].gain.value = bypassed ? 0 : parseFloat(bandSliders[i].value);
+  }
+});
+
+window.addEventListener('load', function(){ buildGraph(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spiral Cipher · Music · The Crumb in the Spiral</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:radial-gradient(ellipse at center, #0d0d12 0%, #050508 80%);
+  color:#eee;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  min-height:100vh;padding:32px 16px 60px;
+  display:flex;flex-direction:column;align-items:center;gap:18px;
+}
+
+h1{
+  font-size:clamp(28px,5vw,46px);font-weight:800;text-align:center;
+  letter-spacing:-0.5px;
+}
+h1 em{font-style:normal;color:rgba(218,165,32,0.9)}
+.tagline{
+  color:rgba(218,165,32,0.65);font-size:13px;text-align:center;
+  letter-spacing:3px;text-transform:uppercase;margin-top:-8px;
+}
+.hero-claim{
+  color:#888;font-size:14px;text-align:center;max-width:560px;line-height:1.5;
+}
+.hero-claim b{color:rgba(0,255,200,0.85)}
+
+.stats{
+  display:flex;gap:18px;flex-wrap:wrap;justify-content:center;
+  background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);
+  border-radius:10px;padding:14px 22px;margin:8px 0 12px;
+}
+.stat{text-align:center}
+.stat-val{font-size:18px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums}
+.stat-key{font-size:10px;color:#666;letter-spacing:2px;text-transform:uppercase;margin-top:2px}
+
+.spiral-wrap{
+  position:relative;width:100%;max-width:680px;aspect-ratio:1;
+}
+.spiral-svg{width:100%;height:100%;cursor:default}
+.spiral-svg .path{
+  fill:none;stroke:rgba(218,165,32,0.12);stroke-width:1;
+}
+.spiral-svg .dot{cursor:pointer}
+/* scale only the circle, not the <g> wrapper, so SVG translate is preserved */
+.spiral-svg .dot circle{
+  transition:r .15s, filter .15s, fill .15s;
+}
+.spiral-svg .dot:hover circle{filter:brightness(1.4) drop-shadow(0 0 6px rgba(218,165,32,0.6))}
+.spiral-svg .dot:active circle{filter:brightness(1.6)}
+.spiral-svg .dot.big   {fill:rgba(218,165,32,0.85);stroke:rgba(218,165,32,1);stroke-width:1}
+.spiral-svg .dot.med   {fill:rgba(218,165,32,0.6); stroke:rgba(218,165,32,0.8);stroke-width:1}
+.spiral-svg .dot.small {fill:rgba(218,165,32,0.35);stroke:rgba(218,165,32,0.6);stroke-width:1}
+.spiral-svg .dot.tiny  {fill:rgba(218,165,32,0.2); stroke:rgba(218,165,32,0.4);stroke-width:0.5}
+.spiral-svg .dot.broken{fill:rgba(255,80,80,0.4);stroke:rgba(255,80,80,0.7);stroke-width:0.5}
+/* container dot = points to a child spiral. Larger, ringed, with glyph */
+.spiral-svg .dot.container circle{
+  fill:rgba(0,255,200,0.15);stroke:rgba(0,255,200,0.7);stroke-width:1.5;
+}
+.spiral-svg .dot.container .container-ring{
+  fill:none;stroke:rgba(0,255,200,0.3);stroke-width:0.7;stroke-dasharray:3 3;
+}
+.spiral-svg .dot.container text.glyph{
+  fill:rgba(0,255,200,0.9);font-size:18px;font-weight:700;
+  text-anchor:middle;dominant-baseline:central;pointer-events:none;
+  font-family:'Segoe UI Symbol',monospace;
+}
+.spiral-svg .dot-label{
+  font-size:10px;fill:rgba(218,165,32,0.6);font-family:monospace;
+  pointer-events:none;text-anchor:middle;
+}
+.spiral-svg .center-glyph{
+  font-size:24px;fill:rgba(218,165,32,0.7);font-family:'Segoe UI Symbol',monospace;
+  text-anchor:middle;dominant-baseline:central;font-weight:700;
+}
+
+.breadcrumb{
+  display:flex;gap:8px;font-size:13px;align-items:center;flex-wrap:wrap;
+  background:rgba(0,255,200,0.04);border:1px solid rgba(0,255,200,0.12);
+  padding:10px 16px;border-radius:8px;color:#888;max-width:680px;width:100%;
+}
+.breadcrumb .crumb{
+  cursor:pointer;color:rgba(0,255,200,0.7);transition:color .15s;
+  font-family:monospace;font-size:12px;
+}
+.breadcrumb .crumb:hover{color:rgba(0,255,200,0.95)}
+.breadcrumb .crumb.current{color:#fff;cursor:default}
+.breadcrumb .sep{color:#444}
+.breadcrumb .cid{color:#444;font-size:10px;font-family:monospace;margin-left:auto}
+
+.legend{
+  display:flex;gap:18px;font-size:12px;color:#666;
+  flex-wrap:wrap;justify-content:center;
+}
+.legend-dot.container{background:rgba(0,255,200,0.4);border:1.5px solid rgba(0,255,200,0.7);width:14px;height:14px}
+.legend-item{display:flex;align-items:center;gap:6px}
+.legend-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.legend-dot.big{background:rgba(218,165,32,0.85);width:14px;height:14px}
+.legend-dot.med{background:rgba(218,165,32,0.6)}
+.legend-dot.small{background:rgba(218,165,32,0.35);width:8px;height:8px}
+.legend-dot.broken{background:rgba(255,80,80,0.5)}
+
+/* MODAL */
+.modal-bg{
+  position:fixed;inset:0;background:rgba(0,0,0,0.85);
+  display:none;align-items:center;justify-content:center;z-index:50;
+  backdrop-filter:blur(6px);
+}
+.modal-bg.open{display:flex}
+.modal{
+  background:#111;border:1px solid rgba(218,165,32,0.3);
+  border-radius:14px;padding:28px;max-width:560px;width:90%;
+  max-height:90vh;overflow-y:auto;
+  display:flex;flex-direction:column;gap:14px;
+}
+.modal h2{
+  font-size:20px;color:rgba(218,165,32,0.9);
+  display:flex;align-items:center;gap:8px;
+}
+.modal-meta{
+  display:grid;grid-template-columns:120px 1fr;gap:6px 12px;
+  font-size:13px;color:#aaa;font-family:monospace;
+}
+.modal-meta b{color:#666;font-weight:normal}
+.modal audio{width:100%;border-radius:8px;outline:none}
+.transcript{
+  background:rgba(218,165,32,0.06);border-left:3px solid rgba(218,165,32,0.5);
+  padding:10px 14px;font-style:italic;color:rgba(218,165,32,0.85);
+  border-radius:0 8px 8px 0;
+}
+.payload{
+  background:#0a0a0a;border:1px solid rgba(255,255,255,0.05);
+  border-radius:6px;padding:10px;font-family:monospace;font-size:10px;
+  color:#666;max-height:80px;overflow:hidden;
+  position:relative;word-break:break-all;
+}
+.payload::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:30px;
+  background:linear-gradient(transparent, #0a0a0a);
+}
+.fractal-hint{
+  font-size:12px;color:#666;font-style:italic;
+  border-top:1px solid rgba(255,255,255,0.05);padding-top:12px;
+}
+.fractal-hint b{color:rgba(0,255,200,0.7);font-style:normal}
+.modal-close{
+  background:transparent;border:1px solid rgba(255,255,255,0.1);
+  color:#888;padding:8px 16px;border-radius:8px;cursor:pointer;
+  font-size:12px;align-self:flex-end;
+}
+.modal-close:hover{border-color:rgba(218,165,32,0.4);color:#ccc}
+
+.footer{
+  margin-top:32px;color:#333;font-size:11px;text-align:center;
+  max-width:600px;line-height:1.6;
+}
+.footer a{color:#666;text-decoration:none;border-bottom:1px dotted #333}
+.footer a:hover{color:rgba(218,165,32,0.7)}
+</style>
+</head>
+<body>
+
+<h1>The <em>Crumb</em> in the Spiral</h1>
+<p class="tagline">smart biscuits · audio DNA · IPFS-pinnable</p>
+<p class="hero-claim">
+  This is a <b>visible IPFS DAG</b>. The teal-ringed dots open into child spirals.
+  The gold dots are leaf biscuits — click to play. Click breadcrumb to ascend.
+  <b>Sub-30 kbps speech</b>, no GPU. Cortex on a doorbell.
+</p>
+
+<div class="stats" id="stats">
+  <div class="stat"><div class="stat-val" id="s-biscuits">—</div><div class="stat-key">biscuits</div></div>
+  <div class="stat"><div class="stat-val" id="s-bytes">—</div><div class="stat-key">total bytes</div></div>
+  <div class="stat"><div class="stat-val" id="s-duration">—</div><div class="stat-key">total speech</div></div>
+  <div class="stat"><div class="stat-val" id="s-rate">—</div><div class="stat-key">avg bitrate</div></div>
+</div>
+
+<div class="breadcrumb" id="breadcrumb">
+  <span class="crumb current">root</span>
+  <span class="cid" id="current-cid"></span>
+</div>
+
+<div class="spiral-wrap">
+  <svg class="spiral-svg" viewBox="-340 -340 680 680" id="spiral"></svg>
+</div>
+
+<div class="legend">
+  <span class="legend-item"><span class="legend-dot container"></span>container &middot; opens child spiral</span>
+  <span class="legend-item"><span class="legend-dot big"></span>biscuit &middot; click to play</span>
+  <span class="legend-item"><span class="legend-dot small"></span>small biscuit</span>
+  <span class="legend-item"><span class="legend-dot broken"></span>below codec floor</span>
+</div>
+
+<!-- modal -->
+<div class="modal-bg" id="modal">
+  <div class="modal" id="modal-body"></div>
+</div>
+
+<div class="footer">
+  Each biscuit's <code>cid</code> is the SHA-256 prefix of its crumb binary — IPFS-ready.
+  Click a dot to inspect, play, and (for the larger biscuits) preview fractal recursion
+  into child biscuits. Codec: <a href="crumb-studio_v3.html">crumb v3 / v4</a>.<br>
+  ShortFactory · spiral cipher · 2026
+</div>
+
+<script>
+//──────────────────────────────────────────────────────────────────────────
+// State — breadcrumb stack of {url, name, manifest, cid}
+//──────────────────────────────────────────────────────────────────────────
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const breadcrumbStack = [];
+
+async function loadManifest(url) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`fetch ${url}: ${r.status}`);
+  return r.json();
+}
+
+function fmt(n, suffix='') {
+  if (n >= 1000000) return (n/1000000).toFixed(1) + 'M' + suffix;
+  if (n >= 1000)    return (n/1000).toFixed(1) + 'k' + suffix;
+  return n.toFixed(0) + suffix;
+}
+
+function classifyBiscuit(b) {
+  if (b.duration_ms < 300)  return 'broken';
+  if (b.size_bytes < 500)   return 'small';
+  if (b.size_bytes < 1500)  return 'med';
+  return 'big';
+}
+function biscuitRadius(b) {
+  const kb = b.size_bytes / 1024;
+  if (kb < 0.5) return 5;
+  if (kb < 1.5) return 8;
+  if (kb < 5)   return 12;
+  if (kb < 15)  return 16;
+  return 22;
+}
+function containerRadius(b) {
+  // size by total payload it points to
+  const kb = b.total_size / 1024;
+  if (kb < 5)  return 14;
+  if (kb < 20) return 18;
+  return 22;
+}
+
+//──────────────────────────────────────────────────────────────────────────
+// Render spiral — handles root_spiral (branch_pointers) and leaf_spiral (biscuits)
+//──────────────────────────────────────────────────────────────────────────
+function renderSpiral(manifest) {
+  const svg = document.getElementById('spiral');
+  svg.innerHTML = '';
+
+  // determine items: branches (containers) for root, biscuits for leaf
+  let items, isRoot;
+  if (manifest.type === 'root_spiral') {
+    items = manifest.branches.slice();
+    isRoot = true;
+  } else if (manifest.type === 'leaf_spiral' || manifest.type === 'biscuit_manifest') {
+    items = manifest.biscuits.slice().sort((a,b) => b.duration_ms - a.duration_ms);
+    isRoot = false;
+  } else {
+    throw new Error('unknown manifest type: ' + manifest.type);
+  }
+
+  // spiral path
+  const turns = isRoot ? 2 : 3;
+  const pathPts = [];
+  for (let i = 0; i <= 600; i++) {
+    const t = i / 600;
+    const theta = t * turns * 2 * Math.PI;
+    const r = 60 + (290 - 60) * (1 - t);
+    pathPts.push([r * Math.cos(theta), r * Math.sin(theta)]);
+  }
+  const d = pathPts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(2) + ' ' + p[1].toFixed(2)).join(' ');
+  const path = document.createElementNS(SVG_NS, 'path');
+  path.setAttribute('d', d);
+  path.setAttribute('class', 'path');
+  svg.appendChild(path);
+
+  // place dots
+  const n = items.length;
+  for (let i = 0; i < n; i++) {
+    const t = (i + 0.5) / n;
+    const theta = t * turns * 2 * Math.PI;
+    const r = 60 + (290 - 60) * (1 - t);
+    const x = r * Math.cos(theta);
+    const y = r * Math.sin(theta);
+    const item = items[i];
+
+    const g = document.createElementNS(SVG_NS, 'g');
+    g.setAttribute('transform', `translate(${x.toFixed(2)} ${y.toFixed(2)})`);
+
+    if (isRoot) {
+      // CONTAINER DOT — opens a child spiral
+      g.setAttribute('class', 'dot container');
+      const radius = containerRadius(item);
+      // outer ring
+      const ring = document.createElementNS(SVG_NS, 'circle');
+      ring.setAttribute('cx', 0); ring.setAttribute('cy', 0);
+      ring.setAttribute('r', radius + 6);
+      ring.setAttribute('class', 'container-ring');
+      g.appendChild(ring);
+      // body
+      const c = document.createElementNS(SVG_NS, 'circle');
+      c.setAttribute('cx', 0); c.setAttribute('cy', 0);
+      c.setAttribute('r', radius);
+      g.appendChild(c);
+      // glyph in center (○ or ●)
+      const glyph = document.createElementNS(SVG_NS, 'text');
+      glyph.setAttribute('x', 0); glyph.setAttribute('y', 0);
+      glyph.setAttribute('class', 'glyph');
+      glyph.textContent = item.glyph || '○';
+      g.appendChild(glyph);
+      // label below
+      const label = document.createElementNS(SVG_NS, 'text');
+      label.setAttribute('x', 0); label.setAttribute('y', radius + 24);
+      label.setAttribute('class', 'dot-label');
+      label.textContent = item.name + ' · ' + item.leaf_count;
+      g.appendChild(label);
+
+      g.addEventListener('click', () => descendInto(item));
+    } else {
+      // BISCUIT DOT — leaf, opens playback modal
+      const cls = classifyBiscuit(item);
+      g.setAttribute('class', 'dot ' + cls);
+      const radius = biscuitRadius(item);
+      const c = document.createElementNS(SVG_NS, 'circle');
+      c.setAttribute('cx', 0); c.setAttribute('cy', 0);
+      c.setAttribute('r', radius);
+      g.appendChild(c);
+      const label = document.createElementNS(SVG_NS, 'text');
+      label.setAttribute('x', 0); label.setAttribute('y', radius + 14);
+      label.setAttribute('class', 'dot-label');
+      label.textContent = item.transcript || (item.duration_ms + 'ms');
+      g.appendChild(label);
+
+      g.addEventListener('click', () => openBiscuit(item));
+    }
+    svg.appendChild(g);
+  }
+
+  // central glyph
+  const center = document.createElementNS(SVG_NS, 'text');
+  center.setAttribute('x', 0); center.setAttribute('y', 0);
+  center.setAttribute('class', 'center-glyph');
+  center.textContent = isRoot ? '◉' : '○';
+  svg.appendChild(center);
+
+  // update stats
+  document.getElementById('s-biscuits').textContent =
+    isRoot ? (manifest.branches.length + ' br') : manifest.biscuits.length;
+  document.getElementById('s-bytes').textContent = fmt(manifest.total_size, 'B');
+  document.getElementById('s-duration').textContent = (manifest.total_duration_ms/1000).toFixed(1) + 's';
+  const avgKbps = ((manifest.total_size * 8) / manifest.total_duration_ms).toFixed(1);
+  document.getElementById('s-rate').textContent = avgKbps + ' kbps';
+
+  // update breadcrumb (also writes the cid)
+  renderBreadcrumb();
+}
+
+//──────────────────────────────────────────────────────────────────────────
+// Breadcrumb rendering + descent / ascent
+//──────────────────────────────────────────────────────────────────────────
+function renderBreadcrumb() {
+  const el = document.getElementById('breadcrumb');
+  el.innerHTML = '';
+  for (let i = 0; i < breadcrumbStack.length; i++) {
+    const entry = breadcrumbStack[i];
+    const span = document.createElement('span');
+    span.className = 'crumb' + (i === breadcrumbStack.length - 1 ? ' current' : '');
+    span.textContent = entry.name;
+    span.addEventListener('click', () => {
+      // pop back to this level
+      breadcrumbStack.length = i + 1;
+      renderSpiral(entry.manifest);
+    });
+    el.appendChild(span);
+    if (i < breadcrumbStack.length - 1) {
+      const sep = document.createElement('span');
+      sep.className = 'sep';
+      sep.textContent = '›';
+      el.appendChild(sep);
+    }
+  }
+  // cid on right
+  const cidEl = document.createElement('span');
+  cidEl.className = 'cid';
+  cidEl.id = 'current-cid';
+  const last = breadcrumbStack[breadcrumbStack.length - 1];
+  cidEl.textContent = last && last.manifest && last.manifest.cid ? last.manifest.cid : '';
+  el.appendChild(cidEl);
+}
+
+async function descendInto(branchPointer) {
+  try {
+    const child = await loadManifest(branchPointer.manifest_url);
+    breadcrumbStack.push({ name: branchPointer.name, manifest: child });
+    renderSpiral(child);
+  } catch (e) {
+    console.error(e);
+    alert('failed to descend: ' + e.message);
+  }
+}
+
+//──────────────────────────────────────────────────────────────────────────
+// Modal — biscuit inspector
+//──────────────────────────────────────────────────────────────────────────
+function openBiscuit(b) {
+  const body = document.getElementById('modal-body');
+  const kb = (b.size_bytes / 1024).toFixed(2);
+  const seconds = (b.duration_ms / 1000).toFixed(2);
+  const kbps = ((b.size_bytes * 8) / b.duration_ms).toFixed(1);
+  const broken = b.duration_ms < 300;
+
+  // fractal hint: how many sub-biscuits could this contain?
+  const PHONEME_MS = 150;
+  const subdivisions = Math.floor(b.duration_ms / PHONEME_MS);
+  const subSize = Math.round((PHONEME_MS / b.duration_ms) * b.size_bytes);
+
+  body.innerHTML = `
+    <h2>biscuit · ${b.duration_ms}ms</h2>
+    ${b.transcript ? `<div class="transcript">"${b.transcript}"</div>` : ''}
+    <div class="modal-meta">
+      <b>codec</b><span>${b.codec}</span>
+      <b>duration</b><span>${seconds} s (${b.duration_ms} ms)</span>
+      <b>size</b><span>${b.size_bytes.toLocaleString()} bytes (${kb} KB)</span>
+      <b>bitrate</b><span>${kbps} kbps</span>
+      <b>cid</b><span>${b.cid}</span>
+      <b>sample rate</b><span>${b.sr} Hz mono</span>
+    </div>
+    ${broken
+      ? `<div class="transcript" style="border-left-color:rgba(255,80,80,0.6);color:rgba(255,80,80,0.85)">⚠ below codec floor (300ms) — reconstruction quality drops sharply. spectral sim ~0.50.</div>`
+      : ''}
+    <audio controls preload="auto" src="${b.wav_url}"></audio>
+    <div class="fractal-hint">
+      <b>fractal recursion preview:</b><br>
+      this biscuit could contain <b>${subdivisions}</b> phoneme-level sub-biscuits
+      (~${PHONEME_MS}ms each, ~${subSize} bytes each).<br>
+      every dot in the spiral is itself a spiral. cortex traverses to the leaf.
+    </div>
+    <details>
+      <summary style="cursor:pointer;font-size:12px;color:#666">payload (base64, first 500 chars)</summary>
+      <div class="payload">${b.payload_b64.slice(0, 500)}…</div>
+    </details>
+    <button class="modal-close" onclick="closeBiscuit()">close</button>
+  `;
+  document.getElementById('modal').classList.add('open');
+}
+function closeBiscuit() {
+  document.getElementById('modal').classList.remove('open');
+}
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target.id === 'modal') closeBiscuit();
+});
+document.addEventListener('keydown', e => {
+  if (e.code === 'Escape') closeBiscuit();
+});
+
+//──────────────────────────────────────────────────────────────────────────
+// Boot — load root manifest. Falls back to flat voice-test manifest if
+// root not available (legacy view).
+//──────────────────────────────────────────────────────────────────────────
+async function boot() {
+  let manifest, name;
+  try {
+    manifest = await loadManifest('root.manifest.json');
+    name = manifest.name || 'root';
+  } catch (e) {
+    // fall back to flat manifest
+    try {
+      manifest = await loadManifest('voice-test.manifest.json');
+      name = 'voice-test';
+    } catch (e2) {
+      document.getElementById('spiral').innerHTML =
+        '<text x="0" y="0" text-anchor="middle" fill="#888" font-size="14">no manifest found</text>';
+      return;
+    }
+  }
+  breadcrumbStack.push({ name: name, manifest: manifest });
+  renderSpiral(manifest);
+}
+boot();
+</script>
+</body>
+</html>

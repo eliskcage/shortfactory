@@ -1,0 +1,58 @@
+{
+  "v": 1,
+  "type": "root_spiral",
+  "name": "cortex first vocabulary",
+  "total_size": 39580,
+  "total_duration_ms": 22624,
+  "branches": [
+    {
+      "v": 1,
+      "type": "branch_pointer",
+      "branch_id": "a",
+      "name": "the lead",
+      "glyph": "\u25cb",
+      "cid": "sha256:2a2af6887f7a1330",
+      "leaf_count": 4,
+      "total_size": 9293,
+      "total_duration_ms": 5466,
+      "manifest_url": "branch-a.manifest.json"
+    },
+    {
+      "v": 1,
+      "type": "branch_pointer",
+      "branch_id": "b",
+      "name": "the leap",
+      "glyph": "\u25cf",
+      "cid": "sha256:40eb6a3f67e8fc41",
+      "leaf_count": 4,
+      "total_size": 9232,
+      "total_duration_ms": 5371,
+      "manifest_url": "branch-b.manifest.json"
+    },
+    {
+      "v": 1,
+      "type": "branch_pointer",
+      "branch_id": "c",
+      "name": "the voice",
+      "glyph": "\u25cb",
+      "cid": "sha256:a487be99747b5ec0",
+      "leaf_count": 4,
+      "total_size": 10294,
+      "total_duration_ms": 5811,
+      "manifest_url": "branch-c.manifest.json"
+    },
+    {
+      "v": 1,
+      "type": "branch_pointer",
+      "branch_id": "d",
+      "name": "the dna",
+      "glyph": "\u25cf",
+      "cid": "sha256:d5a769be39f19f26",
+      "leaf_count": 4,
+      "total_size": 10761,
+      "total_duration_ms": 5976,
+      "manifest_url": "branch-d.manifest.json"
+    }
+  ],
+  "cid": "sha256:26dc9787c14a8766"
+}

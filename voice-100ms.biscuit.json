@@ -1,0 +1,14 @@
+{
+  "v": 1,
+  "type": "audio_crumb",
+  "codec": "crumb_v3",
+  "sr": 22050,
+  "duration_ms": 100,
+  "size_bytes": 320,
+  "cid": "sha256:ebcbb10e3089f824",
+  "created": "2026-04-28",
+  "transcript": "q\u2014",
+  "wav_url": "voice-100ms.crumb.v3.wav",
+  "crumb_url": "voice-100ms.crumb.v3",
+  "payload_b64": "Q1JNQgUiVgAAAAgAAAACAABQBgYKBQUAAADfAAAAPwAAAHjaXY+xagJBFEXP7LrRBQ1GFCwstlBIYWFhuhRjnYgigo2FCPoB+gMLNiFFQFLZ+QlC8gHT2whJE7DwE9LY58aBFJnu8M698x7m+EQ0O1CYO9obTGlC2JkQNRyZMgjpbokrjvoX3PSh08dEjvBDOBRaOENmJBzDXRHeUsI1xE24/YZPS/ACubbwBK/KSrp+FB4k2wvmrZ9OU4KCl2s7ycrmIauq6hbeIehBVIfkV3aYB310L1lVS4t5Vrbl5YWme7hSNtF0Zf+w5nw21t6JlwepagGtgo5E+P/9AAAMLrN42mNgYGBgYQQSrEwOExgYmJ0cShgYmAxKVIBCHnzMDQwMpqyMDi0MxU7cfQt5kg1alTsced8oPrcBAMh9CrQ="
+}
